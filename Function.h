@@ -1,6 +1,11 @@
 #pragma once
 
 //構造体
+struct Vector2 {
+	float x;
+	float y;
+};
+
 struct Vector3 {
 	float x;
 	float y;
@@ -11,6 +16,11 @@ struct Transform {
 	Vector3 scale;
 	Vector3 rotate;
 	Vector3 translate;
+};
+
+struct VertexData {
+	Vector4 position;
+	Vector2 texcoord;
 };
 
 //関数
