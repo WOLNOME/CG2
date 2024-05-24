@@ -1003,35 +1003,53 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
 
-	//解放処理
+	/////解放処理/////
+	//fenceとevent
 	CloseHandle(fenceEvent);
 	fence->Release();
+	//descriptorheap（追加予定あり）
 	rtvDescriptorHeap->Release();
+	srvDescriptorHeap->Release();
+	dsvDescriptorHeap->Release();
+	//resource(追加予定あり)
 	swapChainResources[0]->Release();
 	swapChainResources[1]->Release();
+	materialResource->Release();
+	vertexResource->Release();
+	wvpResource->Release();
+	textureResorce->Release();
+	depthStencilResource->Release();
+	vertexResourceSprite->Release();
+	transformationMatrixResourceSprite->Release();
+	//swapchain
 	swapChain->Release();
+	//commandlist
 	commandList->Release();
 	commandAllocator->Release();
 	commandQueue->Release();
+	//device
 	device->Release();
+	//adapter
 	useAdapter->Release();
+	//dxgi
 	dxgiFactory->Release();
-	vertexResource->Release();
-	materialResource->Release();
+	//graphicspipline
 	graphicsPipelineState->Release();
+	//blob
 	signatireBlob->Release();
 	if (errorBlob) {
 		errorBlob->Release();
 	}
-	rootSignature->Release();
 	pixelShaderBlob->Release();
 	vertexShaderBlob->Release();
+	//rootsignature
+	rootSignature->Release();
 #ifdef _DEBUG
 	debugContoroller->Release();
 #endif // _DEBUG
 	CloseWindow(hwnd);
 
-	//リソースチェック
+	//リソースチェック(解放できてないのがある)
 	IDXGIDebug1* debug;
 	if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&debug)))) {
 		debug->ReportLiveObjects(DXGI_DEBUG_ALL, DXGI_DEBUG_RLO_ALL);
