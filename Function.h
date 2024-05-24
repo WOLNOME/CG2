@@ -345,7 +345,7 @@ float Cot(float rad)
 	return c;
 }
 
-Matrix4x4 MakePerspectiveForMatrix(float fovY, float aspectRatio, float nearClip, float farClip)
+Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip)
 {
 	Matrix4x4 c;
 	c.m[0][0] = (1 / aspectRatio) * Cot(fovY / 2);
