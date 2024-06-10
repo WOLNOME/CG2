@@ -306,6 +306,30 @@ ID3D12Resource* CreateDepthStencilTextureResource(ID3D12Device* device, int32_t 
 	return resource;
 }
 
+//テクスチャ転送用関数
+void CreateTexture(ID3D12Device* device, ID3D12Resource* textureResource, ID3D12DescriptorHeap* srvDescriptorHeap, const char* name) {
+	//Textureを読んで転送する
+	DirectX::ScratchImage mipImages = LoadTexture(name);
+	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+	textureResource = CreateTextureResource(device, metadata);
+	UploadTextureData(textureResource, mipImages);
+	//metadataをもとにSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Format = metadata.format;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+	//SRVを作成するDescriptorHeapの場所を決める
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = srvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = srvDescriptorHeap->GetGPUDescriptorHandleForHeapStart();
+	//先頭はImGuiが使っているのでその次を使う
+	textureSrvHandleCPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	textureSrvHandleGPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	//SRVの生成
+	device->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);
+
+}
+
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -716,7 +740,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//書き込むためのアドレスを取得
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	//今回は白を書き込んでみる
-	*materialData = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	Vector4 color = { 1.0f,1.0f,1.0f,1.0f };
+	*materialData = color;
 
 	//WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
 	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(Matrix4x4));
@@ -776,8 +801,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//Textureを読んで転送する
 	DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-	ID3D12Resource* textureResorce = CreateTextureResource(device, metadata);
-	UploadTextureData(textureResorce, mipImages);
+	ID3D12Resource* textureResource = CreateTextureResource(device, metadata);
+	UploadTextureData(textureResource, mipImages);
 	//metadataをもとにSRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Format = metadata.format;
@@ -791,7 +816,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	textureSrvHandleCPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	textureSrvHandleGPU.ptr += device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 	//SRVの生成
-	device->CreateShaderResourceView(textureResorce, &srvDesc, textureSrvHandleCPU);
+	device->CreateShaderResourceView(textureResource, &srvDesc, textureSrvHandleCPU);
 
 
 	//DepthStencilTextureをウィンドウサイズで作成
@@ -844,6 +869,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 
+	//宣言
+	bool isDisplaySprite = true;
+	bool isDisplayObject = true;
+
+
 	MSG msg{};
 	//ウィンドウの×ボタンが押されるまでループ
 	while (msg.message != WM_QUIT) {
@@ -866,14 +896,66 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			//開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
 
-			ImGui::Begin("Window");
-			ImGui::DragFloat3("SpriteTransform", &transformSprite.translate.x, 1.0f);
+			//Window枠取り出し
+			ImGui::Begin("Settings");
+			//スプライト
+			if (ImGui::TreeNode("sprite transform")) {
+				//スプライトの平行移動
+				ImGui::DragFloat3("SpriteTransform", &transformSprite.translate.x, 1.0f);
+				//リセット
+				if (ImGui::Button("reset")) {
+					transformSprite.translate = { 0.0f,0.0f,0.0f };
+				}
+				//スプライトの表示切り替え
+				if(ImGui::Button("DisplayChange")) {
+					isDisplaySprite = !isDisplaySprite;
+				}
+
+				ImGui::TreePop();
+			}
+			//オブジェクト
+			if (ImGui::TreeNode("object transform")) {
+				//オブジェクトの平行移動
+				ImGui::DragFloat3("translate", &transform.translate.x, 0.01f);
+				ImGui::DragFloat3("rotate", &transform.rotate.x, 0.01f);
+				ImGui::DragFloat3("scale", &transform.scale.x, 0.01f);
+				//リセット
+				if (ImGui::Button("reset")) {
+					transform.translate = { 0.0f,0.0f,0.0f };
+					transform.rotate = { 0.0f,0.0f,0.0f };
+					transform.scale = { 1.0f,1.0f,1.0f };
+				}
+				//オブジェクトの表示切り替え
+				if (ImGui::Button("DisplayChange")) {
+					isDisplayObject = !isDisplayObject;
+				}
+
+				ImGui::TreePop();
+			}
+			//マテリアル
+			if (ImGui::TreeNode("material")) {
+				//図形の色を変える
+				ImGui::ColorEdit3("color", &color.x);
+				*materialData = color;
+				static int n;
+				ImGui::Combo("texture", &n, "uvChecker\0checkerBoard\0monsterBall\0\0");
+				//テクスチャの順番
+				const char* textureName[3] = {
+					"resources/uvChecker.png",
+					"resources/checkerBoard.png",
+					"resources/monsterBall.png"
+				};
+				CreateTexture(device, textureResource, srvDescriptorHeap, textureName[n]);
+				ImGui::TreePop();
+			}
+
 
 			ImGui::End();
 
+			ImGui::ShowDemoWindow();
 
 
-			transform.rotate.y += 0.03f;
+
 
 			/////レンダリングパイプライン/////
 			//各種行列の計算
@@ -944,10 +1026,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//wvp用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
 			//図形の描画
-			commandList->DrawInstanced(6, 1, 0, 0);
+			if (isDisplayObject) {
+				commandList->DrawInstanced(6, 1, 0, 0);
+			}
 
 			//Spriteの描画。変更が必要な物だけ変更する
-			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+			if (isDisplaySprite) {
+				commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+			}
 			//TransformationMatrixCBufferの場所を指定
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 			//描画！
@@ -1017,7 +1103,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialResource->Release();
 	vertexResource->Release();
 	wvpResource->Release();
-	textureResorce->Release();
+	textureResource->Release();
 	depthStencilResource->Release();
 	vertexResourceSprite->Release();
 	transformationMatrixResourceSprite->Release();
