@@ -7,9 +7,11 @@
 #include <cassert>
 #include <dxgidebug.h>
 #include <dxcapi.h>
+#include <cmath>
 #include "Vector4.h"
 #include "Matrix4x4.h"
 #include "Function.h"
+#define _USE_MATH_DEFINES
 
 
 //DirectXTex
@@ -30,6 +32,9 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 //定数
 const int kTriangleVertexNum = 3;
 const int kTriangleNum = 2;
+
+const uint32_t kSubdivision = 20;
+float pi = (float)M_PI;
 
 
 //ウィンドウプロシージャ
@@ -554,13 +559,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//RootParameter作成。複数設定できるので配列。今回は結果1つだけなので長さ1の配列
 	D3D12_ROOT_PARAMETER rootParameters[3] = {};
+	//マテリアルの設定
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
 	rootParameters[0].Descriptor.ShaderRegister = 0;//レジスタ番号0とバインド
+	//オブジェクト関連の設定
 	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
 	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;//VertexShaderで使う
 	rootParameters[1].Descriptor.ShaderRegister = 0;//レジスタ番号0とバインド
-	//RootParameter続き
+	//テクスチャの設定
 	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//Tableを使う
 	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
 	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;//Tableの中身の配列を指定
@@ -753,11 +760,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{0.0f,0.0f,0.0f}
 	};
 
+
 	//カメラの位置、角度を作る
 	Transform cameraTransform{
 		{1.0f,1.0f,1.0f},
 		{0.0f,0.0f,0.0f},
-		{0.0f,0.0f,-5.0f}
+		{0.0f,0.0f,-10.0f}
 	};
 
 	//ImGuiの初期化
@@ -804,6 +812,64 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	device->CreateDepthStencilView(depthStencilResource, &dsvDesc, dsvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 
 
+	///////////Sphere用の頂点リソースを作る///////////
+	ID3D12Resource* vertexResourceSphere = CreateBufferResource(device, sizeof(VertexData) * (kSubdivision * kSubdivision * 6));
+	//頂点バッファビューを作成する
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewSphere{};
+	//リソースの先端のアドレスから使う
+	vertexBufferViewSphere.BufferLocation = vertexResourceSphere->GetGPUVirtualAddress();
+	//使用するリソースのサイズは頂点6つ分のサイズ
+	vertexBufferViewSphere.SizeInBytes = sizeof(VertexData) * (kSubdivision * kSubdivision * 6);
+	//1頂点あたりのサイズ
+	vertexBufferViewSphere.StrideInBytes = sizeof(VertexData);
+	//頂点リソースにデータを書き込む
+	VertexData* vertexDataSphere = nullptr;
+	//書き込むためのアドレスを取得
+	vertexResourceSphere->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataSphere));
+	///頂点の座標を決めていく
+	//経度分割1つ分の角度
+	const float kLonEvery = pi * 2.0f / float(kSubdivision);
+	//緯度分割1つ分の角度
+	const float kLatEvery = pi * 2.0f / float(kSubdivision);
+	//緯度の方向に分割
+	for (UINT latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+		float lat = -pi / 2.0f * kLatEvery * latIndex;
+		//緯度の方向に分割
+		for (UINT lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
+			float lon = lonIndex * kLonEvery;
+			//頂点にデータを入れる
+			vertexDataSphere[start].position.x = cos(lat) * cos(lon);
+			vertexDataSphere[start].position.y = sin(lat);
+			vertexDataSphere[start].position.z = cos(lat) * sin(lon);
+			vertexDataSphere[start].position.w = 1.0f;
+			vertexDataSphere[start].texcoord.x = float(lonIndex) / float(kSubdivision);
+			vertexDataSphere[start].texcoord.y = float(latIndex) / float(kSubdivision);
+		}
+	}
+	//マテリアル用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
+	ID3D12Resource* materialResourceSphere = CreateBufferResource(device, sizeof(Vector4));
+	//データを書き込む
+	Vector4* materialDataSphere = nullptr;
+	//書き込むためのアドレスを取得
+	materialResourceSphere->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSphere));
+	//白を書き込んでおく
+	*materialDataSphere = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	//WVP用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
+	ID3D12Resource* wvpResourceSphere = CreateBufferResource(device, sizeof(Matrix4x4));
+	//データを書き込む
+	Matrix4x4* wvpDataSphere = nullptr;
+	//書き込むためのアドレスを取得
+	wvpResourceSphere->Map(0, nullptr, reinterpret_cast<void**>(&wvpDataSphere));
+	//単位行列を書き込んでおく
+	*wvpDataSphere = MakeIdentity4x4();
+	//トランスフォーム
+	Transform transformSphere = {
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
+
 	//Sprite用の頂点リソースを作る
 	ID3D12Resource* vertexResourceSprite = CreateBufferResource(device, sizeof(VertexData) * 6);
 	//頂点バッファビューを作成する
@@ -844,6 +910,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
 
 
+
+
+
+	//初期化
+	bool isDisplayTriangle = false;
+	bool isDisplaySprite = false;
+	bool isDisplaySphere = true;
+
+
 	MSG msg{};
 	//ウィンドウの×ボタンが押されるまでループ
 	while (msg.message != WM_QUIT) {
@@ -866,14 +941,68 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			//開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
 
-			ImGui::Begin("Window");
-			ImGui::DragFloat3("SpriteTransform", &transformSprite.translate.x, 1.0f);
+			ImGui::Begin("Settings");
+			//スプライト
+			if (ImGui::TreeNode("sprite transform")) {
+				//スプライトの平行移動
+				ImGui::DragFloat3("SpriteTransform", &transformSprite.translate.x, 1.0f);
+				//リセット
+				if (ImGui::Button("reset")) {
+					transformSprite.translate = { 0.0f,0.0f,0.0f };
+				}
+				//スプライトの表示切り替え
+				if (ImGui::Button("DisplayChange")) {
+					isDisplaySprite = !isDisplaySprite;
+				}
+
+				ImGui::TreePop();
+			}
+			//三角形
+			if (ImGui::TreeNode("triangle transform")) {
+				//オブジェクトの平行移動
+				ImGui::DragFloat3("translate", &transform.translate.x, 0.01f);
+				ImGui::DragFloat3("rotate", &transform.rotate.x, 0.01f);
+				ImGui::DragFloat3("scale", &transform.scale.x, 0.01f);
+				//リセット
+				if (ImGui::Button("reset")) {
+					transform.translate = { 0.0f,0.0f,0.0f };
+					transform.rotate = { 0.0f,0.0f,0.0f };
+					transform.scale = { 1.0f,1.0f,1.0f };
+				}
+				//オブジェクトの表示切り替え
+				if (ImGui::Button("DisplayChange")) {
+					isDisplayTriangle = !isDisplayTriangle;
+				}
+
+				ImGui::TreePop();
+			}
+			//球
+			if (ImGui::TreeNode("sphere transform")) {
+				//オブジェクトの平行移動
+				ImGui::DragFloat3("translate", &transformSphere.translate.x, 0.01f);
+				ImGui::DragFloat3("rotate", &transformSphere.rotate.x, 0.01f);
+				ImGui::DragFloat3("scale", &transformSphere.scale.x, 0.01f);
+				//リセット
+				if (ImGui::Button("reset")) {
+					transformSphere.translate = { 0.0f,0.0f,0.0f };
+					transformSphere.rotate = { 0.0f,0.0f,0.0f };
+					transformSphere.scale = { 1.0f,1.0f,1.0f };
+				}
+				//オブジェクトの表示切り替え
+				if (ImGui::Button("DisplayChange")) {
+					isDisplaySphere = !isDisplaySphere;
+				}
+
+				ImGui::TreePop();
+			}
 
 			ImGui::End();
 
 
 
+
 			transform.rotate.y += 0.03f;
+			transformSphere.rotate.y += 0.03f;
 
 			/////レンダリングパイプライン/////
 			//各種行列の計算
@@ -889,6 +1018,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, (float)kClientWidth, (float)kClientHeight, 0.0f, 100.0f);
 			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
 			*transformationMatrixDataSprite = worldViewProjectionMatrixSprite;
+			//Sphere用のWorldViewProjectionMatrixを作る
+			Matrix4x4 worldMatrixSphere = MakeAffineMatrix(transformSphere.scale, transformSphere.rotate, transformSphere.translate);
+			Matrix4x4 cameraMatrixSphere = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			Matrix4x4 viewMatrixSphere = Inverse(cameraMatrixSphere);
+			Matrix4x4 projectionMatrixSphere = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
+			Matrix4x4 worldViewProjectionMatrixSphere = Multiply(worldMatrixSphere, Multiply(viewMatrixSphere, projectionMatrixSphere));
+			*wvpDataSphere = worldViewProjectionMatrixSphere;
+
 
 			//ImGuiの内部コマンドを生成する
 			ImGui::Render();
@@ -934,24 +1071,43 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//RootSignatureを設定。PSOに設定しているけど別途設定が必要
 			commandList->SetGraphicsRootSignature(rootSignature);
 			commandList->SetPipelineState(graphicsPipelineState);
+
+			//triangleの描画
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
 			//形状を設定
 			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			//マテリアルCBufferの場所を設定
+			//マテリアルCBufferの場所を設定(0はrootparameterの0番目でマテリアルの設定してるため)
 			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]である。
+			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
 			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 			//wvp用のCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-			//図形の描画
-			commandList->DrawInstanced(6, 1, 0, 0);
+			//三角形の描画
+			if (isDisplayTriangle) {
+				commandList->DrawInstanced(6, 1, 0, 0);
+			}
+
+			//Sphereの描画
+			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSphere);
+			//マテリアルCBufferの場所を設定
+			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSphere->GetGPUVirtualAddress());
+			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			//wvp用のCBufferの場所を指定
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResourceSphere->GetGPUVirtualAddress());
+			//球の描画
+			if (isDisplaySphere) {
+				commandList->DrawInstanced((kSubdivision * kSubdivision * 6), 1, 0, 0);
+			}
 
 			//Spriteの描画。変更が必要な物だけ変更する
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
 			//TransformationMatrixCBufferの場所を指定
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
 			//描画！
-			commandList->DrawInstanced(6, 1, 0, 0);
+			if (isDisplaySprite) {
+				commandList->DrawInstanced(6, 1, 0, 0);
+			}
 
 			//ImGuiの描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
@@ -1021,6 +1177,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	depthStencilResource->Release();
 	vertexResourceSprite->Release();
 	transformationMatrixResourceSprite->Release();
+	materialResourceSphere->Release();
+	materialResourceSphere->Release();
+	vertexResourceSphere->Release();
+	wvpResourceSphere->Release();
 	//swapchain
 	swapChain->Release();
 	//commandlist

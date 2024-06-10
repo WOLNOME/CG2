@@ -23,6 +23,11 @@ struct VertexData {
 	Vector2 texcoord;
 };
 
+struct Sphere {
+	Vector3 center;
+	float radius;
+};
+
 //関数
 
 Vector3 Add(const Vector3& v1, const Vector3& v2)
