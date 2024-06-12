@@ -681,6 +681,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 
+	//////////triangleのリソースを作る///////////
 	//実際に頂点リソースを作る
 	ID3D12Resource* vertexResource = CreateBufferResource(device, sizeof(VertexData) * 6);
 	//頂点バッファビューを作成する
@@ -830,21 +831,66 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//経度分割1つ分の角度
 	const float kLonEvery = pi * 2.0f / float(kSubdivision);
 	//緯度分割1つ分の角度
-	const float kLatEvery = pi * 2.0f / float(kSubdivision);
+	const float kLatEvery = pi / float(kSubdivision);
+	//球の情報
+	Sphere sphere;
+	sphere.center = { 0.0f,0.0f,0.0f };
+	sphere.radius = 1.0f;
 	//緯度の方向に分割
 	for (UINT latIndex = 0; latIndex < kSubdivision; ++latIndex) {
-		float lat = -pi / 2.0f * kLatEvery * latIndex;
+		float lat = -pi / 2.0f + kLatEvery * latIndex;
 		//緯度の方向に分割
 		for (UINT lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
 			uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
 			float lon = lonIndex * kLonEvery;
+			///三角形一枚目
 			//頂点にデータを入れる
-			vertexDataSphere[start].position.x = cos(lat) * cos(lon);
-			vertexDataSphere[start].position.y = sin(lat);
-			vertexDataSphere[start].position.z = cos(lat) * sin(lon);
+			vertexDataSphere[start].position.x = sphere.center.x + sphere.radius * cos(lat) * cos(lon);
+			vertexDataSphere[start].position.y = sphere.center.y + sphere.radius * sin(lat);
+			vertexDataSphere[start].position.z = sphere.center.z + sphere.radius * cos(lat) * sin(lon);
 			vertexDataSphere[start].position.w = 1.0f;
 			vertexDataSphere[start].texcoord.x = float(lonIndex) / float(kSubdivision);
-			vertexDataSphere[start].texcoord.y = float(latIndex) / float(kSubdivision);
+			vertexDataSphere[start].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
+			//頂点にデータを入れる
+			vertexDataSphere[start + 1].position.x = sphere.center.x + sphere.radius * cos(lat + kLatEvery) * cos(lon);
+			vertexDataSphere[start + 1].position.y = sphere.center.y + sphere.radius * sin(lat + kLatEvery);
+			vertexDataSphere[start + 1].position.z = sphere.center.z + sphere.radius * cos(lat + kLatEvery) * sin(lon);
+			vertexDataSphere[start + 1].position.w = 1.0f;
+			vertexDataSphere[start + 1].texcoord.x = float(lonIndex) / float(kSubdivision);
+			vertexDataSphere[start + 1].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
+			//頂点にデータを入れる
+			vertexDataSphere[start + 2].position.x = sphere.center.x + sphere.radius * cos(lat) * cos(lon + kLonEvery);
+			vertexDataSphere[start + 2].position.y = sphere.center.y + sphere.radius * sin(lat);
+			vertexDataSphere[start + 2].position.z = sphere.center.z + sphere.radius * cos(lat) * sin(lon + kLonEvery);
+			vertexDataSphere[start + 2].position.w = 1.0f;
+			vertexDataSphere[start + 2].texcoord.x = float(lonIndex + 1) / float(kSubdivision);
+			vertexDataSphere[start + 2].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
+			///三角形二枚目
+			//頂点にデータを入れる
+			vertexDataSphere[start + 3].position.x = sphere.center.x + sphere.radius * cos(lat + kLatEvery) * cos(lon);
+			vertexDataSphere[start + 3].position.y = sphere.center.y + sphere.radius * sin(lat + kLatEvery);
+			vertexDataSphere[start + 3].position.z = sphere.center.z + sphere.radius * cos(lat + kLatEvery) * sin(lon);
+			vertexDataSphere[start + 3].position.w = 1.0f;
+			vertexDataSphere[start + 3].texcoord.x = float(lonIndex) / float(kSubdivision);
+			vertexDataSphere[start + 3].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
+			//頂点にデータを入れる
+			vertexDataSphere[start + 4].position.x = sphere.center.x + sphere.radius * cos(lat + kLatEvery) * cos(lon + kLonEvery);
+			vertexDataSphere[start + 4].position.y = sphere.center.y + sphere.radius * sin(lat + kLatEvery);
+			vertexDataSphere[start + 4].position.z = sphere.center.z + sphere.radius * cos(lat + kLatEvery) * sin(lon + kLonEvery);
+			vertexDataSphere[start + 4].position.w = 1.0f;
+			vertexDataSphere[start + 4].texcoord.x = float(lonIndex + 1) / float(kSubdivision);
+			vertexDataSphere[start + 4].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
+			//頂点にデータを入れる
+			vertexDataSphere[start + 5].position.x = sphere.center.x + sphere.radius * cos(lat) * cos(lon + kLonEvery);
+			vertexDataSphere[start + 5].position.y = sphere.center.y + sphere.radius * sin(lat);
+			vertexDataSphere[start + 5].position.z = sphere.center.z + sphere.radius * cos(lat) * sin(lon + kLonEvery);
+			vertexDataSphere[start + 5].position.w = 1.0f;
+			vertexDataSphere[start + 5].texcoord.x = float(lonIndex + 1) / float(kSubdivision);
+			vertexDataSphere[start + 5].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
+
+			//メモ//
+			//三角形描画時には頂点を半時計周りの順番で設定する。
+			//時計回りにすると表裏が逆になってしまう。
 		}
 	}
 	//マテリアル用のリソースを作る。Matrix4x4 1つ分のサイズを用意する
