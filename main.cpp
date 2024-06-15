@@ -1125,6 +1125,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//descriptorheap（追加予定あり）
 	rtvDescriptorHeap->Release();
 	srvDescriptorHeap->Release();
+	dsvDescriptorHeap->Release();
 	//resource(追加予定あり)
 	swapChainResources[0]->Release();
 	swapChainResources[1]->Release();
