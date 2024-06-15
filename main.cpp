@@ -796,7 +796,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		swapChainDesc.BufferCount,
 		rtvDesc.Format,
 		srvDescriptorHeap,
-		GetCPUDescriptorHandle(srvDescriptorHeap,descriptorSizeSRV,0),
+		GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 0),
 		GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 0)
 	);
 
@@ -991,11 +991,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 
-	
+
 	//初期化
 	bool isDisplayTriangle = false;
 	bool isDisplaySprite = false;
 	bool isDisplaySphere = true;
+	bool useMonsterBall = true;
 
 
 	MSG msg{};
@@ -1021,6 +1022,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
 
 			ImGui::Begin("Settings");
+			//テクスチャ
+			if (ImGui::TreeNode("texture")) {
+				ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+
+				ImGui::TreePop();
+			}
 			//スプライト
 			if (ImGui::TreeNode("sprite transform")) {
 				//スプライトの平行移動
@@ -1132,7 +1139,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->ResourceBarrier(1, &barrier);
 
 			//描画先のRTVとDSVを設定する
-			D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(dsvDescriptorHeap, descriptorSizeDSV, 1);
+			D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(dsvDescriptorHeap, descriptorSizeDSV, 0);
 			commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
 			//指定した色で画面全体をクリアする
 			float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };//青っぽい色。RGBAの順
@@ -1171,7 +1178,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//マテリアルCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSphere->GetGPUVirtualAddress());
 			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU2);
+			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 			//wvp用のCBufferの場所を指定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResourceSphere->GetGPUVirtualAddress());
 			//球の描画
@@ -1183,6 +1190,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
 			//TransformationMatrixCBufferの場所を指定
 			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+			//テクスチャ設定
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
 			//描画！
 			if (isDisplaySprite) {
 				commandList->DrawInstanced(6, 1, 0, 0);
@@ -1256,7 +1265,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	depthStencilResource->Release();
 	vertexResourceSprite->Release();
 	transformationMatrixResourceSprite->Release();
-	materialResourceSphere->Release();
 	materialResourceSphere->Release();
 	vertexResourceSphere->Release();
 	wvpResourceSphere->Release();
