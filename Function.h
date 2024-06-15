@@ -21,6 +21,7 @@ struct Transform {
 struct VertexData {
 	Vector4 position;
 	Vector2 texcoord;
+	Vector4 normal;
 };
 
 struct Sphere {
@@ -425,6 +426,30 @@ Vector3 Cross(const Vector3& a, const Vector3& b)
 	c.y = (a.z * b.x) - (a.x * b.z);
 	c.z = (a.x * b.y) - (a.y * b.x);
 
+	return c;
+}
+
+float Length(const Vector3& v)
+{
+	float c;
+	c = sqrtf(powf(v.x, 2) + powf(v.y, 2) + powf(v.z, 2));
+	return c;
+}
+
+Vector3 Normalize(const Vector3& v)
+{
+	Vector3 c;
+	//長さを求める
+	float length = Length(v);
+	//length=0で無ければ正規化
+	if (length != 0) {
+		c.x = v.x / length;
+		c.y = v.y / length;
+		c.z = v.z / length;
+	}
+	else {
+		assert("正規化できません");
+	}
 	return c;
 }
 
