@@ -21,11 +21,29 @@ struct Transform {
 struct VertexData {
 	Vector4 position;
 	Vector2 texcoord;
+	Vector3 normal;
 };
 
 struct Sphere {
 	Vector3 center;
 	float radius;
+};
+
+struct Material {
+	Vector4 color;
+	int32_t enableLighting;
+};
+
+struct TransformationMatrix {
+	Matrix4x4 WVP;
+	Matrix4x4 World;
+};
+
+struct DirectionalLight
+{
+	Vector4 color;
+	Vector3 direction;
+	float intensity;
 };
 
 //関数
@@ -428,3 +446,26 @@ Vector3 Cross(const Vector3& a, const Vector3& b)
 	return c;
 }
 
+float Length(const Vector3& v)
+{
+	float c;
+	c = sqrtf(powf(v.x, 2) + powf(v.y, 2) + powf(v.z, 2));
+	return c;
+}
+
+Vector3 Normalize(const Vector3& v)
+{
+	Vector3 c;
+	//長さを求める
+	float length = Length(v);
+	//length=0で無ければ正規化
+	if (length != 0) {
+		c.x = v.x / length;
+		c.y = v.y / length;
+		c.z = v.z / length;
+	}
+	else {
+		assert("正規化できません");
+	}
+	return c;
+}
