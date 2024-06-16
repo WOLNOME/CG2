@@ -800,8 +800,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//カメラの位置、角度を作る
 	Transform cameraTransform{
 		{1.0f,1.0f,1.0f},
-		{0.0f,0.0f,0.0f},
-		{0.0f,0.0f,-10.0f}
+		{0.3f,0.0f,0.0f},
+		{0.0f,5.0f,-20.0f}
 	};
 
 	//ImGuiの初期化
@@ -1046,11 +1046,79 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	directionalLightData->intensity = 1.0f;
 	////////////////////////////////////////////////////////////////////////////////////////
 
+	////////////////床用のリソースを作る///////////////////////////////
+	//頂点リソース
+	ID3D12Resource* vertexResourceFloor = CreateBufferResource(device, sizeof(VertexData) * 6);
+	//頂点バッファビューを作成する
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewFloor{};
+	//リソースの先頭アドレスから使う
+	vertexBufferViewFloor.BufferLocation = vertexResourceFloor->GetGPUVirtualAddress();
+	//使用するリソースのサイズは頂点3つ分のサイズ
+	vertexBufferViewFloor.SizeInBytes = sizeof(VertexData) * 6;
+	//1頂点あたりのサイズ
+	vertexBufferViewFloor.StrideInBytes = sizeof(VertexData);
+	//頂点リソースにデータを書き込む
+	VertexData* vertexDataFloor = nullptr;
+	//書き込むためのアドレスを取得
+	vertexResourceFloor->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataFloor));
+	///三角形1個目
+	//左下
+	vertexDataFloor[0].position = { -5.0f,-3.0f,5.0f,1.0f };
+	vertexDataFloor[0].texcoord = { 0.0f,0.0f };
+	//上
+	vertexDataFloor[1].position = { 5.0f,-3.0f,5.0f,1.0f };
+	vertexDataFloor[1].texcoord = { 1.0f,0.0f };
+	//右下
+	vertexDataFloor[2].position = { -5.0f,-3.0f,-5.0f,1.0f };
+	vertexDataFloor[2].texcoord = { 0.0f,1.0f };
+	///三角形2個目
+	//左下2
+	vertexDataFloor[3].position = { 5.0f,-3.0f,-5.0f,1.0f };
+	vertexDataFloor[3].texcoord = { 1.0f,1.0f };
+	//上2
+	vertexDataFloor[4].position = { -5.0f,-3.0f,-5.0f,1.0f };
+	vertexDataFloor[4].texcoord = { 0.0f,1.0f };
+	//右下2
+	vertexDataFloor[5].position = { 5.0f,-3.0f,5.0f,1.0f };
+	vertexDataFloor[5].texcoord = { 1.0f,0.0f };
+
+	//法線情報
+	for (UINT i = 0; i < 6; i++) {
+		vertexDataFloor[i].normal = { 0.0f,1.0f,0.0f };
+	}
+
+	//マテリアル(色)用のリソースを作る
+	ID3D12Resource* materialResourceFloor = CreateBufferResource(device, sizeof(Material));
+	//マテリアルにデータを書き込む
+	Material* materialDataFloor = nullptr;
+	//書き込むためのアドレスを取得
+	materialResourceFloor->Map(0, nullptr, reinterpret_cast<void**>(&materialDataFloor));
+	//今回は白を書き込んでみる
+	materialDataFloor->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	//ライティングオフ
+	materialDataFloor->enableLighting = false;
+
+	//WVP用のリソースを作る
+	ID3D12Resource* wvpResourceFloor = CreateBufferResource(device, sizeof(TransformationMatrix));
+	//データを書き込む
+	TransformationMatrix* wvpDataFloor = nullptr;
+	//書き込むためのアドレスを取得
+	wvpResourceFloor->Map(0, nullptr, reinterpret_cast<void**>(&wvpDataFloor));
+	//単位行列を書き込んでおく
+	wvpDataFloor->WVP = MakeIdentity4x4();
+	wvpDataFloor->World = MakeIdentity4x4();
+	//トランスフォーム
+	Transform transformFloor = {
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
 
 	//初期化
 	bool isDisplayTriangle = false;
 	bool isDisplaySprite = false;
 	bool isDisplaySphere = true;
+	bool isDisplayFloor = true;
 	bool useMonsterBall = true;
 
 
@@ -1136,6 +1204,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				ImGui::TreePop();
 			}
+			//床
+			if (ImGui::TreeNode("floor")) {
+				//オブジェクトの平行移動
+				ImGui::DragFloat3("translate", &transformSphere.translate.x, 0.01f);
+				ImGui::DragFloat3("rotate", &transformSphere.rotate.x, 0.01f);
+				ImGui::DragFloat3("scale", &transformSphere.scale.x, 0.01f);
+				//リセット
+				if (ImGui::Button("reset")) {
+					transformSphere.translate = { 0.0f,0.0f,0.0f };
+					transformSphere.rotate = { 0.0f,0.0f,0.0f };
+					transformSphere.scale = { 1.0f,1.0f,1.0f };
+				}
+				//オブジェクトの表示切り替え
+				if (ImGui::Button("DisplayChange")) {
+					isDisplaySphere = !isDisplaySphere;
+				}
+
+				ImGui::TreePop();
+			}
 			//平行光源
 			if (ImGui::TreeNode("DirectionalLight")) {
 				//オブジェクトの平行移動
@@ -1152,17 +1239,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				ImGui::TreePop();
 			}
+			//カメラ
+			if (ImGui::TreeNode("CAMERA")) {
+				//平行移動
+				ImGui::DragFloat3("translate", &cameraTransform.translate.x, 0.01f);
+				ImGui::DragFloat3("rotate", &cameraTransform.rotate.x, 0.01f);
+				ImGui::DragFloat3("scale", &cameraTransform.scale.x, 0.01f);
+				//リセット
+				if (ImGui::Button("reset")) {
+					cameraTransform.translate = { 0.0f,0.0f,-10.0f };
+					cameraTransform.rotate = { 0.0f,0.0f,0.0f };
+					cameraTransform.scale = { 1.0f,1.0f,1.0f };
+				}
+
+				ImGui::TreePop();
+			}
 
 			ImGui::End();
-
-
-
 
 			transform.rotate.y += 0.03f;
 			transformSphere.rotate.y += 0.03f;
 
 			/////レンダリングパイプライン/////
-			//各種行列の計算
+			//triangleの計算
 			Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 			Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 viewMatrix = Inverse(cameraMatrix);
@@ -1185,6 +1284,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 worldViewProjectionMatrixSphere = Multiply(worldMatrixSphere, Multiply(viewMatrixSphere, projectionMatrixSphere));
 			wvpDataSphere->WVP = worldViewProjectionMatrixSphere;
 			wvpDataSphere->World = worldMatrixSphere;
+			//triangleの計算
+			Matrix4x4 worldMatrixFloor = MakeAffineMatrix(transformFloor.scale, transformFloor.rotate, transformFloor.translate);
+			Matrix4x4 cameraMatrixFloor = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			Matrix4x4 viewMatrixFloor = Inverse(cameraMatrixFloor);
+			Matrix4x4 projectionMatrixFloor = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
+			Matrix4x4 worldViewProjectionMatrixFloor = Multiply(worldMatrixFloor, Multiply(viewMatrixFloor, projectionMatrixFloor));
+			wvpDataFloor->WVP = worldViewProjectionMatrixFloor;
+			wvpDataFloor->World = worldMatrixFloor;
+
 
 			//ImGuiの内部コマンドを生成する
 			ImGui::Render();
@@ -1275,9 +1383,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				commandList->DrawInstanced(6, 1, 0, 0);
 			}
 
-			//平行光源の設定
-			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-
+			//Floorの描画
+			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewFloor);
+			//マテリアルCBufferの場所を設定
+			commandList->SetGraphicsRootConstantBufferView(0, materialResourceFloor->GetGPUVirtualAddress());
+			//テクスチャ設定
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			//TransformationMatrixCBufferの場所を指定
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResourceFloor->GetGPUVirtualAddress());
+			//描画！
+			if (isDisplayFloor) {
+				commandList->DrawInstanced(6, 1, 0, 0);
+			}
 
 			//ImGuiの描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
@@ -1340,16 +1457,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//resource(追加予定あり)
 	swapChainResources[0]->Release();
 	swapChainResources[1]->Release();
+
 	materialResource->Release();
 	vertexResource->Release();
 	wvpResource->Release();
+
 	textureResorce->Release();
+
 	depthStencilResource->Release();
+
 	vertexResourceSprite->Release();
 	transformationMatrixResourceSprite->Release();
+
 	materialResourceSphere->Release();
 	vertexResourceSphere->Release();
 	wvpResourceSphere->Release();
+
+	materialResourceFloor->Release();
+	vertexResourceFloor->Release();
+	wvpResourceFloor->Release();
+
 	directionalLightResource->Release();
 	//swapchain
 	swapChain->Release();
