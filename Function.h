@@ -32,6 +32,7 @@ struct Sphere {
 struct Material {
 	Vector4 color;
 	int32_t enableLighting;
+	int32_t enableShadowing;
 };
 
 struct TransformationMatrix {

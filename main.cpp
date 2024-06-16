@@ -575,7 +575,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	//RootParameter作成。複数設定できるので配列。今回は結果1つだけなので長さ1の配列
-	D3D12_ROOT_PARAMETER rootParameters[4] = {};
+	D3D12_ROOT_PARAMETER rootParameters[8] = {};
 	//マテリアルの設定
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
@@ -593,6 +593,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
 	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
 	rootParameters[3].Descriptor.ShaderRegister = 1;//レジスタ番号1とバインド
+	//球体情報の設定
+	rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[4].Descriptor.ShaderRegister = 2;
+	//VPV逆行列の設定
+	rootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[5].Descriptor.ShaderRegister = 3;
+	//ViewProjection逆行列の設定
+	rootParameters[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[6].Descriptor.ShaderRegister = 4;
+	//Viewport逆行列の設定
+	rootParameters[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	rootParameters[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	rootParameters[7].Descriptor.ShaderRegister = 5;
+
 
 	//Samplerの設定
 	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
@@ -758,6 +775,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	//ライティングオフ
 	materialData->enableLighting = false;
+	//シャドイングオフ
+	materialData->enableShadowing = false;
+
 
 	//WVP用のリソースを作る
 	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(TransformationMatrix));
@@ -780,6 +800,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	viewport.MinDepth = 0.0f;
 	viewport.MaxDepth = 1.0f;
 
+	//ビューポートを4x4行列に変換する
+	Matrix4x4 viewportMatrix;
+	viewportMatrix = makeViewportMatrix((float)viewport.TopLeftX, (float)viewport.TopLeftY, (float)viewport.Width, (float)viewport.Height, (float)viewport.MinDepth, (float)viewport.MaxDepth);
+
 	//シザー矩形
 	D3D12_RECT scissorRect{};
 	//基本的にビューポートと同じ矩形が構成されるようにする
@@ -800,8 +824,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//カメラの位置、角度を作る
 	Transform cameraTransform{
 		{1.0f,1.0f,1.0f},
-		{0.3f,0.0f,0.0f},
-		{0.0f,5.0f,-20.0f}
+		{0.6f,0.0f,0.0f},
+		{0.0f,13.0f,-26.0f}
 	};
 
 	//ImGuiの初期化
@@ -962,6 +986,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialDataSphere->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	//ライティングオン
 	materialDataSphere->enableLighting = true;
+	//シャドイングオフ
+	materialDataSphere->enableShadowing = false;
+
 	//WVP用のリソースを作る。
 	ID3D12Resource* wvpResourceSphere = CreateBufferResource(device, sizeof(TransformationMatrix));
 	//データを書き込む
@@ -977,6 +1004,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{0.0f,0.0f,0.0f},
 		{0.0f,0.0f,0.0f}
 	};
+
+	//球体情報用のリソースを作る
+	ID3D12Resource* sphereInformaationResourceSphere = CreateBufferResource(device, sizeof(Sphere));
+	//データを作成
+	Sphere* sphereInformationDataSphere = nullptr;
+	//書き込むためのアドレスを取得
+	sphereInformaationResourceSphere->Map(0, nullptr, reinterpret_cast<void**>(&sphereInformationDataSphere));
+	//データを書き込む
+	sphereInformationDataSphere->center = sphere.center;
+	sphereInformationDataSphere->radius = sphere.radius;
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	///////////////////Sprite用の頂点リソースを作る////////////////////////////////////////////
@@ -1021,6 +1059,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialDataSprite->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	//ライティングオフ
 	materialDataSprite->enableLighting = false;
+	//シャドイングオフ
+	materialDataSprite->enableShadowing = false;
+
 	//Sprite用のTransformationMatrix用のリソースを作る。
 	ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(TransformationMatrix));
 	//データを書き込む
@@ -1063,23 +1104,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	vertexResourceFloor->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataFloor));
 	///三角形1個目
 	//左下
-	vertexDataFloor[0].position = { -5.0f,-3.0f,5.0f,1.0f };
+	vertexDataFloor[0].position = { -10.0f,-3.0f,10.0f,1.0f };
 	vertexDataFloor[0].texcoord = { 0.0f,0.0f };
 	//上
-	vertexDataFloor[1].position = { 5.0f,-3.0f,5.0f,1.0f };
+	vertexDataFloor[1].position = { 10.0f,-3.0f,10.0f,1.0f };
 	vertexDataFloor[1].texcoord = { 1.0f,0.0f };
 	//右下
-	vertexDataFloor[2].position = { -5.0f,-3.0f,-5.0f,1.0f };
+	vertexDataFloor[2].position = { -10.0f,-3.0f,-10.0f,1.0f };
 	vertexDataFloor[2].texcoord = { 0.0f,1.0f };
 	///三角形2個目
 	//左下2
-	vertexDataFloor[3].position = { 5.0f,-3.0f,-5.0f,1.0f };
+	vertexDataFloor[3].position = { 10.0f,-3.0f,-10.0f,1.0f };
 	vertexDataFloor[3].texcoord = { 1.0f,1.0f };
 	//上2
-	vertexDataFloor[4].position = { -5.0f,-3.0f,-5.0f,1.0f };
+	vertexDataFloor[4].position = { -10.0f,-3.0f,-10.0f,1.0f };
 	vertexDataFloor[4].texcoord = { 0.0f,1.0f };
 	//右下2
-	vertexDataFloor[5].position = { 5.0f,-3.0f,5.0f,1.0f };
+	vertexDataFloor[5].position = { 10.0f,-3.0f,10.0f,1.0f };
 	vertexDataFloor[5].texcoord = { 1.0f,0.0f };
 
 	//法線情報
@@ -1097,6 +1138,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialDataFloor->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	//ライティングオフ
 	materialDataFloor->enableLighting = false;
+	//シャドイングオン
+	materialDataFloor->enableShadowing = true;
 
 	//WVP用のリソースを作る
 	ID3D12Resource* wvpResourceFloor = CreateBufferResource(device, sizeof(TransformationMatrix));
@@ -1113,6 +1156,37 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{0.0f,0.0f,0.0f},
 		{0.0f,0.0f,0.0f}
 	};
+	////////////////////////////////////////////////////////////
+
+	/////////////VPV逆行列用のリソースを作る////////////////////
+	ID3D12Resource* ivpvResource = CreateBufferResource(device, sizeof(Matrix4x4));
+	//データを作成
+	Matrix4x4* ivpvData = nullptr;
+	//アドレス取得
+	ivpvResource->Map(0, nullptr, reinterpret_cast<void**>(&ivpvData));
+	//単位行列を書き込んでおく
+	*ivpvData = MakeIdentity4x4();
+	////////////////////////////////////////////////////////////
+
+	/////////////ViewProjection逆行列用のリソースを作る////////////////////
+	ID3D12Resource* iViewProjectionResource = CreateBufferResource(device, sizeof(Matrix4x4));
+	//データを作成
+	Matrix4x4* iViewProjectionData = nullptr;
+	//アドレス取得
+	iViewProjectionResource->Map(0, nullptr, reinterpret_cast<void**>(&iViewProjectionData));
+	//単位行列を書き込んでおく
+	*iViewProjectionData = MakeIdentity4x4();
+	////////////////////////////////////////////////////////////
+
+	/////////////Viewport逆行列用のリソースを作る////////////////////
+	ID3D12Resource* iViewportResource = CreateBufferResource(device, sizeof(Matrix4x4));
+	//データを作成
+	Matrix4x4* iViewportData = nullptr;
+	//アドレス取得
+	iViewportResource->Map(0, nullptr, reinterpret_cast<void**>(&iViewportData));
+	//単位行列を書き込んでおく
+	*iViewportData = MakeIdentity4x4();
+	////////////////////////////////////////////////////////////
 
 	//初期化
 	bool isDisplayTriangle = false;
@@ -1284,7 +1358,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 worldViewProjectionMatrixSphere = Multiply(worldMatrixSphere, Multiply(viewMatrixSphere, projectionMatrixSphere));
 			wvpDataSphere->WVP = worldViewProjectionMatrixSphere;
 			wvpDataSphere->World = worldMatrixSphere;
-			//triangleの計算
+			//floorの計算
 			Matrix4x4 worldMatrixFloor = MakeAffineMatrix(transformFloor.scale, transformFloor.rotate, transformFloor.translate);
 			Matrix4x4 cameraMatrixFloor = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 			Matrix4x4 viewMatrixFloor = Inverse(cameraMatrixFloor);
@@ -1292,7 +1366,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 worldViewProjectionMatrixFloor = Multiply(worldMatrixFloor, Multiply(viewMatrixFloor, projectionMatrixFloor));
 			wvpDataFloor->WVP = worldViewProjectionMatrixFloor;
 			wvpDataFloor->World = worldMatrixFloor;
-
+			//ivpvDataの更新
+			Matrix4x4 matVPV = Multiply(Multiply(viewMatrixFloor, projectionMatrixFloor), viewportMatrix);
+			*ivpvData = Inverse(matVPV);
+			*iViewProjectionData = Inverse(Multiply(viewMatrixFloor, projectionMatrixFloor));
+			*iViewportData = Inverse(viewportMatrix);
 
 			//ImGuiの内部コマンドを生成する
 			ImGui::Render();
@@ -1339,6 +1417,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootSignature(rootSignature);
 			commandList->SetPipelineState(graphicsPipelineState);
 
+			//iviewportリソースの転送
+			commandList->SetGraphicsRootConstantBufferView(7, iViewportResource->GetGPUVirtualAddress());
+			//iviewprojectionリソースの転送
+			commandList->SetGraphicsRootConstantBufferView(6, iViewProjectionResource->GetGPUVirtualAddress());
+			//ivpvリソースの転送
+			commandList->SetGraphicsRootConstantBufferView(5, ivpvResource->GetGPUVirtualAddress());
+
+
 			//平行光源の設定
 			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
@@ -1365,6 +1451,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
 			//wvp用のCBufferの場所を指定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResourceSphere->GetGPUVirtualAddress());
+			//球体情報用のCBufferの場所を指定
+			commandList->SetGraphicsRootConstantBufferView(4, sphereInformaationResourceSphere->GetGPUVirtualAddress());
 			//球の描画
 			if (isDisplaySphere) {
 				commandList->DrawInstanced((kSubdivision * kSubdivision * 6), 1, 0, 0);
@@ -1395,6 +1483,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			if (isDisplayFloor) {
 				commandList->DrawInstanced(6, 1, 0, 0);
 			}
+			
 
 			//ImGuiの描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
@@ -1478,6 +1567,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	wvpResourceFloor->Release();
 
 	directionalLightResource->Release();
+
+	ivpvResource->Release();
+
+	iViewProjectionResource->Release();
+
+	iViewportResource->Release();
 	//swapchain
 	swapChain->Release();
 	//commandlist
