@@ -20,7 +20,7 @@ VertexShaderOutput main(VertexShaderInput input)
     VertexShaderOutput output;
     output.position = mul(input.position, gTransformationMatrix.WVP);
     output.texcoord = input.texcoord;
-    float32_t4 lightDir = { 1.0f, 1.0f, 0.0f, 1.0f };
+    float32_t4 lightDir = { 0.0f, 1.0f, 0.0f, 1.0f };
     output.dot = dot(lightDir, input.normal);
     return output;
 }
