@@ -58,21 +58,21 @@ PixelShaderOutput main(VertexShaderOutput input)
         //diffは平行光源と逆の向き
         ray.diff = -1.0f * gDirectionalLight.direction;
         //originは各ピクセルのワールド座標を入れる
-        float32_t3 Coordinate;
+        float32_t3 worldCoordinate;
         //Coordinateにスクリーン座標とvpvの逆行列をtransform
-        Coordinate.x = input.position.x * gMatInverseVPV.ivpv._m00 + input.position.y * gMatInverseVPV.ivpv._m10 + input.position.z * gMatInverseVPV.ivpv._m20 + 1.0f * gMatInverseVPV.ivpv._m30;
-        Coordinate.y = input.position.x * gMatInverseVPV.ivpv._m01 + input.position.y * gMatInverseVPV.ivpv._m11 + input.position.z * gMatInverseVPV.ivpv._m21 + 1.0f * gMatInverseVPV.ivpv._m31;
-        Coordinate.z = input.position.x * gMatInverseVPV.ivpv._m02 + input.position.y * gMatInverseVPV.ivpv._m12 + input.position.z * gMatInverseVPV.ivpv._m22 + 1.0f * gMatInverseVPV.ivpv._m32;
+        worldCoordinate.x = input.position.x * gMatInverseVPV.ivpv._m00 + input.position.y * gMatInverseVPV.ivpv._m10 + input.position.z * gMatInverseVPV.ivpv._m20 + 1.0f * gMatInverseVPV.ivpv._m30;
+        worldCoordinate.y = input.position.x * gMatInverseVPV.ivpv._m01 + input.position.y * gMatInverseVPV.ivpv._m11 + input.position.z * gMatInverseVPV.ivpv._m21 + 1.0f * gMatInverseVPV.ivpv._m31;
+        worldCoordinate.z = input.position.x * gMatInverseVPV.ivpv._m02 + input.position.y * gMatInverseVPV.ivpv._m12 + input.position.z * gMatInverseVPV.ivpv._m22 + 1.0f * gMatInverseVPV.ivpv._m32;
         float w = input.position.x * gMatInverseVPV.ivpv._m03 + input.position.y * gMatInverseVPV.ivpv._m13 + input.position.z * gMatInverseVPV.ivpv._m23 + 1.0f * gMatInverseVPV.ivpv._m33;
         if (w != 0.0f)
         {
-            Coordinate.x /= w;
-            Coordinate.y /= w;
-            Coordinate.z /= w;
+            worldCoordinate.x /= w;
+            worldCoordinate.y /= w;
+            worldCoordinate.z /= w;
         }
         
         //オリジンに当てはめる
-        ray.origin = Coordinate;
+        ray.origin = worldCoordinate;
         
         //球体とレイの当たり判定を求める
         //レイと球の中心の距離をdとする
@@ -95,7 +95,25 @@ PixelShaderOutput main(VertexShaderOutput input)
         //dが半径より小さいと当たっている→影ができる
         if (d < gSphere.radius)
         {
-            output.color = gMaterial.color * textureColor * 0.2f;
+            float shadowDensity;
+            const float shadowRange = 15.0f;
+            float pixelToCenter;
+            pixelToCenter = distance(gSphere.center, worldCoordinate);
+            if (pixelToCenter >= shadowRange)
+            {
+                shadowDensity = 1.0f;
+            }
+            else if (pixelToCenter <= 0.0f)
+            {
+                shadowDensity = 0.0f;
+            }
+            else
+            {
+                shadowDensity = pixelToCenter / shadowRange;
+            }
+            
+            
+                output.color = gMaterial.color * textureColor * shadowDensity;
         }
         else
         {

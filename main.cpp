@@ -1278,6 +1278,87 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				ImGui::TreePop();
 			}
+			//球の頂点データをいじりたい
+			if (ImGui::TreeNode("sphere vertexdata")) {
+				//オブジェクトの平行移動
+				ImGui::DragFloat3("center transform", &sphere.center.x, 0.01f);
+				ImGui::DragFloat("radius", &sphere.radius, 0.01f);
+				//リセット
+				if (ImGui::Button("reset")) {
+					sphere.center = { 0.0f,0.0f,0.0f };
+					sphere.radius = 1.0f;
+				}
+				//vertexdatasphereの更新
+				//緯度の方向に分割
+				for (UINT latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+					float lat = -pi / 2.0f + kLatEvery * latIndex;
+					//緯度の方向に分割
+					for (UINT lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+						uint32_t start = (latIndex * kSubdivision + lonIndex) * 6;
+						float lon = lonIndex * kLonEvery;
+						///三角形一枚目
+						//頂点にデータを入れる
+						vertexDataSphere[start].position.x = sphere.center.x + sphere.radius * cos(lat) * cos(lon);
+						vertexDataSphere[start].position.y = sphere.center.y + sphere.radius * sin(lat);
+						vertexDataSphere[start].position.z = sphere.center.z + sphere.radius * cos(lat) * sin(lon);
+						vertexDataSphere[start].position.w = 1.0f;
+						vertexDataSphere[start].texcoord.x = float(lonIndex) / float(kSubdivision);
+						vertexDataSphere[start].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
+						//頂点にデータを入れる
+						vertexDataSphere[start + 1].position.x = sphere.center.x + sphere.radius * cos(lat + kLatEvery) * cos(lon);
+						vertexDataSphere[start + 1].position.y = sphere.center.y + sphere.radius * sin(lat + kLatEvery);
+						vertexDataSphere[start + 1].position.z = sphere.center.z + sphere.radius * cos(lat + kLatEvery) * sin(lon);
+						vertexDataSphere[start + 1].position.w = 1.0f;
+						vertexDataSphere[start + 1].texcoord.x = float(lonIndex) / float(kSubdivision);
+						vertexDataSphere[start + 1].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
+						//頂点にデータを入れる
+						vertexDataSphere[start + 2].position.x = sphere.center.x + sphere.radius * cos(lat) * cos(lon + kLonEvery);
+						vertexDataSphere[start + 2].position.y = sphere.center.y + sphere.radius * sin(lat);
+						vertexDataSphere[start + 2].position.z = sphere.center.z + sphere.radius * cos(lat) * sin(lon + kLonEvery);
+						vertexDataSphere[start + 2].position.w = 1.0f;
+						vertexDataSphere[start + 2].texcoord.x = float(lonIndex + 1) / float(kSubdivision);
+						vertexDataSphere[start + 2].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
+						///三角形二枚目
+						//頂点にデータを入れる
+						vertexDataSphere[start + 3].position.x = sphere.center.x + sphere.radius * cos(lat + kLatEvery) * cos(lon);
+						vertexDataSphere[start + 3].position.y = sphere.center.y + sphere.radius * sin(lat + kLatEvery);
+						vertexDataSphere[start + 3].position.z = sphere.center.z + sphere.radius * cos(lat + kLatEvery) * sin(lon);
+						vertexDataSphere[start + 3].position.w = 1.0f;
+						vertexDataSphere[start + 3].texcoord.x = float(lonIndex) / float(kSubdivision);
+						vertexDataSphere[start + 3].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
+						//頂点にデータを入れる
+						vertexDataSphere[start + 4].position.x = sphere.center.x + sphere.radius * cos(lat + kLatEvery) * cos(lon + kLonEvery);
+						vertexDataSphere[start + 4].position.y = sphere.center.y + sphere.radius * sin(lat + kLatEvery);
+						vertexDataSphere[start + 4].position.z = sphere.center.z + sphere.radius * cos(lat + kLatEvery) * sin(lon + kLonEvery);
+						vertexDataSphere[start + 4].position.w = 1.0f;
+						vertexDataSphere[start + 4].texcoord.x = float(lonIndex + 1) / float(kSubdivision);
+						vertexDataSphere[start + 4].texcoord.y = 1.0f - float(latIndex + 1) / float(kSubdivision);
+						//頂点にデータを入れる
+						vertexDataSphere[start + 5].position.x = sphere.center.x + sphere.radius * cos(lat) * cos(lon + kLonEvery);
+						vertexDataSphere[start + 5].position.y = sphere.center.y + sphere.radius * sin(lat);
+						vertexDataSphere[start + 5].position.z = sphere.center.z + sphere.radius * cos(lat) * sin(lon + kLonEvery);
+						vertexDataSphere[start + 5].position.w = 1.0f;
+						vertexDataSphere[start + 5].texcoord.x = float(lonIndex + 1) / float(kSubdivision);
+						vertexDataSphere[start + 5].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
+
+						//法線情報の入力
+						for (uint32_t i = 0; i < 6; i++) {
+							vertexDataSphere[start + i].normal.x = vertexDataSphere[start + i].position.x;
+							vertexDataSphere[start + i].normal.y = vertexDataSphere[start + i].position.y;
+							vertexDataSphere[start + i].normal.z = vertexDataSphere[start + i].position.z;
+						}
+
+						//メモ//
+						//三角形描画時には頂点を半時計周りの順番で設定する。
+						//時計回りにすると表裏が逆になってしまう。
+					}
+				}
+				//球体情報の更新
+				sphereInformationDataSphere->center = sphere.center;
+				sphereInformationDataSphere->radius = sphere.radius;
+
+				ImGui::TreePop();
+			}
 			//床
 			if (ImGui::TreeNode("floor")) {
 				//オブジェクトの平行移動
@@ -1332,7 +1413,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::End();
 
 			transform.rotate.y += 0.03f;
-			transformSphere.rotate.y += 0.03f;
 
 			/////レンダリングパイプライン/////
 			//triangleの計算
@@ -1371,6 +1451,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			*ivpvData = Inverse(matVPV);
 			*iViewProjectionData = Inverse(Multiply(viewMatrixFloor, projectionMatrixFloor));
 			*iViewportData = Inverse(viewportMatrix);
+
+
 
 			//ImGuiの内部コマンドを生成する
 			ImGui::Render();
@@ -1444,6 +1526,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			}
 
 			//Sphereの描画
+			//頂点バッファーの場所指定
+			vertexBufferViewSphere.BufferLocation = vertexResourceSphere->GetGPUVirtualAddress();
 			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSphere);
 			//マテリアルCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSphere->GetGPUVirtualAddress());
