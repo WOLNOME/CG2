@@ -892,27 +892,21 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			vertexDataSphere[start].normal.x = Normalize(Cross(v1, v2)).x;
 			vertexDataSphere[start].normal.y = Normalize(Cross(v1, v2)).y;
 			vertexDataSphere[start].normal.z = Normalize(Cross(v1, v2)).z;
-			vertexDataSphere[start].normal.w = 1.0f;
 			vertexDataSphere[start + 1].normal.x = Normalize(Cross(v2, v3)).x;
 			vertexDataSphere[start + 1].normal.y = Normalize(Cross(v2, v3)).y;
 			vertexDataSphere[start + 1].normal.z = Normalize(Cross(v2, v3)).z;
-			vertexDataSphere[start + 1].normal.w = 1.0f;
 			vertexDataSphere[start + 2].normal.x = Normalize(Cross(v3, v1)).x;
 			vertexDataSphere[start + 2].normal.y = Normalize(Cross(v3, v1)).y;
 			vertexDataSphere[start + 2].normal.z = Normalize(Cross(v3, v1)).z;
-			vertexDataSphere[start + 2].normal.w = 1.0f;
 			vertexDataSphere[start + 3].normal.x = Normalize(Cross(v4, v5)).x;
 			vertexDataSphere[start + 3].normal.y = Normalize(Cross(v4, v5)).y;
 			vertexDataSphere[start + 3].normal.z = Normalize(Cross(v4, v5)).z;
-			vertexDataSphere[start + 3].normal.w = 1.0f;
 			vertexDataSphere[start + 4].normal.x = Normalize(Cross(v5, v6)).x;
 			vertexDataSphere[start + 4].normal.y = Normalize(Cross(v5, v6)).y;
 			vertexDataSphere[start + 4].normal.z = Normalize(Cross(v5, v6)).z;
-			vertexDataSphere[start + 4].normal.w = 1.0f;
 			vertexDataSphere[start + 5].normal.x = Normalize(Cross(v6, v4)).x;
 			vertexDataSphere[start + 5].normal.y = Normalize(Cross(v6, v4)).y;
 			vertexDataSphere[start + 5].normal.z = Normalize(Cross(v6, v4)).z;
-			vertexDataSphere[start + 5].normal.w = 1.0f;
 
 
 			//メモ//

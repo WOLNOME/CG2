@@ -21,7 +21,7 @@ struct Transform {
 struct VertexData {
 	Vector4 position;
 	Vector2 texcoord;
-	Vector4 normal;
+	Vector3 normal;
 };
 
 struct Sphere {
