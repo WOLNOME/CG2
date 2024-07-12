@@ -1,4 +1,5 @@
 #pragma once
+#include <vector>
 
 //構造体
 struct Vector2 {
@@ -50,6 +51,10 @@ struct DirectionalLight
 	Vector4 color;
 	Vector3 direction;
 	float intensity;
+};
+
+struct ModelData {
+	std::vector<VertexData> vertices;
 };
 
 //関数

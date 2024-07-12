@@ -8,6 +8,8 @@
 #include <dxgidebug.h>
 #include <dxcapi.h>
 #include <cmath>
+#include <fstream>
+#include <sstream>
 #include "Vector4.h"
 #include "Matrix4x4.h"
 #include "Function.h"
@@ -91,6 +93,7 @@ std::string ConvertString(const std::wstring& str) {
 	return result;
 }
 
+//コンパイルシェーダー
 IDxcBlob* CompileShader(
 	//CompilerするShaderファイルへのパス
 	const std::wstring& filePath,
@@ -323,13 +326,75 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 	return handleGPU;
 }
 
+//objファイル読む関数
+ModelData LoadObjFIle(const std::string& directoryPath, const std::string& filename) {
+	//1.中で必要となる変数の宣言
+	ModelData modelData;
+	std::vector<Vector4> positions;
+	std::vector<Vector3> normals;
+	std::vector<Vector2> texcoords;
+	std::string line;
+	//2.ファイルを開く
+	std::ifstream file(directoryPath + "/" + filename);
+	assert(file.is_open());
+	//3.実際にファイルを読み、ModelDataを構築していく
+	while (std::getline(file, line)) {
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier;//←先頭の識別子を読む
+		//identifierに応じた処理
+		if (identifier == "v") {
+			Vector4 position;
+			s >> position.x >> position.y >> position.z;
+			position.x *= -1.0f;
+			position.w = 1.0f;
+			positions.push_back(position);
+		}
+		else if (identifier == "vt") {
+			Vector2 texcoord;
+			s >> texcoord.x >> texcoord.y;
+			texcoords.push_back(texcoord);
+		}
+		else if (identifier == "vn") {
+			Vector3 normal;
+			s >> normal.x >> normal.y >> normal.z;
+			normal.x *= -1.0f;
+			normals.push_back(normal);
+		}
+		else if (identifier == "f") {
+			VertexData triangle[3];
+			//面は三角形限定。その他は未対応
+			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
+				std::string vertexDefinition;
+				s >> vertexDefinition;
+				//頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
+				std::istringstream v(vertexDefinition);
+				uint32_t elementIndices[3];
+				for (int32_t element = 0; element < 3; ++element) {
+					std::string index;
+					std::getline(v, index, '/');
+					elementIndices[element] = std::stoi(index);
+				}
+				//要素へのIndexから、実際の要素の値を取得して、頂点を構築する
+				Vector4 position = positions[elementIndices[0] - 1];
+				Vector2 texcoord = texcoords[elementIndices[1] - 1];
+				Vector3 normal = normals[elementIndices[2] - 1];
+				triangle[faceVertex] = { position,texcoord,normal };
+			}//頂点を逆順に登録することで、周り順を逆にする
+			modelData.vertices.push_back(triangle[2]);
+			modelData.vertices.push_back(triangle[1]);
+			modelData.vertices.push_back(triangle[0]);
+			
+		}
+	}
+	//4.ModelDataを返す
+	return modelData;
+}
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//COMの初期化
 	CoInitializeEx(0, COINIT_MULTITHREADED);
-
-
 
 	WNDCLASS wc{};
 	//ウィンドウプロシージャ
@@ -1078,13 +1143,56 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	indexDataSprite[0] = 0; indexDataSprite[1] = 1; indexDataSprite[2] = 2;
 	indexDataSprite[3] = 1; indexDataSprite[4] = 3; indexDataSprite[5] = 2;
 
+	
+	/////////////////////////モデル用のリソースを作る/////////////////////////////////////////////////////////////////////////////////
+	ModelData modelData = LoadObjFIle("resources", "plane.obj");
+	//頂点用リソースを作る
+	ID3D12Resource* vertexResourceModel = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
+	//頂点バッファービューを作成
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewModel{};
+	vertexBufferViewModel.BufferLocation = vertexResourceModel->GetGPUVirtualAddress();
+	vertexBufferViewModel.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
+	vertexBufferViewModel.StrideInBytes = sizeof(VertexData);
+	//頂点用リソースにデータを書き込む
+	VertexData* vertexDataModel = nullptr;
+	vertexResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataModel));
+	std::memcpy(vertexDataModel, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
+	//マテリアル用のリソースを作る。
+	ID3D12Resource* materialResourceModel = CreateBufferResource(device, sizeof(Material));
+	//データを書き込む
+	Material* materialDataModel = nullptr;
+	//書き込むためのアドレスを取得
+	materialResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&materialDataModel));
+	//白を書き込んでおく
+	materialDataModel->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	//ライティングオン
+	materialDataModel->enableLighting = true;
+	//uvTransform
+	materialDataModel->uvTransform = MakeIdentity4x4();
+	//WVP用のリソースを作る。
+	ID3D12Resource* wvpResourceModel = CreateBufferResource(device, sizeof(TransformationMatrix));
+	//データを書き込む
+	TransformationMatrix* wvpDataModel = nullptr;
+	//書き込むためのアドレスを取得
+	wvpResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&wvpDataModel));
+	//単位行列を書き込んでおく
+	wvpDataModel->WVP = MakeIdentity4x4();
+	wvpDataModel->World = MakeIdentity4x4();
+	//トランスフォーム
+	Transform transformModel = {
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
+	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	//初期化
 	bool isDisplayTriangle = false;
-	bool isDisplaySprite = true;
-	bool isDisplaySphere = true;
+	bool isDisplaySprite = false;
+	bool isDisplaySphere = false;
 	bool isDisplayIndex = false;
+	bool isDisplayModel = true;
 	bool useMonsterBall = true;
 
 
@@ -1213,6 +1321,25 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				//オブジェクトの表示切り替え
 				if (ImGui::Button("DisplayChange")) {
 					isDisplayIndex = !isDisplayIndex;
+				}
+
+				ImGui::TreePop();
+			}
+			//モデル
+			if (ImGui::TreeNode("model transform")) {
+				//オブジェクトの平行移動
+				ImGui::DragFloat3("translate", &transformModel.translate.x, 0.01f);
+				ImGui::DragFloat3("rotate", &transformModel.rotate.x, 0.01f);
+				ImGui::DragFloat3("scale", &transformModel.scale.x, 0.01f);
+				//リセット
+				if (ImGui::Button("reset")) {
+					transformModel.translate = { 0.0f,0.0f,0.0f };
+					transformModel.rotate = { 0.0f,0.0f,0.0f };
+					transformModel.scale = { 1.0f,1.0f,1.0f };
+				}
+				//オブジェクトの表示切り替え
+				if (ImGui::Button("DisplayChange")) {
+					isDisplayModel = !isDisplayModel;
 				}
 
 				ImGui::TreePop();
@@ -1347,6 +1474,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
 			}
 
+			//モデルの描画
+			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewModel);
+			//マテリアルCBufferの場所を設定
+			commandList->SetGraphicsRootConstantBufferView(0, materialResourceModel->GetGPUVirtualAddress());
+			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			//wvp用のCBufferの場所を指定
+			commandList->SetGraphicsRootConstantBufferView(1, wvpResourceModel->GetGPUVirtualAddress());
+			//モデルの描画
+			if (isDisplayModel) {
+				commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+			}
+
 			//ImGuiの描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);
 
@@ -1380,7 +1520,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				//イベントを待つ
 				WaitForSingleObject(fenceEvent, INFINITE);
 			}
-
 
 			//次のフレーム用のコマンドリストを準備
 			hr = commandAllocator->Reset();
