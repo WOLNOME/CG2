@@ -1413,6 +1413,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui::End();
 
 			transform.rotate.y += 0.03f;
+			transformSphere.rotate.y += 0.03f;
 
 			/////レンダリングパイプライン/////
 			//triangleの計算

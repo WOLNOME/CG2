@@ -70,7 +70,6 @@ PixelShaderOutput main(VertexShaderOutput input)
             worldCoordinate.y /= w;
             worldCoordinate.z /= w;
         }
-        
         //オリジンに当てはめる
         ray.origin = worldCoordinate;
         
@@ -97,8 +96,7 @@ PixelShaderOutput main(VertexShaderOutput input)
         {
             float shadowDensity;
             const float shadowRange = 15.0f;
-            float pixelToCenter;
-            pixelToCenter = distance(gSphere.center, worldCoordinate);
+            float pixelToCenter = distance(gSphere.center, worldCoordinate);
             if (pixelToCenter >= shadowRange)
             {
                 shadowDensity = 1.0f;
@@ -111,9 +109,7 @@ PixelShaderOutput main(VertexShaderOutput input)
             {
                 shadowDensity = pixelToCenter / shadowRange;
             }
-            
-            
-                output.color = gMaterial.color * textureColor * shadowDensity;
+            output.color = gMaterial.color * textureColor * shadowDensity;
         }
         else
         {
