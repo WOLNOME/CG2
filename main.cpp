@@ -141,7 +141,7 @@ IDxcBlob* CompileShader(
 	shaderResult->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&shaderError), nullptr);
 	if (shaderError != nullptr && shaderError->GetStringLength() != 0) {
 		Log(shaderError->GetStringPointer());
-		//警告・エラーダメ絶対
+		//警告・エラーダメ絶対→シェーダー側にエラーがある！
 		assert(false);
 	}
 
@@ -758,6 +758,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	//ライティングオフ
 	materialData->enableLighting = false;
+	//uvTransformは単位行列を入れておく
+	materialData->uvTransform = MakeIdentity4x4();
 
 	//WVP用のリソースを作る
 	ID3D12Resource* wvpResource = CreateBufferResource(device, sizeof(TransformationMatrix));
@@ -962,6 +964,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialDataSphere->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	//ライティングオン
 	materialDataSphere->enableLighting = true;
+	//uvTransform
+	materialDataSphere->uvTransform = MakeIdentity4x4();
 	//WVP用のリソースを作る。
 	ID3D12Resource* wvpResourceSphere = CreateBufferResource(device, sizeof(TransformationMatrix));
 	//データを書き込む
@@ -1021,6 +1025,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialDataSprite->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	//ライティングオフ
 	materialDataSprite->enableLighting = false;
+	//uvTransformは単位行列を入れておく
+	materialDataSprite->uvTransform = MakeIdentity4x4();
 	//Sprite用のTransformationMatrix用のリソースを作る。
 	ID3D12Resource* transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(TransformationMatrix));
 	//データを書き込む
@@ -1031,7 +1037,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	transformationMatrixDataSprite->WVP = MakeIdentity4x4();
 	transformationMatrixDataSprite->World = MakeIdentity4x4();
 	//CPU(ImGui)で動かす用のTransform
-	Transform transformSprite{ {1.0f,1.0f,1.0f},{0.0f,0.0f,0.0f},{0.0f,0.0f,0.0f} };
+	Transform transformSprite{
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f} 
+	};
+	//uvTransform用の変数
+	Transform uvTransformSprite{
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
+
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	////////////////////平行光源のリソースを作る////////////////////////////////////
@@ -1065,8 +1082,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//初期化
 	bool isDisplayTriangle = false;
-	bool isDisplaySprite = false;
+	bool isDisplaySprite = true;
 	bool isDisplaySphere = true;
+	bool isDisplayIndex = false;
 	bool useMonsterBall = true;
 
 
@@ -1110,6 +1128,28 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				//スプライトの表示切り替え
 				if (ImGui::Button("DisplayChange")) {
 					isDisplaySprite = !isDisplaySprite;
+				}
+
+				ImGui::TreePop();
+			}
+			//スプライトのuvTransform
+			if (ImGui::TreeNode("sprite uvTransform")) {
+				//uvTransform
+				ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+				ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+				ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
+				
+				//パラメーターの更新
+				Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
+				uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
+				uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
+				materialDataSprite->uvTransform = uvTransformMatrix;
+
+				//リセット
+				if (ImGui::Button("reset")) {
+					uvTransformSprite.translate = { 0.0f,0.0f,0.0f };
+					uvTransformSprite.scale = { 1.0f,1.0f,1.0f };
+					uvTransformSprite.rotate = { 0.0f,0.0f,0.0f };
 				}
 
 				ImGui::TreePop();
@@ -1168,11 +1208,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				ImGui::TreePop();
 			}
+			//インデックス三角形
+			if (ImGui::TreeNode("index")) {
+				//オブジェクトの表示切り替え
+				if (ImGui::Button("DisplayChange")) {
+					isDisplayIndex = !isDisplayIndex;
+				}
+
+				ImGui::TreePop();
+			}
 
 			ImGui::End();
-
-
-
 
 			transform.rotate.y += 0.03f;
 			transformSphere.rotate.y += 0.03f;
@@ -1297,8 +1343,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//インデックスの描画
 			commandList->IASetIndexBuffer(&indexBufferViewSprite);//IAVを設定
 			//描画
-			commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
-
+			if (isDisplayIndex) {
+				commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+			}
 
 			//ImGuiの描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);

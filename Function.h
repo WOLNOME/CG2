@@ -12,6 +12,10 @@ struct Vector3 {
 	float z;
 };
 
+struct Matrix3x3 {
+	float m[3][3];
+};
+
 struct Transform {
 	Vector3 scale;
 	Vector3 rotate;
@@ -32,6 +36,8 @@ struct Sphere {
 struct Material {
 	Vector4 color;
 	int32_t enableLighting;
+	float padding[3];
+	Matrix4x4 uvTransform;
 };
 
 struct TransformationMatrix {
