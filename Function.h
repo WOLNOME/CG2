@@ -55,6 +55,11 @@ struct DirectionalLight
 
 struct ModelData {
 	std::vector<VertexData> vertices;
+	MaterialData material;
+};
+
+struct MaterialData {
+	std::string textureFilePath;
 };
 
 //関数
