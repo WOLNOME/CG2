@@ -326,6 +326,31 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(ID3D12DescriptorHeap* descrip
 	return handleGPU;
 }
 
+//mtlファイルを読む関数
+MaterialData LoadMaterialTemplateFile(const std::string& directryPath, const std::string& filename) {
+	//1.中で必要となる変数の宣言
+	MaterialData materialData;
+	std::string line;
+	//2.ファイルを開く
+	std::ifstream file(directryPath + "/" + filename);
+	assert(file.is_open());
+	//3.実際にファイルを読み、MaterialDAtaを構築していく
+	while (std::getline(file, line)) {
+		std::string identifier;
+		std::istringstream s(line);
+		s >> identifier;
+		//identifierに応じた処理
+		if (identifier == "map_Kd") {
+			std::string textureFilename;
+			s >> textureFilename;
+			//連結してファイルパスにする
+			materialData.textureFilePath = directryPath + "/" + textureFilename;
+		}
+	}
+	//4.MaterialDataを返す
+	return materialData;
+}
+
 //objファイル読む関数
 ModelData LoadObjFIle(const std::string& directoryPath, const std::string& filename) {
 	//1.中で必要となる変数の宣言
@@ -353,6 +378,7 @@ ModelData LoadObjFIle(const std::string& directoryPath, const std::string& filen
 		else if (identifier == "vt") {
 			Vector2 texcoord;
 			s >> texcoord.x >> texcoord.y;
+			texcoord.y = 1.0f - texcoord.y;
 			texcoords.push_back(texcoord);
 		}
 		else if (identifier == "vn") {
@@ -397,30 +423,6 @@ ModelData LoadObjFIle(const std::string& directoryPath, const std::string& filen
 	return modelData;
 }
 
-//mtlファイルを読む関数
-MaterialData LoadMaterialTemplateFile(const std::string& directryPath, const std::string& filename) {
-	//1.中で必要となる変数の宣言
-	MaterialData materialData;
-	std::string line;
-	//2.ファイルを開く
-	std::ifstream file(directryPath + "/" + filename);
-	assert(file.is_open());
-	//3.実際にファイルを読み、MaterialDAtaを構築していく
-	while (std::getline(file, line)) {
-		std::string identifier;
-		std::istringstream s(line);
-		s >> identifier;
-		//identifierに応じた処理
-		if (identifier == "map_Kd") {
-			std::string textureFilename;
-			s >> textureFilename;
-			//凍結してファイルパスにする
-			materialData.textureFilePath = directryPath + "/" + textureFilename;
-		}
-	}
-	//4.MaterialDataを返す
-	return materialData;
-}
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -1129,7 +1131,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	/////////////////////////モデル用のリソースを作る/////////////////////////////////////////////////////////////////////////////////
-	ModelData modelData = LoadObjFIle("resources", "plane.obj");
+	ModelData modelData = LoadObjFIle("resources", "axis.obj");
 	//頂点用リソースを作る
 	ID3D12Resource* vertexResourceModel = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
 	//頂点バッファービューを作成
@@ -1149,7 +1151,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&materialDataModel));
 	//白を書き込んでおく
 	materialDataModel->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	//ライティングオン
+	//ライティング
 	materialDataModel->enableLighting = true;
 	//uvTransform
 	materialDataModel->uvTransform = MakeIdentity4x4();
@@ -1178,10 +1180,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	ID3D12Resource* textureResorce = CreateTextureResource(device, metadata);
 	UploadTextureData(textureResorce, mipImages);
 	//2枚目のTextureを読んで転送する
-	DirectX::ScratchImage mipImages2 = LoadTexture(modelData.material.textureFilePath);
+	DirectX::ScratchImage mipImages2 = LoadTexture("resources/monsterBall.png");
 	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
 	ID3D12Resource* textureResorce2 = CreateTextureResource(device, metadata2);
 	UploadTextureData(textureResorce2, mipImages2);
+	//モデル用のTextureを読んで転送する
+	DirectX::ScratchImage mipImagesModel = LoadTexture(modelData.material.textureFilePath);
+	const DirectX::TexMetadata& metadataModel = mipImagesModel.GetMetadata();
+	ID3D12Resource* textureResorceModel = CreateTextureResource(device, metadataModel);
+	UploadTextureData(textureResorceModel, mipImagesModel);
 	//metadataをもとにSRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Format = metadata.format;
@@ -1194,6 +1201,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
+	//metadataをもとにSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDescModel{};
+	srvDescModel.Format = metadataModel.format;
+	srvDescModel.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDescModel.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDescModel.Texture2D.MipLevels = UINT(metadataModel.mipLevels);
 
 	//SRVを作成するDescriptorHeapの場所を決める
 	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 1);
@@ -1201,12 +1214,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//SRVを作成するDescriptorHeapの場所を決める
 	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 2);
+	//SRVを作成するDescriptorHeapの場所を決める
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPUModel = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 3);
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPUModel = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, 3);
 
 	//SRVの生成
 	device->CreateShaderResourceView(textureResorce, &srvDesc, textureSrvHandleCPU);
 	//SRVの生成
 	device->CreateShaderResourceView(textureResorce2, &srvDesc2, textureSrvHandleCPU2);
-
+	//SRVの作成
+	device->CreateShaderResourceView(textureResorceModel, &srvDescModel, textureSrvHandleCPUModel);
 
 	//DepthStencilTextureをウィンドウサイズで作成
 	ID3D12Resource* depthStencilResource = CreateDepthStencilTextureResource(device, kClientWidth, kClientHeight);;
@@ -1381,6 +1398,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			transform.rotate.y += 0.03f;
 			transformSphere.rotate.y += 0.03f;
+			transformModel.rotate.y += 0.03f;
 
 			/////レンダリングパイプライン/////
 			//各種行列の計算
@@ -1519,7 +1537,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			//マテリアルCBufferの場所を設定
 			commandList->SetGraphicsRootConstantBufferView(0, materialResourceModel->GetGPUVirtualAddress());
 			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPUModel);
 			//wvp用のCBufferの場所を指定
 			commandList->SetGraphicsRootConstantBufferView(1, wvpResourceModel->GetGPUVirtualAddress());
 			//モデルの描画

@@ -53,13 +53,13 @@ struct DirectionalLight
 	float intensity;
 };
 
+struct MaterialData {
+	std::string textureFilePath;
+};
+
 struct ModelData {
 	std::vector<VertexData> vertices;
 	MaterialData material;
-};
-
-struct MaterialData {
-	std::string textureFilePath;
 };
 
 //関数
