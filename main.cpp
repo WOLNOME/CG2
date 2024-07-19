@@ -1254,13 +1254,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	//初期化
+	//表示
 	bool isDisplayTriangle = false;
 	bool isDisplaySprite = false;
 	bool isDisplaySphere = false;
 	bool isDisplayIndex = false;
-	bool isDisplayModel = true;
-	bool useMonsterBall = true;
-
+	bool isDisplayModel = false;
+	bool useMonsterBall = false;
+	//ライト
+	bool isLightingSphere = true;
 
 	MSG msg{};
 	//ウィンドウの×ボタンが押されるまでループ
@@ -1329,7 +1331,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::TreePop();
 			}
 			//三角形
-			if (ImGui::TreeNode("triangle transform")) {
+			if (ImGui::TreeNode("Triangle")) {
 				//オブジェクトの平行移動
 				ImGui::DragFloat3("translate", &transform.translate.x, 0.01f);
 				ImGui::DragFloat3("rotate", &transform.rotate.x, 0.01f);
@@ -1348,11 +1350,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::TreePop();
 			}
 			//球
-			if (ImGui::TreeNode("sphere transform")) {
+			if (ImGui::TreeNode("Sphere")) {
 				//オブジェクトの平行移動
 				ImGui::DragFloat3("translate", &transformSphere.translate.x, 0.01f);
 				ImGui::DragFloat3("rotate", &transformSphere.rotate.x, 0.01f);
 				ImGui::DragFloat3("scale", &transformSphere.scale.x, 0.01f);
+				//ライティング
+				ImGui::Checkbox("lighting", &isLightingSphere);
+				materialDataSphere->enableLighting = isLightingSphere;
 				//リセット
 				if (ImGui::Button("reset")) {
 					transformSphere.translate = { 0.0f,0.0f,0.0f };
@@ -1367,7 +1372,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::TreePop();
 			}
 			//平行光源
-			if (ImGui::TreeNode("DirectionalLight")) {
+			if (ImGui::TreeNode("Light")) {
 				//オブジェクトの平行移動
 				ImGui::DragFloat4("color", &directionalLightData->color.x, 0.01f);
 				ImGui::DragFloat3("direction", &directionalLightData->direction.x, 0.01f);
@@ -1485,7 +1490,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
 			//描画用のDescriptorHeapの設定
-			Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeaps[] = { srvDescriptorHeap.Get()};
+			Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeaps[] = { srvDescriptorHeap.Get() };
 			commandList->SetDescriptorHeaps(1, descriptorHeaps->GetAddressOf());
 
 			//コマンドを積む
@@ -1577,7 +1582,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			assert(SUCCEEDED(hr));
 
 			//GPUにコマンドリストの実行を行わせる
-			Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList.Get()};
+			Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList.Get() };
 			commandQueue->ExecuteCommandLists(1, commandLists->GetAddressOf());
 			//GPUとOSに画面の交換を行うように通知する
 			swapChain->Present(1, 0);
@@ -1619,7 +1624,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//リソースチェック(解放できてないのがある)
 
-	
+
 
 	//COM終了処理
 	CoUninitialize();
