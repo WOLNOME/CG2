@@ -1,12 +1,6 @@
 #pragma once
 #include <vector>
 
-//列挙型
-enum LightingKind {
-	Lambert,
-	HalfLambert
-};
-
 //構造体
 struct Vector2 {
 	float x;
@@ -43,7 +37,6 @@ struct Sphere {
 struct Material {
 	Vector4 color;
 	int32_t enableLighting;
-	LightingKind lightingKind;
 	float padding[3];
 	Matrix4x4 uvTransform;
 };
@@ -58,6 +51,7 @@ struct DirectionalLight
 	Vector4 color;
 	Vector3 direction;
 	float intensity;
+	int32_t lightingKind;
 };
 
 struct MaterialData {

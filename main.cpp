@@ -1263,6 +1263,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	bool useMonsterBall = false;
 	//ライト
 	bool isLightingSphere = true;
+	bool isHalfLambert = false;
 
 	MSG msg{};
 	//ウィンドウの×ボタンが押されるまでループ
@@ -1373,11 +1374,17 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			}
 			//平行光源
 			if (ImGui::TreeNode("Light")) {
-				//オブジェクトの平行移動
+				//色
 				ImGui::DragFloat4("color", &directionalLightData->color.x, 0.01f);
+				//方向
 				ImGui::DragFloat3("direction", &directionalLightData->direction.x, 0.01f);
 				Normalize(directionalLightData->direction);
+				//輝度
 				ImGui::DragFloat("intensity", &directionalLightData->intensity, 0.01f);
+				//種類
+				ImGui::Checkbox("HalfLambert", &isHalfLambert);
+				directionalLightData
+
 				//リセット
 				if (ImGui::Button("reset")) {
 					directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
