@@ -437,6 +437,123 @@ ModelData LoadObjFIle(const std::string& directoryPath, const std::string& filen
 	return modelData;
 }
 
+//モデル用リソース作成関数
+void MakeModelResource(
+	const char* resourceFilePath,
+	const char* objFileName,
+	Microsoft::WRL::ComPtr<ID3D12Device>& device,
+	ModelData& modelData,
+	Microsoft::WRL::ComPtr<ID3D12Resource>& vertexResource,
+	D3D12_VERTEX_BUFFER_VIEW& vertexBufferView,
+	VertexData* vertexData,
+	Microsoft::WRL::ComPtr<ID3D12Resource>& materialResource,
+	Material* materialData,
+	Microsoft::WRL::ComPtr<ID3D12Resource>& wvpResource,
+	TransformationMatrix* wvpData,
+	Transform& transform,
+	D3D12_CPU_DESCRIPTOR_HANDLE& textureSrvHandleCPU,
+	D3D12_GPU_DESCRIPTOR_HANDLE& textureSrvHandleGPU,
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& srvDescriptorHeap,
+	const uint32_t descriptorSizeSRV,
+	const uint32_t index
+) {
+	modelData = LoadObjFIle(resourceFilePath, objFileName);
+	//頂点用リソースを作る
+	vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
+	//頂点バッファービューを作成
+	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
+	vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
+	vertexBufferView.StrideInBytes = sizeof(VertexData);
+	//頂点用リソースにデータを書き込む
+	vertexData = nullptr;
+	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
+	std::memcpy(vertexData, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
+	//マテリアル用のリソースを作る。
+	materialResource = CreateBufferResource(device, sizeof(Material));
+	//データを書き込む
+	materialData = nullptr;
+	//書き込むためのアドレスを取得
+	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
+	//白を書き込んでおく
+	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	//ライティング
+	materialData->enableLighting = true;
+	//uvTransform
+	materialData->uvTransform = MakeIdentity4x4();
+	//WVP用のリソースを作る。
+	wvpResource = CreateBufferResource(device, sizeof(TransformationMatrix));
+	//書き込むためのアドレスを取得
+	wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&wvpData));
+	//単位行列を書き込んでおく
+	wvpData->WVP = MakeIdentity4x4();
+	wvpData->World = MakeIdentity4x4();
+	//トランスフォーム
+	transform = {
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
+
+	//モデル用のTextureを読んで転送する
+	DirectX::ScratchImage mipImagesModel = LoadTexture(modelData.material.textureFilePath);
+	const DirectX::TexMetadata& metadataModel = mipImagesModel.GetMetadata();
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureResorceModel = CreateTextureResource(device, metadataModel);
+	UploadTextureData(textureResorceModel.Get(), mipImagesModel);
+	//metadataをもとにSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDescModel{};
+	srvDescModel.Format = metadataModel.format;
+	srvDescModel.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDescModel.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDescModel.Texture2D.MipLevels = UINT(metadataModel.mipLevels);
+	//SRVを作成するDescriptorHeapの場所を決める
+	textureSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 3);
+	textureSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 3);
+	//SRVの作成
+	device->CreateShaderResourceView(textureResorceModel.Get(), &srvDescModel, textureSrvHandleCPU);
+}
+
+//レンダリングパイプライン
+void RenderingPipeline(
+	TransformationMatrix* wvpData,
+	const Transform transform,
+	const Transform cameraTransform,
+	const int32_t kClientWidth,
+	const int32_t kClientHeight
+) {
+	//モデル用のWorldViewProjectionMatrixを作る
+	Matrix4x4 worldMatrixModel = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+	Matrix4x4 cameraMatrixModel = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+	Matrix4x4 viewMatrixModel = Inverse(cameraMatrixModel);
+	Matrix4x4 projectionMatrixModel = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
+	Matrix4x4 worldViewProjectionMatrixModel = Multiply(worldMatrixModel, Multiply(viewMatrixModel, projectionMatrixModel));
+	wvpData->WVP = worldViewProjectionMatrixModel;
+	wvpData->World = worldMatrixModel;
+}
+
+//モデル描画用コマンドリスト
+void DrawModel(
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>& commandList,
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewModel,
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceModel,
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPUModel,
+	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResourceModel,
+	bool isDisplayModel,
+	ModelData modelData
+) {
+	//モデルの描画
+	commandList->IASetVertexBuffers(0, 1, &vertexBufferViewModel);
+	//マテリアルCBufferの場所を設定
+	commandList->SetGraphicsRootConstantBufferView(0, materialResourceModel->GetGPUVirtualAddress());
+	//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
+	commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPUModel);
+	//wvp用のCBufferの場所を指定
+	commandList->SetGraphicsRootConstantBufferView(1, wvpResourceModel->GetGPUVirtualAddress());
+	//モデルの描画
+	if (isDisplayModel) {
+		commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
+	}
+}
+
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -1129,6 +1246,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
 	directionalLightData->intensity = 1.0f;
+	directionalLightData->lightingKind = true;
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	///////////////////インデックス用リソースを作る////////////////////////////////////
@@ -1148,46 +1266,70 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	/////////////////////////モデル用のリソースを作る/////////////////////////////////////////////////////////////////////////////////
-	ModelData modelData = LoadObjFIle("resources", "axis.obj");
-	//頂点用リソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceModel = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
-	//頂点バッファービューを作成
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewModel{};
-	vertexBufferViewModel.BufferLocation = vertexResourceModel->GetGPUVirtualAddress();
-	vertexBufferViewModel.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
-	vertexBufferViewModel.StrideInBytes = sizeof(VertexData);
-	//頂点用リソースにデータを書き込む
-	VertexData* vertexDataModel = nullptr;
-	vertexResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataModel));
-	std::memcpy(vertexDataModel, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
-	//マテリアル用のリソースを作る。
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceModel = CreateBufferResource(device, sizeof(Material));
-	//データを書き込む
-	Material* materialDataModel = nullptr;
-	//書き込むためのアドレスを取得
-	materialResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&materialDataModel));
-	//白を書き込んでおく
-	materialDataModel->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	//ライティング
-	materialDataModel->enableLighting = true;
-	//uvTransform
-	materialDataModel->uvTransform = MakeIdentity4x4();
-	//WVP用のリソースを作る。
-	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResourceModel = CreateBufferResource(device, sizeof(TransformationMatrix));
-	//データを書き込む
-	TransformationMatrix* wvpDataModel = nullptr;
-	//書き込むためのアドレスを取得
-	wvpResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&wvpDataModel));
-	//単位行列を書き込んでおく
-	wvpDataModel->WVP = MakeIdentity4x4();
-	wvpDataModel->World = MakeIdentity4x4();
-	//トランスフォーム
-	Transform transformModel = {
-		{1.0f,1.0f,1.0f},
-		{0.0f,0.0f,0.0f},
-		{0.0f,0.0f,0.0f}
-	};
+	ModelData modelData;
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceModel;
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewModel;
+	VertexData vertexDataModel;
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceModel;
+	Material materialDataModel;
+	TransformationMatrix wvpDataModel;
+	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResourceModel;
+	Transform transformModel;
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPUModel;
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPUModel;
+	MakeModelResource(
+		"resources",
+		"axis.obj",
+		device,
+		modelData,
+		vertexResourceModel,
+		vertexBufferViewModel,
+		&vertexDataModel,
+		materialResourceModel,
+		&materialDataModel,
+		wvpResourceModel,
+		&wvpDataModel,
+		transformModel,
+		textureSrvHandleCPUModel,
+		textureSrvHandleGPUModel,
+		srvDescriptorHeap,
+		descriptorSizeSRV,
+		3
+	);
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	////////////////////モデル2のリソース////////////////////////////////////////////////////
+	ModelData model2Data;
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceModel2;
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewModel2;
+	VertexData vertexDataModel2;
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceModel2;
+	Material materialDataModel2;
+	TransformationMatrix wvpDataModel2;
+	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResourceModel2;
+	Transform transformModel2;
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPUModel2;
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPUModel2;
+	MakeModelResource(
+		"resources",
+		"plane.obj",
+		device,
+		model2Data,
+		vertexResourceModel2,
+		vertexBufferViewModel2,
+		&vertexDataModel2,
+		materialResourceModel2,
+		&materialDataModel2,
+		wvpResourceModel2,
+		&wvpDataModel2,
+		transformModel2,
+		textureSrvHandleCPUModel2,
+		textureSrvHandleGPUModel2,
+		srvDescriptorHeap,
+		descriptorSizeSRV,
+		4
+	);
+	///////////////////////////////////////////////////////////////////////////////
 
 	////////////////////////Textureの設定///////////////////////////////////
 
@@ -1201,11 +1343,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureResorce2 = CreateTextureResource(device, metadata2);
 	UploadTextureData(textureResorce2.Get(), mipImages2);
-	//モデル用のTextureを読んで転送する
-	DirectX::ScratchImage mipImagesModel = LoadTexture(modelData.material.textureFilePath);
-	const DirectX::TexMetadata& metadataModel = mipImagesModel.GetMetadata();
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResorceModel = CreateTextureResource(device, metadataModel);
-	UploadTextureData(textureResorceModel.Get(), mipImagesModel);
+
 	//metadataをもとにSRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Format = metadata.format;
@@ -1218,12 +1356,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
-	//metadataをもとにSRVの設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDescModel{};
-	srvDescModel.Format = metadataModel.format;
-	srvDescModel.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDescModel.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDescModel.Texture2D.MipLevels = UINT(metadataModel.mipLevels);
 
 	//SRVを作成するDescriptorHeapの場所を決める
 	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 1);
@@ -1231,16 +1363,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//SRVを作成するDescriptorHeapの場所を決める
 	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 2);
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 2);
-	//SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPUModel = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 3);
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPUModel = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 3);
 
 	//SRVの生成
 	device->CreateShaderResourceView(textureResorce.Get(), &srvDesc, textureSrvHandleCPU);
 	//SRVの生成
 	device->CreateShaderResourceView(textureResorce2.Get(), &srvDesc2, textureSrvHandleCPU2);
-	//SRVの作成
-	device->CreateShaderResourceView(textureResorceModel.Get(), &srvDescModel, textureSrvHandleCPUModel);
+
 
 	//DepthStencilTextureをウィンドウサイズで作成
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(device, kClientWidth, kClientHeight);;
@@ -1260,10 +1388,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	bool isDisplaySphere = false;
 	bool isDisplayIndex = false;
 	bool isDisplayModel = false;
+	bool isDisplayModel2 = false;
 	bool useMonsterBall = false;
 	//ライト
 	bool isLightingSphere = true;
-	bool isHalfLambert = false;
+	bool isHalfLambert = true;
 
 	MSG msg{};
 	//ウィンドウの×ボタンが押されるまでループ
@@ -1295,22 +1424,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::TreePop();
 			}
 			//スプライト
-			if (ImGui::TreeNode("sprite transform")) {
+			if (ImGui::TreeNode("Sprite")) {
 				//スプライトの平行移動
-				ImGui::DragFloat3("SpriteTransform", &transformSprite.translate.x, 1.0f);
-				//リセット
-				if (ImGui::Button("reset")) {
-					transformSprite.translate = { 0.0f,0.0f,0.0f };
-				}
-				//スプライトの表示切り替え
-				if (ImGui::Button("DisplayChange")) {
-					isDisplaySprite = !isDisplaySprite;
-				}
-
-				ImGui::TreePop();
-			}
-			//スプライトのuvTransform
-			if (ImGui::TreeNode("sprite uvTransform")) {
+				ImGui::DragFloat3("Transform", &transformSprite.translate.x, 1.0f);
 				//uvTransform
 				ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
 				ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
@@ -1324,9 +1440,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				//リセット
 				if (ImGui::Button("reset")) {
+					transformSprite.translate = { 0.0f,0.0f,0.0f };
 					uvTransformSprite.translate = { 0.0f,0.0f,0.0f };
 					uvTransformSprite.scale = { 1.0f,1.0f,1.0f };
 					uvTransformSprite.rotate = { 0.0f,0.0f,0.0f };
+				}
+				//スプライトの表示切り替え
+				if (ImGui::Button("DisplayChange")) {
+					isDisplaySprite = !isDisplaySprite;
 				}
 
 				ImGui::TreePop();
@@ -1383,7 +1504,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::DragFloat("intensity", &directionalLightData->intensity, 0.01f);
 				//種類
 				ImGui::Checkbox("HalfLambert", &isHalfLambert);
-				directionalLightData
+				directionalLightData->lightingKind = isHalfLambert;
 
 				//リセット
 				if (ImGui::Button("reset")) {
@@ -1404,7 +1525,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::TreePop();
 			}
 			//モデル
-			if (ImGui::TreeNode("model transform")) {
+			if (ImGui::TreeNode("Model")) {
 				//オブジェクトの平行移動
 				ImGui::DragFloat3("translate", &transformModel.translate.x, 0.01f);
 				ImGui::DragFloat3("rotate", &transformModel.rotate.x, 0.01f);
@@ -1422,12 +1543,32 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				ImGui::TreePop();
 			}
+			//モデル2
+			if (ImGui::TreeNode("Model2")) {
+				//オブジェクトの平行移動
+				ImGui::DragFloat3("translate", &transformModel2.translate.x, 0.01f);
+				ImGui::DragFloat3("rotate", &transformModel2.rotate.x, 0.01f);
+				ImGui::DragFloat3("scale", &transformModel2.scale.x, 0.01f);
+				//リセット
+				if (ImGui::Button("reset")) {
+					transformModel2.translate = { 0.0f,0.0f,0.0f };
+					transformModel2.rotate = { 0.0f,0.0f,0.0f };
+					transformModel2.scale = { 1.0f,1.0f,1.0f };
+				}
+				//オブジェクトの表示切り替え
+				if (ImGui::Button("DisplayChange")) {
+					isDisplayModel2 = !isDisplayModel2;
+				}
+
+				ImGui::TreePop();
+			}
 
 			ImGui::End();
 
 			transform.rotate.y += 0.03f;
 			transformSphere.rotate.y += 0.03f;
 			transformModel.rotate.y += 0.03f;
+			transformModel2.rotate.y += 0.03f;
 
 			/////レンダリングパイプライン/////
 			//各種行列の計算
@@ -1453,14 +1594,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 worldViewProjectionMatrixSphere = Multiply(worldMatrixSphere, Multiply(viewMatrixSphere, projectionMatrixSphere));
 			wvpDataSphere->WVP = worldViewProjectionMatrixSphere;
 			wvpDataSphere->World = worldMatrixSphere;
-			//モデル用の
-			Matrix4x4 worldMatrixModel = MakeAffineMatrix(transformModel.scale, transformModel.rotate, transformModel.translate);
-			Matrix4x4 cameraMatrixModel = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-			Matrix4x4 viewMatrixModel = Inverse(cameraMatrixModel);
-			Matrix4x4 projectionMatrixModel = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
-			Matrix4x4 worldViewProjectionMatrixModel = Multiply(worldMatrixModel, Multiply(viewMatrixModel, projectionMatrixModel));
-			wvpDataModel->WVP = worldViewProjectionMatrixModel;
-			wvpDataModel->World = worldMatrixModel;
+
+			//モデル用のWorldViewProjectionMatrixを作る
+			RenderingPipeline(&wvpDataModel, transformModel, cameraTransform, kClientWidth, kClientHeight);
+
+			//モデル用のWorldViewProjectionMatrixを作る
+			RenderingPipeline(&wvpDataModel2, transformModel2, cameraTransform, kClientWidth, kClientHeight);
 
 			//ImGuiの内部コマンドを生成する
 			ImGui::Render();
@@ -1562,17 +1701,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			}
 
 			//モデルの描画
-			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewModel);
-			//マテリアルCBufferの場所を設定
-			commandList->SetGraphicsRootConstantBufferView(0, materialResourceModel->GetGPUVirtualAddress());
-			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPUModel);
-			//wvp用のCBufferの場所を指定
-			commandList->SetGraphicsRootConstantBufferView(1, wvpResourceModel->GetGPUVirtualAddress());
-			//モデルの描画
-			if (isDisplayModel) {
-				commandList->DrawInstanced(UINT(modelData.vertices.size()), 1, 0, 0);
-			}
+			DrawModel(commandList, vertexBufferViewModel, materialResourceModel, textureSrvHandleGPUModel, wvpResourceModel, isDisplayModel, modelData);
+
+			//モデル2の描画
+			DrawModel(commandList, vertexBufferViewModel2, materialResourceModel2, textureSrvHandleGPUModel2, wvpResourceModel2, isDisplayModel2, model2Data);
+
 
 			//ImGuiの描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
