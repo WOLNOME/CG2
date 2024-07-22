@@ -1618,10 +1618,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			Matrix4x4 worldViewProjectionMatrixSphere = Multiply(worldMatrixSphere, Multiply(viewMatrixSphere, projectionMatrixSphere));
 			wvpDataSphere->WVP = worldViewProjectionMatrixSphere;
 			wvpDataSphere->World = worldMatrixSphere;
-
-			//モデル用のWorldViewProjectionMatrixを作る
-			RenderingPipeline(&wvpDataModel, transformModel, cameraTransform, kClientWidth, kClientHeight);
-
+			//モデル用の
+			Matrix4x4 worldMatrixModel = MakeAffineMatrix(transformModel.scale, transformModel.rotate, transformModel.translate);
+			Matrix4x4 cameraMatrixModel = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+			Matrix4x4 viewMatrixModel = Inverse(cameraMatrixModel);
+			Matrix4x4 projectionMatrixModel = MakePerspectiveFovMatrix(0.45f, float(kClientWidth) / float(kClientHeight), 0.1f, 100.0f);
+			Matrix4x4 worldViewProjectionMatrixModel = Multiply(worldMatrixModel, Multiply(viewMatrixModel, projectionMatrixModel));
+			wvpDataModel->WVP = worldViewProjectionMatrixModel;
+			wvpDataModel->World = worldMatrixModel;
 			//モデル用のWorldViewProjectionMatrixを作る
 			RenderingPipeline(&wvpDataModel2, transformModel2, cameraTransform, kClientWidth, kClientHeight);
 
