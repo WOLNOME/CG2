@@ -1266,36 +1266,45 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	/////////////////////////モデル用のリソースを作る/////////////////////////////////////////////////////////////////////////////////
-	ModelData modelData;
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceModel;
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewModel;
-	VertexData vertexDataModel;
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceModel;
-	Material materialDataModel;
-	TransformationMatrix wvpDataModel;
-	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResourceModel;
-	Transform transformModel;
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPUModel;
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPUModel;
-	MakeModelResource(
-		"resources",
-		"axis.obj",
-		device,
-		modelData,
-		vertexResourceModel,
-		vertexBufferViewModel,
-		&vertexDataModel,
-		materialResourceModel,
-		&materialDataModel,
-		wvpResourceModel,
-		&wvpDataModel,
-		transformModel,
-		textureSrvHandleCPUModel,
-		textureSrvHandleGPUModel,
-		srvDescriptorHeap,
-		descriptorSizeSRV,
-		3
-	);
+	ModelData modelData = LoadObjFIle("resources", "axis.obj");
+	//頂点用リソースを作る
+	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResourceModel = CreateBufferResource(device, sizeof(VertexData) * modelData.vertices.size());
+	//頂点バッファービューを作成
+	D3D12_VERTEX_BUFFER_VIEW vertexBufferViewModel{};
+	vertexBufferViewModel.BufferLocation = vertexResourceModel->GetGPUVirtualAddress();
+	vertexBufferViewModel.SizeInBytes = UINT(sizeof(VertexData) * modelData.vertices.size());
+	vertexBufferViewModel.StrideInBytes = sizeof(VertexData);
+	//頂点用リソースにデータを書き込む
+	VertexData* vertexDataModel = nullptr;
+	vertexResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&vertexDataModel));
+	std::memcpy(vertexDataModel, modelData.vertices.data(), sizeof(VertexData) * modelData.vertices.size());
+	//マテリアル用のリソースを作る。
+	Microsoft::WRL::ComPtr<ID3D12Resource> materialResourceModel = CreateBufferResource(device, sizeof(Material));
+	//データを書き込む
+	Material* materialDataModel = nullptr;
+	//書き込むためのアドレスを取得
+	materialResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&materialDataModel));
+	//白を書き込んでおく
+	materialDataModel->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	//ライティング
+	materialDataModel->enableLighting = true;
+	//uvTransform
+	materialDataModel->uvTransform = MakeIdentity4x4();
+	//WVP用のリソースを作る。
+	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResourceModel = CreateBufferResource(device, sizeof(TransformationMatrix));
+	//データを書き込む
+	TransformationMatrix* wvpDataModel = nullptr;
+	//書き込むためのアドレスを取得
+	wvpResourceModel->Map(0, nullptr, reinterpret_cast<void**>(&wvpDataModel));
+	//単位行列を書き込んでおく
+	wvpDataModel->WVP = MakeIdentity4x4();
+	wvpDataModel->World = MakeIdentity4x4();
+	//トランスフォーム
+	Transform transformModel = {
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	////////////////////モデル2のリソース////////////////////////////////////////////////////
