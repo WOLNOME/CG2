@@ -1352,7 +1352,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureResorce2 = CreateTextureResource(device, metadata2);
 	UploadTextureData(textureResorce2.Get(), mipImages2);
-
+	//モデル用のTextureを読んで転送する
+	DirectX::ScratchImage mipImagesModel = LoadTexture(modelData.material.textureFilePath);
+	const DirectX::TexMetadata& metadataModel = mipImagesModel.GetMetadata();
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureResorceModel = CreateTextureResource(device, metadataModel);
+	UploadTextureData(textureResorceModel.Get(), mipImagesModel);
 	//metadataをもとにSRVの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Format = metadata.format;
@@ -1365,6 +1369,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
+	//metadataをもとにSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDescModel{};
+	srvDescModel.Format = metadataModel.format;
+	srvDescModel.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDescModel.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDescModel.Texture2D.MipLevels = UINT(metadataModel.mipLevels);
 
 	//SRVを作成するDescriptorHeapの場所を決める
 	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 1);
@@ -1372,11 +1382,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//SRVを作成するDescriptorHeapの場所を決める
 	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 2);
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 2);
+	//SRVを作成するDescriptorHeapの場所を決める
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPUModel = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 3);
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPUModel = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 3);
 
 	//SRVの生成
 	device->CreateShaderResourceView(textureResorce.Get(), &srvDesc, textureSrvHandleCPU);
 	//SRVの生成
 	device->CreateShaderResourceView(textureResorce2.Get(), &srvDesc2, textureSrvHandleCPU2);
+	//SRVの作成
+	device->CreateShaderResourceView(textureResorceModel.Get(), &srvDescModel, textureSrvHandleCPUModel);
 
 
 	//DepthStencilTextureをウィンドウサイズで作成
