@@ -64,6 +64,8 @@ struct ModelResource {
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
 	TransformationMatrix* wvpData;
 	Transform transform;
+	Transform uvTransform;
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureResorce;
 	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU;
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
 };
@@ -491,9 +493,7 @@ void MakeModelResource(
 	const char* resourceFileName,
 	const char* objFileName,
 	const Microsoft::WRL::ComPtr<ID3D12Device> device,
-	ModelResource& modelResource,
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap,
-	const uint32_t descriptorSizeSRV
+	ModelResource& modelResource
 ) {
 	modelResource.modelData = LoadObjFIle(resourceFileName, objFileName);
 	//頂点用リソースを作る
@@ -530,25 +530,43 @@ void MakeModelResource(
 		{0.0f,0.0f,0.0f},
 		{0.0f,0.0f,0.0f}
 	};
-
-	//モデル用のTextureを読んで転送する
-	DirectX::ScratchImage mipImages = LoadTexture(modelResource.modelData.material.textureFilePath);
-	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResorce = CreateTextureResource(device, metadata);
-	UploadTextureData(textureResorce.Get(), mipImages);
-	//metadataをもとにSRVの設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = metadata.format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
-	//SRVを作成するDescriptorHeapの場所を決める
-	modelResource.textureSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 3);
-	modelResource.textureSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 3);
-	//SRVの作成
-	device->CreateShaderResourceView(textureResorce.Get(), &srvDesc, modelResource.textureSrvHandleCPU);
+	//UVトランスフォーム
+	modelResource.uvTransform = {
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
+	};
 }
 
+//テクスチャ設定用関数
+void SetTexture(
+	ModelResource& modelResource,
+	Microsoft::WRL::ComPtr<ID3D12Device> device,
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap,
+	uint32_t descriptorSizeSRV,
+	uint32_t index
+) {
+	//モデル用のTextureを読んで転送する
+	DirectX::ScratchImage mipImagesModel = LoadTexture(modelResource.modelData.material.textureFilePath);
+	const DirectX::TexMetadata& metadataModel = mipImagesModel.GetMetadata();
+	modelResource.textureResorce = CreateTextureResource(device, metadataModel);
+	UploadTextureData(modelResource.textureResorce, mipImagesModel);
+	//metadataをもとにSRVの設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDescModel{};
+	srvDescModel.Format = metadataModel.format;
+	srvDescModel.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDescModel.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDescModel.Texture2D.MipLevels = UINT(metadataModel.mipLevels);
+	//SRVを作成するDescriptorHeapの場所を決める
+	modelResource.textureSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
+	modelResource.textureSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
+	//SRVの作成
+	device->CreateShaderResourceView(modelResource.textureResorce.Get(), &srvDescModel, modelResource.textureSrvHandleCPU);
+
+	///注意！！！！///
+	/*関数化する時は、ComPtr型のGetは使わない！*/
+
+}
 
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -1263,18 +1281,39 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	/////////////////////////モデル用のリソースを作る/////////////////////////////////////////////////////////////////////////////////
 	ModelResource modelResource;
-	MakeModelResource("resources", "axis.obj", device, modelResource, srvDescriptorHeap, descriptorSizeSRV);
+	MakeModelResource("resources", "axis.obj", device, modelResource);
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	////////////////////モデル2のリソース////////////////////////////////////////////////////
 	ModelResource model2Resource;
-	MakeModelResource("resources", "plane.obj", device, modelResource, srvDescriptorHeap, descriptorSizeSRV);
+	MakeModelResource("resources", "plane.obj", device, model2Resource);
 	///////////////////////////////////////////////////////////////////////////////
 
-	/////////////////////////モデル3のリソースを作る/////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////Utah TeaPotのリソースを作る/////////////////////////////////////////////////////////////////////////////////
 	ModelResource model3Resource;
-	MakeModelResource("resources", "teapot.obj", device, modelResource, srvDescriptorHeap, descriptorSizeSRV);
+	MakeModelResource("resources", "teapot.obj", device, model3Resource);
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+	///////////////////Stanford Bunnyのリソースを作る/////////////////////////////////
+	ModelResource model4Resource;
+	MakeModelResource("resources", "bunny.obj", device, model4Resource);
+	/////////////////////////////////////////////////////////////////////////
+
+	///////////////////MultiMeshのリソースを作る/////////////////////////////////
+	ModelResource model5Resource;
+	MakeModelResource("resources", "multiMesh.obj", device, model5Resource);
+	/////////////////////////////////////////////////////////////////////////
+
+	///////////////////MultiMaterialのリソースを作る/////////////////////////////////
+	ModelResource model6Resource;
+	MakeModelResource("resources", "multiMaterial.obj", device, model6Resource);
+	/////////////////////////////////////////////////////////////////////////
+
+	///////////////////Suzanneのリソースを作る/////////////////////////////////
+	ModelResource model7Resource;
+	MakeModelResource("resources", "suzanne.obj", device, model7Resource);
+	/////////////////////////////////////////////////////////////////////////
+
 
 	////////////////////////Textureの設定///////////////////////////////////
 
@@ -1313,21 +1352,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	device->CreateShaderResourceView(textureResorce2.Get(), &srvDesc2, textureSrvHandleCPU2);
 
 	//モデル用のTextureを読んで転送する
-	DirectX::ScratchImage mipImagesModel = LoadTexture(modelResource.modelData.material.textureFilePath);
-	const DirectX::TexMetadata& metadataModel = mipImagesModel.GetMetadata();
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResorceModel = CreateTextureResource(device, metadataModel);
-	UploadTextureData(textureResorceModel.Get(), mipImagesModel);
-	//metadataをもとにSRVの設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDescModel{};
-	srvDescModel.Format = metadataModel.format;
-	srvDescModel.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDescModel.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDescModel.Texture2D.MipLevels = UINT(metadataModel.mipLevels);
-	//SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPUModel = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 3);
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPUModel = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 3);
-	//SRVの作成
-	device->CreateShaderResourceView(textureResorceModel.Get(), &srvDescModel, textureSrvHandleCPUModel);
+	SetTexture(modelResource, device, srvDescriptorHeap, descriptorSizeSRV, 3);
+
+	//モデル2用のTextureを読んで転送する
+	SetTexture(model2Resource, device, srvDescriptorHeap, descriptorSizeSRV, 4);
+
+	//モデル3用のTextureを読んで転送する
+	SetTexture(model3Resource, device, srvDescriptorHeap, descriptorSizeSRV, 5);
+
+	//モデル4用のTextureを読んで転送する
+	SetTexture(model4Resource, device, srvDescriptorHeap, descriptorSizeSRV, 6);
+
+	//モデル5用のTextureを読んで転送する
+	SetTexture(model5Resource, device, srvDescriptorHeap, descriptorSizeSRV, 7);
+
+	//モデル6用のTextureを読んで転送する
+	SetTexture(model6Resource, device, srvDescriptorHeap, descriptorSizeSRV, 8);
+
+	//モデル7用のTextureを読んで転送する
+	SetTexture(model7Resource, device, srvDescriptorHeap, descriptorSizeSRV, 9);
+
 
 	//DepthStencilTextureをウィンドウサイズで作成
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(device, kClientWidth, kClientHeight);;
@@ -1349,6 +1393,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	bool isDisplayModel = false;
 	bool isDisplayModel2 = false;
 	bool isDisplayModel3 = false;
+	bool isDisplayModel4 = false;
+	bool isDisplayModel5 = false;
+	bool isDisplayModel6 = false;
+	bool isDisplayModel7 = false;
 	bool useMonsterBall = false;
 	//ライト
 	bool isLightingSphere = true;
@@ -1485,7 +1533,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::TreePop();
 			}
 			//モデル
-			if (ImGui::TreeNode("Model")) {
+			if (ImGui::TreeNode("Axis")) {
 				//オブジェクトの平行移動
 				ImGui::DragFloat3("translate", &modelResource.transform.translate.x, 0.01f);
 				ImGui::DragFloat3("rotate", &modelResource.transform.rotate.x, 0.01f);
@@ -1504,7 +1552,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::TreePop();
 			}
 			//モデル2
-			if (ImGui::TreeNode("Model2")) {
+			if (ImGui::TreeNode("Plane")) {
 				//オブジェクトの平行移動
 				ImGui::DragFloat3("translate", &model2Resource.transform.translate.x, 0.01f);
 				ImGui::DragFloat3("rotate", &model2Resource.transform.rotate.x, 0.01f);
@@ -1522,8 +1570,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				ImGui::TreePop();
 			}
-			//モデル
-			if (ImGui::TreeNode("Model3")) {
+			//モデル3
+			if (ImGui::TreeNode("UtahTeapot")) {
 				//オブジェクトの平行移動
 				ImGui::DragFloat3("translate", &model3Resource.transform.translate.x, 0.01f);
 				ImGui::DragFloat3("rotate", &model3Resource.transform.rotate.x, 0.01f);
@@ -1541,6 +1589,85 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				ImGui::TreePop();
 			}
+			//モデル4
+			if (ImGui::TreeNode("StanfordBunny")) {
+				//オブジェクトの平行移動
+				ImGui::DragFloat3("translate", &model4Resource.transform.translate.x, 0.01f);
+				ImGui::DragFloat3("rotate", &model4Resource.transform.rotate.x, 0.01f);
+				ImGui::DragFloat3("scale", &model4Resource.transform.scale.x, 0.01f);
+				//リセット
+				if (ImGui::Button("reset")) {
+					model4Resource.transform.translate = { 0.0f,0.0f,0.0f };
+					model4Resource.transform.rotate = { 0.0f,0.0f,0.0f };
+					model4Resource.transform.scale = { 1.0f,1.0f,1.0f };
+				}
+				//オブジェクトの表示切り替え
+				if (ImGui::Button("DisplayChange")) {
+					isDisplayModel4 = !isDisplayModel4;
+				}
+
+				ImGui::TreePop();
+			}
+			//モデル5
+			if (ImGui::TreeNode("MultiMesh")) {
+				//オブジェクトの平行移動
+				ImGui::DragFloat3("translate", &model5Resource.transform.translate.x, 0.01f);
+				ImGui::DragFloat3("rotate", &model5Resource.transform.rotate.x, 0.01f);
+				ImGui::DragFloat3("scale", &model5Resource.transform.scale.x, 0.01f);
+				
+				//リセット
+				if (ImGui::Button("reset")) {
+					model5Resource.transform.translate = { 0.0f,0.0f,0.0f };
+					model5Resource.transform.rotate = { 0.0f,0.0f,0.0f };
+					model5Resource.transform.scale = { 1.0f,1.0f,1.0f };
+				}
+				//オブジェクトの表示切り替え
+				if (ImGui::Button("DisplayChange")) {
+					isDisplayModel5 = !isDisplayModel5;
+				}
+
+				ImGui::TreePop();
+			}
+			//モデル6
+			if (ImGui::TreeNode("MultiMaterial")) {
+				//オブジェクトの平行移動
+				ImGui::DragFloat3("translate", &model6Resource.transform.translate.x, 0.01f);
+				ImGui::DragFloat3("rotate", &model6Resource.transform.rotate.x, 0.01f);
+				ImGui::DragFloat3("scale", &model6Resource.transform.scale.x, 0.01f);
+
+				//リセット
+				if (ImGui::Button("reset")) {
+					model6Resource.transform.translate = { 0.0f,0.0f,0.0f };
+					model6Resource.transform.rotate = { 0.0f,0.0f,0.0f };
+					model6Resource.transform.scale = { 1.0f,1.0f,1.0f };
+				}
+				//オブジェクトの表示切り替え
+				if (ImGui::Button("DisplayChange")) {
+					isDisplayModel6 = !isDisplayModel6;
+				}
+
+				ImGui::TreePop();
+			}
+			//モデル7
+			if (ImGui::TreeNode("Suzanne")) {
+				//オブジェクトの平行移動
+				ImGui::DragFloat3("translate", &model7Resource.transform.translate.x, 0.01f);
+				ImGui::DragFloat3("rotate", &model7Resource.transform.rotate.x, 0.01f);
+				ImGui::DragFloat3("scale", &model7Resource.transform.scale.x, 0.01f);
+
+				//リセット
+				if (ImGui::Button("reset")) {
+					model7Resource.transform.translate = { 0.0f,0.0f,0.0f };
+					model7Resource.transform.rotate = { 0.0f,0.0f,0.0f };
+					model7Resource.transform.scale = { 1.0f,1.0f,1.0f };
+				}
+				//オブジェクトの表示切り替え
+				if (ImGui::Button("DisplayChange")) {
+					isDisplayModel7 = !isDisplayModel7;
+				}
+
+				ImGui::TreePop();
+			}
 
 			ImGui::End();
 
@@ -1549,6 +1676,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			modelResource.transform.rotate.y += 0.03f;
 			model2Resource.transform.rotate.y += 0.03f;
 			model3Resource.transform.rotate.y += 0.03f;
+			model4Resource.transform.rotate.y += 0.03f;
+			model5Resource.transform.rotate.y += 0.03f;
+			model6Resource.transform.rotate.y += 0.03f;
+			model7Resource.transform.rotate.y += 0.03f;
 
 			/////レンダリングパイプライン/////
 			//各種行列の計算
@@ -1568,6 +1699,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			RenderingPipeLine(model2Resource.wvpData, model2Resource.transform, cameraTransform, kClientWidth, kClientHeight);
 			//モデル3用のWorldViewProjectionMatrixを作る
 			RenderingPipeLine(model3Resource.wvpData, model3Resource.transform, cameraTransform, kClientWidth, kClientHeight);
+			//モデル4用のWorldViewProjectionMatrixを作る
+			RenderingPipeLine(model4Resource.wvpData, model4Resource.transform, cameraTransform, kClientWidth, kClientHeight);
+			//モデル5用のWorldViewProjectionMatrixを作る
+			RenderingPipeLine(model5Resource.wvpData, model5Resource.transform, cameraTransform, kClientWidth, kClientHeight);
+			//モデル6用のWorldViewProjectionMatrixを作る
+			RenderingPipeLine(model6Resource.wvpData, model6Resource.transform, cameraTransform, kClientWidth, kClientHeight);
+			//モデル7用のWorldViewProjectionMatrixを作る
+			RenderingPipeLine(model7Resource.wvpData, model7Resource.transform, cameraTransform, kClientWidth, kClientHeight);
 
 			//ImGuiの内部コマンドを生成する
 			ImGui::Render();
@@ -1670,13 +1809,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			//モデルの描画
 			DrawModel(commandList, modelResource, isDisplayModel);
-
 			//モデル2の描画
 			DrawModel(commandList, model2Resource, isDisplayModel2);
-
 			//モデル3の描画
 			DrawModel(commandList, model3Resource, isDisplayModel3);
-
+			//モデル4の描画
+			DrawModel(commandList, model4Resource, isDisplayModel4);
+			//モデル5の描画
+			DrawModel(commandList, model5Resource, isDisplayModel5);
+			//モデル6の描画
+			DrawModel(commandList, model6Resource, isDisplayModel6);
+			//モデル7の描画
+			DrawModel(commandList, model7Resource, isDisplayModel7);
 
 			//ImGuiの描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
