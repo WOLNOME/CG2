@@ -55,19 +55,19 @@ struct D3DResourceLeakChecker {
 
 //モデルリソース作成用データ型
 struct ModelResource {
-	ModelData modelData;
-	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource;
-	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-	VertexData* vertexData;
-	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource;
-	Material* materialData;
+	std::vector<ModelData> modelData;
+	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> vertexResource;
+	std::vector<D3D12_VERTEX_BUFFER_VIEW> vertexBufferView;
+	std::vector<VertexData*> vertexData;
+	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResource;
+	std::vector<Material*> materialData;
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
 	TransformationMatrix* wvpData;
 	Transform transform;
 	Transform uvTransform;
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResorce;
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU;
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
+	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> textureResorce;
+	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> textureSrvHandleCPU;
+	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> textureSrvHandleGPU;
 };
 
 //ウィンドウプロシージャ
@@ -358,10 +358,11 @@ D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(Microsoft::WRL::ComPtr<ID3D12
 }
 
 //mtlファイルを読む関数
-MaterialData LoadMaterialTemplateFile(const std::string& directryPath, const std::string& filename) {
+MaterialData LoadMaterialTemplateFile(const std::string& directryPath, const std::string& filename, const std::string& materialName) {
 	//1.中で必要となる変数の宣言
 	MaterialData materialData;
 	std::string line;
+	bool isLoad = false;
 	//2.ファイルを開く
 	std::ifstream file(directryPath + "/" + filename);
 	assert(file.is_open());
@@ -371,11 +372,30 @@ MaterialData LoadMaterialTemplateFile(const std::string& directryPath, const std
 		std::istringstream s(line);
 		s >> identifier;
 		//identifierに応じた処理
-		if (identifier == "map_Kd") {
-			std::string textureFilename;
-			s >> textureFilename;
-			//連結してファイルパスにする
-			materialData.textureFilePath = directryPath + "/" + textureFilename;
+		if (identifier == "newmtl") {
+			std::string mtlNumber;
+			s >> mtlNumber;
+			//読み込みたいマテリアルの名前が一致してたら読み込み、そうじゃないなら読み込まない
+			if (mtlNumber == materialName) {
+				isLoad = true;
+			}
+			else {
+				isLoad = false;
+			}
+		}
+		if (isLoad) {
+			if (identifier == "map_Kd") {
+				std::string textureFilename;
+				s >> textureFilename;
+				//連結してファイルパスにする
+				materialData.textureFilePath = directryPath + "/" + textureFilename;
+			}
+			else if (identifier == "Kd") {
+				Vector4 color;
+				s >> color.x >> color.y >> color.z;
+				color.w = 1.0f;
+				materialData.color = color;
+			}
 		}
 	}
 	//4.MaterialDataを返す
@@ -383,13 +403,16 @@ MaterialData LoadMaterialTemplateFile(const std::string& directryPath, const std
 }
 
 //objファイル読む関数
-ModelData LoadObjFIle(const std::string& directoryPath, const std::string& filename) {
+std::vector<ModelData> LoadObjFIle(const std::string& directoryPath, const std::string& filename) {
 	//1.中で必要となる変数の宣言
-	ModelData modelData;
+	std::vector<ModelData> modelData;
 	std::vector<Vector4> positions;
 	std::vector<Vector3> normals;
 	std::vector<Vector2> texcoords;
 	std::string line;
+	std::string line2;
+	bool isGetO = false;
+	size_t index = -1;
 	//2.ファイルを開く
 	std::ifstream file(directoryPath + "/" + filename);
 	assert(file.is_open());
@@ -399,7 +422,12 @@ ModelData LoadObjFIle(const std::string& directoryPath, const std::string& filen
 		std::istringstream s(line);
 		s >> identifier;//←先頭の識別子を読む
 		//identifierに応じた処理
-		if (identifier == "v") {
+		if (identifier == "o") {
+			index++;
+			modelData.resize(index + 1);
+			isGetO = true;
+		}
+		else if (identifier == "v") {
 			Vector4 position;
 			s >> position.x >> position.y >> position.z;
 			position.x *= -1.0f;
@@ -438,16 +466,41 @@ ModelData LoadObjFIle(const std::string& directoryPath, const std::string& filen
 				Vector3 normal = normals[elementIndices[2] - 1];
 				triangle[faceVertex] = { position,texcoord,normal };
 			}//頂点を逆順に登録することで、周り順を逆にする
-			modelData.vertices.push_back(triangle[2]);
-			modelData.vertices.push_back(triangle[1]);
-			modelData.vertices.push_back(triangle[0]);
+			modelData.at(index).vertices.push_back(triangle[2]);
+			modelData.at(index).vertices.push_back(triangle[1]);
+			modelData.at(index).vertices.push_back(triangle[0]);
 		}
-		else if (identifier == "mtllib") {
+		else if (identifier == "usemtl") {
+			std::string materialName;
+			s >> materialName;
+			//例外処理(objファイルにoがない場合)
+			if (!isGetO) {
+				index++;
+				modelData.resize(index + 1);
+			}
+			//各オブジェクト毎のマテリアル名を記憶させる
+			modelData.at(index).materialName = materialName;
+		}
+	}
+	//ファイルの読み直し
+	std::ifstream file2(directoryPath + "/" + filename);
+	assert(file.is_open());
+	//mtlファイルを開いてマテリアル情報を得る(materialNameを基に)
+	while (std::getline(file2, line2)) {
+		std::string identifier;
+		std::istringstream s(line2);
+		s >> identifier;//←先頭の識別子を読む
+		//identifierに応じた処理
+		if (identifier == "mtllib") {
 			//materialTemplateLibraryファイルの名前を取得する
 			std::string materialFilename;
 			s >> materialFilename;
-			//基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を探す。
-			modelData.material = LoadMaterialTemplateFile(directoryPath, materialFilename);
+			for (size_t index = 0; index < modelData.size(); index++) {
+				//基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を探す。
+				modelData.at(index).material = LoadMaterialTemplateFile(directoryPath, materialFilename, modelData.at(index).materialName);
+			}
+			//読んだら抜ける
+			break;
 		}
 	}
 	//4.ModelDataを返す
@@ -475,17 +528,19 @@ void DrawModel(
 	const ModelResource modelResource,
 	const bool isDisplayModel
 ) {
-	//モデルの描画
-	commandList->IASetVertexBuffers(0, 1, &modelResource.vertexBufferView);
-	//マテリアルCBufferの場所を設定
-	commandList->SetGraphicsRootConstantBufferView(0, modelResource.materialResource->GetGPUVirtualAddress());
-	//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
-	commandList->SetGraphicsRootDescriptorTable(2, modelResource.textureSrvHandleGPU);
-	//wvp用のCBufferの場所を指定
-	commandList->SetGraphicsRootConstantBufferView(1, modelResource.wvpResource->GetGPUVirtualAddress());
-	//モデルの描画
-	if (isDisplayModel) {
-		commandList->DrawInstanced(UINT(modelResource.modelData.vertices.size()), 1, 0, 0);
+	for (size_t index = 0; index < modelResource.modelData.size(); index++) {
+		//モデルの描画
+		commandList->IASetVertexBuffers(0, 1, &modelResource.vertexBufferView.at(index));
+		//マテリアルCBufferの場所を設定
+		commandList->SetGraphicsRootConstantBufferView(0, modelResource.materialResource.at(index)->GetGPUVirtualAddress());
+		//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
+		commandList->SetGraphicsRootDescriptorTable(2, modelResource.textureSrvHandleGPU.at(index));
+		//wvp用のCBufferの場所を指定
+		commandList->SetGraphicsRootConstantBufferView(1, modelResource.wvpResource->GetGPUVirtualAddress());
+		//モデルの描画
+		if (isDisplayModel) {
+			commandList->DrawInstanced(UINT(modelResource.modelData.at(index).vertices.size()), 1, 0, 0);
+		}
 	}
 }
 
@@ -496,25 +551,37 @@ void MakeModelResource(
 	ModelResource& modelResource
 ) {
 	modelResource.modelData = LoadObjFIle(resourceFileName, objFileName);
-	//頂点用リソースを作る
-	modelResource.vertexResource = CreateBufferResource(device, sizeof(VertexData) * modelResource.modelData.vertices.size());
-	//頂点バッファービューを作成
-	modelResource.vertexBufferView.BufferLocation = modelResource.vertexResource->GetGPUVirtualAddress();
-	modelResource.vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * modelResource.modelData.vertices.size());
-	modelResource.vertexBufferView.StrideInBytes = sizeof(VertexData);
-	//頂点用リソースにデータを書き込む
-	modelResource.vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&modelResource.vertexData));
-	std::memcpy(modelResource.vertexData, modelResource.modelData.vertices.data(), sizeof(VertexData) * modelResource.modelData.vertices.size());
-	//マテリアル用のリソースを作る。
-	modelResource.materialResource = CreateBufferResource(device, sizeof(Material));
-	//書き込むためのアドレスを取得
-	modelResource.materialResource->Map(0, nullptr, reinterpret_cast<void**>(&modelResource.materialData));
-	//白を書き込んでおく
-	modelResource.materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	//ライティング
-	modelResource.materialData->enableLighting = true;
-	//uvTransform
-	modelResource.materialData->uvTransform = MakeIdentity4x4();
+	const size_t kModelNum = modelResource.modelData.size();
+	for (size_t index = 0; index < kModelNum; index++) {
+		//std::vector型の要素数を確定
+		modelResource.vertexResource.resize(kModelNum);
+		modelResource.vertexBufferView.resize(kModelNum);
+		modelResource.vertexData.resize(kModelNum);
+		modelResource.materialResource.resize(kModelNum);
+		modelResource.materialData.resize(kModelNum);
+		modelResource.textureResorce.resize(kModelNum);
+		modelResource.textureSrvHandleCPU.resize(kModelNum);
+		modelResource.textureSrvHandleGPU.resize(kModelNum);
+		//頂点用リソースを作る
+		modelResource.vertexResource.at(index) = CreateBufferResource(device, sizeof(VertexData) * modelResource.modelData.at(index).vertices.size());
+		//頂点バッファービューを作成
+		modelResource.vertexBufferView.at(index).BufferLocation = modelResource.vertexResource.at(index)->GetGPUVirtualAddress();
+		modelResource.vertexBufferView.at(index).SizeInBytes = UINT(sizeof(VertexData) * modelResource.modelData.at(index).vertices.size());
+		modelResource.vertexBufferView.at(index).StrideInBytes = sizeof(VertexData);
+		//頂点用リソースにデータを書き込む
+		modelResource.vertexResource.at(index)->Map(0, nullptr, reinterpret_cast<void**>(&modelResource.vertexData.at(index)));
+		std::memcpy(modelResource.vertexData.at(index), modelResource.modelData.at(index).vertices.data(), sizeof(VertexData) * modelResource.modelData.at(index).vertices.size());
+		//マテリアル用のリソースを作る。
+		modelResource.materialResource.at(index) = CreateBufferResource(device, sizeof(Material));
+		//書き込むためのアドレスを取得
+		modelResource.materialResource.at(index)->Map(0, nullptr, reinterpret_cast<void**>(&modelResource.materialData.at(index)));
+		//白を書き込んでおく
+		modelResource.materialData.at(index)->color = modelResource.modelData.at(index).material.color;
+		//ライティング
+		modelResource.materialData.at(index)->enableLighting = true;
+		//uvTransform
+		modelResource.materialData.at(index)->uvTransform = MakeIdentity4x4();
+	}
 	//WVP用のリソースを作る。
 	modelResource.wvpResource = CreateBufferResource(device, sizeof(TransformationMatrix));
 	//データを書き込む
@@ -544,28 +611,28 @@ void SetTexture(
 	Microsoft::WRL::ComPtr<ID3D12Device> device,
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap,
 	uint32_t descriptorSizeSRV,
-	uint32_t index
+	uint32_t& site
 ) {
-	//モデル用のTextureを読んで転送する
-	DirectX::ScratchImage mipImagesModel = LoadTexture(modelResource.modelData.material.textureFilePath);
-	const DirectX::TexMetadata& metadataModel = mipImagesModel.GetMetadata();
-	modelResource.textureResorce = CreateTextureResource(device, metadataModel);
-	UploadTextureData(modelResource.textureResorce, mipImagesModel);
-	//metadataをもとにSRVの設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDescModel{};
-	srvDescModel.Format = metadataModel.format;
-	srvDescModel.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDescModel.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDescModel.Texture2D.MipLevels = UINT(metadataModel.mipLevels);
-	//SRVを作成するDescriptorHeapの場所を決める
-	modelResource.textureSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
-	modelResource.textureSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, index);
-	//SRVの作成
-	device->CreateShaderResourceView(modelResource.textureResorce.Get(), &srvDescModel, modelResource.textureSrvHandleCPU);
-
-	///注意！！！！///
-	/*関数化する時は、ComPtr型のGetは使わない！*/
-
+	for (size_t i = 0; i < modelResource.modelData.size(); i++) {
+		//モデル用のTextureを読んで転送する
+		DirectX::ScratchImage mipImagesModel = LoadTexture(modelResource.modelData.at(i).material.textureFilePath);
+		const DirectX::TexMetadata& metadataModel = mipImagesModel.GetMetadata();
+		modelResource.textureResorce.at(i) = CreateTextureResource(device, metadataModel);
+		UploadTextureData(modelResource.textureResorce.at(i), mipImagesModel);
+		//metadataをもとにSRVの設定
+		D3D12_SHADER_RESOURCE_VIEW_DESC srvDescModel{};
+		srvDescModel.Format = metadataModel.format;
+		srvDescModel.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+		srvDescModel.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDescModel.Texture2D.MipLevels = UINT(metadataModel.mipLevels);
+		//DescriptorHeapの場所移動
+		site++;
+		//SRVを作成するDescriptorHeapの場所を決める
+		modelResource.textureSrvHandleCPU.at(i) = GetCPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, site);
+		modelResource.textureSrvHandleGPU.at(i) = GetGPUDescriptorHandle(srvDescriptorHeap, descriptorSizeSRV, site);
+		//SRVの作成
+		device->CreateShaderResourceView(modelResource.textureResorce.at(i).Get(), &srvDescModel, modelResource.textureSrvHandleCPU.at(i));
+	}
 }
 
 
@@ -1309,14 +1376,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	MakeModelResource("resources", "multiMaterial.obj", device, model6Resource);
 	/////////////////////////////////////////////////////////////////////////
 
-	///////////////////Suzanneのリソースを作る/////////////////////////////////
-	ModelResource model7Resource;
-	MakeModelResource("resources", "suzanne.obj", device, model7Resource);
-	/////////////////////////////////////////////////////////////////////////
+	/////////////////////Suzanneのリソースを作る/////////////////////////////////
+	//ModelResource model7Resource;
+	//MakeModelResource("resources", "suzanne.obj", device, model7Resource);
+	///////////////////////////////////////////////////////////////////////////
 
 
 	////////////////////////Textureの設定///////////////////////////////////
-
+	//DescriptorHeap配置場所
+	uint32_t site = 0;
 	//Textureを読んで転送する
 	DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
@@ -1328,9 +1396,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+	//DescriptorHeapの場所移動
+	site++;
 	//SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 1);
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 1);
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, site);
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, site);
 	//SRVの生成
 	device->CreateShaderResourceView(textureResorce.Get(), &srvDesc, textureSrvHandleCPU);
 
@@ -1345,32 +1415,34 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	srvDesc2.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc2.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc2.Texture2D.MipLevels = UINT(metadata2.mipLevels);
+	//DescriptorHeapの場所移動
+	site++;
 	//SRVを作成するDescriptorHeapの場所を決める
-	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 2);
-	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 2);
+	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU2 = GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, site);
+	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU2 = GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, site);
 	//SRVの生成
 	device->CreateShaderResourceView(textureResorce2.Get(), &srvDesc2, textureSrvHandleCPU2);
 
 	//モデル用のTextureを読んで転送する
-	SetTexture(modelResource, device, srvDescriptorHeap, descriptorSizeSRV, 3);
+	SetTexture(modelResource, device, srvDescriptorHeap, descriptorSizeSRV, site);
 
 	//モデル2用のTextureを読んで転送する
-	SetTexture(model2Resource, device, srvDescriptorHeap, descriptorSizeSRV, 4);
+	SetTexture(model2Resource, device, srvDescriptorHeap, descriptorSizeSRV, site);
 
 	//モデル3用のTextureを読んで転送する
-	SetTexture(model3Resource, device, srvDescriptorHeap, descriptorSizeSRV, 5);
+	SetTexture(model3Resource, device, srvDescriptorHeap, descriptorSizeSRV, site);
 
 	//モデル4用のTextureを読んで転送する
-	SetTexture(model4Resource, device, srvDescriptorHeap, descriptorSizeSRV, 6);
+	SetTexture(model4Resource, device, srvDescriptorHeap, descriptorSizeSRV, site);
 
 	//モデル5用のTextureを読んで転送する
-	SetTexture(model5Resource, device, srvDescriptorHeap, descriptorSizeSRV, 7);
+	SetTexture(model5Resource, device, srvDescriptorHeap, descriptorSizeSRV, site);
 
 	//モデル6用のTextureを読んで転送する
-	SetTexture(model6Resource, device, srvDescriptorHeap, descriptorSizeSRV, 8);
+	SetTexture(model6Resource, device, srvDescriptorHeap, descriptorSizeSRV, site);
 
-	//モデル7用のTextureを読んで転送する
-	SetTexture(model7Resource, device, srvDescriptorHeap, descriptorSizeSRV, 9);
+	////モデル7用のTextureを読んで転送する
+	//SetTexture(model7Resource, device, srvDescriptorHeap, descriptorSizeSRV, 9);
 
 
 	//DepthStencilTextureをウィンドウサイズで作成
@@ -1614,7 +1686,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::DragFloat3("translate", &model5Resource.transform.translate.x, 0.01f);
 				ImGui::DragFloat3("rotate", &model5Resource.transform.rotate.x, 0.01f);
 				ImGui::DragFloat3("scale", &model5Resource.transform.scale.x, 0.01f);
-				
+
 				//リセット
 				if (ImGui::Button("reset")) {
 					model5Resource.transform.translate = { 0.0f,0.0f,0.0f };
@@ -1648,26 +1720,26 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				ImGui::TreePop();
 			}
-			//モデル7
-			if (ImGui::TreeNode("Suzanne")) {
-				//オブジェクトの平行移動
-				ImGui::DragFloat3("translate", &model7Resource.transform.translate.x, 0.01f);
-				ImGui::DragFloat3("rotate", &model7Resource.transform.rotate.x, 0.01f);
-				ImGui::DragFloat3("scale", &model7Resource.transform.scale.x, 0.01f);
+			////モデル7
+			//if (ImGui::TreeNode("Suzanne")) {
+			//	//オブジェクトの平行移動
+			//	ImGui::DragFloat3("translate", &model7Resource.transform.translate.x, 0.01f);
+			//	ImGui::DragFloat3("rotate", &model7Resource.transform.rotate.x, 0.01f);
+			//	ImGui::DragFloat3("scale", &model7Resource.transform.scale.x, 0.01f);
 
-				//リセット
-				if (ImGui::Button("reset")) {
-					model7Resource.transform.translate = { 0.0f,0.0f,0.0f };
-					model7Resource.transform.rotate = { 0.0f,0.0f,0.0f };
-					model7Resource.transform.scale = { 1.0f,1.0f,1.0f };
-				}
-				//オブジェクトの表示切り替え
-				if (ImGui::Button("DisplayChange")) {
-					isDisplayModel7 = !isDisplayModel7;
-				}
+			//	//リセット
+			//	if (ImGui::Button("reset")) {
+			//		model7Resource.transform.translate = { 0.0f,0.0f,0.0f };
+			//		model7Resource.transform.rotate = { 0.0f,0.0f,0.0f };
+			//		model7Resource.transform.scale = { 1.0f,1.0f,1.0f };
+			//	}
+			//	//オブジェクトの表示切り替え
+			//	if (ImGui::Button("DisplayChange")) {
+			//		isDisplayModel7 = !isDisplayModel7;
+			//	}
 
-				ImGui::TreePop();
-			}
+			//	ImGui::TreePop();
+			//}
 
 			ImGui::End();
 
@@ -1679,7 +1751,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			model4Resource.transform.rotate.y += 0.03f;
 			model5Resource.transform.rotate.y += 0.03f;
 			model6Resource.transform.rotate.y += 0.03f;
-			model7Resource.transform.rotate.y += 0.03f;
+			//model7Resource.transform.rotate.y += 0.03f;
 
 			/////レンダリングパイプライン/////
 			//各種行列の計算
@@ -1705,8 +1777,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			RenderingPipeLine(model5Resource.wvpData, model5Resource.transform, cameraTransform, kClientWidth, kClientHeight);
 			//モデル6用のWorldViewProjectionMatrixを作る
 			RenderingPipeLine(model6Resource.wvpData, model6Resource.transform, cameraTransform, kClientWidth, kClientHeight);
-			//モデル7用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(model7Resource.wvpData, model7Resource.transform, cameraTransform, kClientWidth, kClientHeight);
+			////モデル7用のWorldViewProjectionMatrixを作る
+			//RenderingPipeLine(model7Resource.wvpData, model7Resource.transform, cameraTransform, kClientWidth, kClientHeight);
 
 			//ImGuiの内部コマンドを生成する
 			ImGui::Render();
@@ -1819,8 +1891,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DrawModel(commandList, model5Resource, isDisplayModel5);
 			//モデル6の描画
 			DrawModel(commandList, model6Resource, isDisplayModel6);
-			//モデル7の描画
-			DrawModel(commandList, model7Resource, isDisplayModel7);
+			////モデル7の描画
+			//DrawModel(commandList, model7Resource, isDisplayModel7);
 
 			//ImGuiの描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
