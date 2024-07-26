@@ -603,6 +603,13 @@ void MakeModelResource(
 		modelResource.materialData.at(index)->lightingKind = HalfLambert;
 		//uvTransform
 		modelResource.materialData.at(index)->uvTransform = MakeIdentity4x4();
+		//テクスチャを持っているか
+		bool isTexture = true;
+		if (modelResource.modelData.at(index).material.textureFilePath.size() == 0) {
+			//テクスチャファイルパスに書き込まれていない→テクスチャがない
+			isTexture = false;
+		}
+		modelResource.materialData.at(index)->isTexture = isTexture;
 		//UVトランスフォーム
 		modelResource.uvTransform.at(index) = {
 			{1.0f,1.0f,1.0f},
@@ -1098,6 +1105,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialData->lightingKind = NoneLighting;
 	//uvTransformは単位行列を入れておく
 	materialData->uvTransform = MakeIdentity4x4();
+	//テクスチャを持っているか
+	materialData->isTexture = true;
 
 	//WVP用のリソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource = CreateBufferResource(device, sizeof(TransformationMatrix));
@@ -1257,6 +1266,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialDataSphere->lightingKind = HalfLambert;
 	//uvTransform
 	materialDataSphere->uvTransform = MakeIdentity4x4();
+	//テクスチャを持っているか
+	materialDataSphere->isTexture = true;
 	//WVP用のリソースを作る。
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResourceSphere = CreateBufferResource(device, sizeof(TransformationMatrix));
 	//データを書き込む
@@ -1318,6 +1329,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	materialDataSprite->lightingKind = NoneLighting;
 	//uvTransformは単位行列を入れておく
 	materialDataSprite->uvTransform = MakeIdentity4x4();
+	//テクスチャを持っているか
+	materialDataSprite->isTexture = true;
 	//Sprite用のTransformationMatrix用のリソースを作る。
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResourceSprite = CreateBufferResource(device, sizeof(TransformationMatrix));
 	//データを書き込む

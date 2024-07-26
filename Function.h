@@ -46,6 +46,7 @@ struct Material {
 	int32_t lightingKind;
 	float padding[3];
 	Matrix4x4 uvTransform;
+	int32_t isTexture;
 };
 
 struct TransformationMatrix {
