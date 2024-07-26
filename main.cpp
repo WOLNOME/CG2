@@ -11,6 +11,7 @@
 #include <fstream>
 #include <sstream>
 #include <wrl.h>
+#include <xaudio2.h>
 #include "Vector4.h"
 #include "Matrix4x4.h"
 #include "Function.h"
@@ -31,6 +32,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dxcompiler.lib")
+#pragma comment(lib,"xaudio2.lib")
 
 //定数
 const int kTriangleVertexNum = 3;
@@ -69,6 +71,39 @@ struct ModelResource {
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> textureSrvHandleCPU;
 	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> textureSrvHandleGPU;
 };
+
+//チャンクヘッダ
+struct ChunkHeader
+{
+	char id[4];
+	int32_t size;
+};
+
+//RIFFヘッダチャンク
+struct RiffHeader
+{
+	ChunkHeader chunk;
+	char type[4];
+};
+
+//FMTチャンク
+struct FormatChunk
+{
+	ChunkHeader chunk;
+	WAVEFORMATEX fmt;
+};
+
+//音声データ
+struct SoundData
+{
+	//波形フォーマット
+	WAVEFORMATEX wfex;
+	//バッファの先頭アドレス
+	BYTE* pBuffer;
+	//バッファのサイズ
+	unsigned int bufferSize;
+};
+
 
 //ウィンドウプロシージャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -667,6 +702,82 @@ void SetTexture(
 		device->CreateShaderResourceView(modelResource.textureResorce.at(i).Get(), &srvDescModel, modelResource.textureSrvHandleCPU.at(i));
 	}
 }
+
+//音声データの読み込み
+SoundData SoundLoadWave(const char* filename)
+{
+	HRESULT result;
+	//1.ファイルオープン
+	std::ifstream file;
+	file.open(filename, std::ios_base::binary);
+	assert(file.is_open());
+	//2.「.wav」データ読み込み
+	RiffHeader riff;
+	file.read((char*)&riff, sizeof(riff));
+	if (strncmp(riff.chunk.id, "RIFF", 4) != 0) {
+		assert(0);
+	}
+	if (strncmp(riff.type, "WAVE", 4) != 0) {
+		assert(0);
+	}
+	FormatChunk format = {};
+	file.read((char*)&format, sizeof(ChunkHeader));
+	if (strncmp(format.chunk.id, "fmt ", 4) != 0) {
+		assert(0);
+	}
+	assert(format.chunk.size <= sizeof(format.fmt));
+	file.read((char*)&format.fmt, format.chunk.size);
+	ChunkHeader data;
+	file.read((char*)&data, sizeof(data));
+	if (strncmp(data.id, "JUNK", 4) == 0) {
+		file.seekg(data.size, std::ios_base::cur);
+		file.read((char*)&data, sizeof(data));
+	}
+	if (strncmp(data.id, "data", 4) != 0) {
+		assert(0);
+	}
+	char* pBuffer = new char[data.size];
+	file.read(pBuffer, data.size);
+	//3.ファイルクローズ
+	file.close();
+	//4.読み込んだ音声データをreturn
+	SoundData soundData = {};
+	soundData.wfex = format.fmt;
+	soundData.pBuffer = reinterpret_cast<BYTE*>(pBuffer);
+	soundData.bufferSize = data.size;
+
+	return soundData;
+}
+
+//音声データの解放
+void SoundUnload(SoundData* soundData)
+{
+	//バッファのメモリを解放
+	delete[] soundData->pBuffer;
+
+	soundData->pBuffer = 0;
+	soundData->bufferSize = 0;
+	soundData->wfex = {};
+}
+
+//サウンドの再生
+void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData)
+{
+	HRESULT result;
+	//波形フォーマットからSourceVoiceを生成
+	IXAudio2SourceVoice* pSourceVoice = nullptr;
+	result = xAudio2->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
+	assert(SUCCEEDED(result));
+	//再生する波形データの設定
+	XAUDIO2_BUFFER buf{};
+	buf.pAudioData = soundData.pBuffer;
+	buf.AudioBytes = soundData.bufferSize;
+	buf.Flags = XAUDIO2_END_OF_STREAM;
+	//波形データの再生
+	result = pSourceVoice->SubmitSourceBuffer(&buf);
+	result = pSourceVoice->Start();
+}
+
 
 
 // Windowsアプリでのエントリーポイント(main関数)
@@ -1492,6 +1603,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	device->CreateDepthStencilView(depthStencilResource.Get(), &dsvDesc, GetCPUDescriptorHandle(dsvDescriptorHeap.Get(), descriptorSizeDSV, 0));
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+	//////////////////Xaudio2の設定/////////////////////////////////////
+	//必要な変数の宣言
+	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
+	IXAudio2MasteringVoice* masterVoice;
+	///////////////////////////////////////////////////////////////////
+
+
 
 	//初期化
 	//表示
@@ -1510,6 +1628,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//ライト
 	bool isLightingSphere = true;
 	bool isHalfLambert = true;
+	//XAudio2エンジンのインスタンス作成
+	hr = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
+	assert(SUCCEEDED(hr));
+	//マスターボイスを作成
+	hr = xAudio2->CreateMasteringVoice(&masterVoice);
+	assert(SUCCEEDED(hr));
+	//音声読み込み
+	SoundData soundData1 = SoundLoadWave("resources/Alarm01.wav");
+	//再生フラグ
+	bool isPlayAudio = false;
 
 	MSG msg{};
 	//ウィンドウの×ボタンが押されるまでループ
@@ -1595,7 +1723,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::DragFloat3("rotate", &transformSphere.rotate.x, 0.01f);
 				ImGui::DragFloat3("scale", &transformSphere.scale.x, 0.01f);
 				//ライティング
-				
+
 				//リセット
 				if (ImGui::Button("reset")) {
 					transformSphere.translate = { 0.0f,0.0f,0.0f };
@@ -1618,7 +1746,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				Normalize(directionalLightData->direction);
 				//輝度
 				ImGui::DragFloat("intensity", &directionalLightData->intensity, 0.01f);
-				
+
 				//リセット
 				if (ImGui::Button("reset")) {
 					directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
@@ -1911,7 +2039,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						ImGui::ColorEdit4("color", &model6Resource.materialData.at(index)->color.x, 0.01f);
 						//ライティング変更
 						const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
-						ImGui::Combo("lighting", &model6Resource.materialData.at(index)->lightingKind, allLightKind,IM_ARRAYSIZE(allLightKind));
+						ImGui::Combo("lighting", &model6Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
 
 						ImGui::TreePop();
 					}
@@ -1984,21 +2112,43 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				if (ImGui::Button("DisplayChange")) {
 					isDisplayModel7 = !isDisplayModel7;
 				}
-				
+
 
 				ImGui::TreePop();
 			}
+			//サウンド
+			if (ImGui::TreeNode("Sound")) {
+				if (ImGui::Button("PlayButton")) {
+					isPlayAudio = !isPlayAudio;
+				}
+				
+				if (isPlayAudio) {
+					//音声再生
+					SoundPlayWave(xAudio2.Get(), soundData1);
+					isPlayAudio = false;
+				}
+
+
+				ImGui::TreePop();
+			}
+
+
 			ImGui::End();
 
-			transform.rotate.y += 0.03f;
-			transformSphere.rotate.y += 0.03f;
-			modelResource.transform.rotate.y += 0.03f;
-			model2Resource.transform.rotate.y += 0.03f;
-			model3Resource.transform.rotate.y += 0.03f;
-			model4Resource.transform.rotate.y += 0.03f;
-			model5Resource.transform.rotate.y += 0.03f;
-			model6Resource.transform.rotate.y += 0.03f;
-			model7Resource.transform.rotate.y += 0.03f;
+			transform.rotate.y += 0.02f;
+			transformSphere.rotate.y += 0.02f;
+			modelResource.transform.rotate.y += 0.02f;
+			model2Resource.transform.rotate.y += 0.02f;
+			model3Resource.transform.rotate.y += 0.02f;
+			model4Resource.transform.rotate.y += 0.02f;
+			model5Resource.transform.rotate.y += 0.02f;
+			model6Resource.transform.rotate.y += 0.02f;
+			model7Resource.transform.rotate.y += 0.02f;
+
+			
+
+
+
 
 			/////レンダリングパイプライン/////
 			//各種行列の計算
@@ -2193,6 +2343,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	/////解放処理/////
 	//event
 	CloseHandle(fenceEvent);
+	//xAudio2
+	xAudio2.Reset();
+	//音声データ
+	SoundUnload(&soundData1);
 
 	CloseWindow(hwnd);
 
