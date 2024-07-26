@@ -1039,7 +1039,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
 	graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	//実際に生成
-
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
 	hr = device->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
 		IID_PPV_ARGS(&graphicsPipelineState));
@@ -1631,11 +1630,42 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::DragFloat3("translate", &modelResource.transform.translate.x, 0.01f);
 				ImGui::DragFloat3("rotate", &modelResource.transform.rotate.x, 0.01f);
 				ImGui::DragFloat3("scale", &modelResource.transform.scale.x, 0.01f);
+				//マテリアル設定
+				for (size_t index = 0; index < modelResource.modelData.size(); index++) {
+					std::string material = "Material";
+					std::string strIndex = material + std::to_string(index + 1);
+					if (ImGui::TreeNode(strIndex.c_str())) {
+						//UVトランスフォーム
+						ImGui::DragFloat2("UVTranslate", &modelResource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
+						ImGui::DragFloat2("UVScale", &modelResource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
+						ImGui::SliderAngle("UVRotate", &modelResource.uvTransform.at(index).rotate.z);
+						//パラメーターの更新
+						Matrix4x4 uvTransformMatrix = MakeScaleMatrix(modelResource.uvTransform.at(index).scale);
+						uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(modelResource.uvTransform.at(index).rotate.z));
+						uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(modelResource.uvTransform.at(index).translate));
+						modelResource.materialData.at(index)->uvTransform = uvTransformMatrix;
+						//カラー変更
+						ImGui::ColorEdit4("color", &modelResource.materialData.at(index)->color.x, 0.01f);
+						//ライティング変更
+						const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
+						ImGui::Combo("lighting", &modelResource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
+
+						ImGui::TreePop();
+					}
+				}
 				//リセット
 				if (ImGui::Button("reset")) {
 					modelResource.transform.translate = { 0.0f,0.0f,0.0f };
 					modelResource.transform.rotate = { 0.0f,0.0f,0.0f };
 					modelResource.transform.scale = { 1.0f,1.0f,1.0f };
+					//マテリアル
+					for (size_t index = 0; index < modelResource.modelData.size(); index++) {
+						modelResource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
+						modelResource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
+						modelResource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
+						modelResource.materialData.at(index)->color = modelResource.modelData.at(index).material.colorData;
+						modelResource.materialData.at(index)->lightingKind = HalfLambert;
+					}
 				}
 				//オブジェクトの表示切り替え
 				if (ImGui::Button("DisplayChange")) {
@@ -1650,11 +1680,42 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::DragFloat3("translate", &model2Resource.transform.translate.x, 0.01f);
 				ImGui::DragFloat3("rotate", &model2Resource.transform.rotate.x, 0.01f);
 				ImGui::DragFloat3("scale", &model2Resource.transform.scale.x, 0.01f);
+				//マテリアル設定
+				for (size_t index = 0; index < model2Resource.modelData.size(); index++) {
+					std::string material = "Material";
+					std::string strIndex = material + std::to_string(index + 1);
+					if (ImGui::TreeNode(strIndex.c_str())) {
+						//UVトランスフォーム
+						ImGui::DragFloat2("UVTranslate", &model2Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
+						ImGui::DragFloat2("UVScale", &model2Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
+						ImGui::SliderAngle("UVRotate", &model2Resource.uvTransform.at(index).rotate.z);
+						//パラメーターの更新
+						Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model2Resource.uvTransform.at(index).scale);
+						uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model2Resource.uvTransform.at(index).rotate.z));
+						uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model2Resource.uvTransform.at(index).translate));
+						model2Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
+						//カラー変更
+						ImGui::ColorEdit4("color", &model2Resource.materialData.at(index)->color.x, 0.01f);
+						//ライティング変更
+						const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
+						ImGui::Combo("lighting", &model2Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
+
+						ImGui::TreePop();
+					}
+				}
 				//リセット
 				if (ImGui::Button("reset")) {
 					model2Resource.transform.translate = { 0.0f,0.0f,0.0f };
 					model2Resource.transform.rotate = { 0.0f,0.0f,0.0f };
 					model2Resource.transform.scale = { 1.0f,1.0f,1.0f };
+					//マテリアル
+					for (size_t index = 0; index < model2Resource.modelData.size(); index++) {
+						model2Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
+						model2Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
+						model2Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
+						model2Resource.materialData.at(index)->color = model2Resource.modelData.at(index).material.colorData;
+						model2Resource.materialData.at(index)->lightingKind = HalfLambert;
+					}
 				}
 				//オブジェクトの表示切り替え
 				if (ImGui::Button("DisplayChange")) {
@@ -1669,11 +1730,42 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::DragFloat3("translate", &model3Resource.transform.translate.x, 0.01f);
 				ImGui::DragFloat3("rotate", &model3Resource.transform.rotate.x, 0.01f);
 				ImGui::DragFloat3("scale", &model3Resource.transform.scale.x, 0.01f);
+				//マテリアル設定
+				for (size_t index = 0; index < model3Resource.modelData.size(); index++) {
+					std::string material = "Material";
+					std::string strIndex = material + std::to_string(index + 1);
+					if (ImGui::TreeNode(strIndex.c_str())) {
+						//UVトランスフォーム
+						ImGui::DragFloat2("UVTranslate", &model3Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
+						ImGui::DragFloat2("UVScale", &model3Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
+						ImGui::SliderAngle("UVRotate", &model3Resource.uvTransform.at(index).rotate.z);
+						//パラメーターの更新
+						Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model3Resource.uvTransform.at(index).scale);
+						uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model3Resource.uvTransform.at(index).rotate.z));
+						uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model3Resource.uvTransform.at(index).translate));
+						model3Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
+						//カラー変更
+						ImGui::ColorEdit4("color", &model3Resource.materialData.at(index)->color.x, 0.01f);
+						//ライティング変更
+						const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
+						ImGui::Combo("lighting", &model3Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
+
+						ImGui::TreePop();
+					}
+				}
 				//リセット
 				if (ImGui::Button("reset")) {
 					model3Resource.transform.translate = { 0.0f,0.0f,0.0f };
 					model3Resource.transform.rotate = { 0.0f,0.0f,0.0f };
 					model3Resource.transform.scale = { 1.0f,1.0f,1.0f };
+					//マテリアル
+					for (size_t index = 0; index < model3Resource.modelData.size(); index++) {
+						model3Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
+						model3Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
+						model3Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
+						model3Resource.materialData.at(index)->color = model3Resource.modelData.at(index).material.colorData;
+						model3Resource.materialData.at(index)->lightingKind = HalfLambert;
+					}
 				}
 				//オブジェクトの表示切り替え
 				if (ImGui::Button("DisplayChange")) {
@@ -1688,11 +1780,42 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::DragFloat3("translate", &model4Resource.transform.translate.x, 0.01f);
 				ImGui::DragFloat3("rotate", &model4Resource.transform.rotate.x, 0.01f);
 				ImGui::DragFloat3("scale", &model4Resource.transform.scale.x, 0.01f);
+				//マテリアル設定
+				for (size_t index = 0; index < model4Resource.modelData.size(); index++) {
+					std::string material = "Material";
+					std::string strIndex = material + std::to_string(index + 1);
+					if (ImGui::TreeNode(strIndex.c_str())) {
+						//UVトランスフォーム
+						ImGui::DragFloat2("UVTranslate", &model4Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
+						ImGui::DragFloat2("UVScale", &model4Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
+						ImGui::SliderAngle("UVRotate", &model4Resource.uvTransform.at(index).rotate.z);
+						//パラメーターの更新
+						Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model4Resource.uvTransform.at(index).scale);
+						uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model4Resource.uvTransform.at(index).rotate.z));
+						uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model4Resource.uvTransform.at(index).translate));
+						model4Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
+						//カラー変更
+						ImGui::ColorEdit4("color", &model4Resource.materialData.at(index)->color.x, 0.01f);
+						//ライティング変更
+						const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
+						ImGui::Combo("lighting", &model4Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
+
+						ImGui::TreePop();
+					}
+				}
 				//リセット
 				if (ImGui::Button("reset")) {
 					model4Resource.transform.translate = { 0.0f,0.0f,0.0f };
 					model4Resource.transform.rotate = { 0.0f,0.0f,0.0f };
 					model4Resource.transform.scale = { 1.0f,1.0f,1.0f };
+					//マテリアル
+					for (size_t index = 0; index < model4Resource.modelData.size(); index++) {
+						model4Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
+						model4Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
+						model4Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
+						model4Resource.materialData.at(index)->color = model4Resource.modelData.at(index).material.colorData;
+						model4Resource.materialData.at(index)->lightingKind = HalfLambert;
+					}
 				}
 				//オブジェクトの表示切り替え
 				if (ImGui::Button("DisplayChange")) {
@@ -1707,12 +1830,42 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::DragFloat3("translate", &model5Resource.transform.translate.x, 0.01f);
 				ImGui::DragFloat3("rotate", &model5Resource.transform.rotate.x, 0.01f);
 				ImGui::DragFloat3("scale", &model5Resource.transform.scale.x, 0.01f);
+				//マテリアル設定
+				for (size_t index = 0; index < model5Resource.modelData.size(); index++) {
+					std::string material = "Material";
+					std::string strIndex = material + std::to_string(index + 1);
+					if (ImGui::TreeNode(strIndex.c_str())) {
+						//UVトランスフォーム
+						ImGui::DragFloat2("UVTranslate", &model5Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
+						ImGui::DragFloat2("UVScale", &model5Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
+						ImGui::SliderAngle("UVRotate", &model5Resource.uvTransform.at(index).rotate.z);
+						//パラメーターの更新
+						Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model5Resource.uvTransform.at(index).scale);
+						uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model5Resource.uvTransform.at(index).rotate.z));
+						uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model5Resource.uvTransform.at(index).translate));
+						model5Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
+						//カラー変更
+						ImGui::ColorEdit4("color", &model5Resource.materialData.at(index)->color.x, 0.01f);
+						//ライティング変更
+						const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
+						ImGui::Combo("lighting", &model5Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
 
+						ImGui::TreePop();
+					}
+				}
 				//リセット
 				if (ImGui::Button("reset")) {
 					model5Resource.transform.translate = { 0.0f,0.0f,0.0f };
 					model5Resource.transform.rotate = { 0.0f,0.0f,0.0f };
 					model5Resource.transform.scale = { 1.0f,1.0f,1.0f };
+					//マテリアル
+					for (size_t index = 0; index < model5Resource.modelData.size(); index++) {
+						model5Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
+						model5Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
+						model5Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
+						model5Resource.materialData.at(index)->color = model5Resource.modelData.at(index).material.colorData;
+						model5Resource.materialData.at(index)->lightingKind = HalfLambert;
+					}
 				}
 				//オブジェクトの表示切り替え
 				if (ImGui::Button("DisplayChange")) {
@@ -1761,6 +1914,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 						model6Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
 						model6Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
 						model6Resource.materialData.at(index)->color = model6Resource.modelData.at(index).material.colorData;
+						model6Resource.materialData.at(index)->lightingKind = HalfLambert;
 					}
 				}
 				//オブジェクトの表示切り替え
@@ -1776,14 +1930,42 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::DragFloat3("translate", &model7Resource.transform.translate.x, 0.01f);
 				ImGui::DragFloat3("rotate", &model7Resource.transform.rotate.x, 0.01f);
 				ImGui::DragFloat3("scale", &model7Resource.transform.scale.x, 0.01f);
-				//カラー変更
-				ImGui::ColorEdit4("color", &model7Resource.materialData.at(0)->color.x, 0.01f);
+				//マテリアル設定
+				for (size_t index = 0; index < model7Resource.modelData.size(); index++) {
+					std::string material = "Material";
+					std::string strIndex = material + std::to_string(index + 1);
+					if (ImGui::TreeNode(strIndex.c_str())) {
+						//UVトランスフォーム
+						ImGui::DragFloat2("UVTranslate", &model7Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
+						ImGui::DragFloat2("UVScale", &model7Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
+						ImGui::SliderAngle("UVRotate", &model7Resource.uvTransform.at(index).rotate.z);
+						//パラメーターの更新
+						Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model7Resource.uvTransform.at(index).scale);
+						uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model7Resource.uvTransform.at(index).rotate.z));
+						uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model7Resource.uvTransform.at(index).translate));
+						model7Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
+						//カラー変更
+						ImGui::ColorEdit4("color", &model7Resource.materialData.at(index)->color.x, 0.01f);
+						//ライティング変更
+						const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
+						ImGui::Combo("lighting", &model7Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
 
+						ImGui::TreePop();
+					}
+				}
 				//リセット
 				if (ImGui::Button("reset")) {
 					model7Resource.transform.translate = { 0.0f,0.0f,0.0f };
 					model7Resource.transform.rotate = { 0.0f,0.0f,0.0f };
 					model7Resource.transform.scale = { 1.0f,1.0f,1.0f };
+					//マテリアル
+					for (size_t index = 0; index < model7Resource.modelData.size(); index++) {
+						model7Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
+						model7Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
+						model7Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
+						model7Resource.materialData.at(index)->color = model7Resource.modelData.at(index).material.colorData;
+						model7Resource.materialData.at(index)->lightingKind = HalfLambert;
+					}
 				}
 				//オブジェクトの表示切り替え
 				if (ImGui::Button("DisplayChange")) {
@@ -1793,10 +1975,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				ImGui::TreePop();
 			}
-			ImGui::End();
-
-			ImGui::Begin("demo");
-			ImGui::ShowDemoWindow();
 			ImGui::End();
 
 			transform.rotate.y += 0.03f;
