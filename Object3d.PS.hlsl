@@ -4,7 +4,7 @@
 struct Material
 {
     float32_t4 color;
-    int32_t enableLighting;
+    int32_t lightingKind;
     float32_t4x4 uvTransform;
 };
 struct DirectionalLight
@@ -12,7 +12,6 @@ struct DirectionalLight
     float32_t4 color;
     float32_t3 direction;
     float intensity;
-    int32_t lightingKind;
 };
 struct PixelShaderOutput
 {
@@ -28,21 +27,19 @@ PixelShaderOutput main(VertexShaderOutput input)
     PixelShaderOutput output;
     float4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
     float32_t4 textureColor = gTexture.Sample(gSampler, transformedUV.xy);
-    if (gMaterial.enableLighting != 0)
+    
+    if (gMaterial.lightingKind == 0)
     {
-        if (gDirectionalLight.lightingKind != 0)
-        {
-            float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
-            float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
-            output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
-        }
-        else
-        {
-            float cos = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
-            output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
-        }
+        float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
+        float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
+        output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
     }
-    else
+    else if (gMaterial.lightingKind == 1)
+    {
+        float cos = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
+        output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
+    }
+    else if (gMaterial.lightingKind == 2)
     {
         output.color = gMaterial.color * textureColor;
     }

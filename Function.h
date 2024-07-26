@@ -1,6 +1,13 @@
 #pragma once
 #include <vector>
 
+//列挙型
+enum LightKind {
+	HalfLambert,
+	Lambert,
+	NoneLighting
+};
+
 //構造体
 struct Vector2 {
 	float x;
@@ -36,7 +43,7 @@ struct Sphere {
 
 struct Material {
 	Vector4 color;
-	int32_t enableLighting;
+	int32_t lightingKind;
 	float padding[3];
 	Matrix4x4 uvTransform;
 };
@@ -51,12 +58,11 @@ struct DirectionalLight
 	Vector4 color;
 	Vector3 direction;
 	float intensity;
-	int32_t lightingKind;
 };
 
 struct MaterialData {
 	std::string textureFilePath;
-	Vector4 color;
+	Vector4 colorData;
 };
 
 struct ModelData {

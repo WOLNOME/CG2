@@ -64,7 +64,7 @@ struct ModelResource {
 	Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
 	TransformationMatrix* wvpData;
 	Transform transform;
-	Transform uvTransform;
+	std::vector<Transform> uvTransform;
 	std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> textureResorce;
 	std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> textureSrvHandleCPU;
 	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> textureSrvHandleGPU;
@@ -394,7 +394,7 @@ MaterialData LoadMaterialTemplateFile(const std::string& directryPath, const std
 				Vector4 color;
 				s >> color.x >> color.y >> color.z;
 				color.w = 1.0f;
-				materialData.color = color;
+				materialData.colorData = color;
 			}
 		}
 	}
@@ -412,6 +412,7 @@ std::vector<ModelData> LoadObjFIle(const std::string& directoryPath, const std::
 	std::string line;
 	std::string line2;
 	bool isGetO = false;
+	bool isGetVt = false;
 	size_t index = -1;
 	//2.ファイルを開く
 	std::ifstream file(directoryPath + "/" + filename);
@@ -439,6 +440,7 @@ std::vector<ModelData> LoadObjFIle(const std::string& directoryPath, const std::
 			s >> texcoord.x >> texcoord.y;
 			texcoord.y = 1.0f - texcoord.y;
 			texcoords.push_back(texcoord);
+			isGetVt = true;
 		}
 		else if (identifier == "vn") {
 			Vector3 normal;
@@ -452,20 +454,36 @@ std::vector<ModelData> LoadObjFIle(const std::string& directoryPath, const std::
 			for (int32_t faceVertex = 0; faceVertex < 3; ++faceVertex) {
 				std::string vertexDefinition;
 				s >> vertexDefinition;
-				//頂点の要素へのIndexは「位置/UV/法線」で格納されているので、分解してIndexを取得する
+				//頂点の要素へのstrは「位置/UV/法線」で格納されているので、分解してstrを取得する
 				std::istringstream v(vertexDefinition);
 				uint32_t elementIndices[3];
 				for (int32_t element = 0; element < 3; ++element) {
-					std::string index;
-					std::getline(v, index, '/');
-					elementIndices[element] = std::stoi(index);
+					std::string str;
+					std::getline(v, str, '/');
+					if (str.size() == 0) {
+						//データがない場合、数値0を仮に入れておく
+						str = "0";
+					}
+					elementIndices[element] = std::stoi(str);
 				}
-				//要素へのIndexから、実際の要素の値を取得して、頂点を構築する
-				Vector4 position = positions[elementIndices[0] - 1];
-				Vector2 texcoord = texcoords[elementIndices[1] - 1];
-				Vector3 normal = normals[elementIndices[2] - 1];
+				//要素へのstrから、実際の要素の値を取得して、頂点を構築する
+				Vector4 position;
+				Vector2 texcoord;
+				Vector3 normal;
+				if (isGetVt) {
+					position = positions[elementIndices[0] - 1];
+					texcoord = texcoords[elementIndices[1] - 1];
+					normal = normals[elementIndices[2] - 1];
+				}
+				else {
+					position = positions[elementIndices[0] - 1];
+					texcoord = { 0,0 };//texcoord(0,0)を代入
+					normal = normals[elementIndices[2] - 1];
+				}
 				triangle[faceVertex] = { position,texcoord,normal };
-			}//頂点を逆順に登録することで、周り順を逆にする
+
+			}
+			//頂点を逆順に登録することで、周り順を逆にする
 			modelData.at(index).vertices.push_back(triangle[2]);
 			modelData.at(index).vertices.push_back(triangle[1]);
 			modelData.at(index).vertices.push_back(triangle[0]);
@@ -533,8 +551,11 @@ void DrawModel(
 		commandList->IASetVertexBuffers(0, 1, &modelResource.vertexBufferView.at(index));
 		//マテリアルCBufferの場所を設定
 		commandList->SetGraphicsRootConstantBufferView(0, modelResource.materialResource.at(index)->GetGPUVirtualAddress());
-		//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
-		commandList->SetGraphicsRootDescriptorTable(2, modelResource.textureSrvHandleGPU.at(index));
+		//モデルにテクスチャがない場合、スキップ
+		if (modelResource.modelData.at(index).material.textureFilePath.size() != 0) {
+			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
+			commandList->SetGraphicsRootDescriptorTable(2, modelResource.textureSrvHandleGPU.at(index));
+		}
 		//wvp用のCBufferの場所を指定
 		commandList->SetGraphicsRootConstantBufferView(1, modelResource.wvpResource->GetGPUVirtualAddress());
 		//モデルの描画
@@ -552,16 +573,17 @@ void MakeModelResource(
 ) {
 	modelResource.modelData = LoadObjFIle(resourceFileName, objFileName);
 	const size_t kModelNum = modelResource.modelData.size();
+	//std::vector型の要素数を確定
+	modelResource.vertexResource.resize(kModelNum);
+	modelResource.vertexBufferView.resize(kModelNum);
+	modelResource.vertexData.resize(kModelNum);
+	modelResource.materialResource.resize(kModelNum);
+	modelResource.materialData.resize(kModelNum);
+	modelResource.textureResorce.resize(kModelNum);
+	modelResource.textureSrvHandleCPU.resize(kModelNum);
+	modelResource.textureSrvHandleGPU.resize(kModelNum);
+	modelResource.uvTransform.resize(kModelNum);
 	for (size_t index = 0; index < kModelNum; index++) {
-		//std::vector型の要素数を確定
-		modelResource.vertexResource.resize(kModelNum);
-		modelResource.vertexBufferView.resize(kModelNum);
-		modelResource.vertexData.resize(kModelNum);
-		modelResource.materialResource.resize(kModelNum);
-		modelResource.materialData.resize(kModelNum);
-		modelResource.textureResorce.resize(kModelNum);
-		modelResource.textureSrvHandleCPU.resize(kModelNum);
-		modelResource.textureSrvHandleGPU.resize(kModelNum);
 		//頂点用リソースを作る
 		modelResource.vertexResource.at(index) = CreateBufferResource(device, sizeof(VertexData) * modelResource.modelData.at(index).vertices.size());
 		//頂点バッファービューを作成
@@ -576,11 +598,17 @@ void MakeModelResource(
 		//書き込むためのアドレスを取得
 		modelResource.materialResource.at(index)->Map(0, nullptr, reinterpret_cast<void**>(&modelResource.materialData.at(index)));
 		//白を書き込んでおく
-		modelResource.materialData.at(index)->color = modelResource.modelData.at(index).material.color;
+		modelResource.materialData.at(index)->color = modelResource.modelData.at(index).material.colorData;
 		//ライティング
-		modelResource.materialData.at(index)->enableLighting = true;
+		modelResource.materialData.at(index)->lightingKind = HalfLambert;
 		//uvTransform
 		modelResource.materialData.at(index)->uvTransform = MakeIdentity4x4();
+		//UVトランスフォーム
+		modelResource.uvTransform.at(index) = {
+			{1.0f,1.0f,1.0f},
+			{0.0f,0.0f,0.0f},
+			{0.0f,0.0f,0.0f}
+		};
 	}
 	//WVP用のリソースを作る。
 	modelResource.wvpResource = CreateBufferResource(device, sizeof(TransformationMatrix));
@@ -597,12 +625,6 @@ void MakeModelResource(
 		{0.0f,0.0f,0.0f},
 		{0.0f,0.0f,0.0f}
 	};
-	//UVトランスフォーム
-	modelResource.uvTransform = {
-		{1.0f,1.0f,1.0f},
-		{0.0f,0.0f,0.0f},
-		{0.0f,0.0f,0.0f}
-	};
 }
 
 //テクスチャ設定用関数
@@ -614,6 +636,10 @@ void SetTexture(
 	uint32_t& site
 ) {
 	for (size_t i = 0; i < modelResource.modelData.size(); i++) {
+		//もし、モデルのテクスチャがないなら、この処理はしない
+		if (modelResource.modelData.at(i).material.textureFilePath.size() == 0) {
+			break;
+		}
 		//モデル用のTextureを読んで転送する
 		DirectX::ScratchImage mipImagesModel = LoadTexture(modelResource.modelData.at(i).material.textureFilePath);
 		const DirectX::TexMetadata& metadataModel = mipImagesModel.GetMetadata();
@@ -1070,7 +1096,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//今回は白を書き込んでみる
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	//ライティングオフ
-	materialData->enableLighting = false;
+	materialData->lightingKind = NoneLighting;
 	//uvTransformは単位行列を入れておく
 	materialData->uvTransform = MakeIdentity4x4();
 
@@ -1229,7 +1255,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//白を書き込んでおく
 	materialDataSphere->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	//ライティングオン
-	materialDataSphere->enableLighting = true;
+	materialDataSphere->lightingKind = HalfLambert;
 	//uvTransform
 	materialDataSphere->uvTransform = MakeIdentity4x4();
 	//WVP用のリソースを作る。
@@ -1290,7 +1316,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//白を書き込んでおく
 	materialDataSprite->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	//ライティングオフ
-	materialDataSprite->enableLighting = false;
+	materialDataSprite->lightingKind = NoneLighting;
 	//uvTransformは単位行列を入れておく
 	materialDataSprite->uvTransform = MakeIdentity4x4();
 	//Sprite用のTransformationMatrix用のリソースを作る。
@@ -1327,7 +1353,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
 	directionalLightData->intensity = 1.0f;
-	directionalLightData->lightingKind = true;
 	////////////////////////////////////////////////////////////////////////////////////////
 
 	///////////////////インデックス用リソースを作る////////////////////////////////////
@@ -1376,10 +1401,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	MakeModelResource("resources", "multiMaterial.obj", device, model6Resource);
 	/////////////////////////////////////////////////////////////////////////
 
-	/////////////////////Suzanneのリソースを作る/////////////////////////////////
-	//ModelResource model7Resource;
-	//MakeModelResource("resources", "suzanne.obj", device, model7Resource);
-	///////////////////////////////////////////////////////////////////////////
+	///////////////////Suzanneのリソースを作る/////////////////////////////////
+	ModelResource model7Resource;
+	MakeModelResource("resources", "suzanne.obj", device, model7Resource);
+	/////////////////////////////////////////////////////////////////////////
 
 
 	////////////////////////Textureの設定///////////////////////////////////
@@ -1441,8 +1466,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//モデル6用のTextureを読んで転送する
 	SetTexture(model6Resource, device, srvDescriptorHeap, descriptorSizeSRV, site);
 
-	////モデル7用のTextureを読んで転送する
-	//SetTexture(model7Resource, device, srvDescriptorHeap, descriptorSizeSRV, 9);
+	//モデル7用のTextureを読んで転送する
+	SetTexture(model7Resource, device, srvDescriptorHeap, descriptorSizeSRV, site);
 
 
 	//DepthStencilTextureをウィンドウサイズで作成
@@ -1558,8 +1583,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::DragFloat3("rotate", &transformSphere.rotate.x, 0.01f);
 				ImGui::DragFloat3("scale", &transformSphere.scale.x, 0.01f);
 				//ライティング
-				ImGui::Checkbox("lighting", &isLightingSphere);
-				materialDataSphere->enableLighting = isLightingSphere;
+				
 				//リセット
 				if (ImGui::Button("reset")) {
 					transformSphere.translate = { 0.0f,0.0f,0.0f };
@@ -1582,10 +1606,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				Normalize(directionalLightData->direction);
 				//輝度
 				ImGui::DragFloat("intensity", &directionalLightData->intensity, 0.01f);
-				//種類
-				ImGui::Checkbox("HalfLambert", &isHalfLambert);
-				directionalLightData->lightingKind = isHalfLambert;
-
+				
 				//リセット
 				if (ImGui::Button("reset")) {
 					directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
@@ -1706,12 +1727,41 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::DragFloat3("translate", &model6Resource.transform.translate.x, 0.01f);
 				ImGui::DragFloat3("rotate", &model6Resource.transform.rotate.x, 0.01f);
 				ImGui::DragFloat3("scale", &model6Resource.transform.scale.x, 0.01f);
+				//マテリアル設定
+				for (size_t index = 0; index < model6Resource.modelData.size(); index++) {
+					std::string material = "Material";
+					std::string strIndex = material + std::to_string(index + 1);
+					if (ImGui::TreeNode(strIndex.c_str())) {
+						//UVトランスフォーム
+						ImGui::DragFloat2("UVTranslate", &model6Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
+						ImGui::DragFloat2("UVScale", &model6Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
+						ImGui::SliderAngle("UVRotate", &model6Resource.uvTransform.at(index).rotate.z);
+						//パラメーターの更新
+						Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model6Resource.uvTransform.at(index).scale);
+						uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model6Resource.uvTransform.at(index).rotate.z));
+						uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model6Resource.uvTransform.at(index).translate));
+						model6Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
+						//カラー変更
+						ImGui::ColorEdit4("color", &model6Resource.materialData.at(index)->color.x, 0.01f);
+						//ライティング変更
+						const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
+						ImGui::Combo("lighting", &model6Resource.materialData.at(index)->lightingKind, allLightKind,IM_ARRAYSIZE(allLightKind));
 
+						ImGui::TreePop();
+					}
+				}
 				//リセット
 				if (ImGui::Button("reset")) {
 					model6Resource.transform.translate = { 0.0f,0.0f,0.0f };
 					model6Resource.transform.rotate = { 0.0f,0.0f,0.0f };
 					model6Resource.transform.scale = { 1.0f,1.0f,1.0f };
+					//マテリアル
+					for (size_t index = 0; index < model6Resource.modelData.size(); index++) {
+						model6Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
+						model6Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
+						model6Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
+						model6Resource.materialData.at(index)->color = model6Resource.modelData.at(index).material.colorData;
+					}
 				}
 				//オブジェクトの表示切り替え
 				if (ImGui::Button("DisplayChange")) {
@@ -1720,27 +1770,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				ImGui::TreePop();
 			}
-			////モデル7
-			//if (ImGui::TreeNode("Suzanne")) {
-			//	//オブジェクトの平行移動
-			//	ImGui::DragFloat3("translate", &model7Resource.transform.translate.x, 0.01f);
-			//	ImGui::DragFloat3("rotate", &model7Resource.transform.rotate.x, 0.01f);
-			//	ImGui::DragFloat3("scale", &model7Resource.transform.scale.x, 0.01f);
+			//モデル7
+			if (ImGui::TreeNode("Suzanne")) {
+				//オブジェクトの平行移動
+				ImGui::DragFloat3("translate", &model7Resource.transform.translate.x, 0.01f);
+				ImGui::DragFloat3("rotate", &model7Resource.transform.rotate.x, 0.01f);
+				ImGui::DragFloat3("scale", &model7Resource.transform.scale.x, 0.01f);
+				//カラー変更
+				ImGui::ColorEdit4("color", &model7Resource.materialData.at(0)->color.x, 0.01f);
 
-			//	//リセット
-			//	if (ImGui::Button("reset")) {
-			//		model7Resource.transform.translate = { 0.0f,0.0f,0.0f };
-			//		model7Resource.transform.rotate = { 0.0f,0.0f,0.0f };
-			//		model7Resource.transform.scale = { 1.0f,1.0f,1.0f };
-			//	}
-			//	//オブジェクトの表示切り替え
-			//	if (ImGui::Button("DisplayChange")) {
-			//		isDisplayModel7 = !isDisplayModel7;
-			//	}
+				//リセット
+				if (ImGui::Button("reset")) {
+					model7Resource.transform.translate = { 0.0f,0.0f,0.0f };
+					model7Resource.transform.rotate = { 0.0f,0.0f,0.0f };
+					model7Resource.transform.scale = { 1.0f,1.0f,1.0f };
+				}
+				//オブジェクトの表示切り替え
+				if (ImGui::Button("DisplayChange")) {
+					isDisplayModel7 = !isDisplayModel7;
+				}
+				
 
-			//	ImGui::TreePop();
-			//}
+				ImGui::TreePop();
+			}
+			ImGui::End();
 
+			ImGui::Begin("demo");
+			ImGui::ShowDemoWindow();
 			ImGui::End();
 
 			transform.rotate.y += 0.03f;
@@ -1751,7 +1807,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			model4Resource.transform.rotate.y += 0.03f;
 			model5Resource.transform.rotate.y += 0.03f;
 			model6Resource.transform.rotate.y += 0.03f;
-			//model7Resource.transform.rotate.y += 0.03f;
+			model7Resource.transform.rotate.y += 0.03f;
 
 			/////レンダリングパイプライン/////
 			//各種行列の計算
@@ -1777,8 +1833,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			RenderingPipeLine(model5Resource.wvpData, model5Resource.transform, cameraTransform, kClientWidth, kClientHeight);
 			//モデル6用のWorldViewProjectionMatrixを作る
 			RenderingPipeLine(model6Resource.wvpData, model6Resource.transform, cameraTransform, kClientWidth, kClientHeight);
-			////モデル7用のWorldViewProjectionMatrixを作る
-			//RenderingPipeLine(model7Resource.wvpData, model7Resource.transform, cameraTransform, kClientWidth, kClientHeight);
+			//モデル7用のWorldViewProjectionMatrixを作る
+			RenderingPipeLine(model7Resource.wvpData, model7Resource.transform, cameraTransform, kClientWidth, kClientHeight);
 
 			//ImGuiの内部コマンドを生成する
 			ImGui::Render();
@@ -1891,8 +1947,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DrawModel(commandList, model5Resource, isDisplayModel5);
 			//モデル6の描画
 			DrawModel(commandList, model6Resource, isDisplayModel6);
-			////モデル7の描画
-			//DrawModel(commandList, model7Resource, isDisplayModel7);
+			//モデル7の描画
+			DrawModel(commandList, model7Resource, isDisplayModel7);
 
 			//ImGuiの描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
