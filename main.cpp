@@ -17,6 +17,10 @@
 #include "Function.h"
 #define _USE_MATH_DEFINES
 
+//DeirectInput
+#define DIRECTINPUT_VERSION	0x0800
+#include <dinput.h>
+
 
 //DirectXTex
 #include "externals/DirectXTex/DirectXTex.h"
@@ -33,6 +37,9 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 #pragma comment(lib,"dxguid.lib")
 #pragma comment(lib,"dxcompiler.lib")
 #pragma comment(lib,"xaudio2.lib")
+#pragma comment(lib,"dinput8.lib")
+#pragma comment(lib,"dxguid.lib")
+
 
 //定数
 const int kTriangleVertexNum = 3;
@@ -104,6 +111,27 @@ struct SoundData
 	unsigned int bufferSize;
 };
 
+//ゲームパッドキーボタンの種類
+enum ButtonKind
+{
+	UpButton,
+	DownButton,
+	LeftButton,
+	RightButton,
+	Button01,
+	Button02,
+	ButtonKindMax,
+};
+
+//ゲームパッドボタンの状態
+enum ButtonState
+{
+	ButtonStateNone,
+	ButtonStateDown,
+	ButtonStatePush,
+	ButtonStateUp,
+	ButtonStateMax,
+};
 
 //ウィンドウプロシージャ
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam) {
@@ -779,7 +807,6 @@ void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData)
 }
 
 
-
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//COMの初期化
@@ -887,6 +914,59 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//デバイスの生成が上手くいかなかったので起動できない
 	assert(device != nullptr);
 	Log("Complete crate D3D12Device!!!\n");//初期化完了のログを出す
+
+	//DirectInputの初期化
+	IDirectInput8* directInput = nullptr;
+	hr = DirectInput8Create(
+		wc.hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
+		(void**)&directInput, nullptr);
+	assert(SUCCEEDED(hr));
+
+	//キーボードデバイスの生成
+	IDirectInputDevice8* keyboard = nullptr;
+	hr = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
+	assert(SUCCEEDED(hr));
+	//入力データ形式のセット
+	hr = keyboard->SetDataFormat(&c_dfDIKeyboard);
+	assert(SUCCEEDED(hr));
+	//排他制御レベルのセット
+	hr = keyboard->SetCooperativeLevel(
+		hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
+	assert(SUCCEEDED(hr));
+
+	//ゲームパッドデバイスの生成
+	IDirectInputDevice8* gamepad = nullptr;
+	hr = directInput->CreateDevice(GUID_Joystick, &gamepad, NULL);
+	assert(SUCCEEDED(hr));
+	//入力データ形式のセット
+	hr = gamepad->SetDataFormat(&c_dfDIJoystick);
+	assert(SUCCEEDED(hr));
+	// プロパティ設定(軸モードを絶対値モードとして設定)
+	DIPROPDWORD diprop;
+	ZeroMemory(&diprop, sizeof(diprop));
+	diprop.diph.dwSize = sizeof(diprop);
+	diprop.diph.dwHeaderSize = sizeof(diprop.diph);
+	diprop.diph.dwHow = DIPH_DEVICE;
+	diprop.diph.dwObj = 0;
+	diprop.dwData = DIPROPAXISMODE_ABS;
+	assert(SUCCEEDED(gamepad->SetProperty(DIPROP_AXISMODE, &diprop.diph)));
+	// X軸の値の範囲設定
+	DIPROPRANGE diprg;
+	ZeroMemory(&diprg, sizeof(diprg));
+	diprg.diph.dwSize = sizeof(diprg);
+	diprg.diph.dwHeaderSize = sizeof(diprg.diph);
+	diprg.diph.dwHow = DIPH_BYOFFSET;
+	diprg.diph.dwObj = DIJOFS_X;
+	diprg.lMin = -1000;
+	diprg.lMax = 1000;
+	assert(SUCCEEDED(gamepad->SetProperty(DIPROP_RANGE, &diprg.diph)));
+	// Y軸の値の範囲設定
+	diprg.diph.dwObj = DIJOFS_Y;
+	assert(SUCCEEDED(gamepad->SetProperty(DIPROP_RANGE, &diprg.diph)));
+	//協調モードの設定
+	assert(SUCCEEDED(gamepad->SetCooperativeLevel(hwnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND)));
+
+
 
 #ifdef _DEBUG
 	ID3D12InfoQueue* infoQueue = nullptr;
@@ -1529,6 +1609,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	MakeModelResource("resources", "suzanne.obj", device, model7Resource);
 	/////////////////////////////////////////////////////////////////////////
 
+	///////////////////Suzanne2のリソースを作る/////////////////////////////////
+	ModelResource model8Resource;
+	MakeModelResource("resources", "suzanne.obj", device, model8Resource);
+	/////////////////////////////////////////////////////////////////////////
+
 
 	////////////////////////Textureの設定///////////////////////////////////
 	//DescriptorHeap配置場所
@@ -1592,6 +1677,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//モデル7用のTextureを読んで転送する
 	SetTexture(model7Resource, device, srvDescriptorHeap, descriptorSizeSRV, site);
 
+	//モデル8用のTextureを読んで転送する
+	SetTexture(model8Resource, device, srvDescriptorHeap, descriptorSizeSRV, site);
+
 
 	//DepthStencilTextureをウィンドウサイズで作成
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(device, kClientWidth, kClientHeight);;
@@ -1624,6 +1712,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	bool isDisplayModel5 = false;
 	bool isDisplayModel6 = false;
 	bool isDisplayModel7 = false;
+	bool isDisplayModel8 = false;
 	bool useMonsterBall = false;
 	//ライト
 	bool isLightingSphere = true;
@@ -1651,11 +1740,113 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			ImGui_ImplDX12_NewFrame();
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
+
+			//グラフィックスコマンド
+			keyboard->Acquire();
+			//全キーの入力状態を取得する
+			BYTE key[256] = {};
+			keyboard->GetDeviceState(sizeof(key), key);
+
+			//ゲームパッドのグラフィックスコマンド
+			gamepad->Acquire();
+			gamepad->Poll();
+			DIJOYSTATE padData;
+			//デバイス取得
+			hr = gamepad->GetDeviceState(sizeof(DIJOYSTATE), &padData);
+			assert(SUCCEEDED(hr));
+			//スティック判定
+			bool isPush[ButtonKind::ButtonKindMax];
+			for (int i = 0; i < ButtonKind::ButtonKindMax; i++) {
+				isPush[i] = false;
+			}
+			int unresponsive_range = 200;
+			if (padData.lX < -unresponsive_range)
+			{
+				isPush[ButtonKind::LeftButton] = true;
+			}
+			else if (padData.lX > unresponsive_range)
+			{
+				isPush[ButtonKind::RightButton] = true;
+			}
+
+			if (padData.lY < -unresponsive_range)
+			{
+				isPush[ButtonKind::UpButton] = true;
+			}
+			else if (padData.lY > unresponsive_range)
+			{
+				isPush[ButtonKind::DownButton] = true;
+			}
+			//ボタン判定
+			for (int i = 0; i < 32; i++) {
+				if (!(padData.rgbButtons[i] & 0x80))
+				{
+					continue;
+				}
+
+				switch (i)
+				{
+				case 0:
+					isPush[ButtonKind::Button01] = true;
+					break;
+				case 1:
+					isPush[ButtonKind::Button02] = true;
+					break;
+				}
+			}
+			//十字キー判定
+			if (padData.rgdwPOV[0] != 0xffffffff)
+			{
+				switch (padData.rgdwPOV[0])
+				{
+					// 上
+				case 0:
+					isPush[ButtonKind::UpButton] = true;
+					break;
+					// 右上
+				case 4500:
+					isPush[ButtonKind::UpButton] = true;
+					isPush[ButtonKind::RightButton] = true;
+					break;
+					// 右
+				case 9000:
+					isPush[ButtonKind::RightButton] = true;
+					break;
+					// 右下
+				case 13500:
+					isPush[ButtonKind::DownButton] = true;
+					isPush[ButtonKind::RightButton] = true;
+					break;
+					// 下
+				case 18000:
+					isPush[ButtonKind::DownButton] = true;
+					break;
+					// 左下
+				case 22500:
+					isPush[ButtonKind::DownButton] = true;
+					isPush[ButtonKind::LeftButton] = true;
+					break;
+					// 左
+				case 27000:
+					isPush[ButtonKind::LeftButton] = true;
+					break;
+					//左上
+				case 31500:
+					isPush[ButtonKind::UpButton] = true;
+					isPush[ButtonKind::LeftButton] = true;
+					break;
+				default:
+					break;
+				}
+			}
+
+
 			//ゲームの処理
 
 			//////////////////////
 			///更新処理
 			//////////////////////
+
 
 
 
@@ -2116,12 +2307,39 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 				ImGui::TreePop();
 			}
+			//モデル8
+			if (ImGui::TreeNode("GamePad")) {
+				//オブジェクトの平行移動
+				if (isPush[ButtonKind::UpButton]) {
+					model8Resource.transform.translate.y += 0.05f;
+				}
+				if (isPush[ButtonKind::DownButton]) {
+					model8Resource.transform.translate.y -= 0.05f;
+				}
+				if (isPush[ButtonKind::RightButton]) {
+					model8Resource.transform.translate.x += 0.05f;
+				}
+				if (isPush[ButtonKind::LeftButton]) {
+					model8Resource.transform.translate.x -= 0.05f;
+				}
+				//リセット
+				if (ImGui::Button("reset")) {
+					model8Resource.transform.translate = { 0.0f,0.0f,0.0f };
+					model8Resource.transform.rotate = { 0.0f,0.0f,0.0f };
+					model8Resource.transform.scale = { 1.0f,1.0f,1.0f };
+				}
+				//オブジェクトの表示切り替え
+				if (ImGui::Button("DisplayChange")) {
+					isDisplayModel8 = !isDisplayModel8;
+				}
+				ImGui::TreePop();
+			}
 			//サウンド
 			if (ImGui::TreeNode("Sound")) {
 				if (ImGui::Button("PlayButton")) {
 					isPlayAudio = !isPlayAudio;
 				}
-				
+
 				if (isPlayAudio) {
 					//音声再生
 					SoundPlayWave(xAudio2.Get(), soundData1);
@@ -2144,9 +2362,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			model5Resource.transform.rotate.y += 0.02f;
 			model6Resource.transform.rotate.y += 0.02f;
 			model7Resource.transform.rotate.y += 0.02f;
-
-			
-
+			model8Resource.transform.rotate.y += 0.02f;
 
 
 
@@ -2176,6 +2392,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			RenderingPipeLine(model6Resource.wvpData, model6Resource.transform, cameraTransform, kClientWidth, kClientHeight);
 			//モデル7用のWorldViewProjectionMatrixを作る
 			RenderingPipeLine(model7Resource.wvpData, model7Resource.transform, cameraTransform, kClientWidth, kClientHeight);
+			//モデル8用のWorldViewProjectionMatrixを作る
+			RenderingPipeLine(model8Resource.wvpData, model8Resource.transform, cameraTransform, kClientWidth, kClientHeight);
 
 			//ImGuiの内部コマンドを生成する
 			ImGui::Render();
@@ -2290,6 +2508,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DrawModel(commandList, model6Resource, isDisplayModel6);
 			//モデル7の描画
 			DrawModel(commandList, model7Resource, isDisplayModel7);
+			//モデル8の描画
+			DrawModel(commandList, model8Resource, isDisplayModel8);
+
 
 			//ImGuiの描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
@@ -2347,6 +2568,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	xAudio2.Reset();
 	//音声データ
 	SoundUnload(&soundData1);
+	//デバイス
+	keyboard->Unacquire();
+	gamepad->Unacquire();
+	directInput->Release();
+
+
 
 	CloseWindow(hwnd);
 
