@@ -734,7 +734,6 @@ void SetTexture(
 //音声データの読み込み
 SoundData SoundLoadWave(const char* filename)
 {
-	HRESULT result;
 	//1.ファイルオープン
 	std::ifstream file;
 	file.open(filename, std::ios_base::binary);
@@ -1193,11 +1192,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
 	//Shaderをコンパイルする
-	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"Object3D.VS.hlsl",
+	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = CompileShader(L"Resources/shaders/Object3D.VS.hlsl",
 		L"vs_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
 	assert(vertexShaderBlob != nullptr);
 
-	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"Object3D.PS.hlsl",
+	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = CompileShader(L"Resources/shaders/Object3D.PS.hlsl",
 		L"ps_6_0", dxcUtils.Get(), dxcCompiler.Get(), includeHandler.Get());
 	assert(pixelShaderBlob != nullptr);
 
@@ -1576,42 +1575,42 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	/////////////////////////モデル用のリソースを作る/////////////////////////////////////////////////////////////////////////////////
 	ModelResource modelResource;
-	MakeModelResource("resources", "axis.obj", device, modelResource);
+	MakeModelResource("Resources", "axis.obj", device, modelResource);
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	////////////////////モデル2のリソース////////////////////////////////////////////////////
 	ModelResource model2Resource;
-	MakeModelResource("resources", "plane.obj", device, model2Resource);
+	MakeModelResource("Resources", "plane.obj", device, model2Resource);
 	///////////////////////////////////////////////////////////////////////////////
 
 	/////////////////////////Utah TeaPotのリソースを作る/////////////////////////////////////////////////////////////////////////////////
 	ModelResource model3Resource;
-	MakeModelResource("resources", "teapot.obj", device, model3Resource);
+	MakeModelResource("Resources", "teapot.obj", device, model3Resource);
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	///////////////////Stanford Bunnyのリソースを作る/////////////////////////////////
 	ModelResource model4Resource;
-	MakeModelResource("resources", "bunny.obj", device, model4Resource);
+	MakeModelResource("Resources", "bunny.obj", device, model4Resource);
 	/////////////////////////////////////////////////////////////////////////
 
 	///////////////////MultiMeshのリソースを作る/////////////////////////////////
 	ModelResource model5Resource;
-	MakeModelResource("resources", "multiMesh.obj", device, model5Resource);
+	MakeModelResource("Resources", "multiMesh.obj", device, model5Resource);
 	/////////////////////////////////////////////////////////////////////////
 
 	///////////////////MultiMaterialのリソースを作る/////////////////////////////////
 	ModelResource model6Resource;
-	MakeModelResource("resources", "multiMaterial.obj", device, model6Resource);
+	MakeModelResource("Resources", "multiMaterial.obj", device, model6Resource);
 	/////////////////////////////////////////////////////////////////////////
 
 	///////////////////Suzanneのリソースを作る/////////////////////////////////
 	ModelResource model7Resource;
-	MakeModelResource("resources", "suzanne.obj", device, model7Resource);
+	MakeModelResource("Resources", "suzanne.obj", device, model7Resource);
 	/////////////////////////////////////////////////////////////////////////
 
 	///////////////////Suzanne2のリソースを作る/////////////////////////////////
 	ModelResource model8Resource;
-	MakeModelResource("resources", "suzanne.obj", device, model8Resource);
+	MakeModelResource("Resources", "suzanne.obj", device, model8Resource);
 	/////////////////////////////////////////////////////////////////////////
 
 
@@ -1619,7 +1618,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//DescriptorHeap配置場所
 	uint32_t site = 0;
 	//Textureを読んで転送する
-	DirectX::ScratchImage mipImages = LoadTexture("resources/uvChecker.png");
+	DirectX::ScratchImage mipImages = LoadTexture("Resources/uvChecker.png");
 	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureResorce = CreateTextureResource(device, metadata);
 	UploadTextureData(textureResorce.Get(), mipImages);
@@ -1638,7 +1637,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	device->CreateShaderResourceView(textureResorce.Get(), &srvDesc, textureSrvHandleCPU);
 
 	//2枚目のTextureを読んで転送する
-	DirectX::ScratchImage mipImages2 = LoadTexture("resources/monsterBall.png");
+	DirectX::ScratchImage mipImages2 = LoadTexture("Resources/monsterBall.png");
 	const DirectX::TexMetadata& metadata2 = mipImages2.GetMetadata();
 	Microsoft::WRL::ComPtr<ID3D12Resource> textureResorce2 = CreateTextureResource(device, metadata2);
 	UploadTextureData(textureResorce2.Get(), mipImages2);
@@ -1724,7 +1723,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	hr = xAudio2->CreateMasteringVoice(&masterVoice);
 	assert(SUCCEEDED(hr));
 	//音声読み込み
-	SoundData soundData1 = SoundLoadWave("resources/Alarm01.wav");
+	SoundData soundData1 = SoundLoadWave("Resources/Alarm01.wav");
 	//再生フラグ
 	bool isPlayAudio = false;
 
