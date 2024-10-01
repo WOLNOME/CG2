@@ -1621,6 +1621,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	MakeModelResource("resources", "suzanne.obj", device, model8Resource);
 	/////////////////////////////////////////////////////////////////////////
 
+	///////////////////フェンスのリソースを作る/////////////////////////////////
+	ModelResource model9Resource;
+	MakeModelResource("resources", "fence.obj", device, model9Resource);
+	/////////////////////////////////////////////////////////////////////////
+
+
+
 
 	////////////////////////Textureの設定///////////////////////////////////
 	//DescriptorHeap配置場所
@@ -1687,6 +1694,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//モデル8用のTextureを読んで転送する
 	SetTexture(model8Resource, device, srvDescriptorHeap, descriptorSizeSRV, site);
 
+	//モデル9用のTextureを読んで転送する
+	SetTexture(model9Resource, device, srvDescriptorHeap, descriptorSizeSRV, site);
 
 	//DepthStencilTextureをウィンドウサイズで作成
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(device, kClientWidth, kClientHeight);;
@@ -1720,6 +1729,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	bool isDisplayModel6 = false;
 	bool isDisplayModel7 = false;
 	bool isDisplayModel8 = false;
+	bool isDisplayModel9 = false;
 	bool useMonsterBall = false;
 	//ライト
 	bool isLightingSphere = true;
@@ -2341,6 +2351,56 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				}
 				ImGui::TreePop();
 			}
+			//モデル9
+			if (ImGui::TreeNode("Fence")) {
+				//オブジェクトの平行移動
+				ImGui::DragFloat3("translate", &model9Resource.transform.translate.x, 0.01f);
+				ImGui::DragFloat3("rotate", &model9Resource.transform.rotate.x, 0.01f);
+				ImGui::DragFloat3("scale", &model9Resource.transform.scale.x, 0.01f);
+				//マテリアル設定
+				for (size_t index = 0; index < model9Resource.modelData.size(); index++) {
+					std::string material = "Material";
+					std::string strIndex = material + std::to_string(index + 1);
+					if (ImGui::TreeNode(strIndex.c_str())) {
+						//UVトランスフォーム
+						ImGui::DragFloat2("UVTranslate", &model9Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
+						ImGui::DragFloat2("UVScale", &model9Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
+						ImGui::SliderAngle("UVRotate", &model9Resource.uvTransform.at(index).rotate.z);
+						//パラメーターの更新
+						Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model9Resource.uvTransform.at(index).scale);
+						uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model9Resource.uvTransform.at(index).rotate.z));
+						uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model9Resource.uvTransform.at(index).translate));
+						model9Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
+						//カラー変更
+						ImGui::ColorEdit4("color", &model9Resource.materialData.at(index)->color.x, 0.01f);
+						//ライティング変更
+						const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
+						ImGui::Combo("lighting", &model9Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
+
+						ImGui::TreePop();
+					}
+				}
+				//リセット
+				if (ImGui::Button("reset")) {
+					model9Resource.transform.translate = { 0.0f,0.0f,0.0f };
+					model9Resource.transform.rotate = { 0.0f,0.0f,0.0f };
+					model9Resource.transform.scale = { 1.0f,1.0f,1.0f };
+					//マテリアル
+					for (size_t index = 0; index < model9Resource.modelData.size(); index++) {
+						model9Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
+						model9Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
+						model9Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
+						model9Resource.materialData.at(index)->color = model9Resource.modelData.at(index).material.colorData;
+						model9Resource.materialData.at(index)->lightingKind = HalfLambert;
+					}
+				}
+				//オブジェクトの表示切り替え
+				if (ImGui::Button("DisplayChange")) {
+					isDisplayModel9 = !isDisplayModel9;
+				}
+
+				ImGui::TreePop();
+			}
 			//サウンド
 			if (ImGui::TreeNode("Sound")) {
 				if (ImGui::Button("PlayButton")) {
@@ -2363,13 +2423,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			transform.rotate.y += 0.02f;
 			transformSphere.rotate.y += 0.02f;
 			modelResource.transform.rotate.y += 0.02f;
-			model2Resource.transform.rotate.y += 0.02f;
+			model2Resource.transform.rotate.y = 3.14f;
 			model3Resource.transform.rotate.y += 0.02f;
 			model4Resource.transform.rotate.y += 0.02f;
 			model5Resource.transform.rotate.y += 0.02f;
 			model6Resource.transform.rotate.y += 0.02f;
 			model7Resource.transform.rotate.y += 0.02f;
 			model8Resource.transform.rotate.y += 0.02f;
+			model9Resource.transform.rotate.y = 3.14f;;
 
 
 
@@ -2401,6 +2462,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			RenderingPipeLine(model7Resource.wvpData, model7Resource.transform, cameraTransform, kClientWidth, kClientHeight);
 			//モデル8用のWorldViewProjectionMatrixを作る
 			RenderingPipeLine(model8Resource.wvpData, model8Resource.transform, cameraTransform, kClientWidth, kClientHeight);
+			//モデル9用のWorldViewProjectionMatrixを作る
+			RenderingPipeLine(model9Resource.wvpData, model9Resource.transform, cameraTransform, kClientWidth, kClientHeight);
 
 			//ImGuiの内部コマンドを生成する
 			ImGui::Render();
@@ -2517,7 +2580,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			DrawModel(commandList, model7Resource, isDisplayModel7);
 			//モデル8の描画
 			DrawModel(commandList, model8Resource, isDisplayModel8);
-
+			//モデル9の描画
+			DrawModel(commandList, model9Resource, isDisplayModel9);
 
 			//ImGuiの描画
 			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());

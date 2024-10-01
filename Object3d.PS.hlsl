@@ -41,6 +41,12 @@ PixelShaderOutput main(VertexShaderOutput input)
         textureColor.w = 1.0f;
     }
    
+    //テクスチャのα値が一定値以下のディスカード処理(パーティクルとかに使えそう)
+    if (textureColor.a <= 0.5)
+    {
+        discard;//←ピクセルの棄却(存在抹消)
+    }
+    
     //ハーフランバート
     if (gMaterial.lightingKind == 0)
     {
