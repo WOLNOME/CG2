@@ -1,15 +1,10 @@
 #include "Input.h"
 #include <cassert>
-#include <wrl.h>
-#include <windows.h>
-
-#define DIRECTINPUT_VERSION	0x0800
-#include <dinput.h>
+#include <Windows.h>
 
 #pragma comment(lib,"dinput8.lib")
 #pragma comment(lib,"dxguid.lib")
 
-using namespace Microsoft::WRL;
 
 void Input::Initialize(HINSTANCE hInstance,HWND hwnd)
 {
@@ -23,7 +18,7 @@ void Input::Initialize(HINSTANCE hInstance,HWND hwnd)
 	assert(SUCCEEDED(hr));
 
 	//キーボードデバイスの生成
-	IDirectInputDevice8* keyboard = nullptr;
+	keyboard = nullptr;
 	hr = directInput->CreateDevice(GUID_SysKeyboard, &keyboard, NULL);
 	assert(SUCCEEDED(hr));
 	//入力データ形式のセット
@@ -35,7 +30,7 @@ void Input::Initialize(HINSTANCE hInstance,HWND hwnd)
 	assert(SUCCEEDED(hr));
 
 	//ゲームパッドデバイスの生成
-	IDirectInputDevice8* gamepad = nullptr;
+	gamepad = nullptr;
 	hr = directInput->CreateDevice(GUID_Joystick, &gamepad, NULL);
 	assert(SUCCEEDED(hr));
 	//入力データ形式のセット
@@ -70,5 +65,104 @@ void Input::Initialize(HINSTANCE hInstance,HWND hwnd)
 
 void Input::Update()
 {
+	HRESULT hr;
 
+	//グラフィックスコマンド
+	keyboard->Acquire();
+	//全キーの入力状態を取得する
+	BYTE key[256] = {};
+	keyboard->GetDeviceState(sizeof(key), key);
+
+	//ゲームパッドのグラフィックスコマンド
+	gamepad->Acquire();
+	gamepad->Poll();
+	DIJOYSTATE padData;
+	//デバイス取得
+	hr = gamepad->GetDeviceState(sizeof(DIJOYSTATE), &padData);
+	assert(SUCCEEDED(hr));
+	//スティック判定
+	bool isPush[ButtonKind::ButtonKindMax];
+	for (int i = 0; i < ButtonKind::ButtonKindMax; i++) {
+		isPush[i] = false;
+	}
+	int unresponsive_range = 200;
+	if (padData.lX < -unresponsive_range)
+	{
+		isPush[ButtonKind::LeftButton] = true;
+	}
+	else if (padData.lX > unresponsive_range)
+	{
+		isPush[ButtonKind::RightButton] = true;
+	}
+
+	if (padData.lY < -unresponsive_range)
+	{
+		isPush[ButtonKind::UpButton] = true;
+	}
+	else if (padData.lY > unresponsive_range)
+	{
+		isPush[ButtonKind::DownButton] = true;
+	}
+	//ボタン判定
+	for (int i = 0; i < 32; i++) {
+		if (!(padData.rgbButtons[i] & 0x80))
+		{
+			continue;
+		}
+
+		switch (i)
+		{
+		case 0:
+			isPush[ButtonKind::Button01] = true;
+			break;
+		case 1:
+			isPush[ButtonKind::Button02] = true;
+			break;
+		}
+	}
+	//十字キー判定
+	if (padData.rgdwPOV[0] != 0xffffffff)
+	{
+		switch (padData.rgdwPOV[0])
+		{
+			// 上
+		case 0:
+			isPush[ButtonKind::UpButton] = true;
+			break;
+			// 右上
+		case 4500:
+			isPush[ButtonKind::UpButton] = true;
+			isPush[ButtonKind::RightButton] = true;
+			break;
+			// 右
+		case 9000:
+			isPush[ButtonKind::RightButton] = true;
+			break;
+			// 右下
+		case 13500:
+			isPush[ButtonKind::DownButton] = true;
+			isPush[ButtonKind::RightButton] = true;
+			break;
+			// 下
+		case 18000:
+			isPush[ButtonKind::DownButton] = true;
+			break;
+			// 左下
+		case 22500:
+			isPush[ButtonKind::DownButton] = true;
+			isPush[ButtonKind::LeftButton] = true;
+			break;
+			// 左
+		case 27000:
+			isPush[ButtonKind::LeftButton] = true;
+			break;
+			//左上
+		case 31500:
+			isPush[ButtonKind::UpButton] = true;
+			isPush[ButtonKind::LeftButton] = true;
+			break;
+		default:
+			break;
+		}
+	}
 }
