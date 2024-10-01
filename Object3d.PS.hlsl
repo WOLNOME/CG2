@@ -39,24 +39,35 @@ PixelShaderOutput main(VertexShaderOutput input)
         textureColor.y = 1.0f;
         textureColor.z = 1.0f;
         textureColor.w = 1.0f;
-        
     }
    
-    
+    //ハーフランバート
     if (gMaterial.lightingKind == 0)
     {
         float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
         float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
-        output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
+        //RGB値処理
+        output.color.rgb = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
+        //α値処理
+        output.color.a = gMaterial.color.a * textureColor.a;
+        
     }
+    //ランバート
     else if (gMaterial.lightingKind == 1)
     {
         float cos = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
-        output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
+         //RGB値処理
+        output.color.rgb = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
+         //α値処理
+        output.color.a = gMaterial.color.a * textureColor.a;
     }
+    //光なし
     else if (gMaterial.lightingKind == 2)
     {
-        output.color = gMaterial.color * textureColor;
+        //RGB値処理
+        output.color.rgb = gMaterial.color.rgb * textureColor.rgb;
+        //α値処理
+        output.color.a = gMaterial.color.a * textureColor.a;
     }
     
     return output;
