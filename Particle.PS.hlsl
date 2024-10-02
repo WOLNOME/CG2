@@ -1,0 +1,80 @@
+#include "Particle.hlsli"
+
+struct Material
+{
+    float32_t4 color;
+    int32_t lightingKind;
+    float32_t4x4 uvTransform;
+    int32_t isTexture;
+};
+struct DirectionalLight
+{
+    float32_t4 color;
+    float32_t3 direction;
+    float intensity;
+};
+struct PixelShaderOutput
+{
+    float32_t4 color : SV_Target0;
+};
+
+ConstantBuffer<Material> gMaterial : register(b0);
+ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
+Texture2D<float32_t4> gTexture : register(t0);
+SamplerState gSampler : register(s0);
+PixelShaderOutput main(VertexShaderOutput input)
+{
+    PixelShaderOutput output;
+    float4 transformedUV = mul(float32_t4(input.texcoord, 0.0f, 1.0f), gMaterial.uvTransform);
+    float32_t4 textureColor;
+    if (gMaterial.isTexture != 0)
+    {
+        //テクスチャあり
+        textureColor = gTexture.Sample(gSampler, transformedUV.xy);
+    }
+    else
+    {
+        //テクスチャなし
+        textureColor.x = 1.0f;
+        textureColor.y = 1.0f;
+        textureColor.z = 1.0f;
+        textureColor.w = 1.0f;
+    }
+   
+    //テクスチャのα値が一定値以下のディスカード処理(パーティクルとかに使えそう)
+    if (textureColor.a <= 0.5)
+    {
+        discard; //←ピクセルの棄却(存在抹消)
+    }
+    
+    //ハーフランバート
+    if (gMaterial.lightingKind == 0)
+    {
+        float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
+        float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
+        //RGB値処理
+        output.color.rgb = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
+        //α値処理
+        output.color.a = gMaterial.color.a * textureColor.a;
+        
+    }
+    //ランバート
+    else if (gMaterial.lightingKind == 1)
+    {
+        float cos = saturate(dot(normalize(input.normal), -gDirectionalLight.direction));
+         //RGB値処理
+        output.color.rgb = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
+         //α値処理
+        output.color.a = gMaterial.color.a * textureColor.a;
+    }
+    //光なし
+    else if (gMaterial.lightingKind == 2)
+    {
+        //RGB値処理
+        output.color.rgb = gMaterial.color.rgb * textureColor.rgb;
+        //α値処理
+        output.color.a = gMaterial.color.a * textureColor.a;
+    }
+    
+    return output;
+}

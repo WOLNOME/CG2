@@ -1005,7 +1005,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	const uint32_t descriptorSizeRTV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	const uint32_t descriptorSizeDSV = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
-
 	//コマンドキューを生成する
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue> commandQueue = nullptr;
 	D3D12_COMMAND_QUEUE_DESC commandQueueDesc{};
