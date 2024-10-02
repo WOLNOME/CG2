@@ -775,7 +775,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	winApp = new WinApp();
 	winApp->Initialize();
 
-	
+
 #ifdef _DEBUG
 	Microsoft::WRL::ComPtr<ID3D12Debug1> debugContoroller = nullptr;
 	if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugContoroller)))) {
@@ -1602,734 +1602,733 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//再生フラグ
 	bool isPlayAudio = false;
 
-	MSG msg{};
+
 	//ウィンドウの×ボタンが押されるまでループ
-	while (msg.message != WM_QUIT) {
-		//Winodwにメッセージが来てたら最優先で処理させる
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
+	while (true) {
+		//メッセージ処理(×ボタンが押されたら終了)
+		if (winApp->ProcessMessage()) {
+			break;
 		}
-		else {
-			ImGui_ImplDX12_NewFrame();
-			ImGui_ImplWin32_NewFrame();
-			ImGui::NewFrame();
 
-			input->Update();
+		ImGui_ImplDX12_NewFrame();
+		ImGui_ImplWin32_NewFrame();
+		ImGui::NewFrame();
 
-
-			//ゲームの処理
-
-			//////////////////////
-			///更新処理
-			//////////////////////
+		input->Update();
 
 
+		//ゲームの処理
+
+		//////////////////////
+		///更新処理
+		//////////////////////
 
 
-			//開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
 
-			ImGui::Begin("Settings");
-			//テクスチャ
-			if (ImGui::TreeNode("texture")) {
-				ImGui::Checkbox("useMonsterBall", &useMonsterBall);
 
-				ImGui::TreePop();
+		//開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
+
+		ImGui::Begin("Settings");
+		//テクスチャ
+		if (ImGui::TreeNode("texture")) {
+			ImGui::Checkbox("useMonsterBall", &useMonsterBall);
+
+			ImGui::TreePop();
+		}
+		//スプライト
+		if (ImGui::TreeNode("Sprite")) {
+			//スプライトの平行移動
+			ImGui::DragFloat3("Transform", &transformSprite.translate.x, 1.0f);
+			//uvTransform
+			ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
+			ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
+			ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
+
+			//パラメーターの更新
+			Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
+			uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
+			uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
+			materialDataSprite->uvTransform = uvTransformMatrix;
+
+			//リセット
+			if (ImGui::Button("reset")) {
+				transformSprite.translate = { 0.0f,0.0f,0.0f };
+				uvTransformSprite.translate = { 0.0f,0.0f,0.0f };
+				uvTransformSprite.scale = { 1.0f,1.0f,1.0f };
+				uvTransformSprite.rotate = { 0.0f,0.0f,0.0f };
 			}
-			//スプライト
-			if (ImGui::TreeNode("Sprite")) {
-				//スプライトの平行移動
-				ImGui::DragFloat3("Transform", &transformSprite.translate.x, 1.0f);
-				//uvTransform
-				ImGui::DragFloat2("UVTranslate", &uvTransformSprite.translate.x, 0.01f, -10.0f, 10.0f);
-				ImGui::DragFloat2("UVScale", &uvTransformSprite.scale.x, 0.01f, -10.0f, 10.0f);
-				ImGui::SliderAngle("UVRotate", &uvTransformSprite.rotate.z);
-
-				//パラメーターの更新
-				Matrix4x4 uvTransformMatrix = MakeScaleMatrix(uvTransformSprite.scale);
-				uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(uvTransformSprite.rotate.z));
-				uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(uvTransformSprite.translate));
-				materialDataSprite->uvTransform = uvTransformMatrix;
-
-				//リセット
-				if (ImGui::Button("reset")) {
-					transformSprite.translate = { 0.0f,0.0f,0.0f };
-					uvTransformSprite.translate = { 0.0f,0.0f,0.0f };
-					uvTransformSprite.scale = { 1.0f,1.0f,1.0f };
-					uvTransformSprite.rotate = { 0.0f,0.0f,0.0f };
-				}
-				//スプライトの表示切り替え
-				if (ImGui::Button("DisplayChange")) {
-					isDisplaySprite = !isDisplaySprite;
-				}
-
-				ImGui::TreePop();
+			//スプライトの表示切り替え
+			if (ImGui::Button("DisplayChange")) {
+				isDisplaySprite = !isDisplaySprite;
 			}
-			//三角形
-			if (ImGui::TreeNode("Triangle")) {
-				//オブジェクトの平行移動
-				ImGui::DragFloat3("translate", &transform.translate.x, 0.01f);
-				ImGui::DragFloat3("rotate", &transform.rotate.x, 0.01f);
-				ImGui::DragFloat3("scale", &transform.scale.x, 0.01f);
-				//リセット
-				if (ImGui::Button("reset")) {
-					transform.translate = { 0.0f,0.0f,0.0f };
-					transform.rotate = { 0.0f,0.0f,0.0f };
-					transform.scale = { 1.0f,1.0f,1.0f };
-				}
-				//オブジェクトの表示切り替え
-				if (ImGui::Button("DisplayChange")) {
-					isDisplayTriangle = !isDisplayTriangle;
-				}
 
-				ImGui::TreePop();
+			ImGui::TreePop();
+		}
+		//三角形
+		if (ImGui::TreeNode("Triangle")) {
+			//オブジェクトの平行移動
+			ImGui::DragFloat3("translate", &transform.translate.x, 0.01f);
+			ImGui::DragFloat3("rotate", &transform.rotate.x, 0.01f);
+			ImGui::DragFloat3("scale", &transform.scale.x, 0.01f);
+			//リセット
+			if (ImGui::Button("reset")) {
+				transform.translate = { 0.0f,0.0f,0.0f };
+				transform.rotate = { 0.0f,0.0f,0.0f };
+				transform.scale = { 1.0f,1.0f,1.0f };
 			}
-			//球
-			if (ImGui::TreeNode("Sphere")) {
-				//オブジェクトの平行移動
-				ImGui::DragFloat3("translate", &transformSphere.translate.x, 0.01f);
-				ImGui::DragFloat3("rotate", &transformSphere.rotate.x, 0.01f);
-				ImGui::DragFloat3("scale", &transformSphere.scale.x, 0.01f);
-				//ライティング
-
-				//リセット
-				if (ImGui::Button("reset")) {
-					transformSphere.translate = { 0.0f,0.0f,0.0f };
-					transformSphere.rotate = { 0.0f,0.0f,0.0f };
-					transformSphere.scale = { 1.0f,1.0f,1.0f };
-				}
-				//オブジェクトの表示切り替え
-				if (ImGui::Button("DisplayChange")) {
-					isDisplaySphere = !isDisplaySphere;
-				}
-
-				ImGui::TreePop();
+			//オブジェクトの表示切り替え
+			if (ImGui::Button("DisplayChange")) {
+				isDisplayTriangle = !isDisplayTriangle;
 			}
-			//平行光源
-			if (ImGui::TreeNode("Light")) {
-				//色
-				ImGui::DragFloat4("color", &directionalLightData->color.x, 0.01f);
-				//方向
-				ImGui::DragFloat3("direction", &directionalLightData->direction.x, 0.01f);
-				Normalize(directionalLightData->direction);
-				//輝度
-				ImGui::DragFloat("intensity", &directionalLightData->intensity, 0.01f);
 
-				//リセット
-				if (ImGui::Button("reset")) {
-					directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
-					directionalLightData->direction = { 0.0f,-1.0f,0.0f };
-					directionalLightData->intensity = 1.0f;
-				}
+			ImGui::TreePop();
+		}
+		//球
+		if (ImGui::TreeNode("Sphere")) {
+			//オブジェクトの平行移動
+			ImGui::DragFloat3("translate", &transformSphere.translate.x, 0.01f);
+			ImGui::DragFloat3("rotate", &transformSphere.rotate.x, 0.01f);
+			ImGui::DragFloat3("scale", &transformSphere.scale.x, 0.01f);
+			//ライティング
 
-				ImGui::TreePop();
+			//リセット
+			if (ImGui::Button("reset")) {
+				transformSphere.translate = { 0.0f,0.0f,0.0f };
+				transformSphere.rotate = { 0.0f,0.0f,0.0f };
+				transformSphere.scale = { 1.0f,1.0f,1.0f };
 			}
-			//インデックス三角形
-			if (ImGui::TreeNode("index")) {
-				//オブジェクトの表示切り替え
-				if (ImGui::Button("DisplayChange")) {
-					isDisplayIndex = !isDisplayIndex;
-				}
-
-				ImGui::TreePop();
+			//オブジェクトの表示切り替え
+			if (ImGui::Button("DisplayChange")) {
+				isDisplaySphere = !isDisplaySphere;
 			}
-			//モデル
-			if (ImGui::TreeNode("Axis")) {
-				//オブジェクトの平行移動
-				ImGui::DragFloat3("translate", &modelResource.transform.translate.x, 0.01f);
-				ImGui::DragFloat3("rotate", &modelResource.transform.rotate.x, 0.01f);
-				ImGui::DragFloat3("scale", &modelResource.transform.scale.x, 0.01f);
-				//マテリアル設定
+
+			ImGui::TreePop();
+		}
+		//平行光源
+		if (ImGui::TreeNode("Light")) {
+			//色
+			ImGui::DragFloat4("color", &directionalLightData->color.x, 0.01f);
+			//方向
+			ImGui::DragFloat3("direction", &directionalLightData->direction.x, 0.01f);
+			Normalize(directionalLightData->direction);
+			//輝度
+			ImGui::DragFloat("intensity", &directionalLightData->intensity, 0.01f);
+
+			//リセット
+			if (ImGui::Button("reset")) {
+				directionalLightData->color = { 1.0f,1.0f,1.0f,1.0f };
+				directionalLightData->direction = { 0.0f,-1.0f,0.0f };
+				directionalLightData->intensity = 1.0f;
+			}
+
+			ImGui::TreePop();
+		}
+		//インデックス三角形
+		if (ImGui::TreeNode("index")) {
+			//オブジェクトの表示切り替え
+			if (ImGui::Button("DisplayChange")) {
+				isDisplayIndex = !isDisplayIndex;
+			}
+
+			ImGui::TreePop();
+		}
+		//モデル
+		if (ImGui::TreeNode("Axis")) {
+			//オブジェクトの平行移動
+			ImGui::DragFloat3("translate", &modelResource.transform.translate.x, 0.01f);
+			ImGui::DragFloat3("rotate", &modelResource.transform.rotate.x, 0.01f);
+			ImGui::DragFloat3("scale", &modelResource.transform.scale.x, 0.01f);
+			//マテリアル設定
+			for (size_t index = 0; index < modelResource.modelData.size(); index++) {
+				std::string material = "Material";
+				std::string strIndex = material + std::to_string(index + 1);
+				if (ImGui::TreeNode(strIndex.c_str())) {
+					//UVトランスフォーム
+					ImGui::DragFloat2("UVTranslate", &modelResource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
+					ImGui::DragFloat2("UVScale", &modelResource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
+					ImGui::SliderAngle("UVRotate", &modelResource.uvTransform.at(index).rotate.z);
+					//パラメーターの更新
+					Matrix4x4 uvTransformMatrix = MakeScaleMatrix(modelResource.uvTransform.at(index).scale);
+					uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(modelResource.uvTransform.at(index).rotate.z));
+					uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(modelResource.uvTransform.at(index).translate));
+					modelResource.materialData.at(index)->uvTransform = uvTransformMatrix;
+					//カラー変更
+					ImGui::ColorEdit4("color", &modelResource.materialData.at(index)->color.x, 0.01f);
+					//ライティング変更
+					const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
+					ImGui::Combo("lighting", &modelResource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
+
+					ImGui::TreePop();
+				}
+			}
+			//リセット
+			if (ImGui::Button("reset")) {
+				modelResource.transform.translate = { 0.0f,0.0f,0.0f };
+				modelResource.transform.rotate = { 0.0f,0.0f,0.0f };
+				modelResource.transform.scale = { 1.0f,1.0f,1.0f };
+				//マテリアル
 				for (size_t index = 0; index < modelResource.modelData.size(); index++) {
-					std::string material = "Material";
-					std::string strIndex = material + std::to_string(index + 1);
-					if (ImGui::TreeNode(strIndex.c_str())) {
-						//UVトランスフォーム
-						ImGui::DragFloat2("UVTranslate", &modelResource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
-						ImGui::DragFloat2("UVScale", &modelResource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
-						ImGui::SliderAngle("UVRotate", &modelResource.uvTransform.at(index).rotate.z);
-						//パラメーターの更新
-						Matrix4x4 uvTransformMatrix = MakeScaleMatrix(modelResource.uvTransform.at(index).scale);
-						uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(modelResource.uvTransform.at(index).rotate.z));
-						uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(modelResource.uvTransform.at(index).translate));
-						modelResource.materialData.at(index)->uvTransform = uvTransformMatrix;
-						//カラー変更
-						ImGui::ColorEdit4("color", &modelResource.materialData.at(index)->color.x, 0.01f);
-						//ライティング変更
-						const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
-						ImGui::Combo("lighting", &modelResource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
-
-						ImGui::TreePop();
-					}
+					modelResource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
+					modelResource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
+					modelResource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
+					modelResource.materialData.at(index)->color = modelResource.modelData.at(index).material.colorData;
+					modelResource.materialData.at(index)->lightingKind = HalfLambert;
 				}
-				//リセット
-				if (ImGui::Button("reset")) {
-					modelResource.transform.translate = { 0.0f,0.0f,0.0f };
-					modelResource.transform.rotate = { 0.0f,0.0f,0.0f };
-					modelResource.transform.scale = { 1.0f,1.0f,1.0f };
-					//マテリアル
-					for (size_t index = 0; index < modelResource.modelData.size(); index++) {
-						modelResource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
-						modelResource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
-						modelResource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
-						modelResource.materialData.at(index)->color = modelResource.modelData.at(index).material.colorData;
-						modelResource.materialData.at(index)->lightingKind = HalfLambert;
-					}
-				}
-				//オブジェクトの表示切り替え
-				if (ImGui::Button("DisplayChange")) {
-					isDisplayModel = !isDisplayModel;
-				}
-
-				ImGui::TreePop();
 			}
-			//モデル2
-			if (ImGui::TreeNode("Plane")) {
-				//オブジェクトの平行移動
-				ImGui::DragFloat3("translate", &model2Resource.transform.translate.x, 0.01f);
-				ImGui::DragFloat3("rotate", &model2Resource.transform.rotate.x, 0.01f);
-				ImGui::DragFloat3("scale", &model2Resource.transform.scale.x, 0.01f);
-				//マテリアル設定
-				for (size_t index = 0; index < model2Resource.modelData.size(); index++) {
-					std::string material = "Material";
-					std::string strIndex = material + std::to_string(index + 1);
-					if (ImGui::TreeNode(strIndex.c_str())) {
-						//UVトランスフォーム
-						ImGui::DragFloat2("UVTranslate", &model2Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
-						ImGui::DragFloat2("UVScale", &model2Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
-						ImGui::SliderAngle("UVRotate", &model2Resource.uvTransform.at(index).rotate.z);
-						//パラメーターの更新
-						Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model2Resource.uvTransform.at(index).scale);
-						uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model2Resource.uvTransform.at(index).rotate.z));
-						uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model2Resource.uvTransform.at(index).translate));
-						model2Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
-						//カラー変更
-						ImGui::ColorEdit4("color", &model2Resource.materialData.at(index)->color.x, 0.01f);
-						//ライティング変更
-						const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
-						ImGui::Combo("lighting", &model2Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
-
-						ImGui::TreePop();
-					}
-				}
-				//リセット
-				if (ImGui::Button("reset")) {
-					model2Resource.transform.translate = { 0.0f,0.0f,0.0f };
-					model2Resource.transform.rotate = { 0.0f,0.0f,0.0f };
-					model2Resource.transform.scale = { 1.0f,1.0f,1.0f };
-					//マテリアル
-					for (size_t index = 0; index < model2Resource.modelData.size(); index++) {
-						model2Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
-						model2Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
-						model2Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
-						model2Resource.materialData.at(index)->color = model2Resource.modelData.at(index).material.colorData;
-						model2Resource.materialData.at(index)->lightingKind = HalfLambert;
-					}
-				}
-				//オブジェクトの表示切り替え
-				if (ImGui::Button("DisplayChange")) {
-					isDisplayModel2 = !isDisplayModel2;
-				}
-
-				ImGui::TreePop();
-			}
-			//モデル3
-			if (ImGui::TreeNode("UtahTeapot")) {
-				//オブジェクトの平行移動
-				ImGui::DragFloat3("translate", &model3Resource.transform.translate.x, 0.01f);
-				ImGui::DragFloat3("rotate", &model3Resource.transform.rotate.x, 0.01f);
-				ImGui::DragFloat3("scale", &model3Resource.transform.scale.x, 0.01f);
-				//マテリアル設定
-				for (size_t index = 0; index < model3Resource.modelData.size(); index++) {
-					std::string material = "Material";
-					std::string strIndex = material + std::to_string(index + 1);
-					if (ImGui::TreeNode(strIndex.c_str())) {
-						//UVトランスフォーム
-						ImGui::DragFloat2("UVTranslate", &model3Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
-						ImGui::DragFloat2("UVScale", &model3Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
-						ImGui::SliderAngle("UVRotate", &model3Resource.uvTransform.at(index).rotate.z);
-						//パラメーターの更新
-						Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model3Resource.uvTransform.at(index).scale);
-						uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model3Resource.uvTransform.at(index).rotate.z));
-						uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model3Resource.uvTransform.at(index).translate));
-						model3Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
-						//カラー変更
-						ImGui::ColorEdit4("color", &model3Resource.materialData.at(index)->color.x, 0.01f);
-						//ライティング変更
-						const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
-						ImGui::Combo("lighting", &model3Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
-
-						ImGui::TreePop();
-					}
-				}
-				//リセット
-				if (ImGui::Button("reset")) {
-					model3Resource.transform.translate = { 0.0f,0.0f,0.0f };
-					model3Resource.transform.rotate = { 0.0f,0.0f,0.0f };
-					model3Resource.transform.scale = { 1.0f,1.0f,1.0f };
-					//マテリアル
-					for (size_t index = 0; index < model3Resource.modelData.size(); index++) {
-						model3Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
-						model3Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
-						model3Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
-						model3Resource.materialData.at(index)->color = model3Resource.modelData.at(index).material.colorData;
-						model3Resource.materialData.at(index)->lightingKind = HalfLambert;
-					}
-				}
-				//オブジェクトの表示切り替え
-				if (ImGui::Button("DisplayChange")) {
-					isDisplayModel3 = !isDisplayModel3;
-				}
-
-				ImGui::TreePop();
-			}
-			//モデル4
-			if (ImGui::TreeNode("StanfordBunny")) {
-				//オブジェクトの平行移動
-				ImGui::DragFloat3("translate", &model4Resource.transform.translate.x, 0.01f);
-				ImGui::DragFloat3("rotate", &model4Resource.transform.rotate.x, 0.01f);
-				ImGui::DragFloat3("scale", &model4Resource.transform.scale.x, 0.01f);
-				//マテリアル設定
-				for (size_t index = 0; index < model4Resource.modelData.size(); index++) {
-					std::string material = "Material";
-					std::string strIndex = material + std::to_string(index + 1);
-					if (ImGui::TreeNode(strIndex.c_str())) {
-						//UVトランスフォーム
-						ImGui::DragFloat2("UVTranslate", &model4Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
-						ImGui::DragFloat2("UVScale", &model4Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
-						ImGui::SliderAngle("UVRotate", &model4Resource.uvTransform.at(index).rotate.z);
-						//パラメーターの更新
-						Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model4Resource.uvTransform.at(index).scale);
-						uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model4Resource.uvTransform.at(index).rotate.z));
-						uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model4Resource.uvTransform.at(index).translate));
-						model4Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
-						//カラー変更
-						ImGui::ColorEdit4("color", &model4Resource.materialData.at(index)->color.x, 0.01f);
-						//ライティング変更
-						const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
-						ImGui::Combo("lighting", &model4Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
-
-						ImGui::TreePop();
-					}
-				}
-				//リセット
-				if (ImGui::Button("reset")) {
-					model4Resource.transform.translate = { 0.0f,0.0f,0.0f };
-					model4Resource.transform.rotate = { 0.0f,0.0f,0.0f };
-					model4Resource.transform.scale = { 1.0f,1.0f,1.0f };
-					//マテリアル
-					for (size_t index = 0; index < model4Resource.modelData.size(); index++) {
-						model4Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
-						model4Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
-						model4Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
-						model4Resource.materialData.at(index)->color = model4Resource.modelData.at(index).material.colorData;
-						model4Resource.materialData.at(index)->lightingKind = HalfLambert;
-					}
-				}
-				//オブジェクトの表示切り替え
-				if (ImGui::Button("DisplayChange")) {
-					isDisplayModel4 = !isDisplayModel4;
-				}
-
-				ImGui::TreePop();
-			}
-			//モデル5
-			if (ImGui::TreeNode("MultiMesh")) {
-				//オブジェクトの平行移動
-				ImGui::DragFloat3("translate", &model5Resource.transform.translate.x, 0.01f);
-				ImGui::DragFloat3("rotate", &model5Resource.transform.rotate.x, 0.01f);
-				ImGui::DragFloat3("scale", &model5Resource.transform.scale.x, 0.01f);
-				//マテリアル設定
-				for (size_t index = 0; index < model5Resource.modelData.size(); index++) {
-					std::string material = "Material";
-					std::string strIndex = material + std::to_string(index + 1);
-					if (ImGui::TreeNode(strIndex.c_str())) {
-						//UVトランスフォーム
-						ImGui::DragFloat2("UVTranslate", &model5Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
-						ImGui::DragFloat2("UVScale", &model5Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
-						ImGui::SliderAngle("UVRotate", &model5Resource.uvTransform.at(index).rotate.z);
-						//パラメーターの更新
-						Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model5Resource.uvTransform.at(index).scale);
-						uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model5Resource.uvTransform.at(index).rotate.z));
-						uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model5Resource.uvTransform.at(index).translate));
-						model5Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
-						//カラー変更
-						ImGui::ColorEdit4("color", &model5Resource.materialData.at(index)->color.x, 0.01f);
-						//ライティング変更
-						const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
-						ImGui::Combo("lighting", &model5Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
-
-						ImGui::TreePop();
-					}
-				}
-				//リセット
-				if (ImGui::Button("reset")) {
-					model5Resource.transform.translate = { 0.0f,0.0f,0.0f };
-					model5Resource.transform.rotate = { 0.0f,0.0f,0.0f };
-					model5Resource.transform.scale = { 1.0f,1.0f,1.0f };
-					//マテリアル
-					for (size_t index = 0; index < model5Resource.modelData.size(); index++) {
-						model5Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
-						model5Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
-						model5Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
-						model5Resource.materialData.at(index)->color = model5Resource.modelData.at(index).material.colorData;
-						model5Resource.materialData.at(index)->lightingKind = HalfLambert;
-					}
-				}
-				//オブジェクトの表示切り替え
-				if (ImGui::Button("DisplayChange")) {
-					isDisplayModel5 = !isDisplayModel5;
-				}
-
-				ImGui::TreePop();
-			}
-			//モデル6
-			if (ImGui::TreeNode("MultiMaterial")) {
-				//オブジェクトの平行移動
-				ImGui::DragFloat3("translate", &model6Resource.transform.translate.x, 0.01f);
-				ImGui::DragFloat3("rotate", &model6Resource.transform.rotate.x, 0.01f);
-				ImGui::DragFloat3("scale", &model6Resource.transform.scale.x, 0.01f);
-				//マテリアル設定
-				for (size_t index = 0; index < model6Resource.modelData.size(); index++) {
-					std::string material = "Material";
-					std::string strIndex = material + std::to_string(index + 1);
-					if (ImGui::TreeNode(strIndex.c_str())) {
-						//UVトランスフォーム
-						ImGui::DragFloat2("UVTranslate", &model6Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
-						ImGui::DragFloat2("UVScale", &model6Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
-						ImGui::SliderAngle("UVRotate", &model6Resource.uvTransform.at(index).rotate.z);
-						//パラメーターの更新
-						Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model6Resource.uvTransform.at(index).scale);
-						uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model6Resource.uvTransform.at(index).rotate.z));
-						uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model6Resource.uvTransform.at(index).translate));
-						model6Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
-						//カラー変更
-						ImGui::ColorEdit4("color", &model6Resource.materialData.at(index)->color.x, 0.01f);
-						//ライティング変更
-						const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
-						ImGui::Combo("lighting", &model6Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
-
-						ImGui::TreePop();
-					}
-				}
-				//リセット
-				if (ImGui::Button("reset")) {
-					model6Resource.transform.translate = { 0.0f,0.0f,0.0f };
-					model6Resource.transform.rotate = { 0.0f,0.0f,0.0f };
-					model6Resource.transform.scale = { 1.0f,1.0f,1.0f };
-					//マテリアル
-					for (size_t index = 0; index < model6Resource.modelData.size(); index++) {
-						model6Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
-						model6Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
-						model6Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
-						model6Resource.materialData.at(index)->color = model6Resource.modelData.at(index).material.colorData;
-						model6Resource.materialData.at(index)->lightingKind = HalfLambert;
-					}
-				}
-				//オブジェクトの表示切り替え
-				if (ImGui::Button("DisplayChange")) {
-					isDisplayModel6 = !isDisplayModel6;
-				}
-
-				ImGui::TreePop();
-			}
-			//モデル7
-			if (ImGui::TreeNode("Suzanne")) {
-				//オブジェクトの平行移動
-				ImGui::DragFloat3("translate", &model7Resource.transform.translate.x, 0.01f);
-				ImGui::DragFloat3("rotate", &model7Resource.transform.rotate.x, 0.01f);
-				ImGui::DragFloat3("scale", &model7Resource.transform.scale.x, 0.01f);
-				//マテリアル設定
-				for (size_t index = 0; index < model7Resource.modelData.size(); index++) {
-					std::string material = "Material";
-					std::string strIndex = material + std::to_string(index + 1);
-					if (ImGui::TreeNode(strIndex.c_str())) {
-						//UVトランスフォーム
-						ImGui::DragFloat2("UVTranslate", &model7Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
-						ImGui::DragFloat2("UVScale", &model7Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
-						ImGui::SliderAngle("UVRotate", &model7Resource.uvTransform.at(index).rotate.z);
-						//パラメーターの更新
-						Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model7Resource.uvTransform.at(index).scale);
-						uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model7Resource.uvTransform.at(index).rotate.z));
-						uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model7Resource.uvTransform.at(index).translate));
-						model7Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
-						//カラー変更
-						ImGui::ColorEdit4("color", &model7Resource.materialData.at(index)->color.x, 0.01f);
-						//ライティング変更
-						const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
-						ImGui::Combo("lighting", &model7Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
-
-						ImGui::TreePop();
-					}
-				}
-				//リセット
-				if (ImGui::Button("reset")) {
-					model7Resource.transform.translate = { 0.0f,0.0f,0.0f };
-					model7Resource.transform.rotate = { 0.0f,0.0f,0.0f };
-					model7Resource.transform.scale = { 1.0f,1.0f,1.0f };
-					//マテリアル
-					for (size_t index = 0; index < model7Resource.modelData.size(); index++) {
-						model7Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
-						model7Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
-						model7Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
-						model7Resource.materialData.at(index)->color = model7Resource.modelData.at(index).material.colorData;
-						model7Resource.materialData.at(index)->lightingKind = HalfLambert;
-					}
-				}
-				//オブジェクトの表示切り替え
-				if (ImGui::Button("DisplayChange")) {
-					isDisplayModel7 = !isDisplayModel7;
-				}
-
-
-				ImGui::TreePop();
-			}
-			//モデル8
-			if (ImGui::TreeNode("Input")) {
-				//オブジェクトの平行移動
-				if (input->PushKey(DIK_UP)) {
-					model8Resource.transform.translate.y += 0.05f;
-				}
-				if (input->PushKey(DIK_DOWN)) {
-					model8Resource.transform.translate.y -= 0.05f;
-				}
-				if (input->PushKey(DIK_RIGHT)) {
-					model8Resource.transform.translate.x += 0.05f;
-				}
-				if (input->PushKey(DIK_LEFT)) {
-					model8Resource.transform.translate.x -= 0.05f;
-				}
-				//リセット
-				if (ImGui::Button("reset")) {
-					model8Resource.transform.translate = { 0.0f,0.0f,0.0f };
-					model8Resource.transform.rotate = { 0.0f,0.0f,0.0f };
-					model8Resource.transform.scale = { 1.0f,1.0f,1.0f };
-				}
-				//オブジェクトの表示切り替え
-				if (ImGui::Button("DisplayChange")) {
-					isDisplayModel8 = !isDisplayModel8;
-				}
-				ImGui::TreePop();
-			}
-			//サウンド
-			if (ImGui::TreeNode("Sound")) {
-				if (ImGui::Button("PlayButton")) {
-					isPlayAudio = !isPlayAudio;
-				}
-
-				if (isPlayAudio) {
-					//音声再生
-					SoundPlayWave(xAudio2.Get(), soundData1);
-					isPlayAudio = false;
-				}
-
-
-				ImGui::TreePop();
+			//オブジェクトの表示切り替え
+			if (ImGui::Button("DisplayChange")) {
+				isDisplayModel = !isDisplayModel;
 			}
 
-
-			ImGui::End();
-
-			transform.rotate.y += 0.02f;
-			transformSphere.rotate.y += 0.02f;
-			modelResource.transform.rotate.y += 0.02f;
-			model2Resource.transform.rotate.y += 0.02f;
-			model3Resource.transform.rotate.y += 0.02f;
-			model4Resource.transform.rotate.y += 0.02f;
-			model5Resource.transform.rotate.y += 0.02f;
-			model6Resource.transform.rotate.y += 0.02f;
-			model7Resource.transform.rotate.y += 0.02f;
-			model8Resource.transform.rotate.y += 0.02f;
-
-
-
-			/////レンダリングパイプライン/////
-			//各種行列の計算
-			RenderingPipeLine(wvpData, transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
-			//Sprite用のWorldViewProjectionMatrixを作る
-			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
-			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-			Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, (float)WinApp::kClientWidth, (float)WinApp::kClientHeight, 0.0f, 100.0f);
-			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
-			transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
-			transformationMatrixDataSprite->World = worldMatrixSprite;
-			//Sphere用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(wvpDataSphere, transformSphere, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
-			//モデル用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(modelResource.wvpData, modelResource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
-			//モデル2用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(model2Resource.wvpData, model2Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
-			//モデル3用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(model3Resource.wvpData, model3Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
-			//モデル4用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(model4Resource.wvpData, model4Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
-			//モデル5用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(model5Resource.wvpData, model5Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
-			//モデル6用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(model6Resource.wvpData, model6Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
-			//モデル7用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(model7Resource.wvpData, model7Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
-			//モデル8用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(model8Resource.wvpData, model8Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
-
-			//ImGuiの内部コマンドを生成する
-			ImGui::Render();
-
-			//////////////////////
-			///描画処理
-			//////////////////////
-
-			//これから書き込むバックバッファのインデックスを取得
-			UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
-
-			//TransitionBarrierの設定
-			D3D12_RESOURCE_BARRIER barrier{};
-			//今回のバリアはTransition
-			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-			//Noneにしておく
-			barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-			//バリアを張る対象のリソース。現在のバックバッファに対して行う
-			barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
-			//遷移前（現在）のResourceState
-			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-			//背に後のResourceState
-			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-			//TransitionBarrierを張る
-			commandList->ResourceBarrier(1, &barrier);
-
-			//描画先のRTVとDSVを設定する
-			D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(dsvDescriptorHeap.Get(), descriptorSizeDSV, 0);
-			commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
-			//指定した色で画面全体をクリアする
-			float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };//青っぽい色。RGBAの順
-			commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
-			//指定した深度で画面全体をクリアする
-			commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-
-			//描画用のDescriptorHeapの設定
-			Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeaps[] = { srvDescriptorHeap.Get() };
-			commandList->SetDescriptorHeaps(1, descriptorHeaps->GetAddressOf());
-
-			//コマンドを積む
-			commandList->RSSetViewports(1, &viewport);
-			commandList->RSSetScissorRects(1, &scissorRect);
-			//RootSignatureを設定。PSOに設定しているけど別途設定が必要
-			commandList->SetGraphicsRootSignature(rootSignature.Get());
-			commandList->SetPipelineState(graphicsPipelineState.Get());
-
-			//平行光源の設定
-			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-
-			//triangleの描画
-			commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
-			//形状を設定
-			commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-			//マテリアルCBufferの場所を設定(0はrootparameterの0番目でマテリアルの設定してるため)
-			commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
-			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-			//wvp用のCBufferの場所を設定
-			commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
-			//三角形の描画
-			if (isDisplayTriangle) {
-				commandList->DrawInstanced(6, 1, 0, 0);
-			}
-
-			//Sphereの描画
-			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSphere);
-			//マテリアルCBufferの場所を設定
-			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSphere->GetGPUVirtualAddress());
-			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
-			commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
-			//wvp用のCBufferの場所を指定
-			commandList->SetGraphicsRootConstantBufferView(1, wvpResourceSphere->GetGPUVirtualAddress());
-			//球の描画
-			if (isDisplaySphere) {
-				commandList->DrawInstanced((kSubdivision * kSubdivision * 6), 1, 0, 0);
-			}
-
-			//Spriteの描画。変更が必要な物だけ変更する
-			commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
-			//マテリアルCBufferの場所を設定
-			commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
-			//テクスチャ設定
-			commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
-			//TransformationMatrixCBufferの場所を指定
-			commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
-			//描画！
-			if (isDisplaySprite) {
-				commandList->DrawInstanced(6, 1, 0, 0);
-			}
-
-			//平行光源の設定
-			commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
-
-			//インデックスの描画
-			commandList->IASetIndexBuffer(&indexBufferViewSprite);//IAVを設定
-			//描画
-			if (isDisplayIndex) {
-				commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
-			}
-
-			//モデルの描画
-			DrawModel(commandList, modelResource, isDisplayModel);
-			//モデル2の描画
-			DrawModel(commandList, model2Resource, isDisplayModel2);
-			//モデル3の描画
-			DrawModel(commandList, model3Resource, isDisplayModel3);
-			//モデル4の描画
-			DrawModel(commandList, model4Resource, isDisplayModel4);
-			//モデル5の描画
-			DrawModel(commandList, model5Resource, isDisplayModel5);
-			//モデル6の描画
-			DrawModel(commandList, model6Resource, isDisplayModel6);
-			//モデル7の描画
-			DrawModel(commandList, model7Resource, isDisplayModel7);
-			//モデル8の描画
-			DrawModel(commandList, model8Resource, isDisplayModel8);
-
-
-			//ImGuiの描画
-			ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
-
-			//画面に描く処理はすべて終わり、画面に映すので、状態を遷移
-			//今回はRenderTargetからPresentにする
-			barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-			barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-			//TransitionBarrierを張る
-			commandList->ResourceBarrier(1, &barrier);
-
-			//コマンドリストの内容を確定させる。全てのコマンドを積んでからCloseすること
-			hr = commandList->Close();
-			assert(SUCCEEDED(hr));
-
-			//GPUにコマンドリストの実行を行わせる
-			Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList.Get() };
-			commandQueue->ExecuteCommandLists(1, commandLists->GetAddressOf());
-			//GPUとOSに画面の交換を行うように通知する
-			swapChain->Present(1, 0);
-
-			//Fenceの値を更新
-			fenceValue++;
-			//GPUがここまでたどり着いたときに、Fenceの値を指定した値を代入するようにSignalを送る
-			commandQueue->Signal(fence.Get(), fenceValue);
-
-			//fenceの値が指定したSignal値にたどり着いているか確認する
-			//GetCompletedValueの初期値はFence作成時に渡した初期値
-			if (fence->GetCompletedValue() < fenceValue) {
-				//指定したSignalにたどり着いていないので、たどり着くまで待つようにイベントを設定する
-				fence->SetEventOnCompletion(fenceValue, fenceEvent);
-				//イベントを待つ
-				WaitForSingleObject(fenceEvent, INFINITE);
-			}
-
-			//次のフレーム用のコマンドリストを準備
-			hr = commandAllocator->Reset();
-			assert(SUCCEEDED(hr));
-			hr = commandList->Reset(commandAllocator.Get(), nullptr);
-			assert(SUCCEEDED(hr));
-
+			ImGui::TreePop();
 		}
+		//モデル2
+		if (ImGui::TreeNode("Plane")) {
+			//オブジェクトの平行移動
+			ImGui::DragFloat3("translate", &model2Resource.transform.translate.x, 0.01f);
+			ImGui::DragFloat3("rotate", &model2Resource.transform.rotate.x, 0.01f);
+			ImGui::DragFloat3("scale", &model2Resource.transform.scale.x, 0.01f);
+			//マテリアル設定
+			for (size_t index = 0; index < model2Resource.modelData.size(); index++) {
+				std::string material = "Material";
+				std::string strIndex = material + std::to_string(index + 1);
+				if (ImGui::TreeNode(strIndex.c_str())) {
+					//UVトランスフォーム
+					ImGui::DragFloat2("UVTranslate", &model2Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
+					ImGui::DragFloat2("UVScale", &model2Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
+					ImGui::SliderAngle("UVRotate", &model2Resource.uvTransform.at(index).rotate.z);
+					//パラメーターの更新
+					Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model2Resource.uvTransform.at(index).scale);
+					uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model2Resource.uvTransform.at(index).rotate.z));
+					uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model2Resource.uvTransform.at(index).translate));
+					model2Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
+					//カラー変更
+					ImGui::ColorEdit4("color", &model2Resource.materialData.at(index)->color.x, 0.01f);
+					//ライティング変更
+					const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
+					ImGui::Combo("lighting", &model2Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
+
+					ImGui::TreePop();
+				}
+			}
+			//リセット
+			if (ImGui::Button("reset")) {
+				model2Resource.transform.translate = { 0.0f,0.0f,0.0f };
+				model2Resource.transform.rotate = { 0.0f,0.0f,0.0f };
+				model2Resource.transform.scale = { 1.0f,1.0f,1.0f };
+				//マテリアル
+				for (size_t index = 0; index < model2Resource.modelData.size(); index++) {
+					model2Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
+					model2Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
+					model2Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
+					model2Resource.materialData.at(index)->color = model2Resource.modelData.at(index).material.colorData;
+					model2Resource.materialData.at(index)->lightingKind = HalfLambert;
+				}
+			}
+			//オブジェクトの表示切り替え
+			if (ImGui::Button("DisplayChange")) {
+				isDisplayModel2 = !isDisplayModel2;
+			}
+
+			ImGui::TreePop();
+		}
+		//モデル3
+		if (ImGui::TreeNode("UtahTeapot")) {
+			//オブジェクトの平行移動
+			ImGui::DragFloat3("translate", &model3Resource.transform.translate.x, 0.01f);
+			ImGui::DragFloat3("rotate", &model3Resource.transform.rotate.x, 0.01f);
+			ImGui::DragFloat3("scale", &model3Resource.transform.scale.x, 0.01f);
+			//マテリアル設定
+			for (size_t index = 0; index < model3Resource.modelData.size(); index++) {
+				std::string material = "Material";
+				std::string strIndex = material + std::to_string(index + 1);
+				if (ImGui::TreeNode(strIndex.c_str())) {
+					//UVトランスフォーム
+					ImGui::DragFloat2("UVTranslate", &model3Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
+					ImGui::DragFloat2("UVScale", &model3Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
+					ImGui::SliderAngle("UVRotate", &model3Resource.uvTransform.at(index).rotate.z);
+					//パラメーターの更新
+					Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model3Resource.uvTransform.at(index).scale);
+					uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model3Resource.uvTransform.at(index).rotate.z));
+					uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model3Resource.uvTransform.at(index).translate));
+					model3Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
+					//カラー変更
+					ImGui::ColorEdit4("color", &model3Resource.materialData.at(index)->color.x, 0.01f);
+					//ライティング変更
+					const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
+					ImGui::Combo("lighting", &model3Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
+
+					ImGui::TreePop();
+				}
+			}
+			//リセット
+			if (ImGui::Button("reset")) {
+				model3Resource.transform.translate = { 0.0f,0.0f,0.0f };
+				model3Resource.transform.rotate = { 0.0f,0.0f,0.0f };
+				model3Resource.transform.scale = { 1.0f,1.0f,1.0f };
+				//マテリアル
+				for (size_t index = 0; index < model3Resource.modelData.size(); index++) {
+					model3Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
+					model3Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
+					model3Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
+					model3Resource.materialData.at(index)->color = model3Resource.modelData.at(index).material.colorData;
+					model3Resource.materialData.at(index)->lightingKind = HalfLambert;
+				}
+			}
+			//オブジェクトの表示切り替え
+			if (ImGui::Button("DisplayChange")) {
+				isDisplayModel3 = !isDisplayModel3;
+			}
+
+			ImGui::TreePop();
+		}
+		//モデル4
+		if (ImGui::TreeNode("StanfordBunny")) {
+			//オブジェクトの平行移動
+			ImGui::DragFloat3("translate", &model4Resource.transform.translate.x, 0.01f);
+			ImGui::DragFloat3("rotate", &model4Resource.transform.rotate.x, 0.01f);
+			ImGui::DragFloat3("scale", &model4Resource.transform.scale.x, 0.01f);
+			//マテリアル設定
+			for (size_t index = 0; index < model4Resource.modelData.size(); index++) {
+				std::string material = "Material";
+				std::string strIndex = material + std::to_string(index + 1);
+				if (ImGui::TreeNode(strIndex.c_str())) {
+					//UVトランスフォーム
+					ImGui::DragFloat2("UVTranslate", &model4Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
+					ImGui::DragFloat2("UVScale", &model4Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
+					ImGui::SliderAngle("UVRotate", &model4Resource.uvTransform.at(index).rotate.z);
+					//パラメーターの更新
+					Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model4Resource.uvTransform.at(index).scale);
+					uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model4Resource.uvTransform.at(index).rotate.z));
+					uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model4Resource.uvTransform.at(index).translate));
+					model4Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
+					//カラー変更
+					ImGui::ColorEdit4("color", &model4Resource.materialData.at(index)->color.x, 0.01f);
+					//ライティング変更
+					const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
+					ImGui::Combo("lighting", &model4Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
+
+					ImGui::TreePop();
+				}
+			}
+			//リセット
+			if (ImGui::Button("reset")) {
+				model4Resource.transform.translate = { 0.0f,0.0f,0.0f };
+				model4Resource.transform.rotate = { 0.0f,0.0f,0.0f };
+				model4Resource.transform.scale = { 1.0f,1.0f,1.0f };
+				//マテリアル
+				for (size_t index = 0; index < model4Resource.modelData.size(); index++) {
+					model4Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
+					model4Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
+					model4Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
+					model4Resource.materialData.at(index)->color = model4Resource.modelData.at(index).material.colorData;
+					model4Resource.materialData.at(index)->lightingKind = HalfLambert;
+				}
+			}
+			//オブジェクトの表示切り替え
+			if (ImGui::Button("DisplayChange")) {
+				isDisplayModel4 = !isDisplayModel4;
+			}
+
+			ImGui::TreePop();
+		}
+		//モデル5
+		if (ImGui::TreeNode("MultiMesh")) {
+			//オブジェクトの平行移動
+			ImGui::DragFloat3("translate", &model5Resource.transform.translate.x, 0.01f);
+			ImGui::DragFloat3("rotate", &model5Resource.transform.rotate.x, 0.01f);
+			ImGui::DragFloat3("scale", &model5Resource.transform.scale.x, 0.01f);
+			//マテリアル設定
+			for (size_t index = 0; index < model5Resource.modelData.size(); index++) {
+				std::string material = "Material";
+				std::string strIndex = material + std::to_string(index + 1);
+				if (ImGui::TreeNode(strIndex.c_str())) {
+					//UVトランスフォーム
+					ImGui::DragFloat2("UVTranslate", &model5Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
+					ImGui::DragFloat2("UVScale", &model5Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
+					ImGui::SliderAngle("UVRotate", &model5Resource.uvTransform.at(index).rotate.z);
+					//パラメーターの更新
+					Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model5Resource.uvTransform.at(index).scale);
+					uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model5Resource.uvTransform.at(index).rotate.z));
+					uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model5Resource.uvTransform.at(index).translate));
+					model5Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
+					//カラー変更
+					ImGui::ColorEdit4("color", &model5Resource.materialData.at(index)->color.x, 0.01f);
+					//ライティング変更
+					const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
+					ImGui::Combo("lighting", &model5Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
+
+					ImGui::TreePop();
+				}
+			}
+			//リセット
+			if (ImGui::Button("reset")) {
+				model5Resource.transform.translate = { 0.0f,0.0f,0.0f };
+				model5Resource.transform.rotate = { 0.0f,0.0f,0.0f };
+				model5Resource.transform.scale = { 1.0f,1.0f,1.0f };
+				//マテリアル
+				for (size_t index = 0; index < model5Resource.modelData.size(); index++) {
+					model5Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
+					model5Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
+					model5Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
+					model5Resource.materialData.at(index)->color = model5Resource.modelData.at(index).material.colorData;
+					model5Resource.materialData.at(index)->lightingKind = HalfLambert;
+				}
+			}
+			//オブジェクトの表示切り替え
+			if (ImGui::Button("DisplayChange")) {
+				isDisplayModel5 = !isDisplayModel5;
+			}
+
+			ImGui::TreePop();
+		}
+		//モデル6
+		if (ImGui::TreeNode("MultiMaterial")) {
+			//オブジェクトの平行移動
+			ImGui::DragFloat3("translate", &model6Resource.transform.translate.x, 0.01f);
+			ImGui::DragFloat3("rotate", &model6Resource.transform.rotate.x, 0.01f);
+			ImGui::DragFloat3("scale", &model6Resource.transform.scale.x, 0.01f);
+			//マテリアル設定
+			for (size_t index = 0; index < model6Resource.modelData.size(); index++) {
+				std::string material = "Material";
+				std::string strIndex = material + std::to_string(index + 1);
+				if (ImGui::TreeNode(strIndex.c_str())) {
+					//UVトランスフォーム
+					ImGui::DragFloat2("UVTranslate", &model6Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
+					ImGui::DragFloat2("UVScale", &model6Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
+					ImGui::SliderAngle("UVRotate", &model6Resource.uvTransform.at(index).rotate.z);
+					//パラメーターの更新
+					Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model6Resource.uvTransform.at(index).scale);
+					uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model6Resource.uvTransform.at(index).rotate.z));
+					uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model6Resource.uvTransform.at(index).translate));
+					model6Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
+					//カラー変更
+					ImGui::ColorEdit4("color", &model6Resource.materialData.at(index)->color.x, 0.01f);
+					//ライティング変更
+					const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
+					ImGui::Combo("lighting", &model6Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
+
+					ImGui::TreePop();
+				}
+			}
+			//リセット
+			if (ImGui::Button("reset")) {
+				model6Resource.transform.translate = { 0.0f,0.0f,0.0f };
+				model6Resource.transform.rotate = { 0.0f,0.0f,0.0f };
+				model6Resource.transform.scale = { 1.0f,1.0f,1.0f };
+				//マテリアル
+				for (size_t index = 0; index < model6Resource.modelData.size(); index++) {
+					model6Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
+					model6Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
+					model6Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
+					model6Resource.materialData.at(index)->color = model6Resource.modelData.at(index).material.colorData;
+					model6Resource.materialData.at(index)->lightingKind = HalfLambert;
+				}
+			}
+			//オブジェクトの表示切り替え
+			if (ImGui::Button("DisplayChange")) {
+				isDisplayModel6 = !isDisplayModel6;
+			}
+
+			ImGui::TreePop();
+		}
+		//モデル7
+		if (ImGui::TreeNode("Suzanne")) {
+			//オブジェクトの平行移動
+			ImGui::DragFloat3("translate", &model7Resource.transform.translate.x, 0.01f);
+			ImGui::DragFloat3("rotate", &model7Resource.transform.rotate.x, 0.01f);
+			ImGui::DragFloat3("scale", &model7Resource.transform.scale.x, 0.01f);
+			//マテリアル設定
+			for (size_t index = 0; index < model7Resource.modelData.size(); index++) {
+				std::string material = "Material";
+				std::string strIndex = material + std::to_string(index + 1);
+				if (ImGui::TreeNode(strIndex.c_str())) {
+					//UVトランスフォーム
+					ImGui::DragFloat2("UVTranslate", &model7Resource.uvTransform.at(index).translate.x, 0.01f, -10.0f, 10.0f);
+					ImGui::DragFloat2("UVScale", &model7Resource.uvTransform.at(index).scale.x, 0.01f, -10.0f, 10.0f);
+					ImGui::SliderAngle("UVRotate", &model7Resource.uvTransform.at(index).rotate.z);
+					//パラメーターの更新
+					Matrix4x4 uvTransformMatrix = MakeScaleMatrix(model7Resource.uvTransform.at(index).scale);
+					uvTransformMatrix = Multiply(uvTransformMatrix, MakeRotateZMatrix(model7Resource.uvTransform.at(index).rotate.z));
+					uvTransformMatrix = Multiply(uvTransformMatrix, MakeTranslateMatrix(model7Resource.uvTransform.at(index).translate));
+					model7Resource.materialData.at(index)->uvTransform = uvTransformMatrix;
+					//カラー変更
+					ImGui::ColorEdit4("color", &model7Resource.materialData.at(index)->color.x, 0.01f);
+					//ライティング変更
+					const char* allLightKind[] = { "HalfLambert","Lambert","NoneLighting" };
+					ImGui::Combo("lighting", &model7Resource.materialData.at(index)->lightingKind, allLightKind, IM_ARRAYSIZE(allLightKind));
+
+					ImGui::TreePop();
+				}
+			}
+			//リセット
+			if (ImGui::Button("reset")) {
+				model7Resource.transform.translate = { 0.0f,0.0f,0.0f };
+				model7Resource.transform.rotate = { 0.0f,0.0f,0.0f };
+				model7Resource.transform.scale = { 1.0f,1.0f,1.0f };
+				//マテリアル
+				for (size_t index = 0; index < model7Resource.modelData.size(); index++) {
+					model7Resource.uvTransform.at(index).translate = { 0.0f,0.0f,0.0f };
+					model7Resource.uvTransform.at(index).rotate = { 0.0f,0.0f,0.0f };
+					model7Resource.uvTransform.at(index).scale = { 1.0f,1.0f,1.0f };
+					model7Resource.materialData.at(index)->color = model7Resource.modelData.at(index).material.colorData;
+					model7Resource.materialData.at(index)->lightingKind = HalfLambert;
+				}
+			}
+			//オブジェクトの表示切り替え
+			if (ImGui::Button("DisplayChange")) {
+				isDisplayModel7 = !isDisplayModel7;
+			}
+
+
+			ImGui::TreePop();
+		}
+		//モデル8
+		if (ImGui::TreeNode("Input")) {
+			//オブジェクトの平行移動
+			if (input->PushKey(DIK_UP)) {
+				model8Resource.transform.translate.y += 0.05f;
+			}
+			if (input->PushKey(DIK_DOWN)) {
+				model8Resource.transform.translate.y -= 0.05f;
+			}
+			if (input->PushKey(DIK_RIGHT)) {
+				model8Resource.transform.translate.x += 0.05f;
+			}
+			if (input->PushKey(DIK_LEFT)) {
+				model8Resource.transform.translate.x -= 0.05f;
+			}
+			//リセット
+			if (ImGui::Button("reset")) {
+				model8Resource.transform.translate = { 0.0f,0.0f,0.0f };
+				model8Resource.transform.rotate = { 0.0f,0.0f,0.0f };
+				model8Resource.transform.scale = { 1.0f,1.0f,1.0f };
+			}
+			//オブジェクトの表示切り替え
+			if (ImGui::Button("DisplayChange")) {
+				isDisplayModel8 = !isDisplayModel8;
+			}
+			ImGui::TreePop();
+		}
+		//サウンド
+		if (ImGui::TreeNode("Sound")) {
+			if (ImGui::Button("PlayButton")) {
+				isPlayAudio = !isPlayAudio;
+			}
+
+			if (isPlayAudio) {
+				//音声再生
+				SoundPlayWave(xAudio2.Get(), soundData1);
+				isPlayAudio = false;
+			}
+
+
+			ImGui::TreePop();
+		}
+
+
+		ImGui::End();
+
+		transform.rotate.y += 0.02f;
+		transformSphere.rotate.y += 0.02f;
+		modelResource.transform.rotate.y += 0.02f;
+		model2Resource.transform.rotate.y += 0.02f;
+		model3Resource.transform.rotate.y += 0.02f;
+		model4Resource.transform.rotate.y += 0.02f;
+		model5Resource.transform.rotate.y += 0.02f;
+		model6Resource.transform.rotate.y += 0.02f;
+		model7Resource.transform.rotate.y += 0.02f;
+		model8Resource.transform.rotate.y += 0.02f;
+
+
+
+		/////レンダリングパイプライン/////
+		//各種行列の計算
+		RenderingPipeLine(wvpData, transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
+		//Sprite用のWorldViewProjectionMatrixを作る
+		Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
+		Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
+		Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, (float)WinApp::kClientWidth, (float)WinApp::kClientHeight, 0.0f, 100.0f);
+		Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
+		transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
+		transformationMatrixDataSprite->World = worldMatrixSprite;
+		//Sphere用のWorldViewProjectionMatrixを作る
+		RenderingPipeLine(wvpDataSphere, transformSphere, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
+		//モデル用のWorldViewProjectionMatrixを作る
+		RenderingPipeLine(modelResource.wvpData, modelResource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
+		//モデル2用のWorldViewProjectionMatrixを作る
+		RenderingPipeLine(model2Resource.wvpData, model2Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
+		//モデル3用のWorldViewProjectionMatrixを作る
+		RenderingPipeLine(model3Resource.wvpData, model3Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
+		//モデル4用のWorldViewProjectionMatrixを作る
+		RenderingPipeLine(model4Resource.wvpData, model4Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
+		//モデル5用のWorldViewProjectionMatrixを作る
+		RenderingPipeLine(model5Resource.wvpData, model5Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
+		//モデル6用のWorldViewProjectionMatrixを作る
+		RenderingPipeLine(model6Resource.wvpData, model6Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
+		//モデル7用のWorldViewProjectionMatrixを作る
+		RenderingPipeLine(model7Resource.wvpData, model7Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
+		//モデル8用のWorldViewProjectionMatrixを作る
+		RenderingPipeLine(model8Resource.wvpData, model8Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
+
+		//ImGuiの内部コマンドを生成する
+		ImGui::Render();
+
+		//////////////////////
+		///描画処理
+		//////////////////////
+
+		//これから書き込むバックバッファのインデックスを取得
+		UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
+
+		//TransitionBarrierの設定
+		D3D12_RESOURCE_BARRIER barrier{};
+		//今回のバリアはTransition
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		//Noneにしておく
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		//バリアを張る対象のリソース。現在のバックバッファに対して行う
+		barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();
+		//遷移前（現在）のResourceState
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+		//背に後のResourceState
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		//TransitionBarrierを張る
+		commandList->ResourceBarrier(1, &barrier);
+
+		//描画先のRTVとDSVを設定する
+		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = GetCPUDescriptorHandle(dsvDescriptorHeap.Get(), descriptorSizeDSV, 0);
+		commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
+		//指定した色で画面全体をクリアする
+		float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };//青っぽい色。RGBAの順
+		commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
+		//指定した深度で画面全体をクリアする
+		commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+		//描画用のDescriptorHeapの設定
+		Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeaps[] = { srvDescriptorHeap.Get() };
+		commandList->SetDescriptorHeaps(1, descriptorHeaps->GetAddressOf());
+
+		//コマンドを積む
+		commandList->RSSetViewports(1, &viewport);
+		commandList->RSSetScissorRects(1, &scissorRect);
+		//RootSignatureを設定。PSOに設定しているけど別途設定が必要
+		commandList->SetGraphicsRootSignature(rootSignature.Get());
+		commandList->SetPipelineState(graphicsPipelineState.Get());
+
+		//平行光源の設定
+		commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+
+		//triangleの描画
+		commandList->IASetVertexBuffers(0, 1, &vertexBufferView);
+		//形状を設定
+		commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		//マテリアルCBufferの場所を設定(0はrootparameterの0番目でマテリアルの設定してるため)
+		commandList->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+		//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
+		commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+		//wvp用のCBufferの場所を設定
+		commandList->SetGraphicsRootConstantBufferView(1, wvpResource->GetGPUVirtualAddress());
+		//三角形の描画
+		if (isDisplayTriangle) {
+			commandList->DrawInstanced(6, 1, 0, 0);
+		}
+
+		//Sphereの描画
+		commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSphere);
+		//マテリアルCBufferの場所を設定
+		commandList->SetGraphicsRootConstantBufferView(0, materialResourceSphere->GetGPUVirtualAddress());
+		//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
+		commandList->SetGraphicsRootDescriptorTable(2, useMonsterBall ? textureSrvHandleGPU2 : textureSrvHandleGPU);
+		//wvp用のCBufferの場所を指定
+		commandList->SetGraphicsRootConstantBufferView(1, wvpResourceSphere->GetGPUVirtualAddress());
+		//球の描画
+		if (isDisplaySphere) {
+			commandList->DrawInstanced((kSubdivision * kSubdivision * 6), 1, 0, 0);
+		}
+
+		//Spriteの描画。変更が必要な物だけ変更する
+		commandList->IASetVertexBuffers(0, 1, &vertexBufferViewSprite);
+		//マテリアルCBufferの場所を設定
+		commandList->SetGraphicsRootConstantBufferView(0, materialResourceSprite->GetGPUVirtualAddress());
+		//テクスチャ設定
+		commandList->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+		//TransformationMatrixCBufferの場所を指定
+		commandList->SetGraphicsRootConstantBufferView(1, transformationMatrixResourceSprite->GetGPUVirtualAddress());
+		//描画！
+		if (isDisplaySprite) {
+			commandList->DrawInstanced(6, 1, 0, 0);
+		}
+
+		//平行光源の設定
+		commandList->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+
+		//インデックスの描画
+		commandList->IASetIndexBuffer(&indexBufferViewSprite);//IAVを設定
+		//描画
+		if (isDisplayIndex) {
+			commandList->DrawIndexedInstanced(6, 1, 0, 0, 0);
+		}
+
+		//モデルの描画
+		DrawModel(commandList, modelResource, isDisplayModel);
+		//モデル2の描画
+		DrawModel(commandList, model2Resource, isDisplayModel2);
+		//モデル3の描画
+		DrawModel(commandList, model3Resource, isDisplayModel3);
+		//モデル4の描画
+		DrawModel(commandList, model4Resource, isDisplayModel4);
+		//モデル5の描画
+		DrawModel(commandList, model5Resource, isDisplayModel5);
+		//モデル6の描画
+		DrawModel(commandList, model6Resource, isDisplayModel6);
+		//モデル7の描画
+		DrawModel(commandList, model7Resource, isDisplayModel7);
+		//モデル8の描画
+		DrawModel(commandList, model8Resource, isDisplayModel8);
+
+
+		//ImGuiの描画
+		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList.Get());
+
+		//画面に描く処理はすべて終わり、画面に映すので、状態を遷移
+		//今回はRenderTargetからPresentにする
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+		//TransitionBarrierを張る
+		commandList->ResourceBarrier(1, &barrier);
+
+		//コマンドリストの内容を確定させる。全てのコマンドを積んでからCloseすること
+		hr = commandList->Close();
+		assert(SUCCEEDED(hr));
+
+		//GPUにコマンドリストの実行を行わせる
+		Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList.Get() };
+		commandQueue->ExecuteCommandLists(1, commandLists->GetAddressOf());
+		//GPUとOSに画面の交換を行うように通知する
+		swapChain->Present(1, 0);
+
+		//Fenceの値を更新
+		fenceValue++;
+		//GPUがここまでたどり着いたときに、Fenceの値を指定した値を代入するようにSignalを送る
+		commandQueue->Signal(fence.Get(), fenceValue);
+
+		//fenceの値が指定したSignal値にたどり着いているか確認する
+		//GetCompletedValueの初期値はFence作成時に渡した初期値
+		if (fence->GetCompletedValue() < fenceValue) {
+			//指定したSignalにたどり着いていないので、たどり着くまで待つようにイベントを設定する
+			fence->SetEventOnCompletion(fenceValue, fenceEvent);
+			//イベントを待つ
+			WaitForSingleObject(fenceEvent, INFINITE);
+		}
+
+		//次のフレーム用のコマンドリストを準備
+		hr = commandAllocator->Reset();
+		assert(SUCCEEDED(hr));
+		hr = commandList->Reset(commandAllocator.Get(), nullptr);
+		assert(SUCCEEDED(hr));
+
+
 	}
 
 

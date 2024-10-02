@@ -65,14 +65,26 @@ void WinApp::Initialize()
 
 }
 
-void WinApp::Update()
-{
-}
-
 void WinApp::Finalize()
 {
 	CloseWindow(hwnd);
 	CoUninitialize();
+}
+
+bool  WinApp::ProcessMessage()
+{
+	MSG msg{};
+	//Winodwにメッセージが来てたら最優先で処理させる
+	if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+	//終了処理が来てたらtrueを返す
+	if (msg.message == WM_QUIT) {
+		return true;
+	}
+	return false;
+
 }
 
 
