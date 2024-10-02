@@ -2144,20 +2144,20 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 				ImGui::TreePop();
 			}
 			//モデル8
-			if (ImGui::TreeNode("GamePad")) {
-				////オブジェクトの平行移動
-				//if (isPush[ButtonKind::UpButton]) {
-				//	model8Resource.transform.translate.y += 0.05f;
-				//}
-				//if (isPush[ButtonKind::DownButton]) {
-				//	model8Resource.transform.translate.y -= 0.05f;
-				//}
-				//if (isPush[ButtonKind::RightButton]) {
-				//	model8Resource.transform.translate.x += 0.05f;
-				//}
-				//if (isPush[ButtonKind::LeftButton]) {
-				//	model8Resource.transform.translate.x -= 0.05f;
-				//}
+			if (ImGui::TreeNode("Input")) {
+				//オブジェクトの平行移動
+				if (input->PushKey(DIK_UP)) {
+					model8Resource.transform.translate.y += 0.05f;
+				}
+				if (input->PushKey(DIK_DOWN)) {
+					model8Resource.transform.translate.y -= 0.05f;
+				}
+				if (input->PushKey(DIK_RIGHT)) {
+					model8Resource.transform.translate.x += 0.05f;
+				}
+				if (input->PushKey(DIK_LEFT)) {
+					model8Resource.transform.translate.x -= 0.05f;
+				}
 				//リセット
 				if (ImGui::Button("reset")) {
 					model8Resource.transform.translate = { 0.0f,0.0f,0.0f };
@@ -2404,9 +2404,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	xAudio2.Reset();
 	//音声データ
 	SoundUnload(&soundData1);
-	//デバイス
 	
-
 	delete input;
 
 

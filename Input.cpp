@@ -67,10 +67,12 @@ void Input::Update()
 {
 	HRESULT hr;
 
+	//前回のキー入力を保存
+	memcpy(preKey, key, sizeof(key));
+
 	//グラフィックスコマンド
 	keyboard->Acquire();
 	//全キーの入力状態を取得する
-	BYTE key[256] = {};
 	keyboard->GetDeviceState(sizeof(key), key);
 
 	//ゲームパッドのグラフィックスコマンド
@@ -165,4 +167,24 @@ void Input::Update()
 			break;
 		}
 	}
+}
+
+bool Input::PushKey(BYTE keyNumber)
+{
+	//指定キーを押していればtrueを返す
+	if (key[keyNumber]) {
+		return true;
+	}
+	//そうでなければfalseを返す
+	return false;
+}
+
+bool Input::TriggerKey(BYTE keyNumber)
+{
+	//指定キーを押しているかつ前回指定キーが押されていなかったらtrueを返す
+	if (key[keyNumber] && !preKey[keyNumber]) {
+		return true;
+	}
+	//そうでなければfalseを返す
+	return false;
 }
