@@ -2145,19 +2145,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			}
 			//モデル8
 			if (ImGui::TreeNode("GamePad")) {
-				//オブジェクトの平行移動
-				if (isPush[ButtonKind::UpButton]) {
-					model8Resource.transform.translate.y += 0.05f;
-				}
-				if (isPush[ButtonKind::DownButton]) {
-					model8Resource.transform.translate.y -= 0.05f;
-				}
-				if (isPush[ButtonKind::RightButton]) {
-					model8Resource.transform.translate.x += 0.05f;
-				}
-				if (isPush[ButtonKind::LeftButton]) {
-					model8Resource.transform.translate.x -= 0.05f;
-				}
+				////オブジェクトの平行移動
+				//if (isPush[ButtonKind::UpButton]) {
+				//	model8Resource.transform.translate.y += 0.05f;
+				//}
+				//if (isPush[ButtonKind::DownButton]) {
+				//	model8Resource.transform.translate.y -= 0.05f;
+				//}
+				//if (isPush[ButtonKind::RightButton]) {
+				//	model8Resource.transform.translate.x += 0.05f;
+				//}
+				//if (isPush[ButtonKind::LeftButton]) {
+				//	model8Resource.transform.translate.x -= 0.05f;
+				//}
 				//リセット
 				if (ImGui::Button("reset")) {
 					model8Resource.transform.translate = { 0.0f,0.0f,0.0f };
@@ -2405,8 +2405,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//音声データ
 	SoundUnload(&soundData1);
 	//デバイス
-	keyboard->Unacquire();
-	gamepad->Unacquire();
+	
 
 	delete input;
 
