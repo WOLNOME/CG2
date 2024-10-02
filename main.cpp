@@ -840,7 +840,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Input* input = nullptr;
 	input = new Input();
-	input->Initialize(wc.hInstance, hwnd);
+	input->Initialize(winApp->GetHInstance(), winApp->GetHwnd());
 
 
 #ifdef _DEBUG
@@ -903,15 +903,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//スワップチェーンを生成する
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain = nullptr;
 	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-	swapChainDesc.Width = kClientWidth;	//画面の幅。ウィンドウのクライアント領域を同じものにしておく
-	swapChainDesc.Height = kClientHeight; //画面の高さ。ウィンドウのクライアント領域を同じものにしておく
+	swapChainDesc.Width = WinApp::kClientWidth;	//画面の幅。ウィンドウのクライアント領域を同じものにしておく
+	swapChainDesc.Height = WinApp::kClientHeight; //画面の高さ。ウィンドウのクライアント領域を同じものにしておく
 	swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; //色の領域
 	swapChainDesc.SampleDesc.Count = 1; //マルチサンプルしない
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT; //描画のターゲットとして利用する
 	swapChainDesc.BufferCount = 2; //ダブルバッファ
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; //モニタにうつしたら、中身を破棄
 	//コマンドキュー、ウィンドウハンドル、設定を渡して生成する。
-	hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), hwnd, &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
+	hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), winApp->GetHwnd(), &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
 	assert(SUCCEEDED(hr));
 
 	//RTV用のヒープディスクリプタの数は2。RTVはShader内で触るものではないので、ShaderVisibleはfalse
@@ -1188,8 +1188,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//ビューポート
 	D3D12_VIEWPORT viewport{};
 	//クライアント領域のサイズと一緒にして画面全体に表示
-	viewport.Width = kClientWidth;
-	viewport.Height = kClientHeight;
+	viewport.Width = WinApp::kClientWidth;
+	viewport.Height = WinApp::kClientHeight;
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	viewport.MinDepth = 0.0f;
@@ -1199,9 +1199,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	D3D12_RECT scissorRect{};
 	//基本的にビューポートと同じ矩形が構成されるようにする
 	scissorRect.left = 0;
-	scissorRect.right = kClientWidth;
+	scissorRect.right = WinApp::kClientWidth;
 	scissorRect.top = 0;
-	scissorRect.bottom = kClientHeight;
+	scissorRect.bottom = WinApp::kClientHeight;
 
 
 	//Transform変数を作る
@@ -1223,7 +1223,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGui::StyleColorsDark();
-	ImGui_ImplWin32_Init(hwnd);
+	ImGui_ImplWin32_Init(winApp->GetHwnd());
 	ImGui_ImplDX12_Init(
 		device.Get(),
 		swapChainDesc.BufferCount,
@@ -1557,7 +1557,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	//DepthStencilTextureをウィンドウサイズで作成
-	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(device, kClientWidth, kClientHeight);;
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = CreateDepthStencilTextureResource(device, WinApp::kClientWidth, WinApp::kClientHeight);;
 	//DSVの設定
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
 	dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
@@ -2145,32 +2145,32 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 			/////レンダリングパイプライン/////
 			//各種行列の計算
-			RenderingPipeLine(wvpData, transform, cameraTransform, kClientWidth, kClientHeight);
+			RenderingPipeLine(wvpData, transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
 			//Sprite用のWorldViewProjectionMatrixを作る
 			Matrix4x4 worldMatrixSprite = MakeAffineMatrix(transformSprite.scale, transformSprite.rotate, transformSprite.translate);
 			Matrix4x4 viewMatrixSprite = MakeIdentity4x4();
-			Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, (float)kClientWidth, (float)kClientHeight, 0.0f, 100.0f);
+			Matrix4x4 projectionMatrixSprite = MakeOrthographicMatrix(0.0f, 0.0f, (float)WinApp::kClientWidth, (float)WinApp::kClientHeight, 0.0f, 100.0f);
 			Matrix4x4 worldViewProjectionMatrixSprite = Multiply(worldMatrixSprite, Multiply(viewMatrixSprite, projectionMatrixSprite));
 			transformationMatrixDataSprite->WVP = worldViewProjectionMatrixSprite;
 			transformationMatrixDataSprite->World = worldMatrixSprite;
 			//Sphere用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(wvpDataSphere, transformSphere, cameraTransform, kClientWidth, kClientHeight);
+			RenderingPipeLine(wvpDataSphere, transformSphere, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
 			//モデル用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(modelResource.wvpData, modelResource.transform, cameraTransform, kClientWidth, kClientHeight);
+			RenderingPipeLine(modelResource.wvpData, modelResource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
 			//モデル2用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(model2Resource.wvpData, model2Resource.transform, cameraTransform, kClientWidth, kClientHeight);
+			RenderingPipeLine(model2Resource.wvpData, model2Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
 			//モデル3用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(model3Resource.wvpData, model3Resource.transform, cameraTransform, kClientWidth, kClientHeight);
+			RenderingPipeLine(model3Resource.wvpData, model3Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
 			//モデル4用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(model4Resource.wvpData, model4Resource.transform, cameraTransform, kClientWidth, kClientHeight);
+			RenderingPipeLine(model4Resource.wvpData, model4Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
 			//モデル5用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(model5Resource.wvpData, model5Resource.transform, cameraTransform, kClientWidth, kClientHeight);
+			RenderingPipeLine(model5Resource.wvpData, model5Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
 			//モデル6用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(model6Resource.wvpData, model6Resource.transform, cameraTransform, kClientWidth, kClientHeight);
+			RenderingPipeLine(model6Resource.wvpData, model6Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
 			//モデル7用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(model7Resource.wvpData, model7Resource.transform, cameraTransform, kClientWidth, kClientHeight);
+			RenderingPipeLine(model7Resource.wvpData, model7Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
 			//モデル8用のWorldViewProjectionMatrixを作る
-			RenderingPipeLine(model8Resource.wvpData, model8Resource.transform, cameraTransform, kClientWidth, kClientHeight);
+			RenderingPipeLine(model8Resource.wvpData, model8Resource.transform, cameraTransform, WinApp::kClientWidth, WinApp::kClientHeight);
 
 			//ImGuiの内部コマンドを生成する
 			ImGui::Render();
@@ -2350,7 +2350,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete input;
 
 
-	CloseWindow(hwnd);
+	CloseWindow(winApp->GetHwnd());
 
 	//リソースチェック(解放できてないのがある)
 
