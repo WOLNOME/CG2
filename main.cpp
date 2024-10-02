@@ -1605,7 +1605,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	//ウィンドウの×ボタンが押されるまでループ
 	while (true) {
-		//メッセージ処理(×ボタンが押されたら終了)
+		//メッセージ処理
 		if (winApp->ProcessMessage()) {
 			break;
 		}
