@@ -16,6 +16,7 @@
 #include "Matrix4x4.h"
 #include "Function.h"
 #include "Input.h"
+#include "WinApp.h"
 #define _USE_MATH_DEFINES
 
 //DeirectInput
@@ -790,7 +791,7 @@ void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData)
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//COMの初期化
-	CoInitializeEx(0, COINIT_MULTITHREADED);
+	HRESULT hr = CoInitializeEx(0, COINIT_MULTITHREADED);
 	//解放処理確認用
 	D3DResourceLeakChecker leakCheck;
 
@@ -895,11 +896,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	assert(device != nullptr);
 	Log("Complete crate D3D12Device!!!\n");//初期化完了のログを出す
 
-	
+
 
 	Input* input = nullptr;
 	input = new Input();
-	input->Initialize(wc.hInstance,hwnd);
+	input->Initialize(wc.hInstance, hwnd);
 
 
 #ifdef _DEBUG
@@ -2404,7 +2405,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	xAudio2.Reset();
 	//音声データ
 	SoundUnload(&soundData1);
-	
+
 	delete input;
 
 
