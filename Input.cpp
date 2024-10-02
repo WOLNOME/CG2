@@ -6,14 +6,16 @@
 #pragma comment(lib,"dxguid.lib")
 
 
-void Input::Initialize(HINSTANCE hInstance,HWND hwnd)
+void Input::Initialize(WinApp* winApp)
 {
-	HRESULT hr;
+	//借りてきたWinAppのインスタンスを記憶
+	winApp_ = winApp;
 
+	HRESULT hr;
 	//DirectInputの初期化
 	IDirectInput8* directInput = nullptr;
 	hr = DirectInput8Create(
-		hInstance, DIRECTINPUT_VERSION, IID_IDirectInput8,
+		winApp_->GetHInstance(), DIRECTINPUT_VERSION, IID_IDirectInput8,
 		(void**)&directInput, nullptr);
 	assert(SUCCEEDED(hr));
 
@@ -26,7 +28,7 @@ void Input::Initialize(HINSTANCE hInstance,HWND hwnd)
 	assert(SUCCEEDED(hr));
 	//排他制御レベルのセット
 	hr = keyboard->SetCooperativeLevel(
-		hwnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
+		winApp_->GetHwnd(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
 	assert(SUCCEEDED(hr));
 
 	//ゲームパッドデバイスの生成
@@ -59,7 +61,7 @@ void Input::Initialize(HINSTANCE hInstance,HWND hwnd)
 	diprg.diph.dwObj = DIJOFS_Y;
 	assert(SUCCEEDED(gamepad->SetProperty(DIPROP_RANGE, &diprg.diph)));
 	//協調モードの設定
-	assert(SUCCEEDED(gamepad->SetCooperativeLevel(hwnd, DISCL_EXCLUSIVE | DISCL_FOREGROUND)));
+	assert(SUCCEEDED(gamepad->SetCooperativeLevel(winApp_->GetHwnd(), DISCL_EXCLUSIVE | DISCL_FOREGROUND)));
 
 }
 

@@ -1,8 +1,8 @@
 #pragma once
 #include <wrl.h>
-
 #define DIRECTINPUT_VERSION	0x0800
 #include <dinput.h>
+#include "WinApp.h"
 
 ///ゲームパッドのコマンド
 //ゲームパッドキーボタンの種類
@@ -35,7 +35,7 @@ public:
 
 public://メンバ関数
 	//初期化
-	void Initialize(HINSTANCE wc, HWND hwnd);
+	void Initialize(WinApp* winApp);
 	//更新
 	void Update();
 
@@ -43,7 +43,9 @@ public://固有の処理
 	bool PushKey(BYTE keyNumber);
 	bool TriggerKey(BYTE keyNumber);
 
-
+private://インスタンス
+	//WindowsAPI
+	WinApp* winApp_= nullptr;
 private://メンバ変数
 	//キーボードデバイス
 	ComPtr<IDirectInputDevice8> keyboard;
@@ -54,6 +56,6 @@ private://メンバ変数
 
 	//ゲームパッドデバイス
 	ComPtr<IDirectInputDevice8> gamepad;
-
+	
 
 };

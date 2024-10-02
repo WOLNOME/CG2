@@ -16,6 +16,7 @@ public://定数(公開は定数のみ)
 public:
 	void Initialize();
 	void Update();
+	void Finalize();
 public://ゲッター
 	HWND GetHwnd()const { return hwnd; }
 	HINSTANCE GetHInstance()const { return wc.hInstance; }

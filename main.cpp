@@ -840,7 +840,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	Input* input = nullptr;
 	input = new Input();
-	input->Initialize(winApp->GetHInstance(), winApp->GetHwnd());
+	input->Initialize(winApp);
 
 
 #ifdef _DEBUG
@@ -2346,18 +2346,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//音声データ
 	SoundUnload(&soundData1);
 
-	delete winApp;
 	delete input;
 
-
-	CloseWindow(winApp->GetHwnd());
-
-	//リソースチェック(解放できてないのがある)
-
-
-
-	//COM終了処理
-	CoUninitialize();
+	//WindowsAPIの終了処理
+	winApp->Finalize();
+	delete winApp;
 
 	return 0;
 }
