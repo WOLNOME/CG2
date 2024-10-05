@@ -16,7 +16,14 @@
 class DirectXCommon
 {
 public:
+	~DirectXCommon();
+
 	void Initialize(WinApp* winApp);
+
+	//描画前処理
+	void PreDraw();
+	//描画後処理
+	void PostDraw();
 
 private://生成系メンバ変数
 	void GenerateDevice();
@@ -81,6 +88,8 @@ private://メンバ変数
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
 	//フェンス
 	Microsoft::WRL::ComPtr<ID3D12Fence> fence = nullptr;
+	//フェンス値
+	uint64_t fenceValue = 0;
 	//イベント
 	HANDLE fenceEvent;
 	//ビューポート
@@ -93,7 +102,8 @@ private://メンバ変数
 	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler = nullptr;
 	//インクルードハンドラ
 	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
-
+	//TransitionBarrier
+	D3D12_RESOURCE_BARRIER barrier{};
 
 };
 
