@@ -1,15 +1,17 @@
 #pragma once
+#include "WinApp.h"
 #include <d3d12.h>
 #include <dxgi1_6.h>
-#include <wrl.h>
 #include <array>
 #include <dxcapi.h>
-#include "WinApp.h"
+#include <string>
 
 //imgui
 #include "externals/imgui/imgui.h"
 #include "externals/imgui/imgui_impl_dx12.h"
 #include "externals/imgui/imgui_impl_win32.h"
+//DirectXTex
+#include "externals/DirectXTex/DirectXTex.h"
 
 #pragma comment(lib,"dxcompiler.lib")
 
@@ -51,6 +53,26 @@ public:
 	D3D12_GPU_DESCRIPTOR_HANDLE GetRTVGPUDescriptorHandle(uint32_t index);
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDSVCPUDescriptorHandle(uint32_t index);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetDSVGPUDescriptorHandle(uint32_t index);
+	//コンパイルシェーダー
+	Microsoft::WRL::ComPtr<IDxcBlob> CompileShader(
+		//CompilerするShaderファイルへのパス
+		const std::wstring& filePath,
+		//Compilerに使用するProfile
+		const wchar_t* profile
+	);
+	//リソース生成
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
+	//テクスチャリソースの生成
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
+	//テクスチャデータの転送
+	void UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
+	//テクスチャファイル読み込み
+	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
+public://ゲッター
+	//デバイス
+	Microsoft::WRL::ComPtr<ID3D12Device> GetDevice() { return device; }
+	//コマンドリスト
+	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> GetCommandList() { return commandList; }
 
 private://インスタンス
 	//WindowsAPI
