@@ -13,7 +13,6 @@
 
 #pragma comment(lib,"xaudio2.lib")
 
-
 //定数
 const int kTriangleVertexNum = 3;
 const int kTriangleNum = 2;
