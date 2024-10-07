@@ -1757,6 +1757,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	winApp->Finalize();
 	delete winApp;
 	delete dxCommon;
+	delete leakChecker;
 
 	return 0;
 }
