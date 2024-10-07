@@ -481,7 +481,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//スプライト共通部
 	SpriteCommon* spriteCommon = nullptr;
 	spriteCommon = new SpriteCommon();
-	spriteCommon->Initialize();
+	spriteCommon->Initialize(dxCommon);
 
 
 
@@ -1058,7 +1058,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//初期化
 #pragma region 最初のシーン初期化
 	Sprite* sprite = new Sprite();
-	sprite->Initialize();
+	sprite->Initialize(spriteCommon);
 
 
 #pragma endregion 最初のシーンの終了
