@@ -1,6 +1,6 @@
 #pragma once
 #include <vector>
-
+#include <cassert>
 //列挙型
 enum LightKind {
 	HalfLambert,

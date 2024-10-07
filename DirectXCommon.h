@@ -1,10 +1,11 @@
 #pragma once
-#include "WinApp.h"
+#include <windows.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <array>
 #include <dxcapi.h>
 #include <string>
+#include "WinApp.h"
 
 //imgui
 #include "externals/imgui/imgui.h"

@@ -1,12 +1,13 @@
 #define _USE_MATH_DEFINES
-#include "WinApp.h"
-#include "DirectXCommon.h"
+#include <windows.h>
 #include <fstream>
 #include <sstream>
 #include <xaudio2.h>
 #include "Vector4.h"
 #include "Matrix4x4.h"
 #include "Function.h"
+#include "DirectXCommon.h"
+#include "WinApp.h"
 #include "Input.h"
 #include "D3DResourceLeakChecker.h"
 #include "Logger.h"
