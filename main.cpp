@@ -457,8 +457,7 @@ void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData)
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//解放処理確認用
-	D3DResourceLeakChecker* leakChecker = nullptr;
-	leakChecker = new D3DResourceLeakChecker();
+	D3DResourceLeakChecker leakChecker;
 
 	//ポインタ
 	WinApp* winApp = nullptr;
@@ -1757,7 +1756,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	winApp->Finalize();
 	delete winApp;
 	delete dxCommon;
-	delete leakChecker;
 
 	return 0;
 }
