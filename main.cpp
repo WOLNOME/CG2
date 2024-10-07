@@ -11,6 +11,8 @@
 #include "Input.h"
 #include "D3DResourceLeakChecker.h"
 #include "Logger.h"
+#include "SpriteCommon.h"
+#include "Sprite.h"
 
 #pragma comment(lib,"xaudio2.lib")
 
@@ -459,22 +461,29 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//解放処理確認用
 	D3DResourceLeakChecker leakChecker;
 
-	//ポインタ
+	//ウィンドウ
 	WinApp* winApp = nullptr;
 	//WindowsAPIの初期化
 	winApp = new WinApp();
 	winApp->Initialize();
 
-	//ポインタ
+	//DorectX12
 	DirectXCommon* dxCommon = nullptr;
 	//DirectXの初期化
 	dxCommon = new DirectXCommon();
 	dxCommon->Initialize(winApp);
 
-	//ポインタ
+	//インプット
 	Input* input = nullptr;
 	input = new Input();
 	input->Initialize(winApp);
+
+	//スプライト共通部
+	SpriteCommon* spriteCommon = nullptr;
+	spriteCommon = new SpriteCommon();
+	spriteCommon->Initialize();
+
+
 
 	HRESULT hr;
 
@@ -1047,6 +1056,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	//初期化
+#pragma region 最初のシーン初期化
+	Sprite* sprite = new Sprite();
+	sprite->Initialize();
+
+
+#pragma endregion 最初のシーンの終了
 	//表示
 	bool isDisplayTriangle = false;
 	bool isDisplaySprite = false;
@@ -1750,12 +1765,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//音声データ
 	SoundUnload(&soundData1);
 
-	delete input;
 
+	delete sprite;
+	delete spriteCommon;
+	delete input;
+	delete dxCommon;
 	//WindowsAPIの終了処理
 	winApp->Finalize();
 	delete winApp;
-	delete dxCommon;
 
 	return 0;
 }
