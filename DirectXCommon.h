@@ -78,9 +78,9 @@ public://公開メンバ関数
 	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
 public://ゲッター
 	//デバイス
-	Microsoft::WRL::ComPtr<ID3D12Device> GetDevice() { return device; }
+	ID3D12Device* GetDevice() const { return device.Get(); }
 	//コマンドリスト
-	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> GetCommandList() { return commandList; }
+	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
 
 private://インスタンス
 	//WindowsAPI
