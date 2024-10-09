@@ -36,6 +36,20 @@ public://メンバ関数
 	void Initialize(SpriteCommon* spriteCommon);
 	void Update();
 	void Draw();
+public://ゲッター
+	const Vector2& GetPosition()const { return position; }
+	float GetRotation()const { return rotation; }
+	const Vector2& GetSize()const { return size; }
+	const Vector4& GetColor()const { return materialData->color; }
+
+
+public://セッター
+	void SetPosition(const Vector2& position) { this->position = position; }
+	void SetRotation(float rotation) { this->rotation = rotation; }
+	void SetSize(const Vector2& size) { this->size = size; }
+	void SetColor(const Vector4& color) { materialData->color = color; }
+
+
 private://インスタンス
 	SpriteCommon* spriteCommon_ = nullptr;
 private://メンバ変数
@@ -47,26 +61,25 @@ private://メンバ変数
 	//バッファリソース内のデータを指すポインタ
 	Struct::VertexData* vertexData = nullptr;
 	uint32_t* indexData = nullptr;
-	Struct::Material* materialDataSprite = nullptr;
+	Struct::Material* materialData = nullptr;
 	Struct::TransformationMatrix* transformationMatrixData = nullptr;
 	//バッファリソースの使い道を補足するバッファビュー
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
-	//トランスフォーム
-	Transform transform{
-		{1.0f,1.0f,1.0f},
-		{0.0f,0.0f,0.0f},
-		{0.0f,0.0f,0.0f}
-	};
 	//UVトランスフォーム
 	Transform uvTransform{
 		{1.0f,1.0f,1.0f},
 		{0.0f,0.0f,0.0f},
 		{0.0f,0.0f,0.0f}
 	};
-	//
+	//テクスチャ設定
 	D3D12_CPU_DESCRIPTOR_HANDLE textureSrvHandleCPU;
 	D3D12_GPU_DESCRIPTOR_HANDLE textureSrvHandleGPU;
+
+private://メンバ変数値書き換え用
+	Vector2 position = { 0.0f,0.0f };
+	float rotation = 0.0f;
+	Vector2 size = { 640.0f,360.0f };
 
 };
 

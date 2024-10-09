@@ -22,21 +22,21 @@ void Sprite::Initialize(SpriteCommon* spriteCommon)
 	//リソースにデータをセット
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 	indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
-	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialDataSprite));
+	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	transformationMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData));
 	///データに書き込む
 	//頂点データ
-	vertexData[0].position = { 0.0f,360.0f,0.0f,1.0f };
+	vertexData[0].position = { 0.0f,1.0f,0.0f,1.0f };
 	vertexData[0].texcoord = { 0.0f,1.0f };
 	vertexData[1].position = { 0.0f,0.0f,0.0f,1.0f };
 	vertexData[1].texcoord = { 0.0f,0.0f };
-	vertexData[2].position = { 640.0f,360.0f,0.0f,1.0f };
+	vertexData[2].position = { 1.0f,1.0f,0.0f,1.0f };
 	vertexData[2].texcoord = { 1.0f,1.0f };
 	vertexData[3].position = { 0.0f,0.0f,0.0f,1.0f };
 	vertexData[3].texcoord = { 0.0f,0.0f };
-	vertexData[4].position = { 640.0f,0.0f,0.0f,1.0f };
+	vertexData[4].position = { 1.0f,0.0f,0.0f,1.0f };
 	vertexData[4].texcoord = { 1.0f,0.0f };
-	vertexData[5].position = { 640.0f,360.0f,0.0f,1.0f };
+	vertexData[5].position = { 1.0f,1.0f,0.0f,1.0f };
 	vertexData[5].texcoord = { 1.0f,1.0f };
 	for (UINT i = 0; i < 6; i++) {
 		vertexData[i].normal = { 0.0f,0.0f,-1.0f };
@@ -45,10 +45,10 @@ void Sprite::Initialize(SpriteCommon* spriteCommon)
 	indexData[0] = 0; indexData[1] = 1; indexData[2] = 2;
 	indexData[3] = 1; indexData[4] = 3; indexData[5] = 2;
 	//マテリアルデータ
-	materialDataSprite->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	materialDataSprite->lightingKind = NoneLighting;
-	materialDataSprite->uvTransform = MakeIdentity4x4();
-	materialDataSprite->isTexture = true;
+	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	materialData->lightingKind = NoneLighting;
+	materialData->uvTransform = MakeIdentity4x4();
+	materialData->isTexture = true;
 	//座標変換行列データ
 	transformationMatrixData->WVP = MakeIdentity4x4();
 	transformationMatrixData->World = MakeIdentity4x4();
@@ -78,6 +78,12 @@ void Sprite::Initialize(SpriteCommon* spriteCommon)
 
 void Sprite::Update()
 {
+	//トランスフォームの情報を作る
+	Transform transform;
+	transform.translate = { position.x,position.y,0.0f };
+	transform.rotate = { 0.0f,0.0f,rotation };
+	transform.scale = { size.x,size.y,1.0f };
+
 	//レンダリングパイプライン
 	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
 	Matrix4x4 viewMatrix = MakeIdentity4x4();
