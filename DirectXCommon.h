@@ -76,12 +76,15 @@ public://公開メンバ関数
 	void UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
 	//テクスチャファイル読み込み
 	static DirectX::ScratchImage LoadTexture(const std::string& filePath);
+	//SRVの配置をインクリメント(テクスチャ設定時のみ)
+	void SRVSiteIncrement() { srvSite++; }
 public://ゲッター
 	//デバイス
 	ID3D12Device* GetDevice() const { return device.Get(); }
 	//コマンドリスト
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
-
+	//SRVの配置(テクスチャ設定時のみ)
+	uint32_t GetSRVSite() { return srvSite; }
 private://インスタンス
 	//WindowsAPI
 	WinApp* winApp_ = nullptr;
@@ -134,6 +137,7 @@ private://メンバ変数
 	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
 	//TransitionBarrier
 	D3D12_RESOURCE_BARRIER barrier{};
-
+	//SRVDescriptorHeapの配置
+	uint32_t srvSite = 0;
 };
 

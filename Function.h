@@ -1,6 +1,10 @@
 #pragma once
 #include <vector>
 #include <cassert>
+#include <string>
+#include <cmath>
+#include "Vector4.h"
+#include "Matrix4x4.h"
 //列挙型
 enum LightKind {
 	HalfLambert,
@@ -30,28 +34,9 @@ struct Transform {
 	Vector3 translate;
 };
 
-struct VertexData {
-	Vector4 position;
-	Vector2 texcoord;
-	Vector3 normal;
-};
-
 struct Sphere {
 	Vector3 center;
 	float radius;
-};
-
-struct Material {
-	Vector4 color;
-	int32_t lightingKind;
-	float padding[3];
-	Matrix4x4 uvTransform;
-	int32_t isTexture;
-};
-
-struct TransformationMatrix {
-	Matrix4x4 WVP;
-	Matrix4x4 World;
 };
 
 struct DirectionalLight
