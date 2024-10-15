@@ -95,6 +95,7 @@ uint32_t TextureManager::GetTextureIndexByFilePath(const std::string& filePath)
 		return textureIndex;
 	}
 
+	//ここに来る事は想定されていない(事前にテクスチャの読み込み必須)
 	assert(0);
 	return 0;
 }

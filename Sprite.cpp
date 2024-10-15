@@ -54,7 +54,7 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 	transformationMatrixData->WVP = MakeIdentity4x4();
 	transformationMatrixData->World = MakeIdentity4x4();
 
-	//単位行列を書き込んでおく
+	//入力されたファイルパスからテクスチャデータのインデックスを受け取る
 	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
 
 

@@ -610,8 +610,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//初期化
 #pragma region 最初のシーン初期化
 	Sprite* sprite = new Sprite();
+	TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
 	sprite->Initialize(spriteCommon, "Resources/uvChecker.png");
-
+	
+	Sprite* sprite2 = new Sprite();
+	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
+	sprite2->Initialize(spriteCommon, "Resources/monsterBall.png");
+	sprite2->SetPosition({ 0.0f,360.0f });
 
 #pragma endregion 最初のシーンの終了
 
@@ -650,7 +655,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///更新処理
 		//////////////////////
 
-
+		//スプライトの更新
+		sprite->Update();
+		sprite2->Update();
 
 
 		//開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
@@ -677,6 +684,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		//スプライト描画
 		sprite->Draw();
+		sprite2->Draw();
 
 		//平行光源の設定
 		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
