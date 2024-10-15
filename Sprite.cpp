@@ -1,7 +1,8 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
+#include "TextureManager.h"
 
-void Sprite::Initialize(SpriteCommon* spriteCommon)
+void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 {
 	//スプライト共通部のインスタンス取得
 	spriteCommon_ = spriteCommon;
@@ -53,26 +54,9 @@ void Sprite::Initialize(SpriteCommon* spriteCommon)
 	transformationMatrixData->WVP = MakeIdentity4x4();
 	transformationMatrixData->World = MakeIdentity4x4();
 
-	/////仮の処理(いらなくなったら消す)
-	//テクスチャの設定
-	//Textureを読んで転送する
-	DirectX::ScratchImage mipImages = DirectXCommon::LoadTexture("Resources/uvChecker.png");
-	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-	Microsoft::WRL::ComPtr<ID3D12Resource> textureResorce = spriteCommon_->GetDirectXCommon()->CreateTextureResource(metadata);
-	spriteCommon_->GetDirectXCommon()->UploadTextureData(textureResorce.Get(), mipImages);
-	//metadataをもとにSRVの設定
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = metadata.format;
-	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
-	//SRVを作成するDescriptorHeapの場所を決める
-	textureSrvHandleCPU = spriteCommon_->GetDirectXCommon()->GetSRVCPUDescriptorHandle(spriteCommon_->GetDirectXCommon()->GetSRVSite());
-	textureSrvHandleGPU = spriteCommon_->GetDirectXCommon()->GetSRVGPUDescriptorHandle(spriteCommon_->GetDirectXCommon()->GetSRVSite());
-	//SRV配置をインクリメント
-	spriteCommon_->GetDirectXCommon()->SRVSiteIncrement();
-	//SRVの生成
-	spriteCommon_->GetDirectXCommon()->GetDevice()->CreateShaderResourceView(textureResorce.Get(), &srvDesc, textureSrvHandleCPU);
+	//単位行列を書き込んでおく
+	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+
 
 }
 
@@ -106,7 +90,7 @@ void Sprite::Draw()
 	spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
 
 	//SRVのDescriptorTableの先頭を設定
-	spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, textureSrvHandleGPU);
+	spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex));
 
 	//描画
 	spriteCommon_->GetDirectXCommon()->GetCommandList()->DrawInstanced(6, 1, 0, 0);
