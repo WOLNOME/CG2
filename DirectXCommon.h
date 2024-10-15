@@ -84,12 +84,6 @@ public://ゲッター
 	ID3D12Device* GetDevice() const { return device.Get(); }
 	//コマンドリスト
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
-	//DXCユーティリティ
-	IDxcUtils* GetDXCUtils()const { return dxcUtils.Get(); }
-	//DXCコンパイラ
-	IDxcCompiler3* GetDXCCompiler()const { return dxcCompiler.Get(); }
-	//インクルードハンドラ
-	IDxcIncludeHandler* GetIncludeHandler()const { return includeHandler.Get(); }
 
 private://インスタンス
 	//WindowsAPI

@@ -114,7 +114,7 @@ void SpriteCommon::SettingPSO()
 
 	//Shaderをコンパイルする
 	vertexShaderBlob = dxCommon_->CompileShader(L"Resources/shaders/Object3D.VS.hlsl",
-		L"vs_6_0", dxCommon_->GetDXCUtils());
+		L"vs_6_0");
 	assert(vertexShaderBlob != nullptr);
 
 	pixelShaderBlob = dxCommon_->CompileShader(L"Resources/shaders/Object3D.PS.hlsl",
