@@ -709,7 +709,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//音声データ
 	SoundUnload(&soundData1);
 
-
+	delete sprite2;
 	delete sprite;
 	delete spriteCommon;
 	delete input;

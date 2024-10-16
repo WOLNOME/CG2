@@ -95,4 +95,6 @@ void Sprite::Draw()
 	//描画
 	spriteCommon_->GetDirectXCommon()->GetCommandList()->DrawInstanced(6, 1, 0, 0);
 
+	spriteCommon_->GetDirectXCommon()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+
 }
