@@ -17,7 +17,7 @@ private://コンストラクタ等の隠蔽
 	~TextureManager() = default;
 	TextureManager(TextureManager&) = delete;
 	TextureManager& operator=(TextureManager&) = delete;
-public:
+public://公開メンバ関数
 	//シングルトンインスタンスの取得
 	static TextureManager* GetInstance();
 	//初期化
@@ -27,14 +27,16 @@ public:
 
 	//テクスチャファイル読み込み
 	 void LoadTexture(const std::string& filePath);
-	 //SRVインデックスの開始番号
-	 uint32_t GetTextureIndexByFilePath(const std::string& filePath);
 	 //GPUハンドルを取得
 	 D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(uint32_t textureIndex);
-private:
+private://非公開メンバ関数
 	//テクスチャデータの転送
 	void UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
-
+public://ゲッター
+	 //SRVインデックスの開始番号
+	 uint32_t GetTextureIndexByFilePath(const std::string& filePath);
+	//メタデータを取得
+	const DirectX::TexMetadata& GetMetaData(uint32_t textureIndex);
 private:
 	//テクスチャデータ
 	struct TextureData

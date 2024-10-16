@@ -600,7 +600,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Sprite* sprite = new Sprite();
 	TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
 	sprite->Initialize(spriteCommon, "Resources/uvChecker.png");
-	
+	sprite->SetAnchorPoint({ 0.5f,0.5f });
+	sprite->SetFlipX(true);
+
 	Sprite* sprite2 = new Sprite();
 	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
 	sprite2->Initialize(spriteCommon, "Resources/monsterBall.png");
@@ -645,6 +647,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		//スプライトの更新
 		sprite->Update();
+		sprite->SetRotation(sprite->GetRotation() + 0.03f);
 		sprite2->Update();
 
 

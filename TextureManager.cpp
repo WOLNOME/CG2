@@ -104,17 +104,6 @@ uint32_t TextureManager::GetTextureIndexByFilePath(const std::string& filePath)
 	return 0;
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(uint32_t textureIndex)
-{
-	//範囲外指定違反チェック
-	assert(textureIndex + kSRVIndexTop < DirectXCommon::kMaxSRVCount);
-
-	TextureData& textureData = textureDatas[textureIndex];
-	return textureData.srvHandleGPU;
-
-
-}
-
 void TextureManager::UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages)
 {
 	//Meta情報を取得
@@ -134,4 +123,22 @@ void TextureManager::UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resour
 		);
 		assert(SUCCEEDED(hr));
 	}
+}
+
+D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(uint32_t textureIndex)
+{
+	//範囲外指定違反チェック
+	assert(textureIndex + kSRVIndexTop < DirectXCommon::kMaxSRVCount);
+
+	TextureData& textureData = textureDatas[textureIndex];
+	return textureData.srvHandleGPU;
+}
+
+const DirectX::TexMetadata& TextureManager::GetMetaData(uint32_t textureIndex)
+{
+	//範囲外指定違反チェック
+	assert(textureIndex + kSRVIndexTop < DirectXCommon::kMaxSRVCount);
+
+	TextureData& textureData = textureDatas[textureIndex];
+	return textureData.metadata;
 }
