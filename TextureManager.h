@@ -31,6 +31,9 @@ public:
 	 uint32_t GetTextureIndexByFilePath(const std::string& filePath);
 	 //GPUハンドルを取得
 	 D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(uint32_t textureIndex);
+private:
+	//テクスチャデータの転送
+	void UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
 
 private:
 	//テクスチャデータ

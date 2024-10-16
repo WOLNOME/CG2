@@ -64,6 +64,10 @@ void TextureManager::LoadTexture(const std::string& filePath)
 	textureData.metadata = metadata;
 	textureData.resource = dxCommon->CreateTextureResource(textureData.metadata);
 
+	//テクスチャデータの転送
+	UploadTextureData(textureData.resource, mipImages);
+	
+
 	//テクスチャデータの要素数番号からSRVのインデックスを計算する
 	uint32_t srvIndex = static_cast<uint32_t>(textureDatas.size() - 1) + kSRVIndexTop;
 
@@ -105,8 +109,29 @@ D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(uint32_t textureInde
 	//範囲外指定違反チェック
 	assert(textureIndex + kSRVIndexTop < DirectXCommon::kMaxSRVCount);
 
-	TextureData& textureData = textureDatas.at(textureIndex);
+	TextureData& textureData = textureDatas[textureIndex];
 	return textureData.srvHandleGPU;
 
 
+}
+
+void TextureManager::UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages)
+{
+	//Meta情報を取得
+	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
+	//全MipMapについて
+	for (size_t mipLevel = 0; mipLevel < metadata.mipLevels; ++mipLevel)
+	{
+		//MipMapLevelを指定して各Imageを取得
+		const DirectX::Image* img = mipImages.GetImage(mipLevel, 0, 0);
+		//Textureに転送
+		HRESULT hr = texture->WriteToSubresource(
+			UINT(mipLevel),
+			nullptr,
+			img->pixels,
+			UINT(img->rowPitch),
+			UINT(img->slicePitch)
+		);
+		assert(SUCCEEDED(hr));
+	}
 }

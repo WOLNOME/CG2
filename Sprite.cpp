@@ -10,6 +10,7 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 	//リソースを作る
 	vertexResource = spriteCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::VertexData) * 6);
 	indexResource = spriteCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(uint32_t) * 6);
+	directionalLightResource = spriteCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::DirectionalLight));
 	materialResource = spriteCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::Material));
 	transformationMatrixResource = spriteCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::TransformationMatrix));
 
@@ -23,6 +24,7 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 	//リソースにデータをセット
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 	indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
+	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	transformationMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData));
 	///データに書き込む
@@ -45,6 +47,10 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 	//インデックスデータ
 	indexData[0] = 0; indexData[1] = 1; indexData[2] = 2;
 	indexData[3] = 1; indexData[4] = 3; indexData[5] = 2;
+	//平行光源用データ
+	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
+	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
+	directionalLightData->intensity = 1.0f;
 	//マテリアルデータ
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	materialData->lightingKind = NoneLighting;
@@ -75,6 +81,10 @@ void Sprite::Update()
 	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 	transformationMatrixData->WVP = worldViewProjectionMatrix;
 	transformationMatrixData->World = worldMatrix;
+
+	
+
+
 }
 
 void Sprite::Draw()
@@ -82,7 +92,7 @@ void Sprite::Draw()
 	//頂点バッファービューを設定
 	spriteCommon_->GetDirectXCommon()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 	//インデックスバッファービューを設定
-	spriteCommon_->GetDirectXCommon()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
+	//spriteCommon_->GetDirectXCommon()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
 
 	//マテリアルCBufferの場所を設定
 	spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
@@ -92,9 +102,12 @@ void Sprite::Draw()
 	//SRVのDescriptorTableの先頭を設定
 	spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex));
 
+	//平行光源の設定
+	spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+
 	//描画
 	spriteCommon_->GetDirectXCommon()->GetCommandList()->DrawInstanced(6, 1, 0, 0);
 
-	spriteCommon_->GetDirectXCommon()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+	//spriteCommon_->GetDirectXCommon()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 }

@@ -72,8 +72,7 @@ public://公開メンバ関数
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 	//テクスチャリソースの生成
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
-	//テクスチャデータの転送
-	void UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
+	
 	
 public://公開メンバ変数
 	//最大テクスチャ枚数(SRV数)

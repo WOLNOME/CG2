@@ -26,12 +26,7 @@ struct Sphere {
 	float radius;
 };
 
-struct DirectionalLight
-{
-	Vector4 color;
-	Vector3 direction;
-	float intensity;
-};
+
 
 struct MaterialData {
 	std::string textureFilePath;

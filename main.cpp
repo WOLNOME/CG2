@@ -588,18 +588,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//};
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	////////////////////平行光源のリソースを作る////////////////////////////////////
-	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource = dxCommon->CreateBufferResource(sizeof(DirectionalLight));
-	//データを作る
-	DirectionalLight* directionalLightData = nullptr;
-	//書き込むためのアドレスを取得
-	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
-	//データに書き込む
-	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
-	directionalLightData->intensity = 1.0f;
-	////////////////////////////////////////////////////////////////////////////////////////
-
 	//////////////////Xaudio2の設定/////////////////////////////////////
 	//必要な変数の宣言
 	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
@@ -685,9 +673,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//スプライト描画
 		sprite->Draw();
 		sprite2->Draw();
-
-		//平行光源の設定
-		dxCommon->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 		//ImGuiの描画
 		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
