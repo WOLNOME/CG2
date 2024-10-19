@@ -162,7 +162,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//モデル共通部
 	ModelCommon* modelCommon = nullptr;
 	modelCommon = new ModelCommon();
-	modelCommon->Initialize();
+	modelCommon->Initialize(dxCommon);
 
 #pragma endregion 基盤システムの初期化
 
@@ -266,7 +266,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//描画前処理
 		dxCommon->PreDraw();
 
-		//スプライトの描画設定
+		//3Dモデルの共通描画設定
+		modelCommon->SettingCommonDrawing();
+
+
+		//スプライトの共通描画設定
 		spriteCommon->SettingCommonDrawing();
 
 		//スプライト描画
