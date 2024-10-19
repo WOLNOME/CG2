@@ -28,11 +28,6 @@ struct Sphere {
 
 
 
-struct MaterialData {
-	std::string textureFilePath;
-	Vector4 colorData;
-};
-
 //関数
 Vector3 Add(const Vector3& v1, const Vector3& v2);
 

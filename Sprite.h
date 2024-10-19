@@ -1,6 +1,6 @@
 #pragma once
-#include "wrl.h"
-#include "d3d12.h"
+#include <wrl.h>
+#include <d3d12.h>
 #include"Function.h"
 
 class SpriteCommon;

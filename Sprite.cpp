@@ -1,12 +1,14 @@
 #include "Sprite.h"
 #include "SpriteCommon.h"
+#include "WinApp.h"
 #include "TextureManager.h"
+#include "DirectXCommon.h"
 
 void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 {
 	//スプライト共通部のインスタンス取得
 	spriteCommon_ = spriteCommon;
-
+	
 	//リソースを作る
 	vertexResource = spriteCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::VertexData) * 4);
 	indexResource = spriteCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(uint32_t) * 6);

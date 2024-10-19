@@ -202,7 +202,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	sprite2->SetPosition({ 0.0f,360.0f });
 
 	Model* model = new Model();
-	model->Initialize();
+	model->Initialize(modelCommon);
 
 #pragma endregion 最初のシーンの終了
 
@@ -241,6 +241,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///更新処理
 		//////////////////////
 
+		//モデルの更新
+		model->Update();
+
 		//スプライトの更新
 		sprite->Update();
 		sprite->SetRotation(sprite->GetRotation() + 0.03f);
@@ -259,9 +262,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//ImGuiの内部コマンドを生成する
 		ImGui::Render();
 
-		//////////////////////
-		///描画処理
-		//////////////////////
+		///==============================///
+		///          描画処理
+		///==============================///
 
 		//描画前処理
 		dxCommon->PreDraw();
@@ -269,13 +272,23 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//3Dモデルの共通描画設定
 		modelCommon->SettingCommonDrawing();
 
+		///------------------------------///
+		///          モデル描画
+		///------------------------------///
+
+		model->Draw();
+
 
 		//スプライトの共通描画設定
 		spriteCommon->SettingCommonDrawing();
 
+		///------------------------------///
+		///          スプライト描画
+		///------------------------------///
+
 		//スプライト描画
 		sprite->Draw();
-		sprite2->Draw();
+		//sprite2->Draw();
 
 		//ImGuiの描画
 		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());

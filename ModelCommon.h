@@ -15,8 +15,9 @@ public://メンバ関数
 private://非公開メンバ関数
 	//グラフィックスパイプライン
 	void GenerateGraphicsPipeline();
+
 public://ゲッター
-	DirectXCommon* GetDxCommon()const { return dxCommon_; }
+	DirectXCommon* GetDirectXCommon()const { return dxCommon_; }
 
 
 private://インスタンス

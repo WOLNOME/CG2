@@ -1,4 +1,5 @@
 #include "SpriteCommon.h"
+#include "DirectXCommon.h"
 #include "Logger.h"
 
 void SpriteCommon::Initialize(DirectXCommon* dxCommon)
