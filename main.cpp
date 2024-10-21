@@ -9,7 +9,7 @@
 #include "Sprite.h"
 #include "Object3dCommon.h"
 #include "Object3d.h"
-#include "ModelCommon.h"
+#include "ModelManager.h"
 #include "Model.h"
 #include "TextureManager.h"
 #include "Function.h"
@@ -151,6 +151,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//テクスチャマネージャ
 	TextureManager::GetInstance()->Initialize(dxCommon);
 
+	//モデルマネージャー
+	ModelManager::GetInstance()->Initialize(dxCommon);
+
 	//インプット
 	Input* input = nullptr;
 	input = new Input();
@@ -165,11 +168,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Object3dCommon* object3dCommon = nullptr;
 	object3dCommon = new Object3dCommon();
 	object3dCommon->Initialize(dxCommon);
-
-	//モデル共通部
-	ModelCommon* modelCommon = nullptr;
-	modelCommon = new ModelCommon();
-	modelCommon->Initialize(dxCommon);
 
 
 #pragma endregion 基盤システムの初期化
@@ -209,20 +207,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	sprite2->Initialize(spriteCommon, "Resources/monsterBall.png");
 	sprite2->SetPosition({ 0.0f,360.0f });
 
+	ModelManager::GetInstance()->LoadModel("plane.obj");
 	Object3d* object3d = new Object3d();
+	object3d->SetModel("plane.obj");
 	object3d->Initialize(object3dCommon);
 
-	Model* model1 = new Model();
-	model1->Initialize(modelCommon);
-
-	Model* model2 = new Model();
-	model2->Initialize(modelCommon);
-
-	model1->SetTranslate({ 0.0f,0.0f,0.0f });
-	model2->SetTranslate({ 0.0f,0.0f,10.0f });
-
-	object3d->SetModel(model1);
-	object3d->SetModel(model2);
+	ModelManager::GetInstance()->LoadModel("axis.obj");
+	Object3d* object3d2 = new Object3d();
+	object3d2->SetModel("axis.obj");
+	object3d2->Initialize(object3dCommon);
 
 #pragma endregion 最初のシーンの終了
 
@@ -262,9 +255,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//////////////////////
 
 		//モデルの更新
-		model1->SetRotate({ model1->GetRotate().x,model1->GetRotate().y + 0.03f,model1->GetRotate().z });
-		model2->SetRotate({ model2->GetRotate().x + 0.03f,model2->GetRotate().y,model2->GetRotate().z });
 		object3d->Update();
+		object3d2->Update();
 
 		//スプライトの更新
 		sprite->Update();
@@ -299,7 +291,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///------------------------------///
 
 		object3d->Draw();
-
+		object3d2->Draw();
 
 		//スプライトの共通描画設定
 		spriteCommon->SettingCommonDrawing();
@@ -332,15 +324,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//音声データ
 	SoundUnload(&soundData1);
 
-	delete model1;
-	delete model2;
-	delete modelCommon;
 	delete object3d;
 	delete sprite2;
 	delete sprite;
 	delete object3dCommon;
 	delete spriteCommon;
 	delete input;
+	ModelManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
 	delete dxCommon;
 	//WindowsAPIの終了処理

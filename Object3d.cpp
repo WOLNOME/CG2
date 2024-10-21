@@ -5,6 +5,7 @@
 #include "sstream"
 #include "Function.h"
 #include "TextureManager.h"
+#include "ModelManager.h"
 #include "WinApp.h"
 #include "Model.h"
 #include <cassert>
@@ -27,9 +28,7 @@ void Object3d::Initialize(Object3dCommon* modelCommon)
 
 void Object3d::Update()
 {
-	for (Model* model : models_) {
-		model->Update();
-	}
+	model_->Update();
 }
 
 void Object3d::Draw()
@@ -38,7 +37,11 @@ void Object3d::Draw()
 	object3dCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 	//モデルを描画する
-	for (Model* model : models_) {
-		model->Draw();
-	}
+	model_->Draw();
+}
+
+void Object3d::SetModel(const std::string& filePath)
+{
+	//モデルを検索してセットする
+	model_ = static_cast<std::unique_ptr<Model>>(ModelManager::GetInstance()->FindModel(filePath));
 }

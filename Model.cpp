@@ -6,16 +6,15 @@
 #include "Object3d.h"
 #include "TextureManager.h"
 
-void Model::Initialize(ModelCommon* modelCommon)
+void Model::Initialize(ModelCommon* modelCommon, const std::string& directorypath, const std::string& filename)
 {
 	//引数で受け取ってメンバ変数に記録する
 	modelCommon_ = modelCommon;
 
 	//モデルリソースの初期設定
-	modelResource_ = MakeModelResource("Resources", "plane.obj");
+	modelResource_ = MakeModelResource(directorypath, filename);
 	//テクスチャの設定
 	SettingTexture();
-
 }
 
 void Model::Update()

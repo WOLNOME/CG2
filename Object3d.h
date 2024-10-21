@@ -31,12 +31,14 @@ public://メンバ関数
 	void Initialize(Object3dCommon* modelCommon);
 	void Update();
 	void Draw();
+public://ゲッター
+	Model* GetModel() { return model_.get(); }
 public://セッター
-	void SetModel(Model* model) { models_.push_back(model); }
+	void SetModel(const std::string& filePath);
 
 private://インスタンス
 	Object3dCommon* object3dCommon_ = nullptr;
-	std::vector<Model*> models_;
+	std::unique_ptr<Model> model_;
 private://メンバ変数
 
 	//平行光源用バッファリソース
