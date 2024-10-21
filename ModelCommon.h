@@ -8,7 +8,7 @@ public:
 
 
 public://ゲッター
-	DirectXCommon* GetCommon()const { return dxCommon_; }
+	DirectXCommon* GetDirectXCommon()const { return dxCommon_; }
 private:
 	DirectXCommon* dxCommon_;
 };
