@@ -15,6 +15,7 @@ void Model::Initialize(ModelCommon* modelCommon)
 
 	//一旦planeでリソースを作る
 	MakeModelResource("Resources", "plane.obj");
+	SettingTexture();
 
 	//平行光源用リソースを作る
 	directionalLightResource = modelCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::DirectionalLight));
