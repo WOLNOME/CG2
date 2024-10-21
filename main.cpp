@@ -7,8 +7,8 @@
 #include "Logger.h"
 #include "SpriteCommon.h"
 #include "Sprite.h"
-#include "ModelCommon.h"
-#include "Model.h"
+#include "Object3dCommon.h"
+#include "Object3d.h"
 #include "TextureManager.h"
 #include "Function.h"
 
@@ -160,8 +160,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	spriteCommon->Initialize(dxCommon);
 
 	//モデル共通部
-	ModelCommon* modelCommon = nullptr;
-	modelCommon = new ModelCommon();
+	Object3dCommon* modelCommon = nullptr;
+	modelCommon = new Object3dCommon();
 	modelCommon->Initialize(dxCommon);
 
 #pragma endregion 基盤システムの初期化
@@ -201,7 +201,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	sprite2->Initialize(spriteCommon, "Resources/monsterBall.png");
 	sprite2->SetPosition({ 0.0f,360.0f });
 
-	Model* model = new Model();
+	Object3d* model = new Object3d();
 	model->Initialize(modelCommon);
 
 #pragma endregion 最初のシーンの終了
