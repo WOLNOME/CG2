@@ -8,6 +8,7 @@
 #include "ModelManager.h"
 #include "WinApp.h"
 #include "Model.h"
+#include "Camera.h"
 #include <cassert>
 
 void Object3d::Initialize(Object3dCommon* modelCommon)

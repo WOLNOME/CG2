@@ -61,7 +61,7 @@
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\audio;$(ProjectDir)engine\input;$(ProjectDir)engine\math;$(ProjectDir)engine\scene;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\audio;$(ProjectDir)engine\input;$(ProjectDir)engine\math;$(ProjectDir)engine\scene;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -85,7 +85,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
       <AdditionalOptions>/utf-8 %(AdditionalOptions)</AdditionalOptions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\audio;$(ProjectDir)engine\input;$(ProjectDir)engine\math;$(ProjectDir)engine\scene;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\2d;$(ProjectDir)engine\3d;$(ProjectDir)engine\base;$(ProjectDir)engine\audio;$(ProjectDir)engine\input;$(ProjectDir)engine\math;$(ProjectDir)engine\scene;$(ProjectDir)externals\DirectXTex;$(ProjectDir)externals\imgui;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -100,6 +100,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="engine\base\D3DResourceLeakChecker.cpp" />
     <ClCompile Include="engine\base\DirectXCommon.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp" />
@@ -125,6 +126,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\base\WinApp.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="engine\base\D3DResourceLeakChecker.h" />
     <ClInclude Include="engine\base\DirectXCommon.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />

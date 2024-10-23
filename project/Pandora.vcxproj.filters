@@ -132,6 +132,9 @@
     <ClCompile Include="engine\2d\SpriteCommon.cpp">
       <Filter>ソース ファイル\2d</Filter>
     </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>ソース ファイル\3d</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -217,6 +220,9 @@
     </ClInclude>
     <ClInclude Include="engine\base\WinApp.h">
       <Filter>ヘッダー ファイル\math</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>ヘッダー ファイル\3d</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
