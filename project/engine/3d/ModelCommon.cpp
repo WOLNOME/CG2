@@ -1,5 +1,6 @@
 #include "ModelCommon.h"
 #include "DirectXCommon.h"
+#include "Camera.h"
 
 void ModelCommon::Initialize(DirectXCommon* dxCommon)
 {

@@ -9,7 +9,13 @@ public:
 
 public://ゲッター
 	DirectXCommon* GetDirectXCommon()const { return dxCommon_; }
+	
+public://セッター
+	
+
 private:
 	DirectXCommon* dxCommon_;
+	
+
 };
 

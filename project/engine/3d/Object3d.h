@@ -11,7 +11,6 @@
 #include "Vector4.h"
 
 class Object3dCommon;
-class Camera;
 class Model;
 //モデル
 class Object3d

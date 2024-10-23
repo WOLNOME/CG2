@@ -8,7 +8,6 @@
 #include "ModelManager.h"
 #include "WinApp.h"
 #include "Model.h"
-#include "Camera.h"
 #include <cassert>
 
 void Object3d::Initialize(Object3dCommon* modelCommon)
@@ -25,6 +24,8 @@ void Object3d::Initialize(Object3dCommon* modelCommon)
 	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
 	directionalLightData->intensity = 1.0f;
 
+	//モデルにカメラをセット
+	model_->SetCamera(object3dCommon_->GetDefaultCamera());
 }
 
 void Object3d::Update()

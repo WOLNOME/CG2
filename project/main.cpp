@@ -13,6 +13,7 @@
 #include "Model.h"
 #include "TextureManager.h"
 #include "Function.h"
+#include "Camera.h"
 
 #pragma comment(lib,"xaudio2.lib")
 
@@ -169,6 +170,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	object3dCommon = new Object3dCommon();
 	object3dCommon->Initialize(dxCommon);
 
+	//カメラの生成
+	Camera* camera = new Camera();
+	camera->SetRotate({ 0.0f,0.0f,0.0f });
+	camera->SetTranslate({ 0.0f,0.0f,-15.0f });
+	object3dCommon->SetDefaultCamera(camera);
 
 #pragma endregion 基盤システムの初期化
 
@@ -254,6 +260,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///更新処理
 		//////////////////////
 
+		//カメラの更新
+		camera->Update();
+
 		//モデルの更新
 		object3d->Update();
 		object3d2->Update();
@@ -327,6 +336,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete object3d;
 	delete sprite2;
 	delete sprite;
+	delete camera;
 	delete object3dCommon;
 	delete spriteCommon;
 	delete input;

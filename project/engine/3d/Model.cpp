@@ -5,6 +5,7 @@
 #include "DirectXCommon.h"
 #include "Object3d.h"
 #include "TextureManager.h"
+#include "Camera.h"
 
 void Model::Initialize(ModelCommon* modelCommon, const std::string& directorypath, const std::string& filename)
 {
@@ -21,10 +22,14 @@ void Model::Update()
 {
 	//レンダリングパイプライン
 	Matrix4x4 worldMatrix = MakeAffineMatrix(modelResource_.transform.scale, modelResource_.transform.rotate, modelResource_.transform.translate);
-	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);
-	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+	Matrix4x4 worldViewProjectionMatrix;
+	if (camera_) {
+		const Matrix4x4& viewProjectionMatrix = camera_->GetViewProjectionMatrix();
+		worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
+	}else{
+		//一応カメラが無くても処理は通るが正しく表示はされない
+		worldViewProjectionMatrix = worldMatrix;
+	}
 	modelResource_.wvpData->WVP = worldViewProjectionMatrix;
 	modelResource_.wvpData->World = worldMatrix;
 }

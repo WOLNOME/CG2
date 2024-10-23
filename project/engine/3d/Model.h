@@ -6,6 +6,7 @@
 #include "Function.h"
 
 class ModelCommon;
+class Camera;
 class Model
 {
 private://インナークラス
@@ -71,6 +72,7 @@ public://セッター
 	void SetScale(const Vector3& scale) { modelResource_.transform.scale = scale; }
 	void SetRotate(const Vector3& rotate) { modelResource_.transform.rotate = rotate; }
 	void SetTranslate(const Vector3& translate) { modelResource_.transform.translate = translate; }
+	void SetCamera(Camera* camera) { camera_ = camera; }
 
 private:
 	//.mtlファイルの読み取り
@@ -83,14 +85,8 @@ private:
 	void SettingTexture();
 private:
 	ModelCommon* modelCommon_;
+	Camera* camera_ = nullptr;
 	//モデル用リソース
 	Struct::ModelResource modelResource_;
-
-	//カメラトランスフォーム
-	Transform cameraTransform = {
-		{1.0f,1.0f,1.0f},
-		{0.3f,0.0f,0.0f},
-		{0.0f,4.0f,-10.0f}
-	};
 };
 
