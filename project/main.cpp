@@ -14,6 +14,7 @@
 #include "TextureManager.h"
 #include "Function.h"
 #include "Camera.h"
+#include "SrvManager.h"
 
 #pragma comment(lib,"xaudio2.lib")
 
@@ -149,8 +150,13 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	dxCommon = new DirectXCommon();
 	dxCommon->Initialize(winApp);
 
+	//SRVマネージャー
+	SrvManager* srvManager = nullptr;
+	srvManager = new SrvManager();
+	srvManager->Initialize(dxCommon);
+
 	//テクスチャマネージャ
-	TextureManager::GetInstance()->Initialize(dxCommon);
+	TextureManager::GetInstance()->Initialize(dxCommon, srvManager);
 
 	//モデルマネージャー
 	ModelManager::GetInstance()->Initialize(dxCommon);
@@ -175,6 +181,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	camera->SetRotate({ 0.0f,0.0f,0.0f });
 	camera->SetTranslate({ 0.0f,0.0f,-15.0f });
 	object3dCommon->SetDefaultCamera(camera);
+
+
 
 #pragma endregion 基盤システムの初期化
 
@@ -247,9 +255,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			break;
 		}
 
-		ImGui_ImplDX12_NewFrame();
+		/*ImGui_ImplDX12_NewFrame();
 		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();
+		ImGui::NewFrame();*/
 
 		input->Update();
 
@@ -275,15 +283,15 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		//開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
 
-		ImGui::Begin("Settings");
+		/*ImGui::Begin("Settings");
 
 
-		ImGui::End();
+		ImGui::End();*/
 
 		/////レンダリングパイプライン/////
 
 		//ImGuiの内部コマンドを生成する
-		ImGui::Render();
+		//ImGui::Render();
 
 		///==============================///
 		///          描画処理
@@ -291,6 +299,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		//描画前処理
 		dxCommon->PreDraw();
+		srvManager->PreDraw();
 
 		//3Dモデルの共通描画設定
 		object3dCommon->SettingCommonDrawing();
@@ -314,7 +323,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//sprite2->Draw();
 
 		//ImGuiの描画
-		ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
+		//ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
 
 		//描画後処理
 		dxCommon->PostDraw();
@@ -322,9 +331,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 
 	//ImGuiの終了処理。
-	ImGui_ImplDX12_Shutdown();
+	/*ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();
+	ImGui::DestroyContext();*/
 
 	/////解放処理/////
 
@@ -342,6 +351,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete input;
 	ModelManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
+	delete srvManager;
 	delete dxCommon;
 	//WindowsAPIの終了処理
 	winApp->Finalize();

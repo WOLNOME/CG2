@@ -46,7 +46,7 @@ void Model::Draw()
 		//モデルにテクスチャがない場合、スキップ
 		if (modelResource_.modelData.at(index).material.textureFilePath.size() != 0) {
 			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
-			modelCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(modelResource_.modelData.at(index).material.textureIndex));
+			modelCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(modelResource_.modelData.at(index).material.textureFilePath));
 		}
 		//描画
 		modelCommon_->GetDirectXCommon()->GetCommandList()->DrawInstanced(UINT(modelResource_.modelData.at(index).vertices.size()), 1, 0, 0);
@@ -293,6 +293,6 @@ void Model::SettingTexture()
 		//.objの参照しているテクスチャファイル読み込み
 		TextureManager::GetInstance()->LoadTexture(modelResource_.modelData.at(index).material.textureFilePath);
 		//読み込んだテクスチャの番号を取得
-		modelResource_.modelData.at(index).material.textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(modelResource_.modelData.at(index).material.textureFilePath);
+		modelResource_.modelData.at(index).material.textureIndex = TextureManager::GetInstance()->GetSrvIndex(modelResource_.modelData.at(index).material.textureFilePath);
 	}
 }

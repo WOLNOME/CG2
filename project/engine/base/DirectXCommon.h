@@ -44,7 +44,6 @@ private://生成系メンバ関数
 	void InitImGui();
 
 private:
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
 	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
 	//FPS固定初期化
@@ -55,8 +54,6 @@ private:
 	std::chrono::steady_clock::time_point reference_;
 
 public://公開メンバ関数
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVCPUDescriptorHandle(uint32_t index);
-	D3D12_GPU_DESCRIPTOR_HANDLE GetSRVGPUDescriptorHandle(uint32_t index);
 	D3D12_CPU_DESCRIPTOR_HANDLE GetRTVCPUDescriptorHandle(uint32_t index);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetRTVGPUDescriptorHandle(uint32_t index);
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDSVCPUDescriptorHandle(uint32_t index);
@@ -68,6 +65,8 @@ public://公開メンバ関数
 		//Compilerに使用するProfile
 		const wchar_t* profile
 	);
+	//デスクリプタヒープ作成
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible);
 	//リソース生成
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 	//テクスチャリソースの生成
@@ -75,8 +74,6 @@ public://公開メンバ関数
 	
 	
 public://公開メンバ変数
-	//最大テクスチャ枚数(SRV数)
-	static const uint32_t kMaxSRVCount;
 	
 public://ゲッター
 	//デバイス
@@ -106,10 +103,8 @@ private://メンバ変数
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = nullptr;
 	//デスクリプターヒープ
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> srvDescriptorHeap = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap = nullptr;
 	//デスクリプターサイズ
-	uint32_t descriptorSizeSRV = 0;
 	uint32_t descriptorSizeRTV = 0;
 	uint32_t descriptorSizeDSV = 0;
 	//スワップチェーンから引っ張て来たリソース

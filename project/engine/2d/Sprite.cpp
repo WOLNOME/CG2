@@ -62,8 +62,8 @@ void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
 	transformationMatrixData->WVP = MakeIdentity4x4();
 	transformationMatrixData->World = MakeIdentity4x4();
 
-	//入力されたファイルパスからテクスチャデータのインデックスを受け取る
-	textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(textureFilePath);
+	//テクスチャファイルパスを受け取る
+	textureFilePath_ = textureFilePath;
 	//スプライトのサイズを本来の画像のサイズに合わせる
 	AdjustTextureSize();
 }
@@ -93,7 +93,7 @@ void Sprite::Update()
 	}
 
 	//指定したテクスチャ番号のメタデータを取得
-	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetaData(textureIndex);
+	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetaData(textureFilePath_);
 	float tex_left = textureLeftTop.x / metadata.width;
 	float tex_right = (textureLeftTop.x + textureSize.x) / metadata.width;
 	float tex_top = textureLeftTop.y / metadata.height;
@@ -138,7 +138,7 @@ void Sprite::Draw()
 	spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
 
 	//SRVのDescriptorTableの先頭を設定
-	spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureIndex));
+	spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureFilePath_));
 
 	//平行光源の設定
 	spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
@@ -151,7 +151,7 @@ void Sprite::Draw()
 void Sprite::AdjustTextureSize()
 {
 	//テクスチャメタデータを取得
-	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetaData(textureIndex);
+	const DirectX::TexMetadata& metadata = TextureManager::GetInstance()->GetMetaData(textureFilePath_);
 
 	textureSize.x = static_cast<float>(metadata.width);
 	textureSize.y = static_cast<float>(metadata.height);

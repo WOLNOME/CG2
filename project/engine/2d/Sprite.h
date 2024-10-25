@@ -1,6 +1,7 @@
 #pragma once
 #include <wrl.h>
 #include <d3d12.h>
+#include <string>
 #include"Function.h"
 
 class SpriteCommon;
@@ -111,7 +112,8 @@ private://メンバ変数値書き換え用
 	Vector2 textureLeftTop = { 0.0f,0.0f };
 	//テクスチャ切り出しサイズ
 	Vector2 textureSize = { 100.0f,100.0f };
-	//テクスチャ番号
-	uint32_t textureIndex = 0;
+	//テクスチャファイルパス
+	std::string textureFilePath_;
+
 };
 
