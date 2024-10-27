@@ -15,6 +15,7 @@
 #include "Function.h"
 #include "Camera.h"
 #include "SrvManager.h"
+#include "ImGuiManager.h"
 
 #pragma comment(lib,"xaudio2.lib")
 
@@ -155,6 +156,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	srvManager = new SrvManager();
 	srvManager->Initialize(dxCommon);
 
+	//ImGuiマネージャー
+	ImGuiManager* imGuiManager = nullptr;
+	imGuiManager = new ImGuiManager();
+	imGuiManager->Initialize(dxCommon, winApp, srvManager);
+
 	//テクスチャマネージャ
 	TextureManager::GetInstance()->Initialize(dxCommon, srvManager);
 
@@ -255,9 +261,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 			break;
 		}
 
-		/*ImGui_ImplDX12_NewFrame();
-		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();*/
+		//ImGui受付開始
+		imGuiManager->Begin();
 
 		input->Update();
 
@@ -291,7 +296,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		/////レンダリングパイプライン/////
 
 		//ImGuiの内部コマンドを生成する
-		//ImGui::Render();
+		imGuiManager->End();
 
 		///==============================///
 		///          描画処理
@@ -323,17 +328,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		//sprite2->Draw();
 
 		//ImGuiの描画
-		//ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), dxCommon->GetCommandList());
+		imGuiManager->Draw();
 
 		//描画後処理
 		dxCommon->PostDraw();
 	}
-
-
-	//ImGuiの終了処理。
-	/*ImGui_ImplDX12_Shutdown();
-	ImGui_ImplWin32_Shutdown();
-	ImGui::DestroyContext();*/
 
 	/////解放処理/////
 
@@ -351,6 +350,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	delete input;
 	ModelManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
+	imGuiManager->Finalize();
+	delete imGuiManager;
 	delete srvManager;
 	delete dxCommon;
 	//WindowsAPIの終了処理

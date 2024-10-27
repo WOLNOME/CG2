@@ -41,8 +41,7 @@ private://生成系メンバ関数
 	void InitViewPort();
 	void InitScissorRect();
 	void GenerateDXCCompiler();
-	void InitImGui();
-
+	
 private:
 	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
 	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
@@ -80,6 +79,8 @@ public://ゲッター
 	ID3D12Device* GetDevice() const { return device.Get(); }
 	//コマンドリスト
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
+	//バックバッファの数を取得
+	size_t GetBackBufferCount()const { return swapChainDesc.BufferCount; }
 
 private://インスタンス
 	//WindowsAPI

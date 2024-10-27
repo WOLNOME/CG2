@@ -47,9 +47,7 @@ void DirectXCommon::Initialize(WinApp* winApp)
 	InitScissorRect();
 	//DXCコンパイラの生成
 	GenerateDXCCompiler();
-	//ImGuiの初期化
-	InitImGui();
-
+	
 }
 
 void DirectXCommon::PreDraw()
@@ -273,7 +271,7 @@ void DirectXCommon::GenerateDepthBuffer()
 	resourceDesc.SampleDesc.Count = 1;
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
-
+	
 	//利用するヒープの設定
 	D3D12_HEAP_PROPERTIES heapProperties{};
 	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -389,23 +387,6 @@ void DirectXCommon::GenerateDXCCompiler()
 	//シェーダー系includeに対応するための設定
 	hr = dxcUtils->CreateDefaultIncludeHandler(&includeHandler);
 	assert(SUCCEEDED(hr));
-}
-
-void DirectXCommon::InitImGui()
-{
-	////ImGuiの初期化
-	//IMGUI_CHECKVERSION();
-	//ImGui::CreateContext();
-	//ImGui::StyleColorsDark();
-	//ImGui_ImplWin32_Init(winApp_->GetHwnd());
-	//ImGui_ImplDX12_Init(
-	//	device.Get(),
-	//	swapChainDesc.BufferCount,
-	//	rtvDesc.Format,
-	//	srvDescriptorHeap.Get(),
-	//	GetCPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 0),
-	//	GetGPUDescriptorHandle(srvDescriptorHeap.Get(), descriptorSizeSRV, 0)
-	//);
 }
 
 Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)

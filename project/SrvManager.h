@@ -23,6 +23,7 @@ public:
 
 
 public://ゲッター
+	ID3D12DescriptorHeap* GetDescriptorHeap()const { return descriptorHeap.Get(); }
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(uint32_t index);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(uint32_t index);
 public://セッター
@@ -41,7 +42,7 @@ private://メンバ変数
 	uint32_t descriptorSize = 0;
 	//SRV用デスクリプタヒープ
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap = nullptr;
-	
+
 	//次に使用するSRVインデックス
 	uint32_t useIndex = 0;
 
