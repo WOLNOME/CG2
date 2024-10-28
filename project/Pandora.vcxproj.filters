@@ -132,19 +132,22 @@
     <ClCompile Include="engine\2d\SpriteCommon.cpp">
       <Filter>ソース ファイル\2d</Filter>
     </ClCompile>
-    <ClCompile Include="Camera.cpp">
+    <ClCompile Include="engine\3d\Camera.cpp">
       <Filter>ソース ファイル\3d</Filter>
     </ClCompile>
-    <ClCompile Include="SrvManager.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="engine\audio\Audio.cpp">
+      <Filter>ソース ファイル\audio</Filter>
     </ClCompile>
-    <ClCompile Include="ImGuiManager.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="engine\audio\AudioCommon.cpp">
+      <Filter>ソース ファイル\audio</Filter>
     </ClCompile>
-    <ClCompile Include="Audio.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="engine\2d\ImGuiManager.cpp">
+      <Filter>ソース ファイル\2d</Filter>
     </ClCompile>
-    <ClCompile Include="AudioCommon.cpp">
+    <ClCompile Include="engine\base\SrvManager.cpp">
+      <Filter>ソース ファイル\base</Filter>
+    </ClCompile>
+    <ClCompile Include="MyGame.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
@@ -230,22 +233,25 @@
     <ClInclude Include="engine\math\Vector4.h">
       <Filter>ヘッダー ファイル\math</Filter>
     </ClInclude>
-    <ClInclude Include="Camera.h">
+    <ClInclude Include="engine\3d\Camera.h">
       <Filter>ヘッダー ファイル\3d</Filter>
-    </ClInclude>
-    <ClInclude Include="SrvManager.h">
-      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="engine\base\WinApp.h">
       <Filter>ヘッダー ファイル\base</Filter>
     </ClInclude>
-    <ClInclude Include="ImGuiManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="engine\audio\Audio.h">
+      <Filter>ヘッダー ファイル\audio</Filter>
     </ClInclude>
-    <ClInclude Include="Audio.h">
-      <Filter>ヘッダー ファイル</Filter>
+    <ClInclude Include="engine\audio\AudioCommon.h">
+      <Filter>ヘッダー ファイル\audio</Filter>
     </ClInclude>
-    <ClInclude Include="AudioCommon.h">
+    <ClInclude Include="engine\2d\ImGuiManager.h">
+      <Filter>ヘッダー ファイル\2d</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\base\SrvManager.h">
+      <Filter>ヘッダー ファイル\base</Filter>
+    </ClInclude>
+    <ClInclude Include="MyGame.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
