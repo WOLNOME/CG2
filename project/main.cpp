@@ -297,11 +297,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 #endif // _DEBUG
 
-
-
-
-		/////レンダリングパイプライン/////
-
 		//ImGuiの内部コマンドを生成する
 		imGuiManager->End();
 
