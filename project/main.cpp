@@ -16,121 +16,10 @@
 #include "Camera.h"
 #include "SrvManager.h"
 #include "ImGuiManager.h"
+#include "AudioCommon.h"
+#include "Audio.h"
 
 #pragma comment(lib,"xaudio2.lib")
-
-//定数
-const int kTriangleVertexNum = 3;
-const int kTriangleNum = 2;
-
-const uint32_t kSubdivision = 20;
-
-//チャンクヘッダ
-struct ChunkHeader
-{
-	char id[4];
-	int32_t size;
-};
-
-//RIFFヘッダチャンク
-struct RiffHeader
-{
-	ChunkHeader chunk;
-	char type[4];
-};
-
-//FMTチャンク
-struct FormatChunk
-{
-	ChunkHeader chunk;
-	WAVEFORMATEX fmt;
-};
-
-//音声データ
-struct SoundData
-{
-	//波形フォーマット
-	WAVEFORMATEX wfex;
-	//バッファの先頭アドレス
-	BYTE* pBuffer;
-	//バッファのサイズ
-	unsigned int bufferSize;
-};
-
-//音声データの読み込み
-SoundData SoundLoadWave(const char* filename)
-{
-	//1.ファイルオープン
-	std::ifstream file;
-	file.open(filename, std::ios_base::binary);
-	assert(file.is_open());
-	//2.「.wav」データ読み込み
-	RiffHeader riff;
-	file.read((char*)&riff, sizeof(riff));
-	if (strncmp(riff.chunk.id, "RIFF", 4) != 0) {
-		assert(0);
-	}
-	if (strncmp(riff.type, "WAVE", 4) != 0) {
-		assert(0);
-	}
-	FormatChunk format = {};
-	file.read((char*)&format, sizeof(ChunkHeader));
-	if (strncmp(format.chunk.id, "fmt ", 4) != 0) {
-		assert(0);
-	}
-	assert(format.chunk.size <= sizeof(format.fmt));
-	file.read((char*)&format.fmt, format.chunk.size);
-	ChunkHeader data;
-	file.read((char*)&data, sizeof(data));
-	if (strncmp(data.id, "JUNK", 4) == 0) {
-		file.seekg(data.size, std::ios_base::cur);
-		file.read((char*)&data, sizeof(data));
-	}
-	if (strncmp(data.id, "data", 4) != 0) {
-		assert(0);
-	}
-	char* pBuffer = new char[data.size];
-	file.read(pBuffer, data.size);
-	//3.ファイルクローズ
-	file.close();
-	//4.読み込んだ音声データをreturn
-	SoundData soundData = {};
-	soundData.wfex = format.fmt;
-	soundData.pBuffer = reinterpret_cast<BYTE*>(pBuffer);
-	soundData.bufferSize = data.size;
-
-	return soundData;
-}
-
-//音声データの解放
-void SoundUnload(SoundData* soundData)
-{
-	//バッファのメモリを解放
-	delete[] soundData->pBuffer;
-
-	soundData->pBuffer = 0;
-	soundData->bufferSize = 0;
-	soundData->wfex = {};
-}
-
-//サウンドの再生
-void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData)
-{
-	HRESULT result;
-	//波形フォーマットからSourceVoiceを生成
-	IXAudio2SourceVoice* pSourceVoice = nullptr;
-	result = xAudio2->CreateSourceVoice(&pSourceVoice, &soundData.wfex);
-	assert(SUCCEEDED(result));
-	//再生する波形データの設定
-	XAUDIO2_BUFFER buf{};
-	buf.pAudioData = soundData.pBuffer;
-	buf.AudioBytes = soundData.bufferSize;
-	buf.Flags = XAUDIO2_END_OF_STREAM;
-	//波形データの再生
-	result = pSourceVoice->SubmitSourceBuffer(&buf);
-	result = pSourceVoice->Start();
-}
-
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
@@ -172,6 +61,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	input = new Input();
 	input->Initialize(winApp);
 
+	//オーディオ共通部
+	AudioCommon* audioCommon = nullptr;
+	audioCommon = new AudioCommon();
+	audioCommon->Initialize();
+
 	//スプライト共通部
 	SpriteCommon* spriteCommon = nullptr;
 	spriteCommon = new SpriteCommon();
@@ -207,13 +101,6 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		{0.0f,0.0f,-10.0f}
 	};
 
-	//////////////////Xaudio2の設定/////////////////////////////////////
-	//必要な変数の宣言
-	Microsoft::WRL::ComPtr<IXAudio2> xAudio2;
-	IXAudio2MasteringVoice* masterVoice;
-	///////////////////////////////////////////////////////////////////
-
-
 	//初期化
 #pragma region 最初のシーン初期化
 	Sprite* sprite = new Sprite();
@@ -239,22 +126,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	object3d2->SetModel("axis.obj");
 	object3d2->Initialize(object3dCommon);
 
+	Audio* audio = new Audio();
+	audio->Initialize(audioCommon, "Alarm01.wav");
+	
 #pragma endregion 最初のシーンの終了
-
-	//ライト
-	bool isLightingSphere = true;
-	bool isHalfLambert = true;
-	//XAudio2エンジンのインスタンス作成
-	HRESULT hr = XAudio2Create(&xAudio2, 0, XAUDIO2_DEFAULT_PROCESSOR);
-	assert(SUCCEEDED(hr));
-	//マスターボイスを作成
-	hr = xAudio2->CreateMasteringVoice(&masterVoice);
-	assert(SUCCEEDED(hr));
-	//音声読み込み
-	SoundData soundData1 = SoundLoadWave("Resources/Alarm01.wav");
-	//再生フラグ
-	bool isPlayAudio = false;
-
 
 	//ウィンドウの×ボタンが押されるまでループ
 	while (true) {
@@ -293,6 +168,12 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		ImGui::Begin("MosterBall");
 		ImGui::SliderFloat2("position", &sprite2Position.x,0.0f,1200.0f,"%5.1f");
 		sprite2->SetPosition(sprite2Position);
+		ImGui::End();
+
+		ImGui::Begin("Audio");
+		if (ImGui::Button("PlayAudio")) {
+			audio->Play();
+		}
 		ImGui::End();
 
 #endif // _DEBUG
@@ -346,17 +227,14 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 	/////解放処理/////
 
-	//xAudio2
-	xAudio2.Reset();
-	//音声データ
-	SoundUnload(&soundData1);
-
+	delete audio;
 	delete object3d;
 	delete sprite2;
 	delete sprite;
 	delete camera;
 	delete object3dCommon;
 	delete spriteCommon;
+	delete audioCommon;
 	delete input;
 	ModelManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
