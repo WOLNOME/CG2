@@ -6,10 +6,9 @@
 void MyGame::Initialize()
 {
 	//ゲーム基盤部の初期化
-	BaseInitialize();
+	Framework::Initialize();
 
 	//ゲームシーン変数の初期化
-
 	sprite_ = new Sprite();
 	TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
 	sprite_->Initialize(spriteCommon_, "Resources/uvChecker.png");
@@ -41,48 +40,27 @@ void MyGame::Initialize()
 
 void MyGame::Finalize()
 {
+
 	delete audio_;
 	delete object3d_;
 	delete sprite2_;
 	delete sprite_;
-	delete camera_;
-	delete object3dCommon_;
-	delete spriteCommon_;
-	delete audioCommon_;
-	delete input_;
-	ModelManager::GetInstance()->Finalize();
-	TextureManager::GetInstance()->Finalize();
-	imGuiManager_->Finalize();
-	delete imGuiManager_;
-	delete srvManager_;
-	delete dxCommon_;
-	//WindowsAPIの終了処理
-	winApp_->Finalize();
-	delete winApp_;
 
+	//ゲーム基盤解放
+	Framework::Finalize();
 }
 
 void MyGame::Update()
 {
-	//メッセージ処理
-	if (winApp_->ProcessMessage()) {
-		isOver = true;
-	}
+	//ゲーム基盤更新
+	Framework::Update();
 
 	//ImGui受付開始
 	imGuiManager_->Begin();
 
-	input_->Update();
-
-
-	//ゲームの処理
-
 	///==============================///
 	///          更新処理
 	///==============================///
-
-	//カメラの更新
-	camera_->Update();
 
 	//モデルの更新
 	object3d_->Update();
@@ -127,86 +105,36 @@ void MyGame::Draw()
 	object3dCommon_->SettingCommonDrawing();
 
 	///------------------------------///
-	///          モデル描画開始
+	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
 	object3d_->Draw();
 	object3d2_->Draw();
 
 	///------------------------------///
-	///          モデル描画終了
+	///↑↑↑↑モデル描画終了↑↑↑↑
 	///------------------------------///
 
 	//スプライトの共通描画設定
 	spriteCommon_->SettingCommonDrawing();
 
 	///------------------------------///
-	///          スプライト描画開始
+	///↓↓↓↓スプライト描画開始↓↓↓↓
 	///------------------------------///
 
 	//スプライト描画
 	sprite_->Draw();
 	sprite2_->Draw();
 
+	
+	///------------------------------///
+	///↑↑↑↑スプライト描画終了↑↑↑↑
+	///------------------------------///
+	
 	//ImGuiの描画
 	imGuiManager_->Draw();
-
-	///------------------------------///
-	///          スプライト描画終了
-	///------------------------------///
 
 	//描画後処理
 	dxCommon_->PostDraw();
 }
 
-void MyGame::BaseInitialize()
-{
-	//解放処理確認用
-	leakChecker;
-
-	//ウィンドウ
-	//WindowsAPIの初期化
-	winApp_ = new WinApp();
-	winApp_->Initialize();
-
-	//DorectX12
-	dxCommon_ = new DirectXCommon();
-	dxCommon_->Initialize(winApp_);
-
-	//SRVマネージャー
-	srvManager_ = new SrvManager();
-	srvManager_->Initialize(dxCommon_);
-
-	//ImGuiマネージャー
-	imGuiManager_ = new ImGuiManager();
-	imGuiManager_->Initialize(dxCommon_, winApp_, srvManager_);
-
-	//テクスチャマネージャ
-	TextureManager::GetInstance()->Initialize(dxCommon_, srvManager_);
-
-	//モデルマネージャー
-	ModelManager::GetInstance()->Initialize(dxCommon_);
-
-	//インプット
-	input_ = new Input();
-	input_->Initialize(winApp_);
-
-	//オーディオ共通部
-	audioCommon_ = new AudioCommon();
-	audioCommon_->Initialize();
-
-	//スプライト共通部
-	spriteCommon_ = new SpriteCommon();
-	spriteCommon_->Initialize(dxCommon_);
-
-	//オブジェクト3D共通部
-	object3dCommon_ = new Object3dCommon();
-	object3dCommon_->Initialize(dxCommon_);
-
-	//カメラの生成
-	camera_ = new Camera();
-	camera_->SetRotate({ 0.0f,0.0f,0.0f });
-	camera_->SetTranslate({ 0.0f,0.0f,-15.0f });
-	object3dCommon_->SetDefaultCamera(camera_);
-
-}

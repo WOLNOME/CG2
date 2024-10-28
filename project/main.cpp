@@ -1,27 +1,13 @@
+#include "Framework.h"
 #include "MyGame.h"
 
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-	//生成と初期化
-	MyGame* myGame = nullptr;
-	myGame = new MyGame();
-	myGame->Initialize();
-	//ウィンドウの×ボタンが押されるまでループ
-	while (true) {
+	Framework* game = new MyGame();
 
-		//更新
-		myGame->Update();
-		//ループ脱出
-		if (myGame->GetOver()) {
-			break;
-		}
-		//描画
-		myGame->Draw();
+	game->Run();
 
-	}
-	//解放
-	myGame->Finalize();
-	delete myGame;
+	delete game;
 
 	return 0;
 }

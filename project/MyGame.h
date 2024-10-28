@@ -1,59 +1,30 @@
 #pragma once
-#include "D3DResourceLeakChecker.h"
-#include "WinApp.h"
-#include "DirectXCommon.h"
-#include "SrvManager.h"
-#include "ImGuiManager.h"
-#include "Input.h"
-#include "AudioCommon.h"
-#include "SpriteCommon.h"
-#include "Object3dCommon.h"
-#include "Camera.h"
 #include "Sprite.h"
 #include "Object3d.h"
 #include "Audio.h"
+#include "Framework.h"
 
-class MyGame
+class MyGame : public Framework
 {
 public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	void Initialize();
+	void Initialize() override;
 	/// <summary>
 	/// 終了時
 	/// </summary>
-	void Finalize();
+	void Finalize() override;
 	/// <summary>
 	/// 更新
 	/// </summary>
-	void Update();
+	void Update() override;
 	/// <summary>
 	/// 描画
 	/// </summary>
-	void Draw();
-	/// <summary>
-	/// 終了判定
-	/// </summary>
-	/// <returns></returns>
-	bool GetOver() { return isOver; }
-private:
-	/// <summary>
-	/// 基盤部の初期化
-	/// </summary>
-	void BaseInitialize();
+	void Draw() override;
 private://基盤インスタンス
-	D3DResourceLeakChecker leakChecker;
-	WinApp* winApp_ = nullptr;
-	DirectXCommon* dxCommon_ = nullptr;
-	SrvManager* srvManager_ = nullptr;
-	ImGuiManager* imGuiManager_ = nullptr;
-	Input* input_ = nullptr;
-	AudioCommon* audioCommon_ = nullptr;
-	SpriteCommon* spriteCommon_ = nullptr;
-	Object3dCommon* object3dCommon_ = nullptr;
-	Camera* camera_ = nullptr;
-	bool isOver = false;
+	
 private://シーンの持つメンバ変数
 	Sprite* sprite_ = nullptr;
 	Sprite* sprite2_ = nullptr;

@@ -21,6 +21,7 @@ void ModelManager::Initialize(DirectXCommon* dxCommon)
 
 void ModelManager::Finalize()
 {
+	modelCommon.reset();
 	delete instance;
 	instance = nullptr;
 }
