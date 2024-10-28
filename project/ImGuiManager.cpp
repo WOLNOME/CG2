@@ -5,6 +5,7 @@
 #include "DirectXCommon.h"
 #include "WinApp.h"
 #include "SrvManager.h"
+#include <cstdint>
 
 void ImGuiManager::Initialize(DirectXCommon* dxCommon, WinApp* winApp, SrvManager* srvManager)
 {
@@ -20,14 +21,16 @@ void ImGuiManager::Initialize(DirectXCommon* dxCommon, WinApp* winApp, SrvManage
 
 	//Win32用初期化関数
 	ImGui_ImplWin32_Init(winApp_->GetHwnd());
+	//使用するSRVのインデックスを受け取る
+	uint32_t index = srvManager_->Allocate();
 	//dx12用初期化関数
 	ImGui_ImplDX12_Init(
 		dxCommon_->GetDevice(),
 		static_cast<int>(dxCommon_->GetBackBufferCount()),
 		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
 		srvManager_->GetDescriptorHeap(),
-		srvManager_->GetCPUDescriptorHandle(1),
-		srvManager_->GetGPUDescriptorHandle(1)
+		srvManager_->GetCPUDescriptorHandle(index),
+		srvManager_->GetGPUDescriptorHandle(index)
 	);
 }
 

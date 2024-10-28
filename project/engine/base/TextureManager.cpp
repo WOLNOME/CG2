@@ -4,7 +4,7 @@
 #include "StringUtility.h"
 
 TextureManager* TextureManager::instance = nullptr;
-//Imguiで0版を使用するため、1番から使用
+//Imguiで0番を使用するため、1番から使用
 uint32_t TextureManager::kSRVIndexTop = 1;
 
 TextureManager* TextureManager::GetInstance()

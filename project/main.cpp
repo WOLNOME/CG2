@@ -225,7 +225,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	Sprite* sprite2 = new Sprite();
 	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
 	sprite2->Initialize(spriteCommon, "Resources/monsterBall.png");
-	sprite2->SetPosition({ 0.0f,360.0f });
+	Vector2 sprite2Position = { 100.0f,100.0f };
+	sprite2->SetPosition(sprite2Position);
+	sprite2->SetSize({ 300.0f,300.0f });
 
 	ModelManager::GetInstance()->LoadModel("plane.obj");
 	Object3d* object3d = new Object3d();
@@ -269,9 +271,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 
 		//ゲームの処理
 
-		//////////////////////
-		///更新処理
-		//////////////////////
+		///==============================///
+		///          更新処理
+		///==============================///
 
 		//カメラの更新
 		camera->Update();
@@ -285,13 +287,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		sprite->SetRotation(sprite->GetRotation() + 0.03f);
 		sprite2->Update();
 
+#ifdef _DEBUG
+		
+		ImGui::SetNextWindowSize(ImVec2(500, 100));
+		ImGui::Begin("MosterBall");
+		ImGui::SliderFloat2("position", &sprite2Position.x,0.0f,1200.0f,"%5.1f");
+		sprite2->SetPosition(sprite2Position);
+		ImGui::End();
 
-		//開発用UIの処理。実際に開発用のUIを出す場合はここをゲーム固有の処理に置き換える
-
-		/*ImGui::Begin("Settings");
+#endif // _DEBUG
 
 
-		ImGui::End();*/
+
 
 		/////レンダリングパイプライン/////
 
@@ -310,25 +317,33 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		object3dCommon->SettingCommonDrawing();
 
 		///------------------------------///
-		///          モデル描画
+		///          モデル描画開始
 		///------------------------------///
 
 		object3d->Draw();
 		object3d2->Draw();
 
+		///------------------------------///
+		///          モデル描画終了
+		///------------------------------///
+
 		//スプライトの共通描画設定
 		spriteCommon->SettingCommonDrawing();
 
 		///------------------------------///
-		///          スプライト描画
+		///          スプライト描画開始
 		///------------------------------///
 
 		//スプライト描画
 		sprite->Draw();
-		//sprite2->Draw();
+		sprite2->Draw();
 
 		//ImGuiの描画
 		imGuiManager->Draw();
+
+		///------------------------------///
+		///          スプライト描画終了
+		///------------------------------///
 
 		//描画後処理
 		dxCommon->PostDraw();
