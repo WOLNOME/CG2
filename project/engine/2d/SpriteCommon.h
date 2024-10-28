@@ -6,9 +6,21 @@ class DirectXCommon;
 
 class SpriteCommon
 {
+private://シングルトン設定
+	static SpriteCommon* instance;
+
+	SpriteCommon() = default;
+	~SpriteCommon() = default;
+	SpriteCommon(SpriteCommon&) = delete;
+	SpriteCommon& operator=(SpriteCommon&) = delete;
+public:
+	//シングルトンインスタンスの取得
+	static SpriteCommon* GetInstance();
 public://メンバ関数
 	//初期化
 	void Initialize(DirectXCommon* dxCommon);
+	//終了
+	void Finalize();
 	//共通描画設定
 	void SettingCommonDrawing();
 

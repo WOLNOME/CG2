@@ -1,7 +1,7 @@
 #pragma once
 #include "Framework.h"
 #include "Sprite.h"
-#include "Object3d.h"
+#include "Model.h"
 #include "Audio.h"
 
 class MyGame : public Framework
@@ -29,8 +29,8 @@ private://シーンの持つメンバ変数
 	Sprite* sprite_ = nullptr;
 	Sprite* sprite2_ = nullptr;
 	Vector2 sprite2Position;
-	Object3d* object3d_ = nullptr;
-	Object3d* object3d2_ = nullptr;
+	Model* model_ = nullptr;
+	Model* model2_ = nullptr;
 	Audio* audio_ = nullptr;
 };
 

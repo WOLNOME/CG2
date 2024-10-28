@@ -4,7 +4,6 @@
 #include <memory>
 
 class Model;
-class ModelCommon;
 class DirectXCommon;
 class ModelManager
 {
@@ -28,12 +27,10 @@ public:
 	//モデルデータ取得関数
 	Model* FindModel(const std::string& filePath);
 
-
-private://インスタンス
-	std::unique_ptr<ModelCommon> modelCommon = nullptr;
-
 private:
 	//モデルデータ
 	std::map<std::string, std::unique_ptr<Model>> models;
+	
+
 };
 

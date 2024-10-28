@@ -2,6 +2,8 @@
 #include "TextureManager.h"
 #include "ModelManager.h"
 #include "Model.h"
+#include "SpriteCommon.h"
+#include "ModelCommon.h"
 
 void MyGame::Initialize()
 {
@@ -11,38 +13,34 @@ void MyGame::Initialize()
 	//ゲームシーン変数の初期化
 	sprite_ = new Sprite();
 	TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
-	sprite_->Initialize(spriteCommon_, "Resources/uvChecker.png");
+	sprite_->Initialize("Resources/uvChecker.png");
 	sprite_->SetAnchorPoint({ 0.5f,0.5f });
 	sprite_->SetFlipX(true);
 
 	sprite2_ = new Sprite();
 	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
-	sprite2_->Initialize(spriteCommon_, "Resources/monsterBall.png");
+	sprite2_->Initialize("Resources/monsterBall.png");
 	sprite2Position = { 100.0f,100.0f };
 	sprite2_->SetPosition(sprite2Position);
 	sprite2_->SetSize({ 300.0f,300.0f });
 
 	ModelManager::GetInstance()->LoadModel("plane.obj");
-	object3d_ = new Object3d();
-	object3d_->SetModel("plane.obj");
-	object3d_->Initialize(object3dCommon_);
+	model_ = new Model();
+	model_ = ModelManager::GetInstance()->FindModel("plane.obj");
 
 	ModelManager::GetInstance()->LoadModel("axis.obj");
-	object3d2_ = new Object3d();
-	object3d2_->SetModel("axis.obj");
-	object3d2_->Initialize(object3dCommon_);
+	model2_ = new Model();
+	model2_= ModelManager::GetInstance()->FindModel("axis.obj");
 
-	audio_ = new Audio();
-	audio_->Initialize(audioCommon_, "Alarm01.wav");
-
+	Audio::GetInstance()->LoadWave("Alarm01.wav");
 
 }
 
 void MyGame::Finalize()
 {
 
-	delete audio_;
-	delete object3d_;
+	delete model2_;
+	delete model_;
 	delete sprite2_;
 	delete sprite_;
 
@@ -63,8 +61,8 @@ void MyGame::Update()
 	///==============================///
 
 	//モデルの更新
-	object3d_->Update();
-	object3d2_->Update();
+	model_->Update();
+	model2_->Update();
 
 	//スプライトの更新
 	sprite_->Update();
@@ -81,7 +79,7 @@ void MyGame::Update()
 
 	ImGui::Begin("Audio");
 	if (ImGui::Button("PlayAudio")) {
-		audio_->Play();
+		Audio::GetInstance()->Play();
 	}
 	ImGui::End();
 
@@ -102,21 +100,22 @@ void MyGame::Draw()
 	srvManager_->PreDraw();
 
 	//3Dモデルの共通描画設定
-	object3dCommon_->SettingCommonDrawing();
+	ModelCommon::GetInstance()->SettingCommonDrawing();
+	ModelCommon::GetInstance()->Draw();
 
 	///------------------------------///
 	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
-	object3d_->Draw();
-	object3d2_->Draw();
+	model_->Draw();
+	model2_->Draw();
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
 	///------------------------------///
 
 	//スプライトの共通描画設定
-	spriteCommon_->SettingCommonDrawing();
+	SpriteCommon::GetInstance()->SettingCommonDrawing();
 
 	///------------------------------///
 	///↓↓↓↓スプライト描画開始↓↓↓↓
