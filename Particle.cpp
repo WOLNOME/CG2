@@ -30,7 +30,7 @@ void Particle::Initialize(ParticleCommon* modelCommon, uint32_t instanceNum)
 	transforms.resize(instanceNum_);
 	for (uint32_t index = 0; index < instanceNum_; ++index) {
 		transforms[index].scale = { 1.0f,1.0f,1.0f };
-		transforms[index].rotate = { 0.0f,0.0f,0.0f };
+		transforms[index].rotate = { 0.0f,3.14f,0.0f };
 		transforms[index].translate = { index * 0.1f,index * 0.1f,index * 0.1f };
 	}
 
@@ -41,9 +41,7 @@ void Particle::Update()
 
 	//レンダリングパイプライン
 	for (uint32_t index = 0; index < instanceNum_; ++index) {
-		transforms[index].rotate.y += 0.03f;
-
-
+		
 		Matrix4x4 worldMatrix = MakeAffineMatrix(transforms[index].scale, transforms[index].rotate, transforms[index].translate);
 		Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
