@@ -27,6 +27,7 @@ public://公開メンバ関数
 
 	//テクスチャファイル読み込み
 	 void LoadTexture(const std::string& filePath);
+	
 	 //GPUハンドルを取得
 	 D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(uint32_t textureIndex);
 private://非公開メンバ関数

@@ -63,8 +63,6 @@ public://インナークラス
 			std::vector<VertexData*> vertexData;
 			std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResource;
 			std::vector<Material*> materialData;
-			Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
-			TransformationMatrix* wvpData;
 			Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
 			TransformationMatrix* instancingData;
 			Transform transform;
@@ -88,6 +86,9 @@ private://メンバ関数(非公開)
 	void MakeModelResource(const std::string& resourceFileName, const std::string& objFileName);
 	//テクスチャ読み込み
 	void SettingTexture();
+	//SRVの設定
+	void SettingSRV();
+
 private://インスタンス
 	ParticleCommon* particleCommon_ = nullptr;
 private://メンバ変数
@@ -105,5 +106,10 @@ private://メンバ変数
 	};
 	//パーティクルの数
 	uint32_t instanceNum_;
+	//各インスタンシング用トランスフォーム
+	std::vector<Transform> transforms;
+	//srvハンドル
+	D3D12_CPU_DESCRIPTOR_HANDLE SrvHandleCPU;
+	D3D12_GPU_DESCRIPTOR_HANDLE SrvHandleGPU;
 };
 

@@ -13,6 +13,8 @@
 #include "Model.h"
 #include "TextureManager.h"
 #include "Function.h"
+#include "ParticleCommon.h"
+#include "Particle.h"
 
 #pragma comment(lib,"xaudio2.lib")
 
@@ -169,6 +171,10 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	object3dCommon = new Object3dCommon();
 	object3dCommon->Initialize(dxCommon);
 
+	//パーティクル共通部
+	ParticleCommon* particleCommon = nullptr;
+	particleCommon = new ParticleCommon();
+	particleCommon->Initialize(dxCommon);
 
 #pragma endregion 基盤システムの初期化
 
@@ -217,6 +223,9 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	object3d2->SetModel("axis.obj");
 	object3d2->Initialize(object3dCommon);
 
+	Particle* particle = new Particle();
+	particle->Initialize(particleCommon, 10);
+
 #pragma endregion 最初のシーンの終了
 
 	//ライト
@@ -258,6 +267,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		object3d->Update();
 		object3d2->Update();
 
+		particle->Update();
+
 		//スプライトの更新
 		sprite->Update();
 		sprite->SetRotation(sprite->GetRotation() + 0.03f);
@@ -293,6 +304,18 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		object3d->Draw();
 		object3d2->Draw();
 
+		
+
+		//パーティクル共通描画設定
+		particleCommon->SettingCommonDrawing();
+
+		///------------------------------///
+		///          パーティクル描画
+		///------------------------------///
+
+		particle->Draw();
+
+
 		//スプライトの共通描画設定
 		spriteCommon->SettingCommonDrawing();
 
@@ -324,9 +347,11 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	//音声データ
 	SoundUnload(&soundData1);
 
+	delete particle;
 	delete object3d;
 	delete sprite2;
 	delete sprite;
+	delete particleCommon;
 	delete object3dCommon;
 	delete spriteCommon;
 	delete input;

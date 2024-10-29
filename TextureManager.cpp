@@ -66,7 +66,7 @@ void TextureManager::LoadTexture(const std::string& filePath)
 
 	//テクスチャデータの転送
 	UploadTextureData(textureData.resource, mipImages);
-	
+
 
 	//テクスチャデータの要素数番号からSRVのインデックスを計算する
 	uint32_t srvIndex = static_cast<uint32_t>(textureDatas.size() - 1) + kSRVIndexTop;

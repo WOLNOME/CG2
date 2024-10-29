@@ -24,18 +24,36 @@ void Particle::Initialize(ParticleCommon* modelCommon, uint32_t instanceNum)
 	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
 	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
 	directionalLightData->intensity = 1.0f;
+
+	//インスタンシング用トランスフォームの初期化
+	transforms.resize(instanceNum_);
+	for (uint32_t index = 0; index < instanceNum_; ++index) {
+		transforms[index].scale = { 1.0f,1.0f,1.0f };
+		transforms[index].rotate = { 0.0f,0.0f,0.0f };
+		transforms[index].translate = { index * 0.1f,index * 0.1f,index * 0.1f };
+	}
+
 }
 
 void Particle::Update()
 {
+
 	//レンダリングパイプライン
-	Matrix4x4 worldMatrix = MakeAffineMatrix(particleResource_.transform.scale, particleResource_.transform.rotate, particleResource_.transform.translate);
-	Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-	Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-	Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);
-	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-	particleResource_.wvpData->WVP = worldViewProjectionMatrix;
-	particleResource_.wvpData->World = worldMatrix;
+	for (uint32_t index = 0; index < instanceNum_; ++index) {
+		transforms[index].rotate.y += 0.03f;
+
+
+		Matrix4x4 worldMatrix = MakeAffineMatrix(transforms[index].scale, transforms[index].rotate, transforms[index].translate);
+		Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
+		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);
+		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+		particleResource_.instancingData[index].WVP = worldViewProjectionMatrix;
+		particleResource_.instancingData[index].World = worldMatrix;
+
+	}
+
+
 }
 
 void Particle::Draw()
@@ -47,7 +65,7 @@ void Particle::Draw()
 		//マテリアルCBufferの場所を設定
 		particleCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, particleResource_.materialResource.at(index)->GetGPUVirtualAddress());
 		//座標変換行列CBufferの場所を設定
-		particleCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, particleResource_.wvpResource->GetGPUVirtualAddress());
+		particleCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(1, TextureManager::GetInstance()->GetSrvHandleGPU(particleResource_.modelData.at(index).material.textureIndex));
 		//モデルにテクスチャがない場合、スキップ
 		if (particleResource_.modelData.at(index).material.textureFilePath.size() != 0) {
 			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
@@ -58,7 +76,7 @@ void Particle::Draw()
 		particleCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 		//描画
-		particleCommon_->GetDirectXCommon()->GetCommandList()->DrawInstanced(UINT(particleResource_.modelData.at(index).vertices.size()), 1, 0, 0);
+		particleCommon_->GetDirectXCommon()->GetCommandList()->DrawInstanced(UINT(particleResource_.modelData.at(index).vertices.size()), instanceNum_, 0, 0);
 	}
 }
 
@@ -249,8 +267,6 @@ void Particle::MakeModelResource(const std::string& resourceFileName, const std:
 		particleResource_.vertexResource.at(index) = particleCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::VertexData) * particleResource_.modelData.at(index).vertices.size());
 		//マテリアル用のリソースを作る。
 		particleResource_.materialResource.at(index) = particleCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::Material));
-		//WVP用のリソースを作る
-		particleResource_.wvpResource = particleCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::TransformationMatrix));
 		//インスタンス用のリソースを作る
 		particleResource_.instancingResource = particleCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::TransformationMatrix) * instanceNum_);
 
@@ -258,20 +274,16 @@ void Particle::MakeModelResource(const std::string& resourceFileName, const std:
 		particleResource_.vertexBufferView.at(index).BufferLocation = particleResource_.vertexResource.at(index)->GetGPUVirtualAddress();
 		particleResource_.vertexBufferView.at(index).SizeInBytes = UINT(sizeof(Struct::VertexData) * particleResource_.modelData.at(index).vertices.size());
 		particleResource_.vertexBufferView.at(index).StrideInBytes = sizeof(Struct::VertexData);
-		
+
 		//リソースにデータを書き込む
 		particleResource_.vertexResource.at(index)->Map(0, nullptr, reinterpret_cast<void**>(&particleResource_.vertexData.at(index)));
 		std::memcpy(particleResource_.vertexData.at(index), particleResource_.modelData.at(index).vertices.data(), sizeof(Struct::VertexData) * particleResource_.modelData.at(index).vertices.size());
 		particleResource_.materialResource.at(index)->Map(0, nullptr, reinterpret_cast<void**>(&particleResource_.materialData.at(index)));
-		particleResource_.wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&particleResource_.wvpData));
 		particleResource_.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&particleResource_.instancingData));
-		
+
 		//マテリアルデータ書き込み
 		particleResource_.materialData.at(index)->color = particleResource_.modelData.at(index).material.colorData;
 		particleResource_.materialData.at(index)->lightingKind = HalfLambert;
-		//Transform
-		particleResource_.wvpData->WVP = MakeIdentity4x4();
-		particleResource_.wvpData->World = MakeIdentity4x4();
 		//インスタンスデータ書き込み
 		for (uint32_t index = 0; index < instanceNum_; ++index) {
 			particleResource_.instancingData[index].WVP = MakeIdentity4x4();
@@ -289,10 +301,11 @@ void Particle::MakeModelResource(const std::string& resourceFileName, const std:
 		particleResource_.materialData.at(index)->isTexture = isTexture;
 		//トランスフォーム
 		particleResource_.transform = {
-			{1.0f,1.0f,1.0f},
-			{0.0f,0.0f,0.0f},
-			{0.0f,0.0f,0.0f}
+		{1.0f,1.0f,1.0f},
+		{0.0f,0.0f,0.0f},
+		{0.0f,0.0f,0.0f}
 		};
+
 		//UVトランスフォーム
 		particleResource_.uvTransform.at(index) = {
 			{1.0f,1.0f,1.0f},
@@ -310,4 +323,20 @@ void Particle::SettingTexture()
 		//読み込んだテクスチャの番号を取得
 		particleResource_.modelData.at(index).material.textureIndex = TextureManager::GetInstance()->GetTextureIndexByFilePath(particleResource_.modelData.at(index).material.textureFilePath);
 	}
+}
+
+void Particle::SettingSRV()
+{
+	//srv設定
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+	srvDesc.Buffer.FirstElement = 0;
+	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+	srvDesc.Buffer.NumElements = instanceNum_;
+	srvDesc.Buffer.StructureByteStride = sizeof(Struct::TransformationMatrix);
+	SrvHandleCPU = particleCommon_->GetDirectXCommon()->GetSRVCPUDescriptorHandle(4);
+	SrvHandleGPU = particleCommon_->GetDirectXCommon()->GetSRVGPUDescriptorHandle(4);
+	particleCommon_->GetDirectXCommon()->GetDevice()->CreateShaderResourceView(particleResource_.instancingResource.Get(), &srvDesc, SrvHandleCPU);
 }
