@@ -4,8 +4,7 @@
 #include "TextureManager.h"
 #include <fstream>
 #include <sstream>
-
-
+#include <random>
 
 void Particle::Initialize(ParticleCommon* modelCommon, uint32_t instanceNum)
 {
@@ -27,15 +26,31 @@ void Particle::Initialize(ParticleCommon* modelCommon, uint32_t instanceNum)
 	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
 	directionalLightData->intensity = 1.0f;
 
+	//ランダム
+	std::random_device seedGenerator;
+	std::mt19937 randomEngine(seedGenerator());
+
 	//インスタンシング用トランスフォームの初期化
 	particles.resize(instanceNum_);
 	for (uint32_t index = 0; index < instanceNum_; ++index) {
+		//生成の振れ幅
+		std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+
 		//トランスフォーム
 		particles[index].transform.scale = { 1.0f,1.0f,1.0f };
 		particles[index].transform.rotate = { 0.0f,3.14f,0.0f };
-		particles[index].transform.translate = { index * 0.1f,index * 0.1f,index * 0.1f };
+		particles[index].transform.translate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
 		//速度
-		particles[index].velocity = { 0.0f,1.0f,0.0f };
+		particles[index].velocity = { distribution(randomEngine) ,distribution(randomEngine) ,distribution(randomEngine) };
+		//色
+		std::uniform_real_distribution<float> distcolor(0.0f, 1.0f);
+		particles[index].color = { distcolor(randomEngine) ,distcolor(randomEngine) ,distcolor(randomEngine),1.0f };
+		particleResource_.instancingData[index].color = particles[index].color;
+		//寿命
+		std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
+		particles[index].lifeTime = distTime(randomEngine);
+		particles[index].currentTime = 0;
+
 	}
 
 }
@@ -276,7 +291,7 @@ void Particle::MakeModelResource(const std::string& resourceFileName, const std:
 		//マテリアル用のリソースを作る。
 		particleResource_.materialResource.at(index) = particleCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::Material));
 		//インスタンス用のリソースを作る
-		particleResource_.instancingResource = particleCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::TransformationMatrix) * instanceNum_);
+		particleResource_.instancingResource = particleCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::ParticleForGPU) * instanceNum_);
 
 		//頂点バッファービューを作成
 		particleResource_.vertexBufferView.at(index).BufferLocation = particleResource_.vertexResource.at(index)->GetGPUVirtualAddress();
@@ -291,11 +306,12 @@ void Particle::MakeModelResource(const std::string& resourceFileName, const std:
 
 		//マテリアルデータ書き込み
 		particleResource_.materialData.at(index)->color = particleResource_.modelData.at(index).material.colorData;
-		particleResource_.materialData.at(index)->lightingKind = HalfLambert;
+		particleResource_.materialData.at(index)->lightingKind = NoneLighting;
 		//インスタンスデータ書き込み
 		for (uint32_t index = 0; index < instanceNum_; ++index) {
 			particleResource_.instancingData[index].WVP = MakeIdentity4x4();
 			particleResource_.instancingData[index].World = MakeIdentity4x4();
+			particleResource_.instancingData[index].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 		}
 
 		//uvTransform
@@ -343,7 +359,7 @@ void Particle::SettingSRV()
 	srvDesc.Buffer.FirstElement = 0;
 	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 	srvDesc.Buffer.NumElements = instanceNum_;
-	srvDesc.Buffer.StructureByteStride = sizeof(Struct::TransformationMatrix);
+	srvDesc.Buffer.StructureByteStride = sizeof(Struct::ParticleForGPU);
 	SrvHandleCPU = particleCommon_->GetDirectXCommon()->GetSRVCPUDescriptorHandle(4);
 	SrvHandleGPU = particleCommon_->GetDirectXCommon()->GetSRVGPUDescriptorHandle(4);
 	particleCommon_->GetDirectXCommon()->GetDevice()->CreateShaderResourceView(particleResource_.instancingResource.Get(), &srvDesc, SrvHandleCPU);

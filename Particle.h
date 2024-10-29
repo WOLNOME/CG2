@@ -39,9 +39,10 @@ public://インナークラス
 			int32_t isTexture;
 		};
 		//座標変換行列データ
-		struct TransformationMatrix {
+		struct ParticleForGPU {
 			Matrix4x4 WVP;
 			Matrix4x4 World;
+			Vector4 color;
 		};
 		//マテリアルデータ
 		struct MaterialData {
@@ -64,7 +65,7 @@ public://インナークラス
 			std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResource;
 			std::vector<Material*> materialData;
 			Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
-			TransformationMatrix* instancingData;
+			ParticleForGPU* instancingData;
 			Transform transform;
 			std::vector<Transform> uvTransform;
 			std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> textureResorce;
@@ -75,6 +76,9 @@ public://インナークラス
 		struct Particle {
 			Transform transform;
 			Vector3 velocity;
+			Vector4 color;
+			float lifeTime;
+			float currentTime;
 		};
 
 	};
@@ -119,6 +123,6 @@ private://メンバ変数
 	D3D12_GPU_DESCRIPTOR_HANDLE SrvHandleGPU;
 	//δtの定義
 	const float kDeltaTime = 1.0f / 60.0f;
-
+	
 };
 
