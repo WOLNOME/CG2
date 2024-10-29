@@ -15,6 +15,7 @@ void Particle::Initialize(ParticleCommon* modelCommon, uint32_t instanceNum)
 	//一旦planeでリソースを作る
 	MakeModelResource("Resources", "plane.obj");
 	SettingTexture();
+	SettingSRV();
 
 	//平行光源用リソースを作る
 	directionalLightResource = particleCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::DirectionalLight));
@@ -65,7 +66,7 @@ void Particle::Draw()
 		//マテリアルCBufferの場所を設定
 		particleCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, particleResource_.materialResource.at(index)->GetGPUVirtualAddress());
 		//座標変換行列CBufferの場所を設定
-		particleCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(1, TextureManager::GetInstance()->GetSrvHandleGPU(particleResource_.modelData.at(index).material.textureIndex));
+		particleCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(1,SrvHandleGPU);
 		//モデルにテクスチャがない場合、スキップ
 		if (particleResource_.modelData.at(index).material.textureFilePath.size() != 0) {
 			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。

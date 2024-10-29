@@ -301,8 +301,8 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///          モデル描画
 		///------------------------------///
 
-		object3d->Draw();
-		object3d2->Draw();
+		//object3d->Draw();
+		//object3d2->Draw();
 
 		
 
@@ -324,7 +324,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///------------------------------///
 
 		//スプライト描画
-		sprite->Draw();
+		//sprite->Draw();
 		//sprite2->Draw();
 
 		//ImGuiの描画

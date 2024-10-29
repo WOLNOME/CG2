@@ -198,7 +198,7 @@
     <None Include="Resources\shaders\Object3d.hlsli">
       <Filter>シェーダーファイル</Filter>
     </None>
-    <None Include="Particle.hlsli">
+    <None Include="Resources\shaders\Particle.hlsli">
       <Filter>シェーダーファイル</Filter>
     </None>
   </ItemGroup>
@@ -209,10 +209,10 @@
     <FxCompile Include="Resources\shaders\Object3d.VS.hlsl">
       <Filter>シェーダーファイル</Filter>
     </FxCompile>
-    <FxCompile Include="Particle.PS.hlsl">
+    <FxCompile Include="Resources\shaders\Particle.PS.hlsl">
       <Filter>シェーダーファイル</Filter>
     </FxCompile>
-    <FxCompile Include="Particle.VS.hlsl">
+    <FxCompile Include="Resources\shaders\Particle.VS.hlsl">
       <Filter>シェーダーファイル</Filter>
     </FxCompile>
   </ItemGroup>
