@@ -6,6 +6,7 @@
 #include <sstream>
 
 
+
 void Particle::Initialize(ParticleCommon* modelCommon, uint32_t instanceNum)
 {
 	//引数で受け取ってメンバ変数に記録する
@@ -27,29 +28,37 @@ void Particle::Initialize(ParticleCommon* modelCommon, uint32_t instanceNum)
 	directionalLightData->intensity = 1.0f;
 
 	//インスタンシング用トランスフォームの初期化
-	transforms.resize(instanceNum_);
+	particles.resize(instanceNum_);
 	for (uint32_t index = 0; index < instanceNum_; ++index) {
-		transforms[index].scale = { 1.0f,1.0f,1.0f };
-		transforms[index].rotate = { 0.0f,3.14f,0.0f };
-		transforms[index].translate = { index * 0.1f,index * 0.1f,index * 0.1f };
+		//トランスフォーム
+		particles[index].transform.scale = { 1.0f,1.0f,1.0f };
+		particles[index].transform.rotate = { 0.0f,3.14f,0.0f };
+		particles[index].transform.translate = { index * 0.1f,index * 0.1f,index * 0.1f };
+		//速度
+		particles[index].velocity = { 0.0f,1.0f,0.0f };
 	}
 
 }
 
 void Particle::Update()
 {
+	for (uint32_t index = 0; index < instanceNum_; ++index) {
+		//速度加算処理
+		particles[index].transform.translate = Add(particles[index].transform.translate, Multiply(kDeltaTime, particles[index].velocity));
+	}
+
+
 
 	//レンダリングパイプライン
 	for (uint32_t index = 0; index < instanceNum_; ++index) {
-		
-		Matrix4x4 worldMatrix = MakeAffineMatrix(transforms[index].scale, transforms[index].rotate, transforms[index].translate);
+
+		Matrix4x4 worldMatrix = MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
 		Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);
 		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
 		particleResource_.instancingData[index].WVP = worldViewProjectionMatrix;
 		particleResource_.instancingData[index].World = worldMatrix;
-
 	}
 
 
@@ -64,7 +73,7 @@ void Particle::Draw()
 		//マテリアルCBufferの場所を設定
 		particleCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, particleResource_.materialResource.at(index)->GetGPUVirtualAddress());
 		//座標変換行列CBufferの場所を設定
-		particleCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(1,SrvHandleGPU);
+		particleCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(1, SrvHandleGPU);
 		//モデルにテクスチャがない場合、スキップ
 		if (particleResource_.modelData.at(index).material.textureFilePath.size() != 0) {
 			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。

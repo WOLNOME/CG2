@@ -71,6 +71,12 @@ public://インナークラス
 			std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> textureSrvHandleCPU;
 			std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> textureSrvHandleGPU;
 		};
+		//パーティクル構造体
+		struct Particle {
+			Transform transform;
+			Vector3 velocity;
+		};
+
 	};
 public://メンバ関数
 	//初期化
@@ -107,9 +113,12 @@ private://メンバ変数
 	//パーティクルの数
 	uint32_t instanceNum_;
 	//各インスタンシング用トランスフォーム
-	std::vector<Transform> transforms;
+	std::vector<Struct::Particle> particles;
 	//srvハンドル
 	D3D12_CPU_DESCRIPTOR_HANDLE SrvHandleCPU;
 	D3D12_GPU_DESCRIPTOR_HANDLE SrvHandleGPU;
+	//δtの定義
+	const float kDeltaTime = 1.0f / 60.0f;
+
 };
 
