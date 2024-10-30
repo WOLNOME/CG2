@@ -15,15 +15,15 @@ public:
 	/// </summary>
 	/// <param name="audioCommon"></param>
 	/// <param name="filename">Resources/はカットして</param>
-	void Initialize(AudioCommon* audioCommon, const std::string& filename);
-
+	void Initialize(const std::string& filename);
+	
 	/// <summary>
 	/// 再生
 	/// </summary>
 	void Play();
 
 private://インスタンス
-	AudioCommon* audioCommon_ = nullptr;
+
 private://メンバ変数
 	AudioCommon::SoundData soundData_;
 };

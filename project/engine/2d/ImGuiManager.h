@@ -1,6 +1,7 @@
 #pragma once
 #include <wrl.h>
 #include <d3d12.h>
+#include "imgui.h"
 
 class DirectXCommon;
 class WinApp;

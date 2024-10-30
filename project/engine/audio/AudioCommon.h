@@ -7,6 +7,15 @@
 #pragma comment(lib,"xaudio2.lib")
 class AudioCommon
 {
+private://シングルトン
+	static AudioCommon* instance;
+
+	AudioCommon() = default;//コンストラクタ隠蔽
+	~AudioCommon() = default;//デストラクタ隠蔽
+	AudioCommon(AudioCommon&) = delete;//コピーコンストラクタ封印
+	AudioCommon& operator=(AudioCommon&) = delete;//コピー代入演算子封印
+public://シングルトン
+	static AudioCommon* GetInstance();
 private://非公開構造体
 	//チャンクヘッダ
 	struct ChunkHeader
@@ -41,10 +50,10 @@ public://公開構造体
 	};
 
 public:
-	~AudioCommon();
-
+	//初期化
 	void Initialize();
-
+	//終了
+	void Finalize();
 	//音声データの読み込み
 	static SoundData SoundLoadWave(const std::string& filename);
 	//サウンドの再生

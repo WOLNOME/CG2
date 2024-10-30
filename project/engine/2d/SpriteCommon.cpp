@@ -2,6 +2,16 @@
 #include "DirectXCommon.h"
 #include "Logger.h"
 
+SpriteCommon* SpriteCommon::instance = nullptr;
+
+SpriteCommon* SpriteCommon::GetInstance()
+{
+	if (instance == nullptr) {
+		instance = new SpriteCommon;
+	}
+	return instance;
+}
+
 void SpriteCommon::Initialize(DirectXCommon* dxCommon)
 {
 	//DirectXCommonのインスタンス取得
@@ -10,6 +20,12 @@ void SpriteCommon::Initialize(DirectXCommon* dxCommon)
 	//グラフィックスパイプライの生成(in CreateRootSignature)
 	GenerateGraphicsPipeline();
 
+}
+
+void SpriteCommon::Finalize()
+{
+	delete instance;
+	instance = nullptr;
 }
 
 void SpriteCommon::SettingCommonDrawing()

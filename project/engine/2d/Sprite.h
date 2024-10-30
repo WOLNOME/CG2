@@ -4,8 +4,6 @@
 #include <string>
 #include"Function.h"
 
-class SpriteCommon;
-
 class Sprite
 {
 public://インナークラス
@@ -41,7 +39,7 @@ public://インナークラス
 	};
 
 public://メンバ関数
-	void Initialize(SpriteCommon* spriteCommon, std::string textureFilePath);
+	void Initialize(std::string textureFilePath);
 	void Update();
 	void Draw();
 private://メンバ関数
@@ -72,7 +70,6 @@ public://セッター
 	void SetTextureSize(const Vector2& size) { textureSize = size; }
 
 private://インスタンス
-	SpriteCommon* spriteCommon_ = nullptr;
 private://メンバ変数
 	//バッファリソース
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = nullptr;

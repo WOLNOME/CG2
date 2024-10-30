@@ -5,7 +5,6 @@
 #include <string>
 #include "Function.h"
 
-class ModelCommon;
 class Camera;
 class Model
 {
@@ -61,7 +60,7 @@ private://インナークラス
 		};
 	};
 public:
-	void Initialize(ModelCommon* modelCommon,const std::string& directorypath,const std::string& filename);
+	void Initialize(const std::string& directorypath,const std::string& filename);
 	void Update();
 	void Draw();
 public://ゲッター
@@ -84,7 +83,6 @@ private:
 	//テクスチャ読み込み
 	void SettingTexture();
 private:
-	ModelCommon* modelCommon_;
 	Camera* camera_ = nullptr;
 	//モデル用リソース
 	Struct::ModelResource modelResource_;

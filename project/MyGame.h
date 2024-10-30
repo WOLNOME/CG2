@@ -3,6 +3,8 @@
 #include "Object3d.h"
 #include "Audio.h"
 #include "Framework.h"
+#include "GamePlayScene.h"
+#include <memory>
 
 class MyGame : public Framework
 {
@@ -25,12 +27,8 @@ public:
 	void Draw() override;
 private://基盤インスタンス
 	
-private://シーンの持つメンバ変数
-	Sprite* sprite_ = nullptr;
-	Sprite* sprite2_ = nullptr;
-	Vector2 sprite2Position;
-	Object3d* object3d_ = nullptr;
-	Object3d* object3d2_ = nullptr;
-	Audio* audio_ = nullptr;
+private://シーン
+	std::unique_ptr<GamePlayScene> gamePlayScene_ = nullptr;
+	
 };
 

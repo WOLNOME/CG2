@@ -5,9 +5,6 @@
 #include "SrvManager.h"
 #include "ImGuiManager.h"
 #include "Input.h"
-#include "AudioCommon.h"
-#include "SpriteCommon.h"
-#include "Object3dCommon.h"
 #include "Camera.h"
 
 class Framework
@@ -48,9 +45,6 @@ protected://基盤インスタンス
 	SrvManager* srvManager_ = nullptr;
 	ImGuiManager* imGuiManager_ = nullptr;
 	Input* input_ = nullptr;
-	AudioCommon* audioCommon_ = nullptr;
-	SpriteCommon* spriteCommon_ = nullptr;
-	Object3dCommon* object3dCommon_ = nullptr;
 	Camera* camera_ = nullptr;
 	bool isOver = false;
 };

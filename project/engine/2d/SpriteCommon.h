@@ -6,9 +6,20 @@ class DirectXCommon;
 
 class SpriteCommon
 {
+private://シングルトン
+	static SpriteCommon* instance;
+
+	SpriteCommon() = default;//コンストラクタ隠蔽
+	~SpriteCommon() = default;//デストラクタ隠蔽
+	SpriteCommon(SpriteCommon&) = delete;//コピーコンストラクタ封印
+	SpriteCommon& operator=(SpriteCommon&) = delete;//コピー代入演算子封印
+public://シングルトン
+	static SpriteCommon* GetInstance();
 public://メンバ関数
 	//初期化
 	void Initialize(DirectXCommon* dxCommon);
+	//終了
+	void Finalize();
 	//共通描画設定
 	void SettingCommonDrawing();
 

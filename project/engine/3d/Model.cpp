@@ -7,11 +7,8 @@
 #include "TextureManager.h"
 #include "Camera.h"
 
-void Model::Initialize(ModelCommon* modelCommon, const std::string& directorypath, const std::string& filename)
+void Model::Initialize(const std::string& directorypath, const std::string& filename)
 {
-	//引数で受け取ってメンバ変数に記録する
-	modelCommon_ = modelCommon;
-
 	//モデルリソースの初期設定
 	modelResource_ = MakeModelResource(directorypath, filename);
 	//テクスチャの設定
@@ -38,18 +35,18 @@ void Model::Draw()
 {
 	for (size_t index = 0; index < modelResource_.modelData.size(); index++) {
 		//頂点バッファービューを設定
-		modelCommon_->GetDirectXCommon()->GetCommandList()->IASetVertexBuffers(0, 1, &modelResource_.vertexBufferView.at(index));
+		ModelCommon::GetInstance()->GetDirectXCommon()->GetCommandList()->IASetVertexBuffers(0, 1, &modelResource_.vertexBufferView.at(index));
 		//マテリアルCBufferの場所を設定
-		modelCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, modelResource_.materialResource.at(index)->GetGPUVirtualAddress());
+		ModelCommon::GetInstance()->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, modelResource_.materialResource.at(index)->GetGPUVirtualAddress());
 		//座標変換行列CBufferの場所を設定
-		modelCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, modelResource_.wvpResource->GetGPUVirtualAddress());
+		ModelCommon::GetInstance()->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, modelResource_.wvpResource->GetGPUVirtualAddress());
 		//モデルにテクスチャがない場合、スキップ
 		if (modelResource_.modelData.at(index).material.textureFilePath.size() != 0) {
 			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
-			modelCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(modelResource_.modelData.at(index).material.textureFilePath));
+			ModelCommon::GetInstance()->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(modelResource_.modelData.at(index).material.textureFilePath));
 		}
 		//描画
-		modelCommon_->GetDirectXCommon()->GetCommandList()->DrawInstanced(UINT(modelResource_.modelData.at(index).vertices.size()), 1, 0, 0);
+		ModelCommon::GetInstance()->GetDirectXCommon()->GetCommandList()->DrawInstanced(UINT(modelResource_.modelData.at(index).vertices.size()), 1, 0, 0);
 	}
 }
 
@@ -240,11 +237,11 @@ Model::Struct::ModelResource Model::MakeModelResource(const std::string& resourc
 	modelResource_.uvTransform.resize(kModelNum);
 	for (size_t index = 0; index < kModelNum; index++) {
 		//頂点用リソースを作る
-		modelResource_.vertexResource.at(index) = modelCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::VertexData) * modelResource_.modelData.at(index).vertices.size());
+		modelResource_.vertexResource.at(index) = ModelCommon::GetInstance()->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::VertexData) * modelResource_.modelData.at(index).vertices.size());
 		//マテリアル用のリソースを作る。
-		modelResource_.materialResource.at(index) = modelCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::Material));
+		modelResource_.materialResource.at(index) = ModelCommon::GetInstance()->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::Material));
 		//WVP用のリソースを作る
-		modelResource_.wvpResource = modelCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::TransformationMatrix));
+		modelResource_.wvpResource = ModelCommon::GetInstance()->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::TransformationMatrix));
 		//頂点バッファービューを作成
 		modelResource_.vertexBufferView.at(index).BufferLocation = modelResource_.vertexResource.at(index)->GetGPUVirtualAddress();
 		modelResource_.vertexBufferView.at(index).SizeInBytes = UINT(sizeof(Struct::VertexData) * modelResource_.modelData.at(index).vertices.size());

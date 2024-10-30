@@ -4,17 +4,14 @@
 #include "TextureManager.h"
 #include "DirectXCommon.h"
 
-void Sprite::Initialize(SpriteCommon* spriteCommon, std::string textureFilePath)
+void Sprite::Initialize(std::string textureFilePath)
 {
-	//スプライト共通部のインスタンス取得
-	spriteCommon_ = spriteCommon;
-	
 	//リソースを作る
-	vertexResource = spriteCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::VertexData) * 4);
-	indexResource = spriteCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(uint32_t) * 6);
-	directionalLightResource = spriteCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::DirectionalLight));
-	materialResource = spriteCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::Material));
-	transformationMatrixResource = spriteCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::TransformationMatrix));
+	vertexResource = SpriteCommon::GetInstance()->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::VertexData) * 4);
+	indexResource = SpriteCommon::GetInstance()->GetDirectXCommon()->CreateBufferResource(sizeof(uint32_t) * 6);
+	directionalLightResource = SpriteCommon::GetInstance()->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::DirectionalLight));
+	materialResource = SpriteCommon::GetInstance()->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::Material));
+	transformationMatrixResource = SpriteCommon::GetInstance()->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::TransformationMatrix));
 
 	//バッファービューを作る
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
@@ -128,23 +125,23 @@ void Sprite::Update()
 void Sprite::Draw()
 {
 	//頂点バッファービューを設定
-	spriteCommon_->GetDirectXCommon()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+	SpriteCommon::GetInstance()->GetDirectXCommon()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 	//インデックスバッファービューを設定
-	spriteCommon_->GetDirectXCommon()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
+	SpriteCommon::GetInstance()->GetDirectXCommon()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
 
 	//マテリアルCBufferの場所を設定
-	spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+	SpriteCommon::GetInstance()->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 	//座標変換行列CBufferの場所を設定
-	spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
+	SpriteCommon::GetInstance()->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
 
 	//SRVのDescriptorTableの先頭を設定
-	spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureFilePath_));
+	SpriteCommon::GetInstance()->GetDirectXCommon()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureFilePath_));
 
 	//平行光源の設定
-	spriteCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+	SpriteCommon::GetInstance()->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 	//描画
-	spriteCommon_->GetDirectXCommon()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+	SpriteCommon::GetInstance()->GetDirectXCommon()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 }
 

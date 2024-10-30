@@ -3,21 +3,18 @@
 Audio::~Audio()
 {
 	//サウンドデータの解放
-	audioCommon_->SoundUnload(&soundData_);
+	AudioCommon::GetInstance()->SoundUnload(&soundData_);
 }
 
-void Audio::Initialize(AudioCommon* audioCommon, const std::string& filename)
+void Audio::Initialize(const std::string& filename)
 {
-	//インスタンス取得
-	audioCommon_ = audioCommon;
-
 	//WAVファイル読み込み
-	soundData_ = audioCommon_->SoundLoadWave("Resources/" + filename);
+	soundData_ = AudioCommon::GetInstance()->SoundLoadWave("Resources/" + filename);
 
 }
 
 void Audio::Play()
 {
 	//再生
-	audioCommon_->SoundPlayWave(soundData_);
+	AudioCommon::GetInstance()->SoundPlayWave(soundData_);
 }

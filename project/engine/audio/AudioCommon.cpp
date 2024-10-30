@@ -2,10 +2,14 @@
 #include <cassert>
 #include <fstream>
 
-AudioCommon::~AudioCommon()
+AudioCommon* AudioCommon::instance = nullptr;
+
+AudioCommon* AudioCommon::GetInstance()
 {
-	//XAudio2の解放
-	xAudio2_.Reset();
+	if (instance == nullptr) {
+		instance = new AudioCommon;
+	}
+	return instance;
 }
 
 void AudioCommon::Initialize()
@@ -17,6 +21,14 @@ void AudioCommon::Initialize()
 	hr = xAudio2_->CreateMasteringVoice(&masterVoice);
 	assert(SUCCEEDED(hr));
 
+}
+
+void AudioCommon::Finalize()
+{
+	//XAudio2の解放
+	xAudio2_.Reset();
+	delete instance;
+	instance = nullptr;
 }
 
 AudioCommon::SoundData AudioCommon::SoundLoadWave(const std::string& filename)

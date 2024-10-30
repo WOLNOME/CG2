@@ -9,9 +9,8 @@
 #include "Vector2.h"
 #include "Vector3.h"
 #include "Vector4.h"
+#include "Model.h"
 
-class Object3dCommon;
-class Model;
 //モデル
 class Object3d
 {
@@ -28,7 +27,7 @@ public://インナークラス
 	};
 public://メンバ関数
 	//初期化
-	void Initialize(Object3dCommon* modelCommon);
+	void Initialize();
 	void Update();
 	void Draw();
 public://ゲッター
@@ -37,7 +36,6 @@ public://セッター
 	void SetModel(const std::string& filePath);
 
 private://インスタンス
-	Object3dCommon* object3dCommon_ = nullptr;
 	std::unique_ptr<Model> model_;
 private://メンバ変数
 

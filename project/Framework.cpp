@@ -1,6 +1,9 @@
 #include "Framework.h"
 #include "TextureManager.h"
 #include "ModelManager.h"
+#include "AudioCommon.h"
+#include "SpriteCommon.h"
+#include "Object3dCommon.h"
 
 void Framework::Initialize()
 {
@@ -35,30 +38,27 @@ void Framework::Initialize()
 	input_->Initialize(winApp_);
 
 	//オーディオ共通部
-	audioCommon_ = new AudioCommon();
-	audioCommon_->Initialize();
+	AudioCommon::GetInstance()->Initialize();
 
 	//スプライト共通部
-	spriteCommon_ = new SpriteCommon();
-	spriteCommon_->Initialize(dxCommon_);
+	SpriteCommon::GetInstance()->Initialize(dxCommon_);
 
 	//オブジェクト3D共通部
-	object3dCommon_ = new Object3dCommon();
-	object3dCommon_->Initialize(dxCommon_);
+	Object3dCommon::GetInstance()->Initialize(dxCommon_);
 
 	//カメラの生成
 	camera_ = new Camera();
 	camera_->SetRotate({ 0.0f,0.0f,0.0f });
 	camera_->SetTranslate({ 0.0f,0.0f,-15.0f });
-	object3dCommon_->SetDefaultCamera(camera_);
+	Object3dCommon::GetInstance()->SetDefaultCamera(camera_);
 }
 
 void Framework::Finalize()
 {
 	delete camera_;
-	delete object3dCommon_;
-	delete spriteCommon_;
-	delete audioCommon_;
+	Object3dCommon::GetInstance()->Finalize();
+	SpriteCommon::GetInstance()->Finalize();
+	AudioCommon::GetInstance()->Finalize();
 	delete input_;
 
 	ModelManager::GetInstance()->Finalize();
