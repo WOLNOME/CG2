@@ -418,3 +418,14 @@ Vector3 Normalize(const Vector3& v)
 	}
 	return c;
 }
+
+bool IsCollision(const AABB& aabb, const Vector3& point)
+{
+	//点の全ての座標成分がAABB内にあるなら衝突
+	if ((point.x >= aabb.min.x && point.x <= aabb.max.x)&&
+		(point.y >= aabb.min.y && point.y <= aabb.max.y)&&
+		(point.z >= aabb.min.z && point.z <= aabb.max.z)) {
+		return true;
+	}
+	return false;
+}

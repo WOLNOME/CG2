@@ -89,6 +89,12 @@ public://インナークラス
 			float frequency;//発生頻度
 			float frequencyTime;//頻度用時刻
 		};
+		//フィールド
+		struct AccelerationField
+		{
+			Vector3 acceleration;
+			AABB area;
+		};
 
 	};
 public://メンバ関数
@@ -140,5 +146,9 @@ private://メンバ変数
 	bool isBillboard = false;
 	//エミッター
 	Struct::Emitter emitter{};
+	//フィールド
+	Struct::AccelerationField accelerationField;
+	//フィールド値のオンオフ
+	bool isField = false;
 };
 

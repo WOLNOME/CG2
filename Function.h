@@ -26,6 +26,11 @@ struct Sphere {
 	float radius;
 };
 
+//AABB
+struct AABB {
+	Vector3 min;
+	Vector3 max;
+};
 
 
 //関数
@@ -72,3 +77,5 @@ Vector3 Cross(const Vector3& a, const Vector3& b);
 float Length(const Vector3& v);
 
 Vector3 Normalize(const Vector3& v);
+
+bool IsCollision(const AABB& aabb, const Vector3& point);

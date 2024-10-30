@@ -34,6 +34,11 @@ void Particle::Initialize(ParticleCommon* modelCommon)
 	emitter.frequency = 0.5f;//0.5秒ごとに発生
 	emitter.frequencyTime = 0.0f;//currentTime
 
+	//フィールド生成
+	accelerationField.acceleration = { 15.0f,0.0f,0.0f };
+	accelerationField.area.min = { -1.0f,-1.0f,-1.0f };
+	accelerationField.area.max = { 1.0f,1.0f,1.0f };
+
 }
 
 void Particle::Update()
@@ -56,6 +61,13 @@ void Particle::Update()
 			//寿命を迎えたら削除
 			particleIterator = particles.erase(particleIterator);
 			continue;
+		}
+
+		//フィールドの処理
+		if (isField) {
+			if (IsCollision(accelerationField.area, (*particleIterator).transform.translate)) {
+				(*particleIterator).velocity = Add((*particleIterator).velocity, Multiply(kDeltaTime, accelerationField.acceleration));
+			}
 		}
 
 		//速度加算処理
@@ -91,6 +103,7 @@ void Particle::Update()
 #ifdef _DEBUG
 	ImGui::Begin("particle");
 	ImGui::Checkbox("billboard", &isBillboard);
+	ImGui::Checkbox("field", &isField);
 	if (ImGui::Button("Add Particle")) {
 		//パーティクル生成
 		particles.splice(particles.end(), Emit(emitter));
