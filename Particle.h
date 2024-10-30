@@ -115,8 +115,9 @@ private://メンバ変数
 		{0.0f,4.0f,-10.0f}
 	};
 	//パーティクルの数
-	uint32_t instanceNum_;
-	//各インスタンシング用トランスフォーム
+	uint32_t numInstance_;
+	uint32_t kNumMaxInstance_;
+	//各インスタンシング用書き換え情報
 	std::vector<Struct::Particle> particles;
 	//srvハンドル
 	D3D12_CPU_DESCRIPTOR_HANDLE SrvHandleCPU;

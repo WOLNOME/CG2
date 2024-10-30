@@ -38,7 +38,7 @@ PixelShaderOutput main(VertexShaderOutput input)
         textureColor.x = 1.0f;
         textureColor.y = 1.0f;
         textureColor.z = 1.0f;
-        textureColor.w = 1.0f;
+        textureColor.a = 1.0f;
         
     }
    

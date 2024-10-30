@@ -10,7 +10,7 @@ void Particle::Initialize(ParticleCommon* modelCommon, uint32_t instanceNum)
 {
 	//引数で受け取ってメンバ変数に記録する
 	particleCommon_ = modelCommon;
-	instanceNum_ = instanceNum;
+	kNumMaxInstance_ = instanceNum;//最大描画枚数
 
 	//一旦planeでリソースを作る
 	MakeModelResource("Resources", "plane.obj");
@@ -31,8 +31,8 @@ void Particle::Initialize(ParticleCommon* modelCommon, uint32_t instanceNum)
 	std::mt19937 randomEngine(seedGenerator());
 
 	//インスタンシング用トランスフォームの初期化
-	particles.resize(instanceNum_);
-	for (uint32_t index = 0; index < instanceNum_; ++index) {
+	particles.resize(kNumMaxInstance_);
+	for (uint32_t index = 0; index < kNumMaxInstance_; ++index) {
 		//生成の振れ幅
 		std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
 
@@ -47,7 +47,7 @@ void Particle::Initialize(ParticleCommon* modelCommon, uint32_t instanceNum)
 		particles[index].color = { distcolor(randomEngine) ,distcolor(randomEngine) ,distcolor(randomEngine),1.0f };
 		particleResource_.instancingData[index].color = particles[index].color;
 		//寿命
-		std::uniform_real_distribution<float> distTime(1.0f, 3.0f);
+		std::uniform_real_distribution<float> distTime(1.0f * 60.0f, 3.0f * 60.0f);
 		particles[index].lifeTime = distTime(randomEngine);
 		particles[index].currentTime = 0;
 
@@ -57,24 +57,37 @@ void Particle::Initialize(ParticleCommon* modelCommon, uint32_t instanceNum)
 
 void Particle::Update()
 {
-	for (uint32_t index = 0; index < instanceNum_; ++index) {
+	//描画すべきインスタンス数(生存中のインスタンス数)のリセット
+	numInstance_ = 0;
+
+	for (uint32_t index = 0; index < kNumMaxInstance_; ++index) {
+		//時間更新
+		++particles[index].currentTime;
+		//生存チェック
+		if (particles[index].currentTime >= particles[index].lifeTime) {
+			continue;
+		}
+
 		//速度加算処理
 		particles[index].transform.translate = Add(particles[index].transform.translate, Multiply(kDeltaTime, particles[index].velocity));
-	}
+		//α値設定
+		float alpha = 1.0f - (particles[index].currentTime / particles[index].lifeTime);
 
-
-
-	//レンダリングパイプライン
-	for (uint32_t index = 0; index < instanceNum_; ++index) {
-
+		//レンダリングパイプライン
 		Matrix4x4 worldMatrix = MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
 		Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);
 		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-		particleResource_.instancingData[index].WVP = worldViewProjectionMatrix;
-		particleResource_.instancingData[index].World = worldMatrix;
+		particleResource_.instancingData[numInstance_].WVP = worldViewProjectionMatrix;
+		particleResource_.instancingData[numInstance_].World = worldMatrix;
+		particleResource_.instancingData[numInstance_].color = particles[index].color;
+		particleResource_.instancingData[numInstance_].color.w = alpha;
+
+		//生存中のパーティクルの数を1つカウントする
+		++numInstance_;
 	}
+
 
 
 }
@@ -99,7 +112,7 @@ void Particle::Draw()
 		particleCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 		//描画
-		particleCommon_->GetDirectXCommon()->GetCommandList()->DrawInstanced(UINT(particleResource_.modelData.at(index).vertices.size()), instanceNum_, 0, 0);
+		particleCommon_->GetDirectXCommon()->GetCommandList()->DrawInstanced(UINT(particleResource_.modelData.at(index).vertices.size()), numInstance_, 0, 0);
 	}
 }
 
@@ -291,7 +304,7 @@ void Particle::MakeModelResource(const std::string& resourceFileName, const std:
 		//マテリアル用のリソースを作る。
 		particleResource_.materialResource.at(index) = particleCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::Material));
 		//インスタンス用のリソースを作る
-		particleResource_.instancingResource = particleCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::ParticleForGPU) * instanceNum_);
+		particleResource_.instancingResource = particleCommon_->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::ParticleForGPU) * kNumMaxInstance_);
 
 		//頂点バッファービューを作成
 		particleResource_.vertexBufferView.at(index).BufferLocation = particleResource_.vertexResource.at(index)->GetGPUVirtualAddress();
@@ -308,7 +321,7 @@ void Particle::MakeModelResource(const std::string& resourceFileName, const std:
 		particleResource_.materialData.at(index)->color = particleResource_.modelData.at(index).material.colorData;
 		particleResource_.materialData.at(index)->lightingKind = NoneLighting;
 		//インスタンスデータ書き込み
-		for (uint32_t index = 0; index < instanceNum_; ++index) {
+		for (uint32_t index = 0; index < kNumMaxInstance_; ++index) {
 			particleResource_.instancingData[index].WVP = MakeIdentity4x4();
 			particleResource_.instancingData[index].World = MakeIdentity4x4();
 			particleResource_.instancingData[index].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -358,7 +371,7 @@ void Particle::SettingSRV()
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
 	srvDesc.Buffer.FirstElement = 0;
 	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-	srvDesc.Buffer.NumElements = instanceNum_;
+	srvDesc.Buffer.NumElements = kNumMaxInstance_;
 	srvDesc.Buffer.StructureByteStride = sizeof(Struct::ParticleForGPU);
 	SrvHandleCPU = particleCommon_->GetDirectXCommon()->GetSRVCPUDescriptorHandle(4);
 	SrvHandleGPU = particleCommon_->GetDirectXCommon()->GetSRVGPUDescriptorHandle(4);
