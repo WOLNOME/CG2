@@ -26,19 +26,33 @@ void Particle::Initialize(ParticleCommon* modelCommon)
 	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
 	directionalLightData->intensity = 1.0f;
 
+	//エミッター生成
+	emitter.transform.scale = { 1.0f,1.0f,1.0f };
+	emitter.transform.rotate = { 0.0f,0.0f,0.0f };
+	emitter.transform.translate = { 0.0f,0.0f,0.0f };
+	emitter.count = 3;//1度に3個生成する
+	emitter.frequency = 0.5f;//0.5秒ごとに発生
+	emitter.frequencyTime = 0.0f;//currentTime
+
 }
 
 void Particle::Update()
 {
 	//インスタンスの番号
 	uint32_t instanceNum = 0;
+	//エミッターの更新
+	emitter.frequencyTime += kDeltaTime;
+	if (emitter.frequency <= emitter.frequencyTime) {
+		particles.splice(particles.end(), Emit(emitter));
+		emitter.frequencyTime -= emitter.frequency;
+	}
 
 	for (std::list<Struct::Particle>::iterator particleIterator = particles.begin(); particleIterator != particles.end();) {
 		//時間更新
 		++(*particleIterator).currentTime;
 
 		//生存チェック
-		if ((*particleIterator).lifeTime<=(*particleIterator).currentTime) {
+		if ((*particleIterator).lifeTime <= (*particleIterator).currentTime) {
 			//寿命を迎えたら削除
 			particleIterator = particles.erase(particleIterator);
 			continue;
@@ -77,12 +91,11 @@ void Particle::Update()
 #ifdef _DEBUG
 	ImGui::Begin("particle");
 	ImGui::Checkbox("billboard", &isBillboard);
-	if (ImGui::Button("GenerateParticle")) {
+	if (ImGui::Button("Add Particle")) {
 		//パーティクル生成
-		particles.push_back(MakeNewParticle());
-		particles.push_back(MakeNewParticle());
-		particles.push_back(MakeNewParticle());
+		particles.splice(particles.end(), Emit(emitter));
 	}
+	ImGui::DragFloat3("EmitterTranslate", &emitter.transform.translate.x, 0.01f, -100.0f, 100.0f);
 	ImGui::End();
 #endif // _DEBUG
 
@@ -375,7 +388,7 @@ void Particle::SettingSRV()
 	particleCommon_->GetDirectXCommon()->GetDevice()->CreateShaderResourceView(particleResource_.instancingResource.Get(), &srvDesc, SrvHandleCPU);
 }
 
-Particle::Struct::Particle Particle::MakeNewParticle()
+Particle::Struct::Particle Particle::MakeNewParticle(const Vector3& translate)
 {
 	Struct::Particle particle;
 	//ランダムエンジンの生成
@@ -385,7 +398,8 @@ Particle::Struct::Particle Particle::MakeNewParticle()
 	particle.transform.scale = { 1.0f,1.0f,1.0f };
 	particle.transform.rotate = { 0.0f,0.0f,0.0f };
 	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-	particle.transform.translate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
+	Vector3 randomTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
+	particle.transform.translate = Add(translate, randomTranslate);
 	//速度
 	particle.velocity = { distribution(randomEngine) ,distribution(randomEngine) ,distribution(randomEngine) };
 	//色
@@ -395,6 +409,17 @@ Particle::Struct::Particle Particle::MakeNewParticle()
 	std::uniform_real_distribution<float> distTime(1.0f * 60.0f, 3.0f * 60.0f);
 	particle.lifeTime = distTime(randomEngine);
 	particle.currentTime = 0;
+
+	return particle;
+}
+
+std::list<Particle::Struct::Particle> Particle::Emit(const Struct::Emitter& emitter)
+{
+	std::list<Struct::Particle> particle;
+
+	for (uint32_t count = 0; count < emitter.count; ++count) {
+		particle.push_back(MakeNewParticle(emitter.transform.translate));
+	}
 
 	return particle;
 }

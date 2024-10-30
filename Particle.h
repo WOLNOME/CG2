@@ -108,9 +108,9 @@ private://メンバ関数(非公開)
 	//SRVの設定
 	void SettingSRV();
 	//パーティクルの生成
-	Struct::Particle MakeNewParticle();
+	Struct::Particle MakeNewParticle(const Vector3& translate);
 	//エミット
-	std::list<Struct::Particle> Emit(const Struct::Emitter& emitter, std::mt19937& randomEngine);
+	std::list<Struct::Particle> Emit(const Struct::Emitter& emitter);
 
 private://インスタンス
 	ParticleCommon* particleCommon_ = nullptr;
@@ -138,6 +138,7 @@ private://メンバ変数
 	const float kDeltaTime = 1.0f / 60.0f;
 	//ビルボードのオンオフ
 	bool isBillboard = false;
-
+	//エミッター
+	Struct::Emitter emitter{};
 };
 
