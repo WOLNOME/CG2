@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <memory>
+#include <numbers>
 #include "Function.h"
 #include "Matrix4x4.h"
 #include "Vector2.h"
@@ -84,7 +85,7 @@ public://インナークラス
 	};
 public://メンバ関数
 	//初期化
-	void Initialize(ParticleCommon* particleCommon,uint32_t instanceNum);
+	void Initialize(ParticleCommon* particleCommon, uint32_t instanceNum);
 	void Update();
 	void Draw();
 	//.mtlファイルの読み取り
@@ -111,8 +112,8 @@ private://メンバ変数
 	//カメラトランスフォーム
 	Transform cameraTransform = {
 		{1.0f,1.0f,1.0f},
-		{0.3f,0.0f,0.0f},
-		{0.0f,4.0f,-10.0f}
+		{std::numbers::pi_v<float> / 3.0f,std::numbers::pi_v<float>,0.0f},
+		{0.0f,23.0f,10.0f}
 	};
 	//パーティクルの数
 	uint32_t numInstance_;
@@ -124,6 +125,8 @@ private://メンバ変数
 	D3D12_GPU_DESCRIPTOR_HANDLE SrvHandleGPU;
 	//δtの定義
 	const float kDeltaTime = 1.0f / 60.0f;
-	
+	//ビルボードのオンオフ
+	bool isBillboard = false;
+
 };
 

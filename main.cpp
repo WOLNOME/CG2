@@ -130,7 +130,6 @@ void SoundPlayWave(IXAudio2* xAudio2, const SoundData& soundData)
 	result = pSourceVoice->Start();
 }
 
-
 // Windowsアプリでのエントリーポイント(main関数)
 int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 

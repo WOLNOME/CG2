@@ -2,6 +2,7 @@
 #include "ParticleCommon.h"
 #include "DirectXCommon.h"
 #include "TextureManager.h"
+#include "externals/imgui/imgui.h"
 #include <fstream>
 #include <sstream>
 #include <random>
@@ -38,7 +39,7 @@ void Particle::Initialize(ParticleCommon* modelCommon, uint32_t instanceNum)
 
 		//トランスフォーム
 		particles[index].transform.scale = { 1.0f,1.0f,1.0f };
-		particles[index].transform.rotate = { 0.0f,3.14f,0.0f };
+		particles[index].transform.rotate = { 0.0f,0.0f,0.0f };
 		particles[index].transform.translate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
 		//速度
 		particles[index].velocity = { distribution(randomEngine) ,distribution(randomEngine) ,distribution(randomEngine) };
@@ -74,8 +75,16 @@ void Particle::Update()
 		float alpha = 1.0f - (particles[index].currentTime / particles[index].lifeTime);
 
 		//レンダリングパイプライン
-		Matrix4x4 worldMatrix = MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
 		Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+		Matrix4x4 backToFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
+		Matrix4x4 billboardMatrix = Multiply(backToFrontMatrix, cameraMatrix);
+		billboardMatrix.m[3][0] = 0.0f;
+		billboardMatrix.m[3][1] = 0.0f;
+		billboardMatrix.m[3][2] = 0.0f;
+		Matrix4x4 worldMatrix = Multiply(Multiply(MakeScaleMatrix(particles[index].transform.scale), billboardMatrix), MakeTranslateMatrix(particles[index].transform.translate));
+		if(!isBillboard){
+			worldMatrix = MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
+		}
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);
 		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
@@ -88,6 +97,11 @@ void Particle::Update()
 		++numInstance_;
 	}
 
+#ifdef _DEBUG
+	ImGui::Begin("particle");
+	ImGui::Checkbox("billboard", &isBillboard);
+	ImGui::End();
+#endif // _DEBUG
 
 
 }
