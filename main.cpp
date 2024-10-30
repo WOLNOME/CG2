@@ -223,7 +223,7 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 	object3d2->Initialize(object3dCommon);
 
 	Particle* particle = new Particle();
-	particle->Initialize(particleCommon, 10);
+	particle->Initialize(particleCommon);
 
 #pragma endregion 最初のシーンの終了
 

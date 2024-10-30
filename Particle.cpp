@@ -7,11 +7,10 @@
 #include <sstream>
 #include <random>
 
-void Particle::Initialize(ParticleCommon* modelCommon, uint32_t instanceNum)
+void Particle::Initialize(ParticleCommon* modelCommon)
 {
 	//引数で受け取ってメンバ変数に記録する
 	particleCommon_ = modelCommon;
-	kNumMaxInstance_ = instanceNum;//最大描画枚数
 
 	//一旦planeでリソースを作る
 	MakeModelResource("Resources", "plane.obj");
@@ -27,52 +26,28 @@ void Particle::Initialize(ParticleCommon* modelCommon, uint32_t instanceNum)
 	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
 	directionalLightData->intensity = 1.0f;
 
-	//ランダム
-	std::random_device seedGenerator;
-	std::mt19937 randomEngine(seedGenerator());
-
-	//インスタンシング用トランスフォームの初期化
-	particles.resize(kNumMaxInstance_);
-	for (uint32_t index = 0; index < kNumMaxInstance_; ++index) {
-		//生成の振れ幅
-		std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
-
-		//トランスフォーム
-		particles[index].transform.scale = { 1.0f,1.0f,1.0f };
-		particles[index].transform.rotate = { 0.0f,0.0f,0.0f };
-		particles[index].transform.translate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
-		//速度
-		particles[index].velocity = { distribution(randomEngine) ,distribution(randomEngine) ,distribution(randomEngine) };
-		//色
-		std::uniform_real_distribution<float> distcolor(0.0f, 1.0f);
-		particles[index].color = { distcolor(randomEngine) ,distcolor(randomEngine) ,distcolor(randomEngine),1.0f };
-		particleResource_.instancingData[index].color = particles[index].color;
-		//寿命
-		std::uniform_real_distribution<float> distTime(1.0f * 60.0f, 3.0f * 60.0f);
-		particles[index].lifeTime = distTime(randomEngine);
-		particles[index].currentTime = 0;
-
-	}
-
 }
 
 void Particle::Update()
 {
-	//描画すべきインスタンス数(生存中のインスタンス数)のリセット
-	numInstance_ = 0;
+	//インスタンスの番号
+	uint32_t instanceNum = 0;
 
-	for (uint32_t index = 0; index < kNumMaxInstance_; ++index) {
+	for (std::list<Struct::Particle>::iterator particleIterator = particles.begin(); particleIterator != particles.end();) {
 		//時間更新
-		++particles[index].currentTime;
+		++(*particleIterator).currentTime;
+
 		//生存チェック
-		if (particles[index].currentTime >= particles[index].lifeTime) {
+		if ((*particleIterator).lifeTime<=(*particleIterator).currentTime) {
+			//寿命を迎えたら削除
+			particleIterator = particles.erase(particleIterator);
 			continue;
 		}
 
 		//速度加算処理
-		particles[index].transform.translate = Add(particles[index].transform.translate, Multiply(kDeltaTime, particles[index].velocity));
+		(*particleIterator).transform.translate = Add((*particleIterator).transform.translate, Multiply(kDeltaTime, (*particleIterator).velocity));
 		//α値設定
-		float alpha = 1.0f - (particles[index].currentTime / particles[index].lifeTime);
+		float alpha = 1.0f - ((*particleIterator).currentTime / (*particleIterator).lifeTime);
 
 		//レンダリングパイプライン
 		Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
@@ -81,25 +56,33 @@ void Particle::Update()
 		billboardMatrix.m[3][0] = 0.0f;
 		billboardMatrix.m[3][1] = 0.0f;
 		billboardMatrix.m[3][2] = 0.0f;
-		Matrix4x4 worldMatrix = Multiply(Multiply(MakeScaleMatrix(particles[index].transform.scale), billboardMatrix), MakeTranslateMatrix(particles[index].transform.translate));
-		if(!isBillboard){
-			worldMatrix = MakeAffineMatrix(particles[index].transform.scale, particles[index].transform.rotate, particles[index].transform.translate);
+		Matrix4x4 worldMatrix = Multiply(Multiply(MakeScaleMatrix((*particleIterator).transform.scale), billboardMatrix), MakeTranslateMatrix((*particleIterator).transform.translate));
+		if (!isBillboard) {
+			worldMatrix = MakeAffineMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, (*particleIterator).transform.translate);
 		}
 		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
 		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);
 		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
-		particleResource_.instancingData[numInstance_].WVP = worldViewProjectionMatrix;
-		particleResource_.instancingData[numInstance_].World = worldMatrix;
-		particleResource_.instancingData[numInstance_].color = particles[index].color;
-		particleResource_.instancingData[numInstance_].color.w = alpha;
+		particleResource_.instancingData[instanceNum].WVP = worldViewProjectionMatrix;
+		particleResource_.instancingData[instanceNum].World = worldMatrix;
+		particleResource_.instancingData[instanceNum].color = (*particleIterator).color;
+		particleResource_.instancingData[instanceNum].color.w = alpha;
 
-		//生存中のパーティクルの数を1つカウントする
-		++numInstance_;
+		//インスタンスの数インクリメント
+		++instanceNum;
+		//次のイテレータに進める
+		++particleIterator;
 	}
 
 #ifdef _DEBUG
 	ImGui::Begin("particle");
 	ImGui::Checkbox("billboard", &isBillboard);
+	if (ImGui::Button("GenerateParticle")) {
+		//パーティクル生成
+		particles.push_back(MakeNewParticle());
+		particles.push_back(MakeNewParticle());
+		particles.push_back(MakeNewParticle());
+	}
 	ImGui::End();
 #endif // _DEBUG
 
@@ -126,7 +109,7 @@ void Particle::Draw()
 		particleCommon_->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 		//描画
-		particleCommon_->GetDirectXCommon()->GetCommandList()->DrawInstanced(UINT(particleResource_.modelData.at(index).vertices.size()), numInstance_, 0, 0);
+		particleCommon_->GetDirectXCommon()->GetCommandList()->DrawInstanced(UINT(particleResource_.modelData.at(index).vertices.size()), particles.size(), 0, 0);
 	}
 }
 
@@ -390,4 +373,28 @@ void Particle::SettingSRV()
 	SrvHandleCPU = particleCommon_->GetDirectXCommon()->GetSRVCPUDescriptorHandle(4);
 	SrvHandleGPU = particleCommon_->GetDirectXCommon()->GetSRVGPUDescriptorHandle(4);
 	particleCommon_->GetDirectXCommon()->GetDevice()->CreateShaderResourceView(particleResource_.instancingResource.Get(), &srvDesc, SrvHandleCPU);
+}
+
+Particle::Struct::Particle Particle::MakeNewParticle()
+{
+	Struct::Particle particle;
+	//ランダムエンジンの生成
+	std::random_device seedGenerator;
+	std::mt19937 randomEngine(seedGenerator());
+	//トランスフォーム
+	particle.transform.scale = { 1.0f,1.0f,1.0f };
+	particle.transform.rotate = { 0.0f,0.0f,0.0f };
+	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
+	particle.transform.translate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
+	//速度
+	particle.velocity = { distribution(randomEngine) ,distribution(randomEngine) ,distribution(randomEngine) };
+	//色
+	std::uniform_real_distribution<float> distcolor(0.0f, 1.0f);
+	particle.color = { distcolor(randomEngine) ,distcolor(randomEngine) ,distcolor(randomEngine),1.0f };
+	//寿命
+	std::uniform_real_distribution<float> distTime(1.0f * 60.0f, 3.0f * 60.0f);
+	particle.lifeTime = distTime(randomEngine);
+	particle.currentTime = 0;
+
+	return particle;
 }

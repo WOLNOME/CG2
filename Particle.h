@@ -1,8 +1,9 @@
 #pragma once
 #include <d3d12.h>
 #include <wrl.h>
-#include <string>
 #include <vector>
+#include <string>
+#include <list>
 #include <memory>
 #include <numbers>
 #include "Function.h"
@@ -81,11 +82,18 @@ public://インナークラス
 			float lifeTime;
 			float currentTime;
 		};
+		//エミッター構造体
+		struct Emitter {
+			Transform transform;//エミッターのトランスフォーム
+			uint32_t count;//発生させるパーティクルの数
+			float frequency;//発生頻度
+			float frequencyTime;//頻度用時刻
+		};
 
 	};
 public://メンバ関数
 	//初期化
-	void Initialize(ParticleCommon* particleCommon, uint32_t instanceNum);
+	void Initialize(ParticleCommon* particleCommon);
 	void Update();
 	void Draw();
 	//.mtlファイルの読み取り
@@ -99,6 +107,10 @@ private://メンバ関数(非公開)
 	void SettingTexture();
 	//SRVの設定
 	void SettingSRV();
+	//パーティクルの生成
+	Struct::Particle MakeNewParticle();
+	//エミット
+	std::list<Struct::Particle> Emit(const Struct::Emitter& emitter, std::mt19937& randomEngine);
 
 private://インスタンス
 	ParticleCommon* particleCommon_ = nullptr;
@@ -115,14 +127,13 @@ private://メンバ変数
 		{std::numbers::pi_v<float> / 3.0f,std::numbers::pi_v<float>,0.0f},
 		{0.0f,23.0f,10.0f}
 	};
-	//パーティクルの数
-	uint32_t numInstance_;
-	uint32_t kNumMaxInstance_;
 	//各インスタンシング用書き換え情報
-	std::vector<Struct::Particle> particles;
+	std::list<Struct::Particle> particles;
 	//srvハンドル
 	D3D12_CPU_DESCRIPTOR_HANDLE SrvHandleCPU;
 	D3D12_GPU_DESCRIPTOR_HANDLE SrvHandleGPU;
+	//表示するパーティクルの最大数
+	const uint32_t kNumMaxInstance_ = 64;
 	//δtの定義
 	const float kDeltaTime = 1.0f / 60.0f;
 	//ビルボードのオンオフ
