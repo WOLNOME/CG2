@@ -1,0 +1,11 @@
+﻿  main.cpp
+C:\Users\牛尾　悠揮\source\repos\Pandora\main.cpp(737,10): warning C4101: 'result': ローカル変数は 1 度も使われていません。
+C:\Users\牛尾　悠揮\source\repos\Pandora\main.cpp(1971,82): warning C4244: '引数': 'float' から 'ImGuiColorEditFlags' への変換です。データが失われる可能性があります。
+C:\Users\牛尾　悠揮\source\repos\Pandora\main.cpp(2021,83): warning C4244: '引数': 'float' から 'ImGuiColorEditFlags' への変換です。データが失われる可能性があります。
+C:\Users\牛尾　悠揮\source\repos\Pandora\main.cpp(2072,83): warning C4244: '引数': 'float' から 'ImGuiColorEditFlags' への変換です。データが失われる可能性があります。
+C:\Users\牛尾　悠揮\source\repos\Pandora\main.cpp(2122,83): warning C4244: '引数': 'float' から 'ImGuiColorEditFlags' への変換です。データが失われる可能性があります。
+C:\Users\牛尾　悠揮\source\repos\Pandora\main.cpp(2172,83): warning C4244: '引数': 'float' から 'ImGuiColorEditFlags' への変換です。データが失われる可能性があります。
+C:\Users\牛尾　悠揮\source\repos\Pandora\main.cpp(2222,83): warning C4244: '引数': 'float' から 'ImGuiColorEditFlags' への変換です。データが失われる可能性があります。
+  Pandora.vcxproj -> C:\Users\牛尾　悠揮\source\repos\Pandora\x64\Debug\Pandora.exe
+          1 個のファイルをコピーしました。
+          1 個のファイルをコピーしました。
