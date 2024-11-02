@@ -66,7 +66,6 @@ void Framework::Finalize()
 	SpriteCommon::GetInstance()->Finalize();
 	AudioCommon::GetInstance()->Finalize();
 	Input::GetInstance()->Finalize();
-
 	ModelManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
 	imGuiManager_->Finalize();

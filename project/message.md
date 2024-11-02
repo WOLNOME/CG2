@@ -1,0 +1,8 @@
+エンジンでやりたいこと
+・Object3dとModelの役割を整える
+(ModelにVertexShaderとMaterialのリソース、Object3dにWVPリソースTransformを分離させる)
+・DirectXCommon,WinApp,その他マネージャのシングルトン化
+・Inputのゲームパッド改良
+・パーティクルクラス
+・オーディオマネージャの作成
+
