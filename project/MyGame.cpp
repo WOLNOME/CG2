@@ -9,8 +9,8 @@ void MyGame::Initialize()
 	Framework::Initialize();
 
 	//シーンの生成初期化
-	gamePlayScene_ = std::make_unique<GamePlayScene>();
-	gamePlayScene_->Initialize();
+	scene_ = std::make_unique<GamePlayScene>();
+	scene_->Initialize();
 
 }
 
@@ -33,7 +33,7 @@ void MyGame::Update()
 	///==============================///
 
 	//シーンの更新
-	gamePlayScene_->Update();
+	scene_->Update();
 
 
 	//ImGuiの内部コマンドを生成する
@@ -52,7 +52,7 @@ void MyGame::Draw()
 	srvManager_->PreDraw();
 
 	//シーンの描画
-	gamePlayScene_->Draw();
+	scene_->Draw();
 
 	//ImGuiの描画
 	imGuiManager_->Draw();

@@ -9,8 +9,8 @@ void GamePlayScene::Initialize()
 {
 	//ゲームシーン変数の初期化
 	sprite_ = new Sprite();
-	TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
-	sprite_->Initialize("Resources/uvChecker.png");
+	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
+	sprite_->Initialize("Resources/monsterBall.png");
 	sprite_->SetAnchorPoint({ 0.5f,0.5f });
 	sprite_->SetFlipX(true);
 

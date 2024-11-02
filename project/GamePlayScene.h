@@ -4,25 +4,25 @@
 #include "Audio.h"
 #include "Vector2.h"
 
-class GamePlayScene
+class GamePlayScene : public BaseScene
 {
 public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	void Initialize();
+	void Initialize() override;
 	/// <summary>
 	/// 終了時
 	/// </summary>
-	void Finalize();
+	void Finalize() override;
 	/// <summary>
 	/// 更新
 	/// </summary>
-	void Update();
+	void Update() override;
 	/// <summary>
 	/// 描画
 	/// </summary>
-	void Draw();
+	void Draw() override;
 private://メンバ変数
 	Sprite* sprite_ = nullptr;
 	Sprite* sprite2_ = nullptr;

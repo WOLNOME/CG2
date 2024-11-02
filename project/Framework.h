@@ -6,6 +6,8 @@
 #include "ImGuiManager.h"
 #include "Input.h"
 #include "Camera.h"
+#include "BaseScene.h"
+#include <memory>
 
 class Framework
 {
@@ -47,5 +49,8 @@ protected://基盤インスタンス
 	Input* input_ = nullptr;
 	Camera* camera_ = nullptr;
 	bool isOver = false;
+	//シーン
+	std::unique_ptr<BaseScene> scene_ = nullptr;
+
 };
 

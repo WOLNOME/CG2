@@ -4,6 +4,7 @@
 #include "Audio.h"
 #include "Framework.h"
 #include "GamePlayScene.h"
+#include "TitleScene.h"
 #include <memory>
 
 class MyGame : public Framework
@@ -26,9 +27,6 @@ public:
 	/// </summary>
 	void Draw() override;
 private://基盤インスタンス
-	
-private://シーン
-	std::unique_ptr<GamePlayScene> gamePlayScene_ = nullptr;
 	
 };
 
