@@ -1,4 +1,5 @@
 #pragma once
+#include "BaseScene.h"
 #include "Sprite.h"
 #include "Object3d.h"
 #include "Audio.h"
