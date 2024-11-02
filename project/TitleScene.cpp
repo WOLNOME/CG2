@@ -42,10 +42,8 @@ void TitleScene::Update()
 {
 	//RIGHTキーを押したら
 	if (input_->TriggerKey(DIK_RIGHT)) {
-		//ゲームプレイシーン(次のシーン)を生成
-		BaseScene* scene = new GamePlayScene();
 		//シーン切り替え依頼
-		sceneManager_->SetNextScene(scene);
+		sceneManager_->SetNextScene("GAMEPLAY");
 	}
 
 	//モデルの更新

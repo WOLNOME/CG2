@@ -1,9 +1,7 @@
 #pragma once
 #include "BaseScene.h"
-//現存のシーン
-#include "TitleScene.h"
-#include "GamePlayScene.h"
-
+#include "AbstractSceneFactory.h"
+#include <string>
 //シーン管理
 class SceneManager
 {
@@ -39,14 +37,16 @@ private:
 	//シーン切り替え
 	void ChangeScene();
 public:
-	//次シーン予約
-	void SetNextScene(BaseScene* nextScene) { nextScene_ = nextScene; }
+	//次シーンのセット
+	void SetNextScene(const std::string& nextSceneName);
 
 private:
 	//今のシーン
 	BaseScene* scene_ = nullptr;
 	//次のシーン
 	BaseScene* nextScene_ = nullptr;
+	//シーンファクトリー
+	AbstractSceneFactory* sceneFactory_ = nullptr;
 
 };
 

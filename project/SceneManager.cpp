@@ -1,4 +1,6 @@
 #include "SceneManager.h"
+#include "SceneFactory.h"
+#include <cassert>
 
 SceneManager* SceneManager::instance = nullptr;
 
@@ -12,15 +14,16 @@ SceneManager* SceneManager::GetInstance()
 
 void SceneManager::Initialize()
 {
+	//シーンファクトリーの生成
+	sceneFactory_ = new SceneFactory();
 }
 
 void SceneManager::Update()
 {
-	//シーン切り替え
+	//シーン切り替え処理
 	ChangeScene();
 	//実行中シーンを更新する
 	scene_->Update();
-
 }
 
 void SceneManager::Draw()
@@ -34,6 +37,8 @@ void SceneManager::Finalize()
 	//最後のシーンの終了と解放
 	scene_->Finalize();
 	delete scene_;
+	//シーンファクトリー解放
+	delete sceneFactory_;
 	//インスタンスの削除
 	delete instance;
 	instance = nullptr;
@@ -54,4 +59,13 @@ void SceneManager::ChangeScene()
 		//次のシーンを初期化する
 		scene_->Initialize();
 	}
+}
+
+void SceneManager::SetNextScene(const std::string& nextSceneName)
+{
+	//警告
+	assert(sceneFactory_);
+	assert(nextScene_ == nullptr);
+	//次シーンを生成
+	nextScene_ = sceneFactory_->CreateScene(nextSceneName);
 }

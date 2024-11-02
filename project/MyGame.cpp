@@ -3,18 +3,14 @@
 #include "ModelManager.h"
 #include "Model.h"
 #include "SceneManager.h"
-#include "BaseScene.h"
 
 void MyGame::Initialize()
 {
 	//ゲーム基盤部の初期化
 	Framework::Initialize();
 
-	//最初のシーン生成
-	BaseScene* scene = new TitleScene();
 	//シーンマネージャーに最初のシーンをセット
-	SceneManager::GetInstance()->SetNextScene(scene);
-
+	SceneManager::GetInstance()->SetNextScene("TITLE");
 
 }
 
