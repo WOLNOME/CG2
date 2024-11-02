@@ -2,15 +2,19 @@
 #include "TextureManager.h"
 #include "ModelManager.h"
 #include "Model.h"
+#include "SceneManager.h"
+#include "BaseScene.h"
 
 void MyGame::Initialize()
 {
 	//ゲーム基盤部の初期化
 	Framework::Initialize();
 
-	//シーンの生成初期化
-	scene_ = std::make_unique<GamePlayScene>();
-	scene_->Initialize();
+	//最初のシーン生成
+	BaseScene* scene = new TitleScene();
+	//シーンマネージャーに最初のシーンをセット
+	SceneManager::GetInstance()->SetNextScene(scene);
+
 
 }
 
@@ -22,23 +26,14 @@ void MyGame::Finalize()
 
 void MyGame::Update()
 {
-	//ゲーム基盤更新
-	Framework::Update();
-
 	//ImGui受付開始
 	imGuiManager_->Begin();
 
-	///==============================///
-	///          更新処理
-	///==============================///
-
-	//シーンの更新
-	scene_->Update();
-
+	//ゲーム基盤更新(シーンの処理もここ、ImGuiの処理も更新処理で)
+	Framework::Update();
 
 	//ImGuiの内部コマンドを生成する
 	imGuiManager_->End();
-
 }
 
 void MyGame::Draw()
@@ -52,7 +47,7 @@ void MyGame::Draw()
 	srvManager_->PreDraw();
 
 	//シーンの描画
-	scene_->Draw();
+	SceneManager::GetInstance()->Draw();
 
 	//ImGuiの描画
 	imGuiManager_->Draw();

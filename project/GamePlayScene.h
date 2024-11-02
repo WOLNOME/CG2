@@ -4,6 +4,7 @@
 #include "Object3d.h"
 #include "Audio.h"
 #include "Vector2.h"
+#include "Input.h"
 
 class GamePlayScene : public BaseScene
 {
@@ -25,11 +26,11 @@ public:
 	/// </summary>
 	void Draw() override;
 private://メンバ変数
+	Input* input_ = nullptr;
+
 	Sprite* sprite_ = nullptr;
 	Sprite* sprite2_ = nullptr;
 	Vector2 sprite2Position;
-	Object3d* object3d_ = nullptr;
-	Object3d* object3d2_ = nullptr;
 	Audio* audio_ = nullptr;
 };
 

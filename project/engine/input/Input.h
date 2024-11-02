@@ -30,6 +30,16 @@ class WinApp;
 //入力
 class Input
 {
+private://コンストラクタ等の隠蔽
+	static Input* instance;
+
+	Input() = default;//コンストラクタ隠蔽
+	~Input() = default;//デストラクタ隠蔽
+	Input(Input&) = delete;//コピーコンストラクタ封印
+	Input& operator=(Input&) = delete;//コピー代入演算子封印
+public:
+	//シングルトンインスタンスの取得
+	static Input* GetInstance();
 public:
 	//namespace省略
 	template <class T> using ComPtr = Microsoft::WRL::ComPtr<T>;//エイリアステンプレート
@@ -39,6 +49,8 @@ public://メンバ関数
 	void Initialize(WinApp* winApp);
 	//更新
 	void Update();
+	//終了
+	void Finalize();
 
 public://固有の処理
 	bool PushKey(BYTE keyNumber);

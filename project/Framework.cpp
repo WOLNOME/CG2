@@ -1,9 +1,11 @@
 #include "Framework.h"
 #include "TextureManager.h"
 #include "ModelManager.h"
+#include "Input.h"
 #include "AudioCommon.h"
 #include "SpriteCommon.h"
 #include "Object3dCommon.h"
+#include "SceneManager.h"
 
 void Framework::Initialize()
 {
@@ -34,8 +36,7 @@ void Framework::Initialize()
 	ModelManager::GetInstance()->Initialize(dxCommon_);
 
 	//インプット
-	input_ = new Input();
-	input_->Initialize(winApp_);
+	Input::GetInstance()->Initialize(winApp_);
 
 	//オーディオ共通部
 	AudioCommon::GetInstance()->Initialize();
@@ -51,15 +52,20 @@ void Framework::Initialize()
 	camera_->SetRotate({ 0.0f,0.0f,0.0f });
 	camera_->SetTranslate({ 0.0f,0.0f,-15.0f });
 	Object3dCommon::GetInstance()->SetDefaultCamera(camera_);
+
+	//シーンマネージャーの生成
+	SceneManager::GetInstance()->Initialize();
+
 }
 
 void Framework::Finalize()
 {
+	SceneManager::GetInstance()->Finalize();
 	delete camera_;
 	Object3dCommon::GetInstance()->Finalize();
 	SpriteCommon::GetInstance()->Finalize();
 	AudioCommon::GetInstance()->Finalize();
-	delete input_;
+	Input::GetInstance()->Finalize();
 
 	ModelManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
@@ -78,9 +84,11 @@ void Framework::Update()
 	if (winApp_->ProcessMessage()) {
 		isOver = true;
 	}
-	input_->Update();
+	Input::GetInstance()->Update();
 	//カメラの更新
 	camera_->Update();
+	//シーンマネージャー更新
+	SceneManager::GetInstance()->Update();
 
 }
 

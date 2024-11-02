@@ -4,9 +4,15 @@
 #include "ImGuiManager.h"
 #include "Object3dCommon.h"
 #include "SpriteCommon.h"
+#include "SceneManager.h"
 
 void GamePlayScene::Initialize()
 {
+	//シーン共通の初期化
+	BaseScene::Initialize();
+
+	input_ = Input::GetInstance();
+
 	//ゲームシーン変数の初期化
 	sprite_ = new Sprite();
 	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
@@ -21,16 +27,6 @@ void GamePlayScene::Initialize()
 	sprite2_->SetPosition(sprite2Position);
 	sprite2_->SetSize({ 300.0f,300.0f });
 
-	ModelManager::GetInstance()->LoadModel("plane.obj");
-	object3d_ = new Object3d();
-	object3d_->SetModel("plane.obj");
-	object3d_->Initialize();
-
-	ModelManager::GetInstance()->LoadModel("axis.obj");
-	object3d2_ = new Object3d();
-	object3d2_->SetModel("axis.obj");
-	object3d2_->Initialize();
-
 	audio_ = new Audio();
 	audio_->Initialize("Alarm01.wav");
 
@@ -39,16 +35,21 @@ void GamePlayScene::Initialize()
 void GamePlayScene::Finalize()
 {
 	delete audio_;
-	delete object3d_;
 	delete sprite2_;
 	delete sprite_;
 }
 
 void GamePlayScene::Update()
 {
+	//LEFTキーを押したら
+	if (input_->TriggerKey(DIK_LEFT)) {
+		//ゲームプレイシーン(次のシーン)を生成
+		BaseScene* scene = new TitleScene();
+		//シーン切り替え依頼
+		sceneManager_->SetNextScene(scene);
+	}
+
 	//モデルの更新
-	object3d_->Update();
-	object3d2_->Update();
 
 	//スプライトの更新
 	sprite_->Update();
@@ -80,8 +81,6 @@ void GamePlayScene::Draw()
 	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
-	object3d_->Draw();
-	object3d2_->Draw();
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
