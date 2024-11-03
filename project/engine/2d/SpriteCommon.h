@@ -2,8 +2,6 @@
 #include <wrl.h>
 #include <d3d12.h>
 
-class DirectXCommon;
-
 class SpriteCommon
 {
 private://シングルトン
@@ -17,7 +15,7 @@ public://シングルトン
 	static SpriteCommon* GetInstance();
 public://メンバ関数
 	//初期化
-	void Initialize(DirectXCommon* dxCommon);
+	void Initialize();
 	//終了
 	void Finalize();
 	//共通描画設定
@@ -27,9 +25,9 @@ private://非公開メンバ関数(内部処理)
 	//グラフィックスパイプラインの生成
 	void GenerateGraphicsPipeline();
 public://ゲッター
-	DirectXCommon* GetDirectXCommon() const { return dxCommon_; }
+	
 private://インスタンス
-	DirectXCommon* dxCommon_ = nullptr;
+	
 private://メンバ関数
 	//ルートシグネチャ
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;

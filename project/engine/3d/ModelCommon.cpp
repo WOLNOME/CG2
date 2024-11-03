@@ -12,11 +12,8 @@ ModelCommon* ModelCommon::GetInstance()
 	return instance;
 }
 
-void ModelCommon::Initialize(DirectXCommon* dxCommon)
+void ModelCommon::Initialize()
 {
-	//引数で受け取ってメンバ変数に記録する
-	dxCommon_ = dxCommon;
-
 }
 
 void ModelCommon::Finalize()

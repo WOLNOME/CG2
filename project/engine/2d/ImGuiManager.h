@@ -3,16 +3,23 @@
 #include <d3d12.h>
 #include "imgui.h"
 
-class DirectXCommon;
-class WinApp;
-class SrvManager;
 class ImGuiManager
 {
+private://コンストラクタ等の隠蔽
+	static ImGuiManager* instance;
+
+	ImGuiManager() = default;//コンストラクタ隠蔽
+	~ImGuiManager() = default;//デストラクタ隠蔽
+	ImGuiManager(ImGuiManager&) = delete;//コピーコンストラクタ封印
+	ImGuiManager& operator=(ImGuiManager&) = delete;//コピー代入演算子封印
+public:
+	//シングルトンインスタンスの取得
+	static ImGuiManager* GetInstance();
 public:
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	void Initialize(DirectXCommon* dxCommon, WinApp* winApp, SrvManager* srvManager);
+	void Initialize();
 
 	/// <summary>
 	/// 終了
@@ -35,9 +42,7 @@ public:
 	void Draw();
 
 private://インスタンス
-	DirectXCommon* dxCommon_ = nullptr;
-	WinApp* winApp_ = nullptr;
-	SrvManager* srvManager_ = nullptr;
+
 private://メンバ変数
 	
 };

@@ -15,14 +15,10 @@ TextureManager* TextureManager::GetInstance()
 	return instance;
 }
 
-void TextureManager::Initialize(DirectXCommon* dxCommon, SrvManager* srvManager)
+void TextureManager::Initialize()
 {
-	//インスタンスの取得
-	this->dxCommon = dxCommon;
-	this->srvManager = srvManager;
-
 	//SRVの数と回数
-	textureDatas.reserve(srvManager->kMaxSRVCount);
+	textureDatas.reserve(SrvManager::GetInstance()->kMaxSRVCount);
 
 }
 
@@ -41,7 +37,7 @@ void TextureManager::LoadTexture(const std::string& filePath)
 	}
 
 	//テクスチャ枚数上限チェック
-	assert(srvManager->CheckCanSecured());
+	assert(SrvManager::GetInstance()->CheckCanSecured());
 
 	//テクスチャファイルを読んでプログラムで扱えるようにする
 	DirectX::ScratchImage image{};
@@ -58,16 +54,16 @@ void TextureManager::LoadTexture(const std::string& filePath)
 	//追加したテクスチャデータの参照を取得する
 	TextureData& textureData = textureDatas[filePath];
 	textureData.metadata = metadata;
-	textureData.resource = dxCommon->CreateTextureResource(textureData.metadata);
+	textureData.resource = DirectXCommon::GetInstance()->CreateTextureResource(textureData.metadata);
 
 	//テクスチャデータの転送
 	UploadTextureData(textureData.resource, mipImages);
 
 	//テクスチャデータの要素数番号からSRVのインデックスを計算する
-	textureData.srvIndex = srvManager->Allocate();
+	textureData.srvIndex = SrvManager::GetInstance()->Allocate();
 
-	textureData.srvHandleCPU = srvManager->GetCPUDescriptorHandle(textureData.srvIndex);
-	textureData.srvHandleGPU = srvManager->GetGPUDescriptorHandle(textureData.srvIndex);
+	textureData.srvHandleCPU = SrvManager::GetInstance()->GetCPUDescriptorHandle(textureData.srvIndex);
+	textureData.srvHandleGPU = SrvManager::GetInstance()->GetGPUDescriptorHandle(textureData.srvIndex);
 
 	//メタデータをもとにsrvの設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
@@ -76,7 +72,7 @@ void TextureManager::LoadTexture(const std::string& filePath)
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
 	//SRVの生成
-	dxCommon->GetDevice()->CreateShaderResourceView(textureData.resource.Get(), &srvDesc, textureData.srvHandleCPU);
+	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(textureData.resource.Get(), &srvDesc, textureData.srvHandleCPU);
 
 }
 
@@ -104,7 +100,7 @@ void TextureManager::UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resour
 const DirectX::TexMetadata& TextureManager::GetMetaData(const std::string& filePath)
 {
 	//範囲外指定違反チェック
-	assert(textureDatas[filePath].srvIndex + kSRVIndexTop < srvManager->kMaxSRVCount);
+	assert(textureDatas[filePath].srvIndex + kSRVIndexTop < SrvManager::GetInstance()->kMaxSRVCount);
 
 	TextureData& textureData = textureDatas[filePath];
 	return textureData.metadata;
@@ -126,7 +122,7 @@ uint32_t TextureManager::GetSrvIndex(const std::string& filePath)
 D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(const std::string& filePath)
 {
 	//範囲外指定違反チェック
-	assert(textureDatas[filePath].srvIndex + kSRVIndexTop < srvManager->kMaxSRVCount);
+	assert(textureDatas[filePath].srvIndex + kSRVIndexTop < SrvManager::GetInstance()->kMaxSRVCount);
 
 	TextureData& textureData = textureDatas[filePath];
 	return textureData.srvHandleGPU;

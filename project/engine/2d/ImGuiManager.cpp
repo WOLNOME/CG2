@@ -6,30 +6,35 @@
 #include "SrvManager.h"
 #include <cstdint>
 
-void ImGuiManager::Initialize(DirectXCommon* dxCommon, WinApp* winApp, SrvManager* srvManager)
-{
-	//インスタンス設定
-	dxCommon_ = dxCommon;
-	winApp_ = winApp;
-	srvManager_ = srvManager;
+ImGuiManager* ImGuiManager::instance = nullptr;
 
+ImGuiManager* ImGuiManager::GetInstance()
+{
+	if (instance == nullptr) {
+		instance = new ImGuiManager;
+	}
+	return instance;
+}
+
+void ImGuiManager::Initialize()
+{
 	//ImGuiのコンテキストを生成
 	ImGui::CreateContext();
 	//ImGuiのスタイルを設定(クラシック)
 	ImGui::StyleColorsClassic();
 
 	//Win32用初期化関数
-	ImGui_ImplWin32_Init(winApp_->GetHwnd());
+	ImGui_ImplWin32_Init(WinApp::GetInstance()->GetHwnd());
 	//使用するSRVのインデックスを受け取る
-	uint32_t index = srvManager_->Allocate();
+	uint32_t index = SrvManager::GetInstance()->Allocate();
 	//dx12用初期化関数
 	ImGui_ImplDX12_Init(
-		dxCommon_->GetDevice(),
-		static_cast<int>(dxCommon_->GetBackBufferCount()),
+		DirectXCommon::GetInstance()->GetDevice(),
+		static_cast<int>(DirectXCommon::GetInstance()->GetBackBufferCount()),
 		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
-		srvManager_->GetDescriptorHeap(),
-		srvManager_->GetCPUDescriptorHandle(index),
-		srvManager_->GetGPUDescriptorHandle(index)
+		SrvManager::GetInstance()->GetDescriptorHeap(),
+		SrvManager::GetInstance()->GetCPUDescriptorHandle(index),
+		SrvManager::GetInstance()->GetGPUDescriptorHandle(index)
 	);
 }
 
@@ -39,6 +44,9 @@ void ImGuiManager::Finalize()
 	ImGui_ImplDX12_Shutdown();
 	ImGui_ImplWin32_Shutdown();
 	ImGui::DestroyContext();
+	//シングルトン解放
+	delete instance;
+	instance = nullptr;
 }
 
 void ImGuiManager::Begin()
@@ -57,10 +65,10 @@ void ImGuiManager::End()
 
 void ImGuiManager::Draw()
 {
-	ID3D12GraphicsCommandList* commandList = dxCommon_->GetCommandList();
+	ID3D12GraphicsCommandList* commandList = DirectXCommon::GetInstance()->GetCommandList();
 
 	//デスクリプタヒープの配列をセットするコマンド
-	ID3D12DescriptorHeap* ppHeaps[] = { srvManager_->GetDescriptorHeap() };
+	ID3D12DescriptorHeap* ppHeaps[] = { SrvManager::GetInstance()->GetDescriptorHeap() };
 	commandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 	//描画コマンドを発行
 	ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), commandList);

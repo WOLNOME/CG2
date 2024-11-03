@@ -4,13 +4,23 @@
 #include <dxgi1_6.h>
 #include <cstdint>
 
-class DirectXCommon;
 class SrvManager
 {
+private://コンストラクタ等の隠蔽
+	static SrvManager* instance;
+
+	SrvManager() = default;//コンストラクタ隠蔽
+	~SrvManager() = default;//デストラクタ隠蔽
+	SrvManager(SrvManager&) = delete;//コピーコンストラクタ封印
+	SrvManager& operator=(SrvManager&) = delete;//コピー代入演算子封印
+public:
+	//シングルトンインスタンスの取得
+	static SrvManager* GetInstance();
 public:
 	//初期化
-	void Initialize(DirectXCommon* dxCommon);
-
+	void Initialize();
+	//終了
+	void Finalize();
 
 	void PreDraw();
 	uint32_t Allocate();
@@ -36,7 +46,7 @@ public://公開メンバ変数
 	static const uint32_t kMaxSRVCount;
 
 private://インスタンス
-	DirectXCommon* dxCommon_ = nullptr;
+
 private://メンバ変数
 	//SRV用のデスクリプタサイズ
 	uint32_t descriptorSize = 0;

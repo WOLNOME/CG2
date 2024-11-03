@@ -2,6 +2,7 @@
 #include "Logger.h"
 #include "StringUtility.h"
 #include "format"
+#include "WinApp.h"
 #include <cassert>
 #include <thread>
 
@@ -9,20 +10,20 @@
 #pragma comment(lib,"dxgi.lib")
 #pragma comment(lib,"winmm.lib")
 
+DirectXCommon* DirectXCommon::instance = nullptr;
+
 using namespace Microsoft::WRL;
 
-DirectXCommon::~DirectXCommon()
+DirectXCommon* DirectXCommon::GetInstance()
 {
-	//イベント
-	CloseHandle(fenceEvent);
+	if (instance == nullptr) {
+		instance = new DirectXCommon;
+	}
+	return instance;
 }
 
-void DirectXCommon::Initialize(WinApp* winApp)
+void DirectXCommon::Initialize()
 {
-	//ポインタ取得
-	assert(winApp);
-	winApp_ = winApp;
-
 	//FPS固定初期化
 	InitializeFixFPS();
 	//デバイスの生成
@@ -48,6 +49,14 @@ void DirectXCommon::Initialize(WinApp* winApp)
 	//DXCコンパイラの生成
 	GenerateDXCCompiler();
 	
+}
+
+void DirectXCommon::Finalize()
+{
+	//イベント
+	CloseHandle(fenceEvent);
+	delete instance;
+	instance = nullptr;
 }
 
 void DirectXCommon::PreDraw()
@@ -255,7 +264,7 @@ void DirectXCommon::GenerateSwapChain()
 	swapChainDesc.BufferCount = 2; //ダブルバッファ
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; //モニタにうつしたら、中身を破棄
 	//スワップチェーンを生成する。
-	hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), winApp_->GetHwnd(), &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
+	hr = dxgiFactory->CreateSwapChainForHwnd(commandQueue.Get(), WinApp::GetInstance()->GetHwnd(), &swapChainDesc, nullptr, nullptr, reinterpret_cast<IDXGISwapChain1**>(swapChain.GetAddressOf()));
 	assert(SUCCEEDED(hr));
 }
 

@@ -25,8 +25,7 @@ enum ButtonState
 	ButtonStateUp,
 	ButtonStateMax,
 };
-//前方宣言
-class WinApp;
+
 //入力
 class Input
 {
@@ -46,7 +45,7 @@ public:
 
 public://メンバ関数
 	//初期化
-	void Initialize(WinApp* winApp);
+	void Initialize();
 	//更新
 	void Update();
 	//終了
@@ -57,8 +56,7 @@ public://固有の処理
 	bool TriggerKey(BYTE keyNumber);
 
 private://インスタンス
-	//WindowsAPI
-	WinApp* winApp_= nullptr;
+
 private://メンバ変数
 	//キーボードデバイス
 	ComPtr<IDirectInputDevice8> keyboard;

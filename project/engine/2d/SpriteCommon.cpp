@@ -12,14 +12,10 @@ SpriteCommon* SpriteCommon::GetInstance()
 	return instance;
 }
 
-void SpriteCommon::Initialize(DirectXCommon* dxCommon)
+void SpriteCommon::Initialize()
 {
-	//DirectXCommonのインスタンス取得
-	dxCommon_ = dxCommon;
-
 	//グラフィックスパイプライの生成(in CreateRootSignature)
 	GenerateGraphicsPipeline();
-
 }
 
 void SpriteCommon::Finalize()
@@ -31,11 +27,11 @@ void SpriteCommon::Finalize()
 void SpriteCommon::SettingCommonDrawing()
 {
 	//ルートシグネチャをセットするコマンド
-	dxCommon_->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 	//グラフィックスパイプラインステートをセットするコマンド
-	dxCommon_->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+	DirectXCommon::GetInstance()->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
 	//プリミティブトポロジーをセットするコマンド
-	dxCommon_->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	DirectXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void SpriteCommon::GenerateGraphicsPipeline()
@@ -99,7 +95,7 @@ void SpriteCommon::GenerateGraphicsPipeline()
 		assert(false);
 	}
 	//バイナリをもとに生成
-	hr = dxCommon_->GetDevice()->CreateRootSignature(0, signatireBlob->GetBufferPointer(),
+	hr = DirectXCommon::GetInstance()->GetDevice()->CreateRootSignature(0, signatireBlob->GetBufferPointer(),
 		signatireBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
 	assert(SUCCEEDED(hr));
 
@@ -134,11 +130,11 @@ void SpriteCommon::GenerateGraphicsPipeline()
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
 	//Shaderをコンパイルする
-	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxCommon_->CompileShader(L"Resources/shaders/Object3d.VS.hlsl",
+	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/Object3d.VS.hlsl",
 		L"vs_6_0");
 	assert(vertexShaderBlob != nullptr);
 
-	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = dxCommon_->CompileShader(L"Resources/shaders/Object3d.PS.hlsl",
+	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/Object3d.PS.hlsl",
 		L"ps_6_0");
 	assert(pixelShaderBlob != nullptr);
 
@@ -172,7 +168,7 @@ void SpriteCommon::GenerateGraphicsPipeline()
 	graphicsPipelineStateDesc.DepthStencilState = depthStencilDesc;
 	graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	//実際に生成
-	hr = dxCommon_->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
+	hr = DirectXCommon::GetInstance()->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
 		IID_PPV_ARGS(&graphicsPipelineState));
 	assert(SUCCEEDED(hr));
 }

@@ -1,4 +1,8 @@
 #include "Framework.h"
+#include "WinApp.h"
+#include "DirectXCommon.h"
+#include "SrvManager.h"
+#include "ImGuiManager.h"
 #include "TextureManager.h"
 #include "ModelManager.h"
 #include "Input.h"
@@ -12,40 +16,35 @@ void Framework::Initialize()
 	//解放処理確認用
 	leakChecker;
 
-	//ウィンドウ
 	//WindowsAPIの初期化
-	winApp_ = new WinApp();
-	winApp_->Initialize();
+	WinApp::GetInstance()->Initialize();
 
 	//DorectX12
-	dxCommon_ = new DirectXCommon();
-	dxCommon_->Initialize(winApp_);
+	DirectXCommon::GetInstance()->Initialize();
 
 	//SRVマネージャー
-	srvManager_ = new SrvManager();
-	srvManager_->Initialize(dxCommon_);
+	SrvManager::GetInstance()->Initialize();
 
 	//ImGuiマネージャー
-	imGuiManager_ = new ImGuiManager();
-	imGuiManager_->Initialize(dxCommon_, winApp_, srvManager_);
+	ImGuiManager::GetInstance()->Initialize();
 
 	//テクスチャマネージャ
-	TextureManager::GetInstance()->Initialize(dxCommon_, srvManager_);
+	TextureManager::GetInstance()->Initialize();
 
 	//モデルマネージャー
-	ModelManager::GetInstance()->Initialize(dxCommon_);
+	ModelManager::GetInstance()->Initialize();
 
 	//インプット
-	Input::GetInstance()->Initialize(winApp_);
+	Input::GetInstance()->Initialize();
 
 	//オーディオ共通部
 	AudioCommon::GetInstance()->Initialize();
 
 	//スプライト共通部
-	SpriteCommon::GetInstance()->Initialize(dxCommon_);
+	SpriteCommon::GetInstance()->Initialize();
 
 	//オブジェクト3D共通部
-	Object3dCommon::GetInstance()->Initialize(dxCommon_);
+	Object3dCommon::GetInstance()->Initialize();
 
 	//カメラの生成
 	camera_ = new Camera();
@@ -68,19 +67,16 @@ void Framework::Finalize()
 	Input::GetInstance()->Finalize();
 	ModelManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
-	imGuiManager_->Finalize();
-	delete imGuiManager_;
-	delete srvManager_;
-	delete dxCommon_;
-	//WindowsAPIの終了処理
-	winApp_->Finalize();
-	delete winApp_;
+	ImGuiManager::GetInstance()->Finalize();
+	SrvManager::GetInstance()->Finalize();
+	DirectXCommon::GetInstance()->Finalize();
+	WinApp::GetInstance()->Finalize();
 }
 
 void Framework::Update()
 {
 	//メッセージ処理
-	if (winApp_->ProcessMessage()) {
+	if (WinApp::GetInstance()->ProcessMessage()) {
 		isOver = true;
 	}
 	Input::GetInstance()->Update();

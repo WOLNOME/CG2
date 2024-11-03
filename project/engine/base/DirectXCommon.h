@@ -1,12 +1,12 @@
 #pragma once
 #include <windows.h>
+#include <wrl.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <array>
 #include <dxcapi.h>
 #include <string>
 #include <chrono>
-#include "WinApp.h"
 
 //imgui
 #include "imgui.h"
@@ -19,10 +19,21 @@
 
 class DirectXCommon
 {
-public:
-	~DirectXCommon();
+private://コンストラクタ等の隠蔽
+	static DirectXCommon* instance;
 
-	void Initialize(WinApp* winApp);
+	DirectXCommon() = default;//コンストラクタ隠蔽
+	~DirectXCommon() = default;//デストラクタ隠蔽
+	DirectXCommon(DirectXCommon&) = delete;//コピーコンストラクタ封印
+	DirectXCommon& operator=(DirectXCommon&) = delete;//コピー代入演算子封印
+public:
+	//シングルトンインスタンスの取得
+	static DirectXCommon* GetInstance();
+public:
+	//初期化
+	void Initialize();
+	//終了
+	void Finalize();
 
 	//描画前処理
 	void PreDraw();
@@ -83,8 +94,7 @@ public://ゲッター
 	size_t GetBackBufferCount()const { return swapChainDesc.BufferCount; }
 
 private://インスタンス
-	//WindowsAPI
-	WinApp* winApp_ = nullptr;
+
 private://メンバ変数
 	//DirectX12デバイス
 	Microsoft::WRL::ComPtr<ID3D12Device> device = nullptr;

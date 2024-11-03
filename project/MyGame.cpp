@@ -1,5 +1,8 @@
 #include "MyGame.h"
+#include "DirectXCommon.h"
 #include "TextureManager.h"
+#include "SrvManager.h"
+#include "ImGuiManager.h"
 #include "ModelManager.h"
 #include "Model.h"
 #include "SceneManager.h"
@@ -23,13 +26,13 @@ void MyGame::Finalize()
 void MyGame::Update()
 {
 	//ImGui受付開始
-	imGuiManager_->Begin();
+	ImGuiManager::GetInstance()->Begin();
 
 	//ゲーム基盤更新(シーンの処理もここ、ImGuiの処理も更新処理で)
 	Framework::Update();
 
 	//ImGuiの内部コマンドを生成する
-	imGuiManager_->End();
+	ImGuiManager::GetInstance()->End();
 }
 
 void MyGame::Draw()
@@ -39,16 +42,16 @@ void MyGame::Draw()
 	///==============================///
 
 	//描画前処理
-	dxCommon_->PreDraw();
-	srvManager_->PreDraw();
-
+	DirectXCommon::GetInstance()->PreDraw();
+	SrvManager::GetInstance()->PreDraw();
+	
 	//シーンの描画
 	SceneManager::GetInstance()->Draw();
 
 	//ImGuiの描画
-	imGuiManager_->Draw();
+	ImGuiManager::GetInstance()->Draw();
 
 	//描画後処理
-	dxCommon_->PostDraw();
+	DirectXCommon::GetInstance()->PostDraw();
 }
 

@@ -12,7 +12,7 @@
 void Object3d::Initialize()
 {
 	//平行光源用リソースを作る
-	directionalLightResource = Object3dCommon::GetInstance()->GetDirectXCommon()->CreateBufferResource(sizeof(Struct::DirectionalLight));
+	directionalLightResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Struct::DirectionalLight));
 	//リソースにデータをセット
 	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 	//平行光源用データ
@@ -32,7 +32,7 @@ void Object3d::Update()
 void Object3d::Draw()
 {
 	//平行光源の設定
-	Object3dCommon::GetInstance()->GetDirectXCommon()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 	//モデルを描画する
 	model_->Draw();

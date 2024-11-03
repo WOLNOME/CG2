@@ -1,11 +1,5 @@
 #pragma once
-#include "Sprite.h"
-#include "Object3d.h"
-#include "Audio.h"
 #include "Framework.h"
-#include "GamePlayScene.h"
-#include "TitleScene.h"
-#include <memory>
 
 class MyGame : public Framework
 {

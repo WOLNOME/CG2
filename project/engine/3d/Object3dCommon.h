@@ -2,7 +2,6 @@
 #include <wrl.h>
 #include <d3d12.h>
 
-class DirectXCommon;
 class Camera;
 
 //モデル共通部
@@ -19,7 +18,7 @@ public://シングルトン
 	static Object3dCommon* GetInstance();
 public://メンバ関数
 	//初期化
-	void Initialize(DirectXCommon* dxCommon);
+	void Initialize();
 	//終了
 	void Finalize();
 	//共通描画設定
@@ -29,13 +28,11 @@ private://非公開メンバ関数
 	void GenerateGraphicsPipeline();
 
 public://ゲッター
-	DirectXCommon* GetDirectXCommon()const { return dxCommon_; }
 	Camera* GetDefaultCamera()const { return defaultCamera; }
 public://セッター
 	void SetDefaultCamera(Camera* camera) { defaultCamera = camera; }
 
 private://インスタンス
-	DirectXCommon* dxCommon_ = nullptr;
 	Camera* defaultCamera = nullptr;
 private://メンバ変数
 	//ルートシグネチャ

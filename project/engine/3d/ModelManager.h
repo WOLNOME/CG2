@@ -4,7 +4,6 @@
 #include <memory>
 
 class Model;
-class DirectXCommon;
 class ModelManager
 {
 private://コンストラクタ等の隠蔽
@@ -18,7 +17,7 @@ public:
 	//シングルトンインスタンスの取得
 	static ModelManager* GetInstance();
 	//初期化
-	void Initialize(DirectXCommon* dxCommon);
+	void Initialize();
 	//終了
 	void Finalize();
 
@@ -29,6 +28,7 @@ public:
 
 
 private://インスタンス
+
 private:
 	//モデルデータ
 	std::map<std::string, std::unique_ptr<Model>> models;

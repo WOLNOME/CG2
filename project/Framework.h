@@ -1,9 +1,5 @@
 #pragma once
 #include "D3DResourceLeakChecker.h"
-#include "WinApp.h"
-#include "DirectXCommon.h"
-#include "SrvManager.h"
-#include "ImGuiManager.h"
 #include "Camera.h"
 #include <memory>
 
@@ -40,10 +36,6 @@ public:
 	void Run();
 protected://基盤インスタンス
 	D3DResourceLeakChecker leakChecker;
-	WinApp* winApp_ = nullptr;
-	DirectXCommon* dxCommon_ = nullptr;
-	SrvManager* srvManager_ = nullptr;
-	ImGuiManager* imGuiManager_ = nullptr;
 	Camera* camera_ = nullptr;
 	bool isOver = false;
 	

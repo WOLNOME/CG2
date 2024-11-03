@@ -1,6 +1,5 @@
 #pragma once
 
-class DirectXCommon;
 class ModelCommon
 {
 private://シングルトン
@@ -14,19 +13,16 @@ public://シングルトン
 	static ModelCommon* GetInstance();
 public:
 	//初期化
-	void Initialize(DirectXCommon* dxCommon);
+	void Initialize();
 	//終了
 	void Finalize();
 
 public://ゲッター
-	DirectXCommon* GetDirectXCommon()const { return dxCommon_; }
-	
+
 public://セッター
 	
 
 private:
-	DirectXCommon* dxCommon_;
-	
 
 };
 

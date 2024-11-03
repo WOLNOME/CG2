@@ -3,9 +3,18 @@
 #include <wrl.h>
 #include <cstdint>
 
-
 class WinApp
 {
+private://コンストラクタ等の隠蔽
+	static WinApp* instance;
+
+	WinApp() = default;//コンストラクタ隠蔽
+	~WinApp() = default;//デストラクタ隠蔽
+	WinApp(WinApp&) = delete;//コピーコンストラクタ封印
+	WinApp& operator=(WinApp&) = delete;//コピー代入演算子封印
+public:
+	//シングルトンインスタンスの取得
+	static WinApp* GetInstance();
 public://静的メンバ関数
 	static LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam);
 public://定数(公開は定数のみ)

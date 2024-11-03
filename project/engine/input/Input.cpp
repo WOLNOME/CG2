@@ -16,16 +16,13 @@ Input* Input::GetInstance()
 	return instance;
 }
 
-void Input::Initialize(WinApp* winApp)
+void Input::Initialize()
 {
-	//借りてきたWinAppのインスタンスを記憶
-	winApp_ = winApp;
-
 	HRESULT hr;
 	//DirectInputの初期化
 	IDirectInput8* directInput = nullptr;
 	hr = DirectInput8Create(
-		winApp_->GetHInstance(), DIRECTINPUT_VERSION, IID_IDirectInput8,
+		WinApp::GetInstance()->GetHInstance(), DIRECTINPUT_VERSION, IID_IDirectInput8,
 		(void**)&directInput, nullptr);
 	assert(SUCCEEDED(hr));
 
@@ -38,7 +35,7 @@ void Input::Initialize(WinApp* winApp)
 	assert(SUCCEEDED(hr));
 	//排他制御レベルのセット
 	hr = keyboard->SetCooperativeLevel(
-		winApp_->GetHwnd(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
+		WinApp::GetInstance()->GetHwnd(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
 	assert(SUCCEEDED(hr));
 
 	//ゲームパッドデバイスの生成

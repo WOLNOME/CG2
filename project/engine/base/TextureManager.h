@@ -7,8 +7,6 @@
 //DirectXTex
 #include "DirectXTex.h"
 
-class DirectXCommon;
-class SrvManager;
 class TextureManager
 {
 private://コンストラクタ等の隠蔽
@@ -22,7 +20,7 @@ public://公開メンバ関数
 	//シングルトンインスタンスの取得
 	static TextureManager* GetInstance();
 	//初期化
-	void Initialize(DirectXCommon* dxCommon,SrvManager* srvManager);
+	void Initialize();
 	//終了
 	void Finalize();
 
@@ -52,8 +50,7 @@ public:
 	//SRVインデックスの開始番号
 	static uint32_t kSRVIndexTop;
 private://インスタンス
-	DirectXCommon* dxCommon;
-	SrvManager* srvManager;
+	
 private://メンバ変数
 	//テクスチャデータ
 	std::unordered_map<std::string, TextureData> textureDatas;
