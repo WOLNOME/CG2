@@ -17,18 +17,7 @@ void Model::Initialize(const std::string& directorypath, const std::string& file
 
 void Model::Update()
 {
-	//レンダリングパイプライン
-	Matrix4x4 worldMatrix = MakeAffineMatrix(modelResource_.transform.scale, modelResource_.transform.rotate, modelResource_.transform.translate);
-	Matrix4x4 worldViewProjectionMatrix;
-	if (camera_) {
-		const Matrix4x4& viewProjectionMatrix = camera_->GetViewProjectionMatrix();
-		worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
-	}else{
-		//一応カメラが無くても処理は通るが正しく表示はされない
-		worldViewProjectionMatrix = worldMatrix;
-	}
-	modelResource_.wvpData->WVP = worldViewProjectionMatrix;
-	modelResource_.wvpData->World = worldMatrix;
+	
 }
 
 void Model::Draw()
@@ -38,8 +27,6 @@ void Model::Draw()
 		DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &modelResource_.vertexBufferView.at(index));
 		//マテリアルCBufferの場所を設定
 		DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, modelResource_.materialResource.at(index)->GetGPUVirtualAddress());
-		//座標変換行列CBufferの場所を設定
-		DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, modelResource_.wvpResource->GetGPUVirtualAddress());
 		//モデルにテクスチャがない場合、スキップ
 		if (modelResource_.modelData.at(index).material.textureFilePath.size() != 0) {
 			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
@@ -224,24 +211,22 @@ Model::Struct::ModelResource Model::MakeModelResource(const std::string& resourc
 	Struct::ModelResource modelResource_;
 
 	modelResource_.modelData = LoadObjFile(resourceFileName, objFileName);
-	const size_t kModelNum = modelResource_.modelData.size();
+	modelNum_ = modelResource_.modelData.size();
 	//std::vector型の要素数を確定
-	modelResource_.vertexResource.resize(kModelNum);
-	modelResource_.vertexBufferView.resize(kModelNum);
-	modelResource_.vertexData.resize(kModelNum);
-	modelResource_.materialResource.resize(kModelNum);
-	modelResource_.materialData.resize(kModelNum);
-	modelResource_.textureResorce.resize(kModelNum);
-	modelResource_.textureSrvHandleCPU.resize(kModelNum);
-	modelResource_.textureSrvHandleGPU.resize(kModelNum);
-	modelResource_.uvTransform.resize(kModelNum);
-	for (size_t index = 0; index < kModelNum; index++) {
+	modelResource_.vertexResource.resize(modelNum_);
+	modelResource_.vertexBufferView.resize(modelNum_);
+	modelResource_.vertexData.resize(modelNum_);
+	modelResource_.materialResource.resize(modelNum_);
+	modelResource_.materialData.resize(modelNum_);
+	modelResource_.textureResorce.resize(modelNum_);
+	modelResource_.textureSrvHandleCPU.resize(modelNum_);
+	modelResource_.textureSrvHandleGPU.resize(modelNum_);
+	modelResource_.uvTransform.resize(modelNum_);
+	for (size_t index = 0; index < modelNum_; index++) {
 		//頂点用リソースを作る
 		modelResource_.vertexResource.at(index) = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Struct::VertexData) * modelResource_.modelData.at(index).vertices.size());
 		//マテリアル用のリソースを作る。
 		modelResource_.materialResource.at(index) = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Struct::Material));
-		//WVP用のリソースを作る
-		modelResource_.wvpResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Struct::TransformationMatrix));
 		//頂点バッファービューを作成
 		modelResource_.vertexBufferView.at(index).BufferLocation = modelResource_.vertexResource.at(index)->GetGPUVirtualAddress();
 		modelResource_.vertexBufferView.at(index).SizeInBytes = UINT(sizeof(Struct::VertexData) * modelResource_.modelData.at(index).vertices.size());
@@ -250,14 +235,10 @@ Model::Struct::ModelResource Model::MakeModelResource(const std::string& resourc
 		modelResource_.vertexResource.at(index)->Map(0, nullptr, reinterpret_cast<void**>(&modelResource_.vertexData.at(index)));
 		std::memcpy(modelResource_.vertexData.at(index), modelResource_.modelData.at(index).vertices.data(), sizeof(Struct::VertexData) * modelResource_.modelData.at(index).vertices.size());
 		modelResource_.materialResource.at(index)->Map(0, nullptr, reinterpret_cast<void**>(&modelResource_.materialData.at(index)));
-		modelResource_.wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&modelResource_.wvpData));
 		//白を書き込んでおく
 		modelResource_.materialData.at(index)->color = modelResource_.modelData.at(index).material.colorData;
 		//ライティング
 		modelResource_.materialData.at(index)->lightingKind = HalfLambert;
-		//Transform
-		modelResource_.wvpData->WVP = MakeIdentity4x4();
-		modelResource_.wvpData->World = MakeIdentity4x4();
 		//uvTransform
 		modelResource_.materialData.at(index)->uvTransform = MakeIdentity4x4();
 		//テクスチャを持っているか
@@ -267,12 +248,6 @@ Model::Struct::ModelResource Model::MakeModelResource(const std::string& resourc
 			isTexture = false;
 		}
 		modelResource_.materialData.at(index)->isTexture = isTexture;
-		//トランスフォーム
-		modelResource_.transform = {
-			{1.0f,1.0f,1.0f},
-			{0.0f,0.0f,0.0f},
-			{0.0f,0.0f,0.0f}
-		};
 		//UVトランスフォーム
 		modelResource_.uvTransform.at(index) = {
 			{1.0f,1.0f,1.0f},

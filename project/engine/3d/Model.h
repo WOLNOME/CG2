@@ -25,11 +25,6 @@ private://インナークラス
 			Matrix4x4 uvTransform;
 			int32_t isTexture;
 		};
-		//座標変換行列データ
-		struct TransformationMatrix {
-			Matrix4x4 WVP;
-			Matrix4x4 World;
-		};
 		//マテリアルデータ
 		struct MaterialData {
 			std::string textureFilePath;
@@ -50,9 +45,6 @@ private://インナークラス
 			std::vector<VertexData*> vertexData;
 			std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResource;
 			std::vector<Material*> materialData;
-			Microsoft::WRL::ComPtr<ID3D12Resource> wvpResource;
-			TransformationMatrix* wvpData;
-			Transform transform;
 			std::vector<Transform> uvTransform;
 			std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> textureResorce;
 			std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> textureSrvHandleCPU;
@@ -60,31 +52,31 @@ private://インナークラス
 		};
 	};
 public:
-	void Initialize(const std::string& directorypath,const std::string& filename);
+	void Initialize(const std::string& directorypath, const std::string& filename);
 	void Update();
 	void Draw();
+
 public://ゲッター
-	const Vector3& GetScale() { return modelResource_.transform.scale; }
-	const Vector3& GetRotate() { return modelResource_.transform.rotate; }
-	const Vector3& GetTranslate() { return modelResource_.transform.translate; }
+	Camera* GetCamera() { return camera_; }
 public://セッター
-	void SetScale(const Vector3& scale) { modelResource_.transform.scale = scale; }
-	void SetRotate(const Vector3& rotate) { modelResource_.transform.rotate = rotate; }
-	void SetTranslate(const Vector3& translate) { modelResource_.transform.translate = translate; }
 	void SetCamera(Camera* camera) { camera_ = camera; }
 
 private:
 	//.mtlファイルの読み取り
-	static Struct::MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& fileName, const std::string& materialName);
+	Struct::MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& fileName, const std::string& materialName);
 	//.objファイルの読み取り
-	static std::vector<Struct::ModelData> LoadObjFile(const std::string& directoryPath, const std::string& fileName);
+	std::vector<Struct::ModelData> LoadObjFile(const std::string& directoryPath, const std::string& fileName);
 	//モデルリソース作成関数
 	Struct::ModelResource MakeModelResource(const std::string& resourceFileName, const std::string& objFileName);
 	//テクスチャ読み込み
 	void SettingTexture();
 private:
+	//カメラ
 	Camera* camera_ = nullptr;
 	//モデル用リソース
 	Struct::ModelResource modelResource_;
+	//モデル数
+	size_t modelNum_;
+
 };
 

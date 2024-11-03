@@ -30,6 +30,7 @@ private://メンバ変数
 
 	Sprite* sprite_ = nullptr;
 	Sprite* sprite2_ = nullptr;
+	Object3d* obj_ = nullptr;
 	Vector2 sprite2Position;
 	Audio* audio_ = nullptr;
 };

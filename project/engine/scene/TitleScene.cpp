@@ -27,6 +27,8 @@ void TitleScene::Initialize()
 	sprite2_->SetPosition(sprite2Position);
 	sprite2_->SetSize({ 300.0f,300.0f });
 
+
+
 	audio_ = new Audio();
 	audio_->Initialize("Alarm01.wav");
 }

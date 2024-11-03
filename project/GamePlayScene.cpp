@@ -1,6 +1,5 @@
 #include "GamePlayScene.h"
 #include "TextureManager.h"
-#include "ModelManager.h"
 #include "ImGuiManager.h"
 #include "Object3dCommon.h"
 #include "SpriteCommon.h"
@@ -27,6 +26,9 @@ void GamePlayScene::Initialize()
 	sprite2_->SetPosition(sprite2Position);
 	sprite2_->SetSize({ 300.0f,300.0f });
 
+	obj_ = new Object3d();
+	obj_->Initialize("axis.obj");
+
 	audio_ = new Audio();
 	audio_->Initialize("Alarm01.wav");
 
@@ -35,6 +37,7 @@ void GamePlayScene::Initialize()
 void GamePlayScene::Finalize()
 {
 	delete audio_;
+	delete obj_;
 	delete sprite2_;
 	delete sprite_;
 }
@@ -48,6 +51,8 @@ void GamePlayScene::Update()
 	}
 
 	//モデルの更新
+	obj_->Update();
+	obj_->SetRotate({ 0.0f,obj_->GetRotate().y + 0.03f,0.0f });
 
 	//スプライトの更新
 	sprite_->Update();
@@ -79,6 +84,7 @@ void GamePlayScene::Draw()
 	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
+	obj_->Draw();
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
