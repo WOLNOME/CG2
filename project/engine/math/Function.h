@@ -26,6 +26,11 @@ struct Sphere {
 	float radius;
 };
 
+//AABB
+struct AABB {
+	Vector3 min;
+	Vector3 max;
+};
 
 
 //関数
@@ -33,7 +38,7 @@ Vector3 Add(const Vector3& v1, const Vector3& v2);
 
 Vector3 Subtract(const Vector3& v1, const Vector3& v2);
 
-float Multiply(const Vector3& v1, const Vector3& v2);
+Vector3 Multiply(float s, const Vector3& v);
 
 Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2);
 
@@ -72,3 +77,5 @@ Vector3 Cross(const Vector3& a, const Vector3& b);
 float Length(const Vector3& v);
 
 Vector3 Normalize(const Vector3& v);
+
+bool IsCollision(const AABB& aabb, const Vector3& point);

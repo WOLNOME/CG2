@@ -54,7 +54,7 @@ private://インナークラス
 public:
 	void Initialize(const std::string& directorypath, const std::string& filename);
 	void Update();
-	void Draw();
+	void Draw(uint32_t instancingNum = 1);
 
 public://ゲッター
 	Camera* GetCamera() { return camera_; }

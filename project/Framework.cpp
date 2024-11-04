@@ -9,6 +9,7 @@
 #include "AudioCommon.h"
 #include "SpriteCommon.h"
 #include "Object3dCommon.h"
+#include "ParticleCommon.h"
 #include "SceneManager.h"
 
 void Framework::Initialize()
@@ -46,11 +47,15 @@ void Framework::Initialize()
 	//オブジェクト3D共通部
 	Object3dCommon::GetInstance()->Initialize();
 
+	//パーティクル共通部
+	ParticleCommon::GetInstance()->Initialize();
+
 	//カメラの生成
 	camera_ = new Camera();
 	camera_->SetRotate({ 0.0f,0.0f,0.0f });
 	camera_->SetTranslate({ 0.0f,0.0f,-15.0f });
 	Object3dCommon::GetInstance()->SetDefaultCamera(camera_);
+	ParticleCommon::GetInstance()->SetDefaultCamera(camera_);
 
 	//シーンマネージャーの生成
 	SceneManager::GetInstance()->Initialize();

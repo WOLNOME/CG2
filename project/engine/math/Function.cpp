@@ -22,11 +22,9 @@ Vector3 Subtract(const Vector3& v1, const Vector3& v2)
 	return c;
 }
 
-float Multiply(const Vector3& v1, const Vector3& v2)
+Vector3 Multiply(float s, const Vector3& v)
 {
-	float c;
-	c = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
-	return c;
+	return Vector3(s * v.x, s * v.y, s * v.z);
 }
 
 Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2)
@@ -419,4 +417,15 @@ Vector3 Normalize(const Vector3& v)
 		assert("正規化できません");
 	}
 	return c;
+}
+
+bool IsCollision(const AABB& aabb, const Vector3& point)
+{
+	//点の全ての座標成分がAABB内にあるなら衝突
+	if ((point.x >= aabb.min.x && point.x <= aabb.max.x) &&
+		(point.y >= aabb.min.y && point.y <= aabb.max.y) &&
+		(point.z >= aabb.min.z && point.z <= aabb.max.z)) {
+		return true;
+	}
+	return false;
 }

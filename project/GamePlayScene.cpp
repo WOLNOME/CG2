@@ -2,6 +2,7 @@
 #include "TextureManager.h"
 #include "ImGuiManager.h"
 #include "Object3dCommon.h"
+#include "ParticleCommon.h"
 #include "SpriteCommon.h"
 #include "SceneManager.h"
 
@@ -29,6 +30,9 @@ void GamePlayScene::Initialize()
 	obj_ = new Object3d();
 	obj_->Initialize("axis.obj");
 
+	particle_ = new Particle();
+	particle_->Initialize("plane.obj");
+
 	audio_ = new Audio();
 	audio_->Initialize("Alarm01.wav");
 
@@ -37,6 +41,7 @@ void GamePlayScene::Initialize()
 void GamePlayScene::Finalize()
 {
 	delete audio_;
+	delete particle_;
 	delete obj_;
 	delete sprite2_;
 	delete sprite_;
@@ -53,6 +58,9 @@ void GamePlayScene::Update()
 	//モデルの更新
 	obj_->Update();
 	obj_->SetRotate({ 0.0f,obj_->GetRotate().y + 0.03f,0.0f });
+
+	//パーティクルの更新
+	particle_->Update();
 
 	//スプライトの更新
 	sprite_->Update();
@@ -88,6 +96,19 @@ void GamePlayScene::Draw()
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
+	///------------------------------///
+
+	//パーティクルの共通描画設定
+	ParticleCommon::GetInstance()->SettingCommonDrawing();
+
+	///------------------------------///
+	///↓↓↓↓パーティクル描画開始↓↓↓↓
+	///------------------------------///
+
+	particle_->Draw();
+
+	///------------------------------///
+	///↑↑↑↑パーティクル描画終了↑↑↑↑
 	///------------------------------///
 
 	//スプライトの共通描画設定
