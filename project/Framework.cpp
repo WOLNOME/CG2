@@ -10,6 +10,7 @@
 #include "SpriteCommon.h"
 #include "Object3dCommon.h"
 #include "ParticleCommon.h"
+#include "ParticleManager.h"
 #include "SceneManager.h"
 
 void Framework::Initialize()
@@ -57,6 +58,9 @@ void Framework::Initialize()
 	Object3dCommon::GetInstance()->SetDefaultCamera(camera_);
 	ParticleCommon::GetInstance()->SetDefaultCamera(camera_);
 
+	//パーティクルマネージャー
+	ParticleManager::GetInstance()->Initialize(camera_);
+
 	//シーンマネージャーの生成
 	SceneManager::GetInstance()->Initialize();
 
@@ -65,6 +69,7 @@ void Framework::Initialize()
 void Framework::Finalize()
 {
 	SceneManager::GetInstance()->Finalize();
+	ParticleManager::GetInstance()->Finalize();
 	delete camera_;
 	Object3dCommon::GetInstance()->Finalize();
 	SpriteCommon::GetInstance()->Finalize();
@@ -87,6 +92,8 @@ void Framework::Update()
 	Input::GetInstance()->Update();
 	//カメラの更新
 	camera_->Update();
+	//パーティクルマネージャの更新
+	ParticleManager::GetInstance()->Update();
 	//シーンマネージャー更新
 	SceneManager::GetInstance()->Update();
 

@@ -2,7 +2,7 @@
 #include "BaseScene.h"
 #include "Sprite.h"
 #include "Object3d.h"
-#include "Particle.h"
+#include "ParticleEmitter.h"
 #include "Audio.h"
 #include "Vector2.h"
 #include "Input.h"
@@ -32,7 +32,8 @@ private://メンバ変数
 	Sprite* sprite_ = nullptr;
 	Sprite* sprite2_ = nullptr;
 	Object3d* obj_ = nullptr;
-	Particle* particle_ = nullptr;
+	ParticleEmitter* emitter1_ = nullptr;
+	ParticleEmitter* emitter2_ = nullptr;
 	Vector2 sprite2Position;
 	Audio* audio_ = nullptr;
 };

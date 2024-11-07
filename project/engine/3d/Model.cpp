@@ -17,10 +17,10 @@ void Model::Initialize(const std::string& directorypath, const std::string& file
 
 void Model::Update()
 {
-	
+
 }
 
-void Model::Draw(uint32_t instancingNum)
+void Model::Draw(const std::string& textureFilePath, uint32_t instancingNum)
 {
 	for (size_t index = 0; index < modelResource_.modelData.size(); index++) {
 		//頂点バッファービューを設定
@@ -29,8 +29,18 @@ void Model::Draw(uint32_t instancingNum)
 		DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, modelResource_.materialResource.at(index)->GetGPUVirtualAddress());
 		//モデルにテクスチャがない場合、スキップ
 		if (modelResource_.modelData.at(index).material.textureFilePath.size() != 0) {
-			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
-			DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(modelResource_.modelData.at(index).material.textureFilePath));
+			//テクスチャパス未入力
+			if (textureFilePath.size() == 0) {
+				//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
+				DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(modelResource_.modelData.at(index).material.textureFilePath));
+			}
+			else {
+				//テクスチャマネージャに登録
+				TextureManager::GetInstance()->LoadTexture("Resources/" + textureFilePath);
+				//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
+				DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU("Resources/" + textureFilePath));
+			}
+
 		}
 		//描画
 		DirectXCommon::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelResource_.modelData.at(index).vertices.size()), instancingNum, 0, 0);
@@ -262,9 +272,11 @@ Model::Struct::ModelResource Model::MakeModelResource(const std::string& resourc
 void Model::SettingTexture()
 {
 	for (size_t index = 0; index < modelResource_.modelData.size(); index++) {
+
 		//.objの参照しているテクスチャファイル読み込み
 		TextureManager::GetInstance()->LoadTexture(modelResource_.modelData.at(index).material.textureFilePath);
 		//読み込んだテクスチャの番号を取得
 		modelResource_.modelData.at(index).material.textureIndex = TextureManager::GetInstance()->GetSrvIndex(modelResource_.modelData.at(index).material.textureFilePath);
+
 	}
 }

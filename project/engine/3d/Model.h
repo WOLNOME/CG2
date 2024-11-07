@@ -8,7 +8,7 @@
 class Camera;
 class Model
 {
-private://インナークラス
+public://インナークラス
 	class Struct {
 	public:
 		//頂点データ
@@ -54,10 +54,12 @@ private://インナークラス
 public:
 	void Initialize(const std::string& directorypath, const std::string& filename);
 	void Update();
-	void Draw(uint32_t instancingNum = 1);
+	void Draw(const std::string& textureFilePath = "", uint32_t instancingNum = 1);
 
 public://ゲッター
 	Camera* GetCamera() { return camera_; }
+	std::vector<Struct::ModelData> GetMaterialDatas()const { return modelResource_.modelData; }
+
 public://セッター
 	void SetCamera(Camera* camera) { camera_ = camera; }
 
