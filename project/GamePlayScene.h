@@ -6,6 +6,7 @@
 #include "Audio.h"
 #include "Vector2.h"
 #include "Input.h"
+#include <memory>
 
 class GamePlayScene : public BaseScene
 {
@@ -29,11 +30,11 @@ public:
 private://メンバ変数
 	Input* input_ = nullptr;
 
-	Sprite* sprite_ = nullptr;
-	Sprite* sprite2_ = nullptr;
-	Object3d* obj_ = nullptr;
-	Particle* particle_ = nullptr;
+	std::unique_ptr<Sprite> sprite_ = nullptr;
+	std::unique_ptr<Sprite> sprite2_ = nullptr;
+	std::unique_ptr<Object3d> obj_ = nullptr;
+	std::unique_ptr<Particle> particle_ = nullptr;
 	Vector2 sprite2Position;
-	Audio* audio_ = nullptr;
+	std::unique_ptr<Audio> audio_ = nullptr;
 };
 

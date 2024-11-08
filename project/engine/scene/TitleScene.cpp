@@ -14,30 +14,26 @@ void TitleScene::Initialize()
 	input_ = Input::GetInstance();
 
 	//ゲームシーン変数の初期化
-	sprite_ = new Sprite();
+	sprite_ = std::make_unique<Sprite>();
 	TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
 	sprite_->Initialize("Resources/uvChecker.png");
 	sprite_->SetAnchorPoint({ 0.5f,0.5f });
 	sprite_->SetFlipX(true);
 
-	sprite2_ = new Sprite();
+	sprite2_ = std::make_unique<Sprite>();
 	TextureManager::GetInstance()->LoadTexture("Resources/uvChecker.png");
 	sprite2_->Initialize("Resources/uvChecker.png");
 	sprite2Position = { 100.0f,100.0f };
 	sprite2_->SetPosition(sprite2Position);
 	sprite2_->SetSize({ 300.0f,300.0f });
 
-
-
-	audio_ = new Audio();
+	audio_ = std::make_unique<Audio>();
 	audio_->Initialize("Alarm01.wav");
 }
 
 void TitleScene::Finalize()
 {
-	delete audio_;
-	delete sprite2_;
-	delete sprite_;
+	
 }
 
 void TitleScene::Update()

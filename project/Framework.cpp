@@ -51,11 +51,11 @@ void Framework::Initialize()
 	ParticleCommon::GetInstance()->Initialize();
 
 	//カメラの生成
-	camera_ = new Camera();
+	camera_ = std::make_unique<Camera>();
 	camera_->SetRotate({ 0.0f,0.0f,0.0f });
 	camera_->SetTranslate({ 0.0f,0.0f,-15.0f });
-	Object3dCommon::GetInstance()->SetDefaultCamera(camera_);
-	ParticleCommon::GetInstance()->SetDefaultCamera(camera_);
+	Object3dCommon::GetInstance()->SetDefaultCamera(camera_.get());
+	ParticleCommon::GetInstance()->SetDefaultCamera(camera_.get());
 
 	//シーンマネージャーの生成
 	SceneManager::GetInstance()->Initialize();
@@ -65,7 +65,7 @@ void Framework::Initialize()
 void Framework::Finalize()
 {
 	SceneManager::GetInstance()->Finalize();
-	delete camera_;
+	camera_.reset();
 	Object3dCommon::GetInstance()->Finalize();
 	SpriteCommon::GetInstance()->Finalize();
 	AudioCommon::GetInstance()->Finalize();

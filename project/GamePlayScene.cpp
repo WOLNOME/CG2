@@ -14,37 +14,32 @@ void GamePlayScene::Initialize()
 	input_ = Input::GetInstance();
 
 	//ゲームシーン変数の初期化
-	sprite_ = new Sprite();
+	sprite_ = std::make_unique<Sprite>();
 	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
 	sprite_->Initialize("Resources/monsterBall.png");
 	sprite_->SetAnchorPoint({ 0.5f,0.5f });
 	sprite_->SetFlipX(true);
 
-	sprite2_ = new Sprite();
+	sprite2_ = std::make_unique<Sprite>();
 	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
 	sprite2_->Initialize("Resources/monsterBall.png");
 	sprite2Position = { 100.0f,100.0f };
 	sprite2_->SetPosition(sprite2Position);
 	sprite2_->SetSize({ 300.0f,300.0f });
 
-	obj_ = new Object3d();
+	obj_ = std::make_unique<Object3d>();
 	obj_->Initialize("axis.obj");
 
-	particle_ = new Particle();
+	particle_ = std::make_unique<Particle>();
 	particle_->Initialize("plane.obj");
 
-	audio_ = new Audio();
+	audio_ = std::make_unique<Audio>();
 	audio_->Initialize("Alarm01.wav");
 
 }
 
 void GamePlayScene::Finalize()
 {
-	delete audio_;
-	delete particle_;
-	delete obj_;
-	delete sprite2_;
-	delete sprite_;
 }
 
 void GamePlayScene::Update()

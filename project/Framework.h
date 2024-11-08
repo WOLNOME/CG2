@@ -36,7 +36,7 @@ public:
 	void Run();
 protected://基盤インスタンス
 	D3DResourceLeakChecker leakChecker;
-	Camera* camera_ = nullptr;
+	std::unique_ptr<Camera> camera_ = nullptr;
 	bool isOver = false;
 	
 };
