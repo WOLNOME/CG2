@@ -3,7 +3,6 @@
 #include "Object3dCommon.h"
 #include "fstream"
 #include "sstream"
-#include "Function.h"
 #include "TextureManager.h"
 #include "ModelManager.h"
 #include "WinApp.h"
@@ -36,11 +35,11 @@ void Object3d::Initialize(const std::string& filePath)
 void Object3d::Update()
 {
 	//レンダリングパイプライン
-	Matrix4x4 worldMatrix = MakeAffineMatrix(object3dResource_.transform.scale, object3dResource_.transform.rotate, object3dResource_.transform.translate);
+	Matrix4x4 worldMatrix = MyMath::MakeAffineMatrix(object3dResource_.transform.scale, object3dResource_.transform.rotate, object3dResource_.transform.translate);
 	Matrix4x4 worldViewProjectionMatrix;
 	if (model_->GetCamera()) {
 		const Matrix4x4& viewProjectionMatrix = model_->GetCamera()->GetViewProjectionMatrix();
-		worldViewProjectionMatrix = Multiply(worldMatrix, viewProjectionMatrix);
+		worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, viewProjectionMatrix);
 	}
 	else {
 		//一応カメラが無くても処理は通るが正しく表示はされない
@@ -74,8 +73,8 @@ Object3d::Struct::Object3dResource Object3d::MakeObject3dResource()
 	//リソースにデータを書き込む
 	object3dResource_.wvpResource->Map(0, nullptr, reinterpret_cast<void**>(&object3dResource_.wvpData));
 	//データに書き込む
-	object3dResource_.wvpData->WVP = MakeIdentity4x4();
-	object3dResource_.wvpData->World = MakeIdentity4x4();
+	object3dResource_.wvpData->WVP = MyMath::MakeIdentity4x4();
+	object3dResource_.wvpData->World = MyMath::MakeIdentity4x4();
 	//トランスフォーム
 	object3dResource_.transform = {
 		{1.0f,1.0f,1.0f},

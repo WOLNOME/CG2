@@ -3,7 +3,7 @@
 #include <wrl.h>
 #include <vector>
 #include <string>
-#include "Function.h"
+#include "MyMath.h"
 
 class Camera;
 class Model

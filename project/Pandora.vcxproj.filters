@@ -61,6 +61,12 @@
     <Filter Include="ヘッダー ファイル\scene">
       <UniqueIdentifier>{0c944ca3-4701-498a-b6ff-bc05dcfd1d99}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\scenebase">
+      <UniqueIdentifier>{4f9159ad-2784-4528-8688-30cef94c225f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\scenebase">
+      <UniqueIdentifier>{06c32eda-a616-48b7-84d6-90c64705451b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -108,9 +114,6 @@
     <ClCompile Include="engine\base\D3DResourceLeakChecker.cpp">
       <Filter>ソース ファイル\base</Filter>
     </ClCompile>
-    <ClCompile Include="engine\math\Function.cpp">
-      <Filter>ソース ファイル\math</Filter>
-    </ClCompile>
     <ClCompile Include="engine\3d\Model.cpp">
       <Filter>ソース ファイル\3d</Filter>
     </ClCompile>
@@ -153,19 +156,10 @@
     <ClCompile Include="Framework.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
-    <ClCompile Include="engine\scene\AbstractSceneFactory.cpp">
-      <Filter>ソース ファイル\scene</Filter>
-    </ClCompile>
     <ClCompile Include="engine\scene\BaseScene.cpp">
       <Filter>ソース ファイル\scene</Filter>
     </ClCompile>
     <ClCompile Include="GamePlayScene.cpp">
-      <Filter>ソース ファイル\scene</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\scene\SceneFactory.cpp">
-      <Filter>ソース ファイル\scene</Filter>
-    </ClCompile>
-    <ClCompile Include="engine\scene\SceneManager.cpp">
       <Filter>ソース ファイル\scene</Filter>
     </ClCompile>
     <ClCompile Include="engine\scene\TitleScene.cpp">
@@ -176,6 +170,18 @@
     </ClCompile>
     <ClCompile Include="ParticleCommon.cpp">
       <Filter>ソース ファイル</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scenebase\AbstractSceneFactory.cpp">
+      <Filter>ソース ファイル\scenebase</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scenebase\SceneManager.cpp">
+      <Filter>ソース ファイル\scenebase</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\scenebase\SceneFactory.cpp">
+      <Filter>ソース ファイル\scenebase</Filter>
+    </ClCompile>
+    <ClCompile Include="engine\math\MyMath.cpp">
+      <Filter>ソース ファイル\math</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -208,9 +214,6 @@
     </ClInclude>
     <ClInclude Include="engine\base\DirectXCommon.h">
       <Filter>ヘッダー ファイル\base</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\math\Function.h">
-      <Filter>ヘッダー ファイル\math</Filter>
     </ClInclude>
     <ClInclude Include="engine\input\Input.h">
       <Filter>ヘッダー ファイル\input</Filter>
@@ -284,19 +287,10 @@
     <ClInclude Include="Framework.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
-    <ClInclude Include="engine\scene\AbstractSceneFactory.h">
-      <Filter>ヘッダー ファイル\scene</Filter>
-    </ClInclude>
     <ClInclude Include="engine\scene\BaseScene.h">
       <Filter>ヘッダー ファイル\scene</Filter>
     </ClInclude>
     <ClInclude Include="GamePlayScene.h">
-      <Filter>ヘッダー ファイル\scene</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\scene\SceneFactory.h">
-      <Filter>ヘッダー ファイル\scene</Filter>
-    </ClInclude>
-    <ClInclude Include="engine\scene\SceneManager.h">
       <Filter>ヘッダー ファイル\scene</Filter>
     </ClInclude>
     <ClInclude Include="engine\scene\TitleScene.h">
@@ -307,6 +301,18 @@
     </ClInclude>
     <ClInclude Include="ParticleCommon.h">
       <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scenebase\AbstractSceneFactory.h">
+      <Filter>ヘッダー ファイル\scenebase</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scenebase\SceneFactory.h">
+      <Filter>ヘッダー ファイル\scenebase</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\scenebase\SceneManager.h">
+      <Filter>ヘッダー ファイル\scenebase</Filter>
+    </ClInclude>
+    <ClInclude Include="engine\math\MyMath.h">
+      <Filter>ヘッダー ファイル\math</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

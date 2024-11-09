@@ -2,7 +2,7 @@
 #include <wrl.h>
 #include <d3d12.h>
 #include <string>
-#include"Function.h"
+#include "MyMath.h"
 
 class Sprite
 {

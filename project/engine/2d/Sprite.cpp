@@ -53,11 +53,11 @@ void Sprite::Initialize(std::string textureFilePath)
 	//マテリアルデータ
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	materialData->lightingKind = NoneLighting;
-	materialData->uvTransform = MakeIdentity4x4();
+	materialData->uvTransform = MyMath::MakeIdentity4x4();
 	materialData->isTexture = true;
 	//座標変換行列データ
-	transformationMatrixData->WVP = MakeIdentity4x4();
-	transformationMatrixData->World = MakeIdentity4x4();
+	transformationMatrixData->WVP = MyMath::MakeIdentity4x4();
+	transformationMatrixData->World = MyMath::MakeIdentity4x4();
 
 	//テクスチャファイルパスを受け取る
 	textureFilePath_ = textureFilePath;
@@ -110,10 +110,10 @@ void Sprite::Update()
 
 
 	//レンダリングパイプライン
-	Matrix4x4 worldMatrix = MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
-	Matrix4x4 viewMatrix = MakeIdentity4x4();
-	Matrix4x4 projectionMatrix = MakeOrthographicMatrix(0.0f, 0.0f, (float)WinApp::kClientWidth, (float)WinApp::kClientHeight, 0.0f, 100.0f);
-	Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+	Matrix4x4 worldMatrix = MyMath::MakeAffineMatrix(transform.scale, transform.rotate, transform.translate);
+	Matrix4x4 viewMatrix = MyMath::MakeIdentity4x4();
+	Matrix4x4 projectionMatrix = MyMath::MakeOrthographicMatrix(0.0f, 0.0f, (float)WinApp::kClientWidth, (float)WinApp::kClientHeight, 0.0f, 100.0f);
+	Matrix4x4 worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, MyMath::Multiply(viewMatrix, projectionMatrix));
 	transformationMatrixData->WVP = worldViewProjectionMatrix;
 	transformationMatrixData->World = worldMatrix;
 

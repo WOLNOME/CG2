@@ -5,7 +5,7 @@
 #include "TextureManager.h"
 #include "ModelManager.h"
 #include "ParticleCommon.h"
-#include "imgui.h"
+#include "ImGuiManager.h"
 #include <fstream>
 #include <sstream>
 #include <random>
@@ -72,30 +72,30 @@ void Particle::Update()
 
 		//フィールドの処理
 		if (isField) {
-			if (IsCollision(accelerationField.area, (*particleIterator).transform.translate)) {
-				(*particleIterator).velocity = Add((*particleIterator).velocity, Multiply(kDeltaTime, accelerationField.acceleration));
+			if (MyMath::IsCollision(accelerationField.area, (*particleIterator).transform.translate)) {
+				(*particleIterator).velocity = MyMath::Add((*particleIterator).velocity, MyMath::Multiply(kDeltaTime, accelerationField.acceleration));
 			}
 		}
 
 		//速度加算処理
-		(*particleIterator).transform.translate = Add((*particleIterator).transform.translate, Multiply(kDeltaTime, (*particleIterator).velocity));
+		(*particleIterator).transform.translate = MyMath::Add((*particleIterator).transform.translate, MyMath::Multiply(kDeltaTime, (*particleIterator).velocity));
 		//α値設定
 		float alpha = 1.0f - ((*particleIterator).currentTime / (*particleIterator).lifeTime);
 
 		//レンダリングパイプライン
-		Matrix4x4 cameraMatrix = MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
-		Matrix4x4 backToFrontMatrix = MakeRotateYMatrix(std::numbers::pi_v<float>);
-		Matrix4x4 billboardMatrix = Multiply(backToFrontMatrix, cameraMatrix);
+		Matrix4x4 cameraMatrix = MyMath::MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
+		Matrix4x4 backToFrontMatrix = MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>);
+		Matrix4x4 billboardMatrix = MyMath::Multiply(backToFrontMatrix, cameraMatrix);
 		billboardMatrix.m[3][0] = 0.0f;
 		billboardMatrix.m[3][1] = 0.0f;
 		billboardMatrix.m[3][2] = 0.0f;
-		Matrix4x4 worldMatrix = Multiply(Multiply(MakeScaleMatrix((*particleIterator).transform.scale), billboardMatrix), MakeTranslateMatrix((*particleIterator).transform.translate));
+		Matrix4x4 worldMatrix = MyMath::Multiply(MyMath::Multiply(MyMath::MakeScaleMatrix((*particleIterator).transform.scale), billboardMatrix), MyMath::MakeTranslateMatrix((*particleIterator).transform.translate));
 		if (!isBillboard) {
-			worldMatrix = MakeAffineMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, (*particleIterator).transform.translate);
+			worldMatrix = MyMath::MakeAffineMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, (*particleIterator).transform.translate);
 		}
-		Matrix4x4 viewMatrix = Inverse(cameraMatrix);
-		Matrix4x4 projectionMatrix = MakePerspectiveFovMatrix(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);
-		Matrix4x4 worldViewProjectionMatrix = Multiply(worldMatrix, Multiply(viewMatrix, projectionMatrix));
+		Matrix4x4 viewMatrix = MyMath::Inverse(cameraMatrix);
+		Matrix4x4 projectionMatrix = MyMath::MakePerspectiveFovMatrix(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);
+		Matrix4x4 worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, MyMath::Multiply(viewMatrix, projectionMatrix));
 		particleResource_.instancingData[instanceNum].WVP = worldViewProjectionMatrix;
 		particleResource_.instancingData[instanceNum].World = worldMatrix;
 		particleResource_.instancingData[instanceNum].color = (*particleIterator).color;
@@ -145,8 +145,8 @@ Particle::Struct::ParticleResource Particle::MakeParticleResource()
 	particleResource.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&particleResource.instancingData));
 	//データに書き込む
 	for (uint32_t index = 0; index < kNumMaxInstance_; ++index) {
-		particleResource.instancingData[index].WVP = MakeIdentity4x4();
-		particleResource.instancingData[index].World = MakeIdentity4x4();
+		particleResource.instancingData[index].WVP = MyMath::MakeIdentity4x4();
+		particleResource.instancingData[index].World = MyMath::MakeIdentity4x4();
 		particleResource.instancingData[index].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 	//トランスフォーム
@@ -189,7 +189,7 @@ Particle::Struct::Particle Particle::MakeNewParticle(const Vector3& translate)
 	particle.transform.rotate = { 0.0f,0.0f,0.0f };
 	std::uniform_real_distribution<float> distribution(-1.0f, 1.0f);
 	Vector3 randomTranslate = { distribution(randomEngine),distribution(randomEngine) ,distribution(randomEngine) };
-	particle.transform.translate = Add(translate, randomTranslate);
+	particle.transform.translate = MyMath::Add(translate, randomTranslate);
 	//速度
 	particle.velocity = { distribution(randomEngine) ,distribution(randomEngine) ,distribution(randomEngine) };
 	//色

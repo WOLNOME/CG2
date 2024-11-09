@@ -240,7 +240,7 @@ Model::Struct::ModelResource Model::MakeModelResource(const std::string& resourc
 		//ライティング
 		modelResource_.materialData.at(index)->lightingKind = HalfLambert;
 		//uvTransform
-		modelResource_.materialData.at(index)->uvTransform = MakeIdentity4x4();
+		modelResource_.materialData.at(index)->uvTransform = MyMath::MakeIdentity4x4();
 		//テクスチャを持っているか
 		bool isTexture = true;
 		if (modelResource_.modelData.at(index).material.textureFilePath.size() == 0) {
