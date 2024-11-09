@@ -54,9 +54,12 @@ void DirectXCommon::Initialize()
 void DirectXCommon::Finalize()
 {
 	//イベント
-	CloseHandle(fenceEvent);
-	delete instance;
-	instance = nullptr;
+	if (fenceEvent) {
+		CloseHandle(fenceEvent);
+	}
+	
+	//インスタンスの破棄
+	DeleteInstance();
 }
 
 void DirectXCommon::PreDraw()
@@ -230,6 +233,14 @@ void DirectXCommon::GenerateDevice()
 	}
 #endif // _DEBUG
 
+}
+
+void DirectXCommon::DeleteInstance()
+{
+	if (instance) {
+		delete instance;
+		instance = nullptr;
+	}
 }
 
 void DirectXCommon::InitCommand()

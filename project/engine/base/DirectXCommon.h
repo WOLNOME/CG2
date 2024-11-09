@@ -29,11 +29,14 @@ private://コンストラクタ等の隠蔽
 public:
 	//シングルトンインスタンスの取得
 	static DirectXCommon* GetInstance();
+	//インスタンスの破棄
+	void DeleteInstance();
 public:
 	//初期化
 	void Initialize();
 	//終了
 	void Finalize();
+
 
 	//描画前処理
 	void PreDraw();
