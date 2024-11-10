@@ -2,29 +2,26 @@
 #include <wrl.h>
 #define DIRECTINPUT_VERSION	0x0800
 #include <dinput.h>
+#include "Vector2.h"
 
 ///ゲームパッドのコマンド
-//ゲームパッドキーボタンの種類
-enum ButtonKind
-{
-	UpButton,
-	DownButton,
-	LeftButton,
-	RightButton,
-	Button01,
-	Button02,
-	ButtonKindMax,
+enum GamepadButton {
+	ButtonA,     // Aボタン
+	ButtonB,     // Bボタン
+	ButtonX,     // Xボタン
+	ButtonY,     // Yボタン
+	LeftShoulder, // LBボタン
+	RightShoulder, // RBボタン
+	Back,        // BACKボタン
+	Start,       // STARTボタン
+	LeftThumb,   // 左スティック押し込み
+	RightThumb,  // 右スティック押し込み
+	DPadUp,     // 十字キー 上
+	DPadDown,   // 十字キー 下
+	DPadLeft,   // 十字キー 左
+	DPadRight   // 十字キー 右
 };
 
-//ゲームパッドボタンの状態
-enum ButtonState
-{
-	ButtonStateNone,
-	ButtonStateDown,
-	ButtonStatePush,
-	ButtonStateUp,
-	ButtonStateMax,
-};
 
 //入力
 class Input
@@ -51,13 +48,27 @@ public://メンバ関数
 	//終了
 	void Finalize();
 
+private://非公開メンバ関数
+	//ダイレクトインプットの初期化
+	void InitDirectInput();
+	//キーボードデバイスの生成
+	void GenerateKeyboard();
+	//ゲームパッドデバイスの生成
+	void GenerateGamepad();
+	
 public://固有の処理
 	bool PushKey(BYTE keyNumber);
 	bool TriggerKey(BYTE keyNumber);
-
+	bool PushButton(GamepadButton button);
+	bool TriggerButton(GamepadButton button);
+	Vector2 GetLeftStickDir();
+	Vector2 GetRightStickDir();
 private://インスタンス
 
 private://メンバ変数
+	//DiretInput1
+	ComPtr<IDirectInput8> directInput;
+
 	//キーボードデバイス
 	ComPtr<IDirectInputDevice8> keyboard;
 	//全キーの状態
@@ -67,6 +78,7 @@ private://メンバ変数
 
 	//ゲームパッドデバイス
 	ComPtr<IDirectInputDevice8> gamepad;
-	
+	DIJOYSTATE padData;
+	DIJOYSTATE prePadData;
 
 };

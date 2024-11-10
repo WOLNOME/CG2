@@ -52,15 +52,16 @@ struct Vector3 final {
 	//ベクトルを正規化した値を出力
 	Vector3 Normalized() const {
 		float len = Length();
-		if (len == 0.0f)
-			throw std::runtime_error("Cannot normalize a zero-length vector");
+		if (len == 0.0f) return Vector3(0.0f, 0.0f, 0.0f);
 		return Vector3(x / len, y / len, z / len);
 	}
 	//自分自身を正規化
 	Vector3& Normalize() {
 		float len = Length();
-		if (len == 0.0f)
-			throw std::runtime_error("Cannot normalize a zero-length vector");
+		if (len == 0.0f) {
+			x = y = z = 0.0f;
+			return *this;
+		}
 		x /= len;
 		y /= len;
 		z /= len;

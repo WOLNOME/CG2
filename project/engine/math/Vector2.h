@@ -47,15 +47,16 @@ struct Vector2 final {
 	//ベクトルを正規化した値を出力
 	Vector2 OutputNormalized() const {
 		float len = Length();
-		if (len == 0.0f)
-			throw std::runtime_error("Cannot normalize a zero-length vector");
+		if (len == 0.0f) return Vector2(0.0f, 0.0f);
 		return Vector2(x / len, y / len);
 	}
 	//自分自身を正規化
 	Vector2& Normalize() {
 		float len = Length();
-		if (len == 0.0f)
-			throw std::runtime_error("Cannot normalize a zero-length vector");
+		if (len == 0.0f) {
+			x = y = 0.0f;
+			return *this;
+		}
 		x /= len;
 		y /= len;
 		return *this;

@@ -64,6 +64,28 @@ void TitleScene::Update()
 	}
 	ImGui::End();
 
+	//buttonを繰り上げたりする
+	if (input_->TriggerKey(DIK_UP)) {
+		button++;
+	}
+	if (input_->TriggerKey(DIK_DOWN)) {
+		button--;
+	}
+	//imguiでbuttonの値を確認
+	ImGui::Begin("button");
+	ImGui::Text("num : %d", button);
+	ImGui::End();
+	//buttonに応じたパッドボタンが押されているかの確認処理
+	if (input_->PushButton((GamepadButton)button)) {
+		ImGui::Begin("get");
+		ImGui::End();
+	}
+
+	//Lスティックの傾き量でスプライトを移動
+	sprite_->SetPosition(sprite_->GetPosition() + (input_->GetRightStickDir()*5));
+
+
+
 #endif // _DEBUG
 }
 

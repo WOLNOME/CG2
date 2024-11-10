@@ -4,6 +4,31 @@
 #include <algorithm>
 #include <numbers>
 
+Vector2 MyMath::Add(const Vector2& v1, const Vector2& v2)
+{
+	Vector2 c;
+	c = {
+		v1.x + v2.x,
+		v1.y + v2.y
+	};
+	return c;
+}
+
+Vector2 MyMath::Subtract(const Vector2& v1, const Vector2& v2)
+{
+	Vector2 c;
+	c = {
+		v1.x - v2.x,
+		v1.y - v2.y
+	};
+	return c;
+}
+
+Vector2 MyMath::Multiply(float s, const Vector2& v)
+{
+	return Vector2(s * v.x, s * v.y);
+}
+
 Vector3 MyMath::Add(const Vector3& v1, const Vector3& v2)
 {
 	Vector3 c;
@@ -1446,6 +1471,31 @@ bool MyMath::IsCollision(const OBB& obb, const Segment& segment)
 ///------------------------------------///
 ///       演算子のオーバーロード
 ///------------------------------------///
+
+Vector2 operator+(const Vector2& v1, const Vector2& v2)
+{
+	return MyMath::Add(v1, v2);
+}
+
+Vector2 operator-(const Vector2& v1, const Vector2& v2)
+{
+	return MyMath::Subtract(v1, v2);
+}
+
+Vector2 operator*(float s, const Vector2& v)
+{
+	return MyMath::Multiply(s, v);
+}
+
+Vector2 operator*(const Vector2& v, float s)
+{
+	return s * v;
+}
+
+Vector2 operator/(const Vector2& v, float s)
+{
+	return MyMath::Multiply(1.0f / s, v);
+}
 
 Vector3 operator+(const Vector3& v1, const Vector3& v2)
 {
