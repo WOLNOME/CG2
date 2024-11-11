@@ -3,6 +3,7 @@
 #include <xaudio2.h>
 #include <cstdint>
 #include <string>
+#include <unordered_map>
 
 #pragma comment(lib,"xaudio2.lib")
 class AudioCommon
@@ -47,6 +48,8 @@ public://公開構造体
 		BYTE* pBuffer;
 		//バッファのサイズ
 		unsigned int bufferSize;
+		// XAudio2 のソースボイス
+		IXAudio2SourceVoice* sourceVoice = nullptr;
 	};
 
 public:
@@ -55,11 +58,25 @@ public:
 	//終了
 	void Finalize();
 	//音声データの読み込み
-	static SoundData SoundLoadWave(const std::string& filename);
-	//サウンドの再生
-	void SoundPlayWave(const SoundData& soundData);
-
+	SoundData SoundLoadWave(const std::string& filename);
+	//サウンドの解放
 	void SoundUnload(SoundData* soundData);
+	// サウンドの再生
+	void SoundPlayWave(SoundData& soundData, bool loop = false);
+	// サウンドの一時停止
+	void SoundPause(SoundData& soundData);
+	// サウンドの再開
+	void SoundResume(SoundData& soundData);
+	// サウンドの停止
+	void SoundStop(SoundData& soundData);
+	// 音量の設定
+	void SetVolume(SoundData& soundData, float volume);
+	// ループ再生の設定
+	void SetLoop(SoundData& soundData, bool loop);
+
+private://非公開メンバ関数
+	//全サウンドデータの解放
+	void ClearSoundDatas();
 
 private://メンバ変数
 	//xAudio2
@@ -67,6 +84,6 @@ private://メンバ変数
 	//マスターボイス
 	IXAudio2MasteringVoice* masterVoice;
 	//全サウンドデータ
-
+	std::unordered_map<std::string, SoundData> soundDatas_;
 };
 
