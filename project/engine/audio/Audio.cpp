@@ -5,21 +5,14 @@ Audio::~Audio()
 	//サウンドデータの解放
 	AudioCommon::GetInstance()->SoundUnload(&soundData_);
 
-	// ソースボイスの破棄
-	if (sourceVoice_) {
-		sourceVoice_->Stop();
-		sourceVoice_->FlushSourceBuffers();
-		sourceVoice_->DestroyVoice();
-		sourceVoice_ = nullptr;
-	}
+
 }
 
 void Audio::Initialize(const std::string& filename)
 {
 	//WAVファイル読み込み
 	soundData_ = AudioCommon::GetInstance()->SoundLoadWave(filename);
-
-	//ソースボイスを生成
+	//ソースボイス読み込み
 	sourceVoice_ = AudioCommon::GetInstance()->GenerateSourceVoice(soundData_);
 }
 

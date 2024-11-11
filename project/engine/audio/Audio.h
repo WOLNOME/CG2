@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <functional>
+#include <memory>
 #include "AudioCommon.h"
 #include "Vector3.h"
 
@@ -51,10 +52,10 @@ public:
 	void SetOnPlaybackEndCallback(std::function<void()> callback);
 
 private:
-	//サウンドデータ
-	AudioCommon::SoundData soundData_;
-	//ソースボイス
-	IXAudio2SourceVoice* sourceVoice_ = nullptr;
+	//サウンドデータハンドル
+	uint32_t indexSoundData_;
+	//ソースボイスハンドル
+	uint32_t indexVoiceData_;
 	float volume_ = 1.0f;
 	bool isPlaying_ = false;
 	bool isPaused_ = false;

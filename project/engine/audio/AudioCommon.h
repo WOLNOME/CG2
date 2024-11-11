@@ -4,7 +4,9 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <set>
 #include <memory>
+
 
 #pragma comment(lib,"xaudio2.lib")
 class AudioCommon
@@ -49,7 +51,17 @@ public://公開構造体
 		BYTE* pBuffer;
 		//バッファのサイズ
 		unsigned int bufferSize;
+
 	};
+	//ボイスデータ
+	struct VoiceData
+	{
+		//ハンドル
+		uint32_t handle = 0u;
+		//ソースボイス
+		std::unique_ptr<IXAudio2SourceVoice> sourceVoice;
+	};
+
 
 public:
 	//初期化
@@ -57,27 +69,21 @@ public:
 	//終了
 	void Finalize();
 	//音声データの読み込み
-	SoundData SoundLoadWave(const std::string& filename);
-	//ソースボイスの生成
-	IXAudio2SourceVoice* GenerateSourceVoice(SoundData& soundData);
-	//サウンドの解放
-	void SoundUnload(SoundData* soundData);
+	uint32_t SoundLoadWave(const std::string& filename);
 	// サウンドの再生
-	void SoundPlayWave(SoundData& soundData, IXAudio2SourceVoice* sourceVoice, bool loop = false);
+	uint32_t SoundPlayWave(uint32_t soundDataHandle, bool loop = false);
 	// サウンドの一時停止
-	void SoundPause(IXAudio2SourceVoice* sourceVoice);
+	void SoundPause(uint32_t voiceDataHandle);
 	// サウンドの再開
-	void SoundResume(IXAudio2SourceVoice* sourceVoice);
+	void SoundResume(uint32_t voiceDataHandle);
 	// サウンドの停止
-	void SoundStop(IXAudio2SourceVoice* sourceVoice);
+	void SoundStop(uint32_t voiceDataHandle);
 	// 音量の設定
-	void SetVolume(IXAudio2SourceVoice* sourceVoice, float volume);
+	void SetVolume(uint32_t voiceDataHandle, float volume);
 	// ループ再生の設定
-	void SetLoop(SoundData& soundData, IXAudio2SourceVoice* sourceVoice, bool loop);
+	void SetLoop(uint32_t soundDataHandle, uint32_t voiceDataHandle, bool loop);
 
 private://非公開メンバ関数
-	//全サウンドデータの解放
-	void ClearSoundDatas();
 
 private://メンバ変数
 	//xAudio2
@@ -86,5 +92,8 @@ private://メンバ変数
 	IXAudio2MasteringVoice* masterVoice;
 	//全サウンドデータ
 	std::unordered_map<std::string, SoundData> soundDatas_;
+	//全ボイスデータ
+	std::set<VoiceData*> voiceDatas_;
+
 };
 
