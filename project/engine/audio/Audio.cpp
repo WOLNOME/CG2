@@ -4,6 +4,14 @@ Audio::~Audio()
 {
 	//サウンドデータの解放
 	AudioCommon::GetInstance()->SoundUnload(&soundData_);
+
+	// ソースボイスの破棄
+	if (sourceVoice_) {
+		sourceVoice_->Stop();
+		sourceVoice_->FlushSourceBuffers();
+		sourceVoice_->DestroyVoice();
+		sourceVoice_ = nullptr;
+	}
 }
 
 void Audio::Initialize(const std::string& filename)
@@ -11,17 +19,19 @@ void Audio::Initialize(const std::string& filename)
 	//WAVファイル読み込み
 	soundData_ = AudioCommon::GetInstance()->SoundLoadWave(filename);
 
+	//ソースボイスを生成
+	sourceVoice_ = AudioCommon::GetInstance()->GenerateSourceVoice(soundData_);
 }
 
 void Audio::Play(bool loop)
 {
 	//再生
-	AudioCommon::GetInstance()->SoundPlayWave(soundData_, loop);
+	AudioCommon::GetInstance()->SoundPlayWave(soundData_, sourceVoice_, loop);
 }
 
 void Audio::Stop()
 {
-	AudioCommon::GetInstance()->SoundStop(soundData_);
+	AudioCommon::GetInstance()->SoundStop(sourceVoice_);
 	isPlaying_ = false;
 	isPaused_ = false;
 }
@@ -29,7 +39,7 @@ void Audio::Stop()
 void Audio::Pause()
 {
 	if (isPlaying_ && !isPaused_) {
-		AudioCommon::GetInstance()->SoundPause(soundData_);
+		AudioCommon::GetInstance()->SoundPause(sourceVoice_);
 		isPaused_ = true;
 	}
 }
@@ -37,7 +47,7 @@ void Audio::Pause()
 void Audio::Resume()
 {
 	if (isPaused_) {
-		AudioCommon::GetInstance()->SoundResume(soundData_);
+		AudioCommon::GetInstance()->SoundResume(sourceVoice_);
 		isPaused_ = false;
 	}
 }
@@ -56,7 +66,7 @@ bool Audio::IsPaused() const
 void Audio::SetVolume(float volume)
 {
 	volume_ = volume;
-	AudioCommon::GetInstance()->SetVolume(soundData_, volume);
+	AudioCommon::GetInstance()->SetVolume(sourceVoice_, volume);
 }
 
 float Audio::GetVolume() const

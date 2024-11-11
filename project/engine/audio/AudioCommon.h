@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string>
 #include <unordered_map>
+#include <memory>
 
 #pragma comment(lib,"xaudio2.lib")
 class AudioCommon
@@ -48,8 +49,6 @@ public://公開構造体
 		BYTE* pBuffer;
 		//バッファのサイズ
 		unsigned int bufferSize;
-		// XAudio2 のソースボイス
-		IXAudio2SourceVoice* sourceVoice = nullptr;
 	};
 
 public:
@@ -59,20 +58,22 @@ public:
 	void Finalize();
 	//音声データの読み込み
 	SoundData SoundLoadWave(const std::string& filename);
+	//ソースボイスの生成
+	IXAudio2SourceVoice* GenerateSourceVoice(SoundData& soundData);
 	//サウンドの解放
 	void SoundUnload(SoundData* soundData);
 	// サウンドの再生
-	void SoundPlayWave(SoundData& soundData, bool loop = false);
+	void SoundPlayWave(SoundData& soundData, IXAudio2SourceVoice* sourceVoice, bool loop = false);
 	// サウンドの一時停止
-	void SoundPause(SoundData& soundData);
+	void SoundPause(IXAudio2SourceVoice* sourceVoice);
 	// サウンドの再開
-	void SoundResume(SoundData& soundData);
+	void SoundResume(IXAudio2SourceVoice* sourceVoice);
 	// サウンドの停止
-	void SoundStop(SoundData& soundData);
+	void SoundStop(IXAudio2SourceVoice* sourceVoice);
 	// 音量の設定
-	void SetVolume(SoundData& soundData, float volume);
+	void SetVolume(IXAudio2SourceVoice* sourceVoice, float volume);
 	// ループ再生の設定
-	void SetLoop(SoundData& soundData, bool loop);
+	void SetLoop(SoundData& soundData, IXAudio2SourceVoice* sourceVoice, bool loop);
 
 private://非公開メンバ関数
 	//全サウンドデータの解放

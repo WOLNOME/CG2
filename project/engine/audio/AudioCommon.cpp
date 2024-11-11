@@ -93,16 +93,17 @@ AudioCommon::SoundData AudioCommon::SoundLoadWave(const std::string& filename)
 	return soundData;
 }
 
+IXAudio2SourceVoice* AudioCommon::GenerateSourceVoice(SoundData& soundData)
+{
+	// ソースボイスがすでに存在しない場合は新しく作成
+	IXAudio2SourceVoice* sourceVoice = nullptr;
+	HRESULT result = xAudio2_->CreateSourceVoice(&sourceVoice, &soundData.wfex);
+	assert(SUCCEEDED(result));
+	return sourceVoice;
+}
+
 void AudioCommon::SoundUnload(SoundData* soundData)
 {
-	// ソースボイスの停止と破棄
-	if (soundData->sourceVoice) {
-		soundData->sourceVoice->Stop();                 // 再生を停止
-		soundData->sourceVoice->FlushSourceBuffers();   // バッファをクリア
-		soundData->sourceVoice->DestroyVoice();         // ソースボイスを破棄
-		soundData->sourceVoice = nullptr;               // ポインタを無効化
-	}
-
 	// バッファのメモリを解放
 	delete[] soundData->pBuffer;
 	soundData->pBuffer = nullptr;
@@ -112,17 +113,9 @@ void AudioCommon::SoundUnload(SoundData* soundData)
 	soundData->wfex = {};
 }
 
-void AudioCommon::SoundPlayWave(SoundData& soundData, bool loop)
+void AudioCommon::SoundPlayWave(SoundData& soundData, IXAudio2SourceVoice* sourceVoice, bool loop)
 {
 	HRESULT result;
-
-	// 波形フォーマットからSourceVoiceを生成
-	result = xAudio2_->CreateSourceVoice(&soundData.sourceVoice, &soundData.wfex);
-	if (FAILED(result)) {
-		// 失敗した場合のエラーハンドリング
-		assert(false && "Failed to create SourceVoice.");
-		return;
-	}
 
 	// 再生する波形データの設定
 	XAUDIO2_BUFFER buf{};
@@ -132,55 +125,55 @@ void AudioCommon::SoundPlayWave(SoundData& soundData, bool loop)
 	buf.LoopCount = loop ? XAUDIO2_LOOP_INFINITE : 0;
 
 	// 波形データの再生
-	soundData.sourceVoice->Stop();
-	soundData.sourceVoice->FlushSourceBuffers();
-	result = soundData.sourceVoice->SubmitSourceBuffer(&buf);
+	sourceVoice->Stop();
+	sourceVoice->FlushSourceBuffers();
+	result = sourceVoice->SubmitSourceBuffer(&buf);
 	assert(SUCCEEDED(result));
-	result = soundData.sourceVoice->Start();
+	result = sourceVoice->Start();
 	assert(SUCCEEDED(result));
 
 }
 
-void AudioCommon::SoundPause(SoundData& soundData)
+void AudioCommon::SoundPause(IXAudio2SourceVoice* sourceVoice)
 {
-	if (soundData.sourceVoice) {
-		soundData.sourceVoice->Stop();
+	if (sourceVoice) {
+		sourceVoice->Stop();
 	}
 }
 
-void AudioCommon::SoundResume(SoundData& soundData)
+void AudioCommon::SoundResume(IXAudio2SourceVoice* sourceVoice)
 {
-	if (soundData.sourceVoice) {
-		soundData.sourceVoice->Start();
+	if (sourceVoice) {
+		sourceVoice->Start();
 	}
 }
 
-void AudioCommon::SoundStop(SoundData& soundData)
+void AudioCommon::SoundStop(IXAudio2SourceVoice* sourceVoice)
 {
-	if (soundData.sourceVoice) {
-		soundData.sourceVoice->Stop();
-		soundData.sourceVoice->FlushSourceBuffers();
+	if (sourceVoice) {
+		sourceVoice->Stop();
+		sourceVoice->FlushSourceBuffers();
 	}
 }
 
-void AudioCommon::SetVolume(SoundData& soundData, float volume)
+void AudioCommon::SetVolume(IXAudio2SourceVoice* sourceVoice, float volume)
 {
-	if (soundData.sourceVoice) {
-		soundData.sourceVoice->SetVolume(volume);
+	if (sourceVoice) {
+		sourceVoice->SetVolume(volume);
 	}
 }
 
-void AudioCommon::SetLoop(SoundData& soundData, bool loop)
+void AudioCommon::SetLoop(SoundData& soundData, IXAudio2SourceVoice* sourceVoice, bool loop)
 {
-	if (soundData.sourceVoice) {
+	if (sourceVoice) {
 		XAUDIO2_BUFFER buf{};
 		buf.pAudioData = soundData.pBuffer;
 		buf.AudioBytes = soundData.bufferSize;
 		buf.Flags = XAUDIO2_END_OF_STREAM;
 		buf.LoopCount = loop ? XAUDIO2_LOOP_INFINITE : 0;
-		soundData.sourceVoice->Stop();
-		soundData.sourceVoice->FlushSourceBuffers();
-		soundData.sourceVoice->SubmitSourceBuffer(&buf);
+		sourceVoice->Stop();
+		sourceVoice->FlushSourceBuffers();
+		sourceVoice->SubmitSourceBuffer(&buf);
 	}
 }
 

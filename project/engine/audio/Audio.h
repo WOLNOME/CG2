@@ -51,7 +51,10 @@ public:
 	void SetOnPlaybackEndCallback(std::function<void()> callback);
 
 private:
+	//サウンドデータ
 	AudioCommon::SoundData soundData_;
+	//ソースボイス
+	IXAudio2SourceVoice* sourceVoice_ = nullptr;
 	float volume_ = 1.0f;
 	bool isPlaying_ = false;
 	bool isPaused_ = false;
