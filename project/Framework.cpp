@@ -66,6 +66,7 @@ void Framework::Finalize()
 {
 	SceneManager::GetInstance()->Finalize();
 	camera_.reset();
+	ParticleCommon::GetInstance()->Finalize();
 	Object3dCommon::GetInstance()->Finalize();
 	SpriteCommon::GetInstance()->Finalize();
 	AudioCommon::GetInstance()->Finalize();
