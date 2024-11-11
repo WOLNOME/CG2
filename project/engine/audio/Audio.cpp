@@ -13,7 +13,7 @@ void Audio::Initialize(const std::string& filename)
 
 }
 
-void Audio::Play(bool loop = false)
+void Audio::Play(bool loop)
 {
 	//再生
 	AudioCommon::GetInstance()->SoundPlayWave(soundData_, loop);
@@ -22,54 +22,61 @@ void Audio::Play(bool loop = false)
 void Audio::Stop()
 {
 	AudioCommon::GetInstance()->SoundStop(soundData_);
+	isPlaying_ = false;
+	isPaused_ = false;
 }
 
 void Audio::Pause()
 {
-	AudioCommon::GetInstance()->SoundPause(soundData_);
+	if (isPlaying_ && !isPaused_) {
+		AudioCommon::GetInstance()->SoundPause(soundData_);
+		isPaused_ = true;
+	}
 }
 
 void Audio::Resume()
 {
-	AudioCommon::GetInstance()->SoundResume(soundData_);
+	if (isPaused_) {
+		AudioCommon::GetInstance()->SoundResume(soundData_);
+		isPaused_ = false;
+	}
 }
 
 bool Audio::IsPlaying() const
 {
-	return false;
+	// 状態を直接返す
+	return isPlaying_ && !isPaused_;
 }
 
 bool Audio::IsPaused() const
 {
-	return false;
+	return isPaused_;
 }
 
 void Audio::SetVolume(float volume)
 {
+	volume_ = volume;
 	AudioCommon::GetInstance()->SetVolume(soundData_, volume);
 }
 
 float Audio::GetVolume() const
 {
-	return 0.0f;
-}
-
-void Audio::FadeIn(float duration, float min, float max)
-{
-}
-
-void Audio::FadeOut(float duration, float min, float max)
-{
+	return volume_;
 }
 
 void Audio::SetPosition(const Vector3& v)
 {
+	// Position設定処理
+	// AudioCommonに専用関数を追加する場合も検討
 }
 
 void Audio::SetListenerPosition(const Vector3& v)
 {
+	// リスナー位置の更新
+   // AudioCommonでリスナー情報を管理する場合
 }
 
 void Audio::SetOnPlaybackEndCallback(std::function<void()> callback)
 {
+	onPlaybackEndCallback_ = callback;
 }

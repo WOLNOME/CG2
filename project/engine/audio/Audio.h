@@ -11,32 +11,37 @@ public:
 	// 初期化
 	void Initialize(const std::string& filename);
 
-	// 再生制御
+	/// <summary>
+	/// 再生
+	/// </summary>
+	/// <param name="loop">ループの有無</param>
 	void Play(bool loop = false);
+	/// <summary>
+	/// 再生中止
+	/// </summary>
 	void Stop();
+	/// <summary>
+	/// 途中で止める
+	/// </summary>
 	void Pause();
+	/// <summary>
+	/// 再開する
+	/// </summary>
 	void Resume();
+	/// <summary>
+	/// 再生中か
+	/// </summary>
+	/// <returns></returns>
 	bool IsPlaying() const;
+	/// <summary>
+	/// 停止中か
+	/// </summary>
+	/// <returns></returns>
 	bool IsPaused() const;
 
 	// 音量制御
 	void SetVolume(float volume);
 	float GetVolume() const;
-
-	/// <summary>
-	/// だんだん大きくなる
-	/// </summary>
-	/// <param name="duration">全体時間</param>
-	/// <param name="min">最小音量</param>
-	/// <param name="max">最大音量</param>
-	void FadeIn(float duration, float min = 0.0f, float max = 1.0f);
-	/// <summary>
-	/// だんだん小さくなる
-	/// </summary>
-	/// <param name="duration">全体時間</param>
-	/// <param name="min">最小音量</param>
-	/// <param name="max">最大音量</param>
-	void FadeOut(float duration, float min = 0.0f, float max = 1.0f);
 
 	// 3D サウンド
 	void SetPosition(const Vector3& v);

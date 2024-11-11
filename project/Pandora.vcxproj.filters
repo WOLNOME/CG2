@@ -159,7 +159,7 @@
     <ClCompile Include="engine\scene\BaseScene.cpp">
       <Filter>ソース ファイル\scene</Filter>
     </ClCompile>
-    <ClCompile Include="GamePlayScene.cpp">
+    <ClCompile Include="engine\scene\GamePlayScene.cpp">
       <Filter>ソース ファイル\scene</Filter>
     </ClCompile>
     <ClCompile Include="engine\scene\TitleScene.cpp">
@@ -290,7 +290,7 @@
     <ClInclude Include="engine\scene\BaseScene.h">
       <Filter>ヘッダー ファイル\scene</Filter>
     </ClInclude>
-    <ClInclude Include="GamePlayScene.h">
+    <ClInclude Include="engine\scene\GamePlayScene.h">
       <Filter>ヘッダー ファイル\scene</Filter>
     </ClInclude>
     <ClInclude Include="engine\scene\TitleScene.h">

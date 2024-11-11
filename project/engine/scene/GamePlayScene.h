@@ -36,5 +36,6 @@ private://メンバ変数
 	std::unique_ptr<Particle> particle_ = nullptr;
 	Vector2 sprite2Position;
 	std::unique_ptr<Audio> audio_ = nullptr;
+	float volume = 0.5f;
 };
 

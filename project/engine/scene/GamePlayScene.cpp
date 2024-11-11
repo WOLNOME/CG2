@@ -73,6 +73,18 @@ void GamePlayScene::Update()
 	if (ImGui::Button("PlayAudio")) {
 		audio_->Play();
 	}
+	if (ImGui::Button("StopAudio")) {
+		audio_->Stop();
+	}
+	if (ImGui::Button("PauseAudio")) {
+		audio_->Pause();
+	}
+	if (ImGui::Button("ResumeAudio")) {
+		audio_->Resume();
+	}
+	ImGui::SliderFloat("SetVolume", &volume, 0.0f, 1.0f);
+
+
 	ImGui::End();
 
 #endif // _DEBUG
