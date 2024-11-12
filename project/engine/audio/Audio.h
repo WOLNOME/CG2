@@ -1,63 +1,50 @@
 #pragma once
 #include <string>
-#include <functional>
-#include <memory>
 #include "AudioCommon.h"
-#include "Vector3.h"
 
-class Audio {
+class Audio
+{
 public:
-	~Audio();
+    /// <summary>
+    /// デストラクタ
+    /// </summary>
+    ~Audio();
 
-	// 初期化
-	void Initialize(const std::string& filename);
+    /// <summary>
+    /// 初期化
+    /// </summary>
+    /// <param name="filename">Resources/はカットして</param>
+    /// <param name="directoryPath">ディレクトリパス (デフォルト: "Resources/audios/")</param>
+    void Initialize(const std::string& filename, const std::string& directoryPath = "Resources/audios/");
 
-	/// <summary>
-	/// 再生
-	/// </summary>
-	/// <param name="loop">ループの有無</param>
-	void Play(bool loop = false);
-	/// <summary>
-	/// 再生中止
-	/// </summary>
-	void Stop();
-	/// <summary>
-	/// 途中で止める
-	/// </summary>
-	void Pause();
-	/// <summary>
-	/// 再開する
-	/// </summary>
-	void Resume();
-	/// <summary>
-	/// 再生中か
-	/// </summary>
-	/// <returns></returns>
-	bool IsPlaying() const;
-	/// <summary>
-	/// 停止中か
-	/// </summary>
-	/// <returns></returns>
-	bool IsPaused() const;
+    /// <summary>
+    /// 再生
+    /// </summary>
+    void Play();
 
-	// 音量制御
-	void SetVolume(float volume);
-	float GetVolume() const;
+    /// <summary>
+    /// 停止
+    /// </summary>
+    void Stop();
 
-	// 3D サウンド
-	void SetPosition(const Vector3& v);
-	void SetListenerPosition(const Vector3& v);
+    /// <summary>
+    /// 一時停止
+    /// </summary>
+    void Pause();
 
-	// コールバック
-	void SetOnPlaybackEndCallback(std::function<void()> callback);
+    /// <summary>
+    /// 再開
+    /// </summary>
+    void Resume();
 
-private:
-	//サウンドデータハンドル
-	uint32_t indexSoundData_;
-	//ソースボイスハンドル
-	uint32_t indexVoiceData_;
-	float volume_ = 1.0f;
-	bool isPlaying_ = false;
-	bool isPaused_ = false;
-	std::function<void()> onPlaybackEndCallback_;
+    /// <summary>
+    /// 音量設定
+    /// </summary>
+    /// <param name="volume">0.0f〜1.0fの範囲で設定</param>
+    void SetVolume(float volume);
+
+private: // メンバ変数
+    std::string directoryPath_;  // ディレクトリパス
+    uint32_t soundDataHandle_ = 0u;  // サウンドデータハンドル
+    uint32_t voiceDataHandle_ = 0u;  // ボイスデータハンドル
 };

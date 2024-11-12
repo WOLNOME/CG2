@@ -3,10 +3,8 @@
 #include <xaudio2.h>
 #include <cstdint>
 #include <string>
-#include <unordered_map>
+#include <array>
 #include <set>
-#include <memory>
-
 
 #pragma comment(lib,"xaudio2.lib")
 class AudioCommon
@@ -51,49 +49,57 @@ public://公開構造体
 		BYTE* pBuffer;
 		//バッファのサイズ
 		unsigned int bufferSize;
-
+		//ファイルパス
+		std::string name;
 	};
-	//ボイスデータ
-	struct VoiceData
-	{
-		//ハンドル
+	// 再生データ
+	struct VoiceData {
+		//アクセスハンドル
 		uint32_t handle = 0u;
 		//ソースボイス
-		std::unique_ptr<IXAudio2SourceVoice> sourceVoice;
+		IXAudio2SourceVoice* sourceVoice = nullptr;
 	};
 
-
 public:
+	// サウンドデータの最大数
+	static const int kMaxSoundData = 128;
+
 	//初期化
 	void Initialize();
 	//終了
 	void Finalize();
 	//音声データの読み込み
 	uint32_t SoundLoadWave(const std::string& filename);
-	// サウンドの再生
-	uint32_t SoundPlayWave(uint32_t soundDataHandle, bool loop = false);
-	// サウンドの一時停止
-	void SoundPause(uint32_t voiceDataHandle);
-	// サウンドの再開
-	void SoundResume(uint32_t voiceDataHandle);
-	// サウンドの停止
-	void SoundStop(uint32_t voiceDataHandle);
-	// 音量の設定
-	void SetVolume(uint32_t voiceDataHandle, float volume);
-	// ループ再生の設定
-	void SetLoop(uint32_t soundDataHandle, uint32_t voiceDataHandle, bool loop);
+	//サウンドの再生
+	uint32_t SoundPlayWave(uint32_t soundDataHandle, bool loop = false, float volume = 1.0f);
+	//サウンドの停止
+	void SoundStop(uint32_t voiceHandle);
+	//サウンドの一時停止
+	void SoundPause(uint32_t voiceHandle);
+	//サウンドの再生再開
+	void SoundResume(uint32_t voiceHandle);
+	//音量の調整
+	void SetVolume(uint32_t voiceHandle, float volume);
 
-private://非公開メンバ関数
+
+
+private:
+	void SoundUnload(SoundData* soundData);
+	void ClearSoundData();
+	void ClearVoiceData();
+	void ShutdownContainer();
 
 private://メンバ変数
 	//xAudio2
 	Microsoft::WRL::ComPtr<IXAudio2> xAudio2_ = nullptr;
 	//マスターボイス
 	IXAudio2MasteringVoice* masterVoice;
-	//全サウンドデータ
-	std::unordered_map<std::string, SoundData> soundDatas_;
-	//全ボイスデータ
+	//サウンドデータコンテナ
+	std::array<SoundData, kMaxSoundData> soundDatas_;
+	//ボイスデータコンテナ
 	std::set<VoiceData*> voiceDatas_;
+	//サウンドデータコンテナの開始位置
+	const int kStartSoundDataIndex = 1;
 
 };
 

@@ -83,7 +83,7 @@ void GamePlayScene::Update()
 		audio_->Resume();
 	}
 	ImGui::SliderFloat("SetVolume", &volume, 0.0f, 1.0f);
-
+	audio_->SetVolume(volume);
 
 	ImGui::End();
 

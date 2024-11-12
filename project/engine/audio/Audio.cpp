@@ -2,84 +2,50 @@
 
 Audio::~Audio()
 {
-	//サウンドデータの解放
-	AudioCommon::GetInstance()->SoundUnload(&soundData_);
-
-
+    // デストラクタで停止してメモリを解放
+    Stop();
 }
 
-void Audio::Initialize(const std::string& filename)
+void Audio::Initialize(const std::string& filename, const std::string& directoryPath)
 {
-	//WAVファイル読み込み
-	soundData_ = AudioCommon::GetInstance()->SoundLoadWave(filename);
-	//ソースボイス読み込み
-	sourceVoice_ = AudioCommon::GetInstance()->GenerateSourceVoice(soundData_);
+    // ディレクトリパスのコピー
+    directoryPath_ = directoryPath;
+
+    // WAVファイルを読み込み
+    soundDataHandle_ = AudioCommon::GetInstance()->SoundLoadWave(directoryPath_ + filename);
 }
 
-void Audio::Play(bool loop)
+void Audio::Play()
 {
-	//再生
-	AudioCommon::GetInstance()->SoundPlayWave(soundData_, sourceVoice_, loop);
+    // 再生
+    voiceDataHandle_ = AudioCommon::GetInstance()->SoundPlayWave(soundDataHandle_, false, 0.5f);
 }
 
 void Audio::Stop()
 {
-	AudioCommon::GetInstance()->SoundStop(sourceVoice_);
-	isPlaying_ = false;
-	isPaused_ = false;
+    if (voiceDataHandle_ != 0u) {
+        AudioCommon::GetInstance()->SoundStop(voiceDataHandle_);
+        voiceDataHandle_ = 0u; // ハンドルを無効化
+    }
 }
 
 void Audio::Pause()
 {
-	if (isPlaying_ && !isPaused_) {
-		AudioCommon::GetInstance()->SoundPause(sourceVoice_);
-		isPaused_ = true;
-	}
+    if (voiceDataHandle_ != 0u) {
+        AudioCommon::GetInstance()->SoundPause(voiceDataHandle_);
+    }
 }
 
 void Audio::Resume()
 {
-	if (isPaused_) {
-		AudioCommon::GetInstance()->SoundResume(sourceVoice_);
-		isPaused_ = false;
-	}
-}
-
-bool Audio::IsPlaying() const
-{
-	// 状態を直接返す
-	return isPlaying_ && !isPaused_;
-}
-
-bool Audio::IsPaused() const
-{
-	return isPaused_;
+    if (voiceDataHandle_ != 0u) {
+        AudioCommon::GetInstance()->SoundResume(voiceDataHandle_);
+    }
 }
 
 void Audio::SetVolume(float volume)
 {
-	volume_ = volume;
-	AudioCommon::GetInstance()->SetVolume(sourceVoice_, volume);
-}
-
-float Audio::GetVolume() const
-{
-	return volume_;
-}
-
-void Audio::SetPosition(const Vector3& v)
-{
-	// Position設定処理
-	// AudioCommonに専用関数を追加する場合も検討
-}
-
-void Audio::SetListenerPosition(const Vector3& v)
-{
-	// リスナー位置の更新
-   // AudioCommonでリスナー情報を管理する場合
-}
-
-void Audio::SetOnPlaybackEndCallback(std::function<void()> callback)
-{
-	onPlaybackEndCallback_ = callback;
+    if (voiceDataHandle_ != 0u) {
+        AudioCommon::GetInstance()->SetVolume(voiceDataHandle_, volume);
+    }
 }
