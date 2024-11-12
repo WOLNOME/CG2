@@ -4,6 +4,9 @@
 
 AudioCommon* AudioCommon::instance = nullptr;
 
+//サウンドデータコンテナの開始位置
+const uint32_t kStartSoundDataIndex = 1;
+
 AudioCommon* AudioCommon::GetInstance()
 {
 	if (instance == nullptr) {

@@ -17,7 +17,7 @@ void Model::Initialize(const std::string& directorypath, const std::string& file
 
 void Model::Update()
 {
-	
+
 }
 
 void Model::Draw(uint32_t instancingNum)
@@ -44,7 +44,7 @@ Model::Struct::MaterialData Model::LoadMaterialTemplateFile(const std::string& d
 	std::string line;
 	bool isLoad = false;
 	//2.ファイルを開く
-	std::ifstream file(directoryPath + "/" + fileName);
+	std::ifstream file(directoryPath + fileName + "/" + fileName + ".mtl");
 	assert(file.is_open());
 	//3.実際にファイルを読み、MaterialDAtaを構築していく
 	while (std::getline(file, line)) {
@@ -68,7 +68,7 @@ Model::Struct::MaterialData Model::LoadMaterialTemplateFile(const std::string& d
 				std::string textureFilename;
 				s >> textureFilename;
 				//連結してファイルパスにする
-				materialData.textureFilePath = directoryPath + "/" + textureFilename;
+				materialData.textureFilePath = directoryPath + fileName + "/" + textureFilename;
 			}
 			else if (identifier == "Kd") {
 				Vector4 color;
@@ -95,7 +95,7 @@ std::vector<Model::Struct::ModelData> Model::LoadObjFile(const std::string& dire
 	bool isGetVt = false;
 	size_t index = -1;
 	//2.ファイルを開く
-	std::ifstream file(directoryPath + "/" + fileName);
+	std::ifstream file(directoryPath + fileName + "/" + fileName + ".obj");
 	assert(file.is_open());
 	//3.実際にファイルを読み、ModelDataを構築していく
 	while (std::getline(file, line)) {
@@ -181,7 +181,7 @@ std::vector<Model::Struct::ModelData> Model::LoadObjFile(const std::string& dire
 		}
 	}
 	//ファイルの読み直し
-	std::ifstream file2(directoryPath + "/" + fileName);
+	std::ifstream file2(directoryPath + fileName + "/" + fileName + ".obj");
 	assert(file.is_open());
 	//mtlファイルを開いてマテリアル情報を得る(materialNameを基に)
 	while (std::getline(file2, line2)) {
@@ -195,7 +195,7 @@ std::vector<Model::Struct::ModelData> Model::LoadObjFile(const std::string& dire
 			s >> materialFilename;
 			for (size_t index = 0; index < modelData.size(); index++) {
 				//基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を探す。
-				modelData.at(index).material = LoadMaterialTemplateFile(directoryPath, materialFilename, modelData.at(index).materialName);
+				modelData.at(index).material = LoadMaterialTemplateFile(directoryPath, fileName, modelData.at(index).materialName);
 			}
 			//読んだら抜ける
 			break;

@@ -98,8 +98,7 @@ private://メンバ変数
 	std::array<SoundData, kMaxSoundData> soundDatas_;
 	//ボイスデータコンテナ
 	std::set<VoiceData*> voiceDatas_;
-	//サウンドデータコンテナの開始位置
-	const int kStartSoundDataIndex = 1;
+	
 
 };
 

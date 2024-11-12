@@ -28,10 +28,10 @@ void GamePlayScene::Initialize()
 	sprite2_->SetSize({ 300.0f,300.0f });
 
 	obj_ = std::make_unique<Object3d>();
-	obj_->Initialize("axis.obj");
+	obj_->Initialize("axis");
 
 	particle_ = std::make_unique<Particle>();
-	particle_->Initialize("plane.obj");
+	particle_->Initialize("plane");
 
 	audio_ = std::make_unique<Audio>();
 	audio_->Initialize("Alarm01.wav");
