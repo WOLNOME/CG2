@@ -3,6 +3,7 @@
 #include "ImGuiManager.h"
 #include "Object3dCommon.h"
 #include "ParticleCommon.h"
+#include "LineDrawerCommon.h"
 #include "SpriteCommon.h"
 #include "SceneManager.h"
 
@@ -32,6 +33,9 @@ void GamePlayScene::Initialize()
 
 	particle_ = std::make_unique<Particle>();
 	particle_->Initialize("plane");
+
+	line_ = std::make_unique<LineDrawer>();
+	line_->Initialize();
 
 	audio_ = std::make_unique<Audio>();
 	audio_->Initialize("Alarm01.wav");
@@ -87,6 +91,11 @@ void GamePlayScene::Update()
 
 	ImGui::End();
 
+	ImGui::Begin("axis");
+	ImGui::SliderFloat3("translate", &translate.x, -10.0f, 10.0f);
+	obj_->SetTranslate(translate);
+	ImGui::End();
+
 #endif // _DEBUG
 }
 
@@ -116,6 +125,23 @@ void GamePlayScene::Draw()
 
 	///------------------------------///
 	///↑↑↑↑パーティクル描画終了↑↑↑↑
+	///------------------------------///
+
+
+	//線描画共通描画設定
+	LineDrawerCommon::GetInstance()->SettingCommonDrawing();
+
+	///------------------------------///
+	///↓↓↓↓線描画開始↓↓↓↓
+	///------------------------------///
+
+	//線描画
+	line_->CreateLine({ 0.0f,1.0f,1.0f }, { 10.0f,2.0f,-4.0f }, { 1.0f,0.0f,0.0f,1.0f });
+	line_->CreateLine({ 1.0f,1.0f,1.0f }, { -3.0f,8.0f,3.0f }, { 0.0f,1.0f,0.0f,1.0f });
+	line_->Draw();
+
+	///------------------------------///
+	///↑↑↑↑線描画終了↑↑↑↑
 	///------------------------------///
 
 	//スプライトの共通描画設定

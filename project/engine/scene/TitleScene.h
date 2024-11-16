@@ -5,6 +5,8 @@
 #include "Audio.h"
 #include "Vector2.h"
 #include "Input.h"
+#include "LineDrawer.h"
+#include <cstdint>
 #include <memory>
 
 class TitleScene : public BaseScene
@@ -35,5 +37,6 @@ private://メンバ変数
 	std::unique_ptr<Audio> audio_ = nullptr;
 
 	int button = 0;
+
 };
 

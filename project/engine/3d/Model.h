@@ -21,7 +21,7 @@ private://インナークラス
 		struct Material {
 			Vector4 color;
 			int32_t lightingKind;
-			float padding[3];
+			float padding[3];//(PSに送るときは16バイトに揃える)
 			Matrix4x4 uvTransform;
 			int32_t isTexture;
 		};

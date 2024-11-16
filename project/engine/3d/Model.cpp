@@ -37,6 +37,7 @@ void Model::Draw(uint32_t instancingNum)
 	}
 }
 
+
 Model::Struct::MaterialData Model::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& fileName, const std::string& materialName)
 {
 	//1.中で必要となる変数の宣言

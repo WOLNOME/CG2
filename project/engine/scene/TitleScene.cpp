@@ -4,6 +4,7 @@
 #include "ImGuiManager.h"
 #include "Object3dCommon.h"
 #include "SpriteCommon.h"
+#include "LineDrawerCommon.h"
 #include "SceneManager.h"
 
 void TitleScene::Initialize()
@@ -33,7 +34,7 @@ void TitleScene::Initialize()
 
 void TitleScene::Finalize()
 {
-	
+
 }
 
 void TitleScene::Update()
@@ -80,9 +81,8 @@ void TitleScene::Update()
 		ImGui::Begin("get");
 		ImGui::End();
 	}
-
 	//Lスティックの傾き量でスプライトを移動
-	sprite_->SetPosition(sprite_->GetPosition() + (input_->GetRightStickDir()*5));
+	sprite_->SetPosition(sprite_->GetPosition() + (input_->GetRightStickDir() * 5));
 
 
 
@@ -101,6 +101,19 @@ void TitleScene::Draw()
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
+	///------------------------------///
+
+	//線描画共通描画設定
+	LineDrawerCommon::GetInstance()->SettingCommonDrawing();
+
+	///------------------------------///
+	///↓↓↓↓線描画開始↓↓↓↓
+	///------------------------------///
+
+	
+
+	///------------------------------///
+	///↑↑↑↑線描画終了↑↑↑↑
 	///------------------------------///
 
 	//スプライトの共通描画設定

@@ -10,6 +10,7 @@
 #include "SpriteCommon.h"
 #include "Object3dCommon.h"
 #include "ParticleCommon.h"
+#include "LineDrawerCommon.h"
 #include "SceneManager.h"
 
 void Framework::Initialize()
@@ -50,12 +51,16 @@ void Framework::Initialize()
 	//パーティクル共通部
 	ParticleCommon::GetInstance()->Initialize();
 
+	//線描画共通部
+	LineDrawerCommon::GetInstance()->Initialize();
+	
 	//カメラの生成
 	camera_ = std::make_unique<Camera>();
 	camera_->SetRotate({ 0.0f,0.0f,0.0f });
 	camera_->SetTranslate({ 0.0f,0.0f,-15.0f });
 	Object3dCommon::GetInstance()->SetDefaultCamera(camera_.get());
 	ParticleCommon::GetInstance()->SetDefaultCamera(camera_.get());
+	LineDrawerCommon::GetInstance()->SetDefaultCamera(camera_.get());
 
 	//シーンマネージャーの生成
 	SceneManager::GetInstance()->Initialize();
@@ -66,6 +71,8 @@ void Framework::Finalize()
 {
 	SceneManager::GetInstance()->Finalize();
 	camera_.reset();
+	LineDrawerCommon::GetInstance()->Finalize();
+	ParticleCommon::GetInstance()->Finalize();
 	Object3dCommon::GetInstance()->Finalize();
 	SpriteCommon::GetInstance()->Finalize();
 	AudioCommon::GetInstance()->Finalize();
