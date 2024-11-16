@@ -3,7 +3,6 @@
 #include "Vector3.h"
 #include "Vector4.h"
 #include "Matrix4x4.h"
-#include "LineDrawer.h"
 #include <vector>
 
 ///------------------------------------///
@@ -114,6 +113,7 @@ struct Capsule {
 	float radius;
 };
 
+class LineDrawer;
 class MyMath
 {
 public://静的メンバ関数

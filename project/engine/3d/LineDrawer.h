@@ -61,7 +61,7 @@ private://非公開メンバ関数
 private://インスタンス
 private://メンバ変数
 	//一つのインスタンスで表示できる線の最大数
-	static const size_t kNumMaxLine_ = 512;
+	static const size_t kNumMaxLine_ = 1024;
 	//インスタンシング用書き換え情報
 	std::list<Line> lines_;
 	//パーティクル用リソース

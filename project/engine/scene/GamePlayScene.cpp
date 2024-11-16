@@ -100,11 +100,11 @@ void GamePlayScene::Update()
 	//球を定義
 	Sphere sphere = {
 		{0.0f,0.0f,0.0f},
-		5.0f
+		2.0f
 	};
 	ImGui::Checkbox("draw", &isDrawSphere_);
 	if (isDrawSphere_) {
-		//MyMath::DrawSphere(sphere, { 1.0f,0.0f,0.0f,1.0f }, line_.get());
+		MyMath::DrawSphere(sphere, { 1.0f,0.0f,0.0f,1.0f }, line_.get());
 	}
 	
 
