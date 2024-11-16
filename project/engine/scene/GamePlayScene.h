@@ -7,6 +7,7 @@
 #include "Audio.h"
 #include "Vector2.h"
 #include "Input.h"
+#include "MyMath.h"
 #include <memory>
 
 class GamePlayScene : public BaseScene
@@ -41,5 +42,7 @@ private://メンバ変数
 	float volume = 0.5f;
 
 	Vector3 translate = { 0.0f,0.0f,0.0f };
+
+	bool isDrawSphere_ = false;
 };
 

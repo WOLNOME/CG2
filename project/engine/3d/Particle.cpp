@@ -132,7 +132,7 @@ void Particle::Draw()
 	//座標変換行列Tableの場所を設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, SrvHandleGPU);
 	//モデルの描画
-	model_->Draw(particles.size());
+	model_->Draw((uint32_t)particles.size());
 }
 
 Particle::Struct::ParticleResource Particle::MakeParticleResource()

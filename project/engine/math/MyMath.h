@@ -3,6 +3,7 @@
 #include "Vector3.h"
 #include "Vector4.h"
 #include "Matrix4x4.h"
+#include "LineDrawer.h"
 #include <vector>
 
 ///------------------------------------///
@@ -223,7 +224,7 @@ public://静的メンバ関数
 	//ベクトルを指定した軸に射影し、その最小値と最大値を計算する関数
 	static std::pair<float, float> ProjectOntoAxis(const Vector3* vertices, int count, const Vector3& axis);
 
-	
+
 	///------------------------------------///
 	///      イージングチートシート
 	///------------------------------------///
@@ -243,7 +244,7 @@ public://静的メンバ関数
 	static float EaseInQuint(float ratio);
 
 	static float EaseOutQuint(float ratio);
-	
+
 	static float EaseInOutQuint(float ratio);
 
 	static float EaseInCirc(float ratio);
@@ -326,6 +327,13 @@ public://静的メンバ関数
 	static bool IsCollision(const OBB& obb, const Ray& ray);
 	//OBBと線分の当たり判定
 	static bool IsCollision(const OBB& obb, const Segment& segment);
+
+	///------------------------------------///
+	///              図形の線描画
+	///------------------------------------///
+	
+	static void DrawSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDrawer);
+
 };
 
 ///------------------------------------///
@@ -339,7 +347,7 @@ Vector2 operator*(float s, const Vector2& v);
 Vector2 operator*(const Vector2& v, float s);
 Vector2 operator/(const Vector2& v, float s);
 Vector3 operator+(const Vector3& v1, const Vector3& v2);
-Vector3 operator-(const Vector3& v1, const Vector3& v2); 
+Vector3 operator-(const Vector3& v1, const Vector3& v2);
 Vector3 operator*(float s, const Vector3& v);
 Vector3 operator*(const Vector3& v, float s);
 Vector3 operator/(const Vector3& v, float s);

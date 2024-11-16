@@ -96,6 +96,20 @@ void GamePlayScene::Update()
 	obj_->SetTranslate(translate);
 	ImGui::End();
 
+	ImGui::Begin("sphere");
+	//球を定義
+	Sphere sphere = {
+		{0.0f,0.0f,0.0f},
+		5.0f
+	};
+	ImGui::Checkbox("draw", &isDrawSphere_);
+	if (isDrawSphere_) {
+		//MyMath::DrawSphere(sphere, { 1.0f,0.0f,0.0f,1.0f }, line_.get());
+	}
+	
+
+	ImGui::End();
+
 #endif // _DEBUG
 }
 

@@ -627,8 +627,8 @@ std::pair<float, float> MyMath::ProjectOntoAxis(const Vector3* vertices, int cou
 	float max = min;
 	for (int i = 1; i < count; ++i) {
 		float projection = Dot(vertices[i], axis);
-		min = std::min(min, projection);
-		max = std::max(max, projection);
+		min = min(min, projection);
+		max = max(max, projection);
 	}
 	return { min, max };
 }
@@ -1467,6 +1467,43 @@ bool MyMath::IsCollision(const OBB& obb, const Segment& segment)
 	// ローカル空間で衝突判定
 	return IsCollision(aabbOBBLocal, segmentOBBLocal);
 }
+
+void MyMath::DrawSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDrawer)
+{
+	float pi = std::numbers::pi_v<float>;
+	const uint32_t kSubdivision = 20;//分割数
+	const float kLonEvery = 2.0f * pi / kSubdivision;//経度分割1つ分の角度
+	const float kLatEvery = pi / kSubdivision;//緯度分割1つ分の角度
+	//緯度の方向に分割 -π/2~π/2
+	for (uint32_t latIndex = 0; latIndex < kSubdivision; ++latIndex) {
+		float lat = -pi / 2.0f + kLatEvery * latIndex;//現在の経度
+		//経度の方向に分割 -π/2~π/2
+		for (uint32_t lonIndex = 0; lonIndex < kSubdivision; ++lonIndex) {
+			float lon = lonIndex * kLonEvery;//現在の緯度
+			//world座標系でのa,b,cを求める
+			Vector3 a, b, c;
+			a = {
+				sphere.center.x + sphere.radius * cosf(lat) * cosf(lon),
+				sphere.center.y + sphere.radius * sinf(lat),
+				sphere.center.z + sphere.radius * cosf(lat) * sinf(lon)
+			};
+			b = {
+				sphere.center.x + sphere.radius * cosf(kLatEvery + lat) * cosf(lon),
+				sphere.center.y + sphere.radius * sinf(kLatEvery + lat),
+				sphere.center.z + sphere.radius * cosf(kLatEvery + lat) * sinf(lon)
+			};
+			c = {
+				sphere.center.x + sphere.radius * cosf(lat) * cosf(kLonEvery + lon),
+				sphere.center.y + sphere.radius * sinf(lat),
+				sphere.center.z + sphere.radius * cosf(lat) * sinf(kLonEvery + lon)
+			};
+			//描画
+			lineDrawer->CreateLine(a, b, color);
+			lineDrawer->CreateLine(a, c, color);
+		}
+	}
+}
+
 
 ///------------------------------------///
 ///       演算子のオーバーロード

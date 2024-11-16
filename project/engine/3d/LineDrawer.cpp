@@ -9,7 +9,8 @@ LineDrawer::LineDrawer()
 
 LineDrawer::~LineDrawer()
 {
-
+	//ラインのリストクリア
+	lines_.clear();
 }
 
 void LineDrawer::Initialize()
@@ -26,6 +27,10 @@ void LineDrawer::Draw()
 	uint32_t instanceNum = 0;
 
 	for (std::list<Line>::iterator lineIterator = lines_.begin(); lineIterator != lines_.end();) {
+		if (instanceNum >= kNumMaxLine_) {
+			break; // 最大インスタンス数に達したら終了
+		}
+		
 		//レンダリングパイプライン
 		Matrix4x4 cameraMatrix = MyMath::MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 		Matrix4x4 worldMatrix = MyMath::MakeAffineMatrix(lineResource_.transform.scale, lineResource_.transform.rotate, lineResource_.transform.translate);
@@ -49,7 +54,9 @@ void LineDrawer::Draw()
 	//頂点バッファービューを設定
 	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &lineResource_.vertexBufferView);
 	//描画
-	DirectXCommon::GetInstance()->GetCommandList()->DrawInstanced(2, lines_.size(), 0, 0);
+	if (instanceNum > 0) {
+		DirectXCommon::GetInstance()->GetCommandList()->DrawInstanced(2, instanceNum, 0, 0);
+	}
 
 	//リストのクリア
 	lines_.clear();
