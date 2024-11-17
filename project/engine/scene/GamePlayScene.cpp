@@ -13,12 +13,12 @@ void GamePlayScene::Initialize()
 	BaseScene::Initialize();
 
 	input_ = Input::GetInstance();
-	
+
 	camera = std::make_unique<Camera>();
 	camera->Initialize();
-	camera->SetRotate({ 0.0f,0.0f,0.0f });
-	camera->SetTranslate(translate);
-	
+	camera->SetRotate({ cameraRotate });
+	camera->SetTranslate(cameraTranslate);
+
 	//ゲームシーン変数の初期化
 	sprite_ = std::make_unique<Sprite>();
 	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
@@ -40,6 +40,9 @@ void GamePlayScene::Initialize()
 	particle_ = std::make_unique<Particle>();
 	particle_->Initialize("plane");
 
+	line_ = std::make_unique<LineDrawer>();
+	line_->Initialize();
+
 	audio_ = std::make_unique<Audio>();
 	audio_->Initialize("Alarm01.wav");
 
@@ -59,14 +62,14 @@ void GamePlayScene::Update()
 		//シーン切り替え依頼
 		sceneManager_->SetNextScene("TITLE");
 	}
-	
+
 	//モデルの更新
 	wtObj_.rotation_.y += 0.03f;
 	wtObj_.UpdateMatrix();
 
 	//パーティクル
 	particle_->Update();
-	
+
 	//スプライトの更新
 	sprite_->Update();
 	sprite_->SetRotation(sprite_->GetRotation() + 0.03f);
@@ -97,15 +100,26 @@ void GamePlayScene::Update()
 
 	ImGui::End();
 
+	ImGui::Begin("line");
+	ImGui::Checkbox("sphere", &isDrawSphere_);
+	if (isDrawSphere_) {
+		Sphere sphere;
+		sphere.center = { 0.0f,-10.0f,0.0f };
+		sphere.radius = 2.0f;
+		MyMath::DrawSphere(sphere, { 1.0f,0.0f,0.0f,1.0f }, line_.get());
+	}
 
+	ImGui::End();
 
 	ImGui::Begin("axis");
 	ImGui::DragFloat3("translate", &wtObj_.translation_.x, 0.01f);
 	ImGui::End();
 
 	ImGui::Begin("camera");
-	ImGui::DragFloat3("translate",&translate.x , 0.01f);
-	camera->SetTranslate(translate);
+	ImGui::DragFloat3("translate", &cameraTranslate.x, 0.01f);
+	ImGui::DragFloat3("rotate", &cameraRotate.x, 0.01f);
+	camera->SetTranslate(cameraTranslate);
+	camera->SetRotate(cameraRotate);
 	ImGui::End();
 
 
@@ -121,7 +135,7 @@ void GamePlayScene::Draw()
 	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
-	obj_->Draw(wtObj_,camera.get());
+	obj_->Draw(wtObj_, camera.get());
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
@@ -149,7 +163,7 @@ void GamePlayScene::Draw()
 	///------------------------------///
 
 	//線描画
-	
+	line_->Draw(camera.get());
 
 	///------------------------------///
 	///↑↑↑↑線描画終了↑↑↑↑

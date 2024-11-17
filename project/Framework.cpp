@@ -54,13 +54,6 @@ void Framework::Initialize()
 	//線描画共通部
 	LineDrawerCommon::GetInstance()->Initialize();
 	
-	//カメラの生成
-	camera_ = std::make_unique<Camera>();
-	camera_->Initialize();
-	camera_->SetRotate({ 0.0f,0.0f,0.0f });
-	camera_->SetTranslate({ 0.0f,0.0f,-15.0f });
-	LineDrawerCommon::GetInstance()->SetDefaultCamera(camera_.get());
-
 	//シーンマネージャーの生成
 	SceneManager::GetInstance()->Initialize();
 
@@ -69,7 +62,6 @@ void Framework::Initialize()
 void Framework::Finalize()
 {
 	SceneManager::GetInstance()->Finalize();
-	camera_.reset();
 	LineDrawerCommon::GetInstance()->Finalize();
 	ParticleCommon::GetInstance()->Finalize();
 	Object3dCommon::GetInstance()->Finalize();
@@ -91,8 +83,6 @@ void Framework::Update()
 		isOver = true;
 	}
 	Input::GetInstance()->Update();
-	//カメラの更新
-	camera_->UpdateMatrix();
 	//シーンマネージャー更新
 	SceneManager::GetInstance()->Update();
 

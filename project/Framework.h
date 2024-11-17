@@ -1,6 +1,5 @@
 #pragma once
 #include "D3DResourceLeakChecker.h"
-#include "Camera.h"
 #include <memory>
 
 class Framework
@@ -36,7 +35,6 @@ public:
 	void Run();
 protected://基盤インスタンス
 	D3DResourceLeakChecker leakChecker;
-	std::unique_ptr<Camera> camera_ = nullptr;
 	bool isOver = false;
 	
 };

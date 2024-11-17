@@ -35,6 +35,8 @@ private://メンバ変数
 	Input* input_ = nullptr;
 	//仮カメラ
 	std::unique_ptr<Camera> camera;
+	Vector3 cameraTranslate = { 0.0f,0.0f,-15.0f };
+	Vector3 cameraRotate = { 0.0f,0.0f,0.0f };
 
 	std::unique_ptr<Sprite> sprite_ = nullptr;
 	std::unique_ptr<Sprite> sprite2_ = nullptr;
@@ -42,10 +44,11 @@ private://メンバ変数
 	WorldTransform wtObj_;
 	std::unique_ptr<Object3d> obj_ = nullptr;
 	std::unique_ptr<Particle> particle_ = nullptr;
+	std::unique_ptr<LineDrawer> line_ = nullptr;
+	bool isDrawSphere_ = false;
 	std::unique_ptr<Audio> audio_ = nullptr;
 	float volume = 0.5f;
 
-	Vector3 translate = { 0.0f,0.0f,-15.0f };
 
 };
 

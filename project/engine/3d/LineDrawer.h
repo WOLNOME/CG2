@@ -8,6 +8,7 @@
 #include <memory>
 #include "MyMath.h"
 
+class Camera;
 class LineDrawer
 {
 public://構造体
@@ -18,7 +19,6 @@ public://構造体
 	};
 	//座標変換行列データ(インスタンスごとに変えられるデータ)
 	struct LineForGPU {
-		Matrix4x4 WVP;
 		Matrix4x4 World;
 		Vector4 start;
 		Vector4 end;
@@ -48,7 +48,7 @@ public://メンバ関数
 
 	//初期化
 	void Initialize();
-	void Draw();
+	void Draw(Camera* camera);
 
 	//ライン作成関数(ハンドルを返却)
 	void CreateLine(Vector3 start, Vector3 end, Vector4 color);
@@ -67,11 +67,4 @@ private://メンバ変数
 	//パーティクル用リソース
 	LineResource lineResource_;
 	
-	//カメラトランスフォーム
-	Transform cameraTransform = {
-		{1.0f,1.0f,1.0f},
-		{std::numbers::pi_v<float> / 3.0f,std::numbers::pi_v<float>,0.0f},
-		{0.0f,23.0f,10.0f}
-	};
-
 };

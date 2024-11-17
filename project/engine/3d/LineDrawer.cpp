@@ -2,6 +2,7 @@
 #include "WinApp.h"
 #include "DirectXCommon.h"
 #include "SrvManager.h"
+#include "Camera.h"
 
 LineDrawer::LineDrawer()
 {
@@ -22,7 +23,7 @@ void LineDrawer::Initialize()
 
 }
 
-void LineDrawer::Draw()
+void LineDrawer::Draw(Camera* camera)
 {
 	uint32_t instanceNum = 0;
 
@@ -32,17 +33,11 @@ void LineDrawer::Draw()
 		}
 		
 		//レンダリングパイプライン
-		Matrix4x4 cameraMatrix = MyMath::MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 		Matrix4x4 worldMatrix = MyMath::MakeAffineMatrix(lineResource_.transform.scale, lineResource_.transform.rotate, lineResource_.transform.translate);
-		Matrix4x4 viewMatrix = MyMath::Inverse(cameraMatrix);
-		Matrix4x4 projectionMatrix = MyMath::MakePerspectiveFovMatrix(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);
-		Matrix4x4 worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, MyMath::Multiply(viewMatrix, projectionMatrix));
-		lineResource_.instancingData[instanceNum].WVP = worldViewProjectionMatrix;
 		lineResource_.instancingData[instanceNum].World = worldMatrix;
 		lineResource_.instancingData[instanceNum].start = (*lineIterator).start;
 		lineResource_.instancingData[instanceNum].end = (*lineIterator).end;
 		lineResource_.instancingData[instanceNum].color = (*lineIterator).color;
-
 
 		//次のインスタンスへ
 		++instanceNum;
@@ -51,6 +46,8 @@ void LineDrawer::Draw()
 	}
 	//座標変換行列の場所を設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(0, lineResource_.SrvHandleGPU);
+	//カメラCBuffer場所を設定
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, camera->GetConstBuffer()->GetGPUVirtualAddress());
 	//頂点バッファービューを設定
 	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &lineResource_.vertexBufferView);
 	//描画
