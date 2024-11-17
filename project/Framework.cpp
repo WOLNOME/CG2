@@ -59,7 +59,6 @@ void Framework::Initialize()
 	camera_->Initialize();
 	camera_->SetRotate({ 0.0f,0.0f,0.0f });
 	camera_->SetTranslate({ 0.0f,0.0f,-15.0f });
-	ParticleCommon::GetInstance()->SetDefaultCamera(camera_.get());
 	LineDrawerCommon::GetInstance()->SetDefaultCamera(camera_.get());
 
 	//シーンマネージャーの生成

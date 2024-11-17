@@ -16,8 +16,6 @@ void Particle::Initialize(const std::string& filePath)
 	ModelManager::GetInstance()->LoadModel(filePath);
 	//モデルマネージャーから検索してセットする
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
-	//モデルにカメラをセット
-	model_->SetCamera(ParticleCommon::GetInstance()->GetDefaultCamera());
 
 	//パーティクルのリソースを作成
 	particleResource_ = MakeParticleResource();

@@ -2,7 +2,6 @@
 #include <wrl.h>
 #include <d3d12.h>
 
-class Camera;
 class ParticleCommon
 {
 private://コンストラクタ等の隠蔽
@@ -27,11 +26,9 @@ private://非公開メンバ関数
 	void GenerateGraphicsPipeline();
 
 public://ゲッター
-	Camera* GetDefaultCamera()const { return defaultCamera; }
 public://セッター
-	void SetDefaultCamera(Camera* camera) { defaultCamera = camera; }
 private://インスタンス
-	Camera* defaultCamera = nullptr;
+	
 private://メンバ変数
 	//ルートシグネチャ
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
