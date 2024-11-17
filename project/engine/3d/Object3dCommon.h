@@ -28,9 +28,7 @@ private://非公開メンバ関数
 	void GenerateGraphicsPipeline();
 
 public://ゲッター
-	Camera* GetDefaultCamera()const { return defaultCamera; }
 public://セッター
-	void SetDefaultCamera(Camera* camera) { defaultCamera = camera; }
 
 private://インスタンス
 	Camera* defaultCamera = nullptr;

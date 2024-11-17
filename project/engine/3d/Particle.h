@@ -8,6 +8,7 @@
 #include <numbers>
 #include "Model.h"
 #include "MyMath.h"
+#include "Camera.h"
 
 class Particle
 {
@@ -23,7 +24,6 @@ public://インナークラス
 		};
 		//座標変換行列データ
 		struct ParticleForGPU {
-			Matrix4x4 WVP;
 			Matrix4x4 World;
 			Vector4 color;
 		};
@@ -57,10 +57,13 @@ public://インナークラス
 
 	};
 public://メンバ関数
-	//初期化
+	/// <summary>
+	/// 初期化
+	/// </summary>
+	/// <param name="filePath">オブジェクトファイルパス(.objはいらない)</param>
 	void Initialize(const std::string& filePath);
 	void Update();
-	void Draw();
+	void Draw(Camera* camera);
 private://メンバ関数(非公開)
 	//パーティクルリソース作成関数
 	Struct::ParticleResource MakeParticleResource();
@@ -82,12 +85,6 @@ private://メンバ変数
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource = nullptr;
 	//平行光源用バッファリソース内のデータをさすポインタ
 	Struct::DirectionalLight* directionalLightData = nullptr;
-	//カメラトランスフォーム
-	Transform cameraTransform = {
-		{1.0f,1.0f,1.0f},
-		{std::numbers::pi_v<float> / 3.0f,std::numbers::pi_v<float>,0.0f},
-		{0.0f,23.0f,10.0f}
-	};
 	//各インスタンシング用書き換え情報
 	std::list<Struct::Particle> particles;
 	//srvハンドル

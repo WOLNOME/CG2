@@ -13,7 +13,12 @@ void GamePlayScene::Initialize()
 	BaseScene::Initialize();
 
 	input_ = Input::GetInstance();
-
+	
+	camera = std::make_unique<Camera>();
+	camera->Initialize();
+	camera->SetRotate({ 0.0f,0.0f,0.0f });
+	camera->SetTranslate(translate);
+	
 	//ゲームシーン変数の初期化
 	sprite_ = std::make_unique<Sprite>();
 	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
@@ -28,14 +33,12 @@ void GamePlayScene::Initialize()
 	sprite2_->SetPosition(sprite2Position);
 	sprite2_->SetSize({ 300.0f,300.0f });
 
+	wtObj_.Initialize();
 	obj_ = std::make_unique<Object3d>();
 	obj_->Initialize("axis");
 
 	particle_ = std::make_unique<Particle>();
 	particle_->Initialize("plane");
-
-	line_ = std::make_unique<LineDrawer>();
-	line_->Initialize();
 
 	audio_ = std::make_unique<Audio>();
 	audio_->Initialize("Alarm01.wav");
@@ -48,19 +51,22 @@ void GamePlayScene::Finalize()
 
 void GamePlayScene::Update()
 {
+	//カメラの更新
+	camera->UpdateMatrix();
+
 	//LEFTキーを押したら
 	if (input_->TriggerKey(DIK_LEFT)) {
 		//シーン切り替え依頼
 		sceneManager_->SetNextScene("TITLE");
 	}
-
+	
 	//モデルの更新
-	obj_->Update();
-	obj_->SetRotate({ 0.0f,obj_->GetRotate().y + 0.03f,0.0f });
+	wtObj_.rotation_.y += 0.03f;
+	wtObj_.UpdateMatrix();
 
-	//パーティクルの更新
+	//パーティクル
 	particle_->Update();
-
+	
 	//スプライトの更新
 	sprite_->Update();
 	sprite_->SetRotation(sprite_->GetRotation() + 0.03f);
@@ -91,24 +97,17 @@ void GamePlayScene::Update()
 
 	ImGui::End();
 
+
+
 	ImGui::Begin("axis");
-	ImGui::SliderFloat3("translate", &translate.x, -10.0f, 10.0f);
-	obj_->SetTranslate(translate);
+	ImGui::DragFloat3("translate", &wtObj_.translation_.x, 0.01f);
 	ImGui::End();
 
-	ImGui::Begin("sphere");
-	//球を定義
-	Sphere sphere = {
-		{0.0f,0.0f,0.0f},
-		2.0f
-	};
-	ImGui::Checkbox("draw", &isDrawSphere_);
-	if (isDrawSphere_) {
-		MyMath::DrawSphere(sphere, { 1.0f,0.0f,0.0f,1.0f }, line_.get());
-	}
-	
-
+	ImGui::Begin("camera");
+	ImGui::DragFloat3("translate",&translate.x , 0.01f);
+	camera->SetTranslate(translate);
 	ImGui::End();
+
 
 #endif // _DEBUG
 }
@@ -122,7 +121,7 @@ void GamePlayScene::Draw()
 	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
-	obj_->Draw();
+	obj_->Draw(wtObj_,camera.get());
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
@@ -135,7 +134,7 @@ void GamePlayScene::Draw()
 	///↓↓↓↓パーティクル描画開始↓↓↓↓
 	///------------------------------///
 
-	particle_->Draw();
+	particle_->Draw(camera.get());
 
 	///------------------------------///
 	///↑↑↑↑パーティクル描画終了↑↑↑↑
@@ -150,9 +149,7 @@ void GamePlayScene::Draw()
 	///------------------------------///
 
 	//線描画
-	line_->CreateLine({ 0.0f,1.0f,1.0f }, { 10.0f,2.0f,-4.0f }, { 1.0f,0.0f,0.0f,1.0f });
-	line_->CreateLine({ 1.0f,1.0f,1.0f }, { -3.0f,8.0f,3.0f }, { 0.0f,1.0f,0.0f,1.0f });
-	line_->Draw();
+	
 
 	///------------------------------///
 	///↑↑↑↑線描画終了↑↑↑↑

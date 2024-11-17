@@ -20,17 +20,17 @@ void Model::Update()
 
 }
 
-void Model::Draw(uint32_t instancingNum)
+void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum)
 {
 	for (size_t index = 0; index < modelResource_.modelData.size(); index++) {
 		//頂点バッファービューを設定
 		DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &modelResource_.vertexBufferView.at(index));
 		//マテリアルCBufferの場所を設定
-		DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, modelResource_.materialResource.at(index)->GetGPUVirtualAddress());
+		DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(materialRootParameterIndex, modelResource_.materialResource.at(index)->GetGPUVirtualAddress());
 		//モデルにテクスチャがない場合、スキップ
 		if (modelResource_.modelData.at(index).material.textureFilePath.size() != 0) {
 			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
-			DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(modelResource_.modelData.at(index).material.textureFilePath));
+			DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(textureRootParameterIndex, TextureManager::GetInstance()->GetSrvHandleGPU(modelResource_.modelData.at(index).material.textureFilePath));
 		}
 		//描画
 		DirectXCommon::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelResource_.modelData.at(index).vertices.size()), instancingNum, 0, 0);

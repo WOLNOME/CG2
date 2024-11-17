@@ -50,6 +50,21 @@ void Particle::Initialize(const std::string& filePath)
 
 void Particle::Update()
 {
+#ifdef _DEBUG
+	ImGui::Begin("particle");
+	ImGui::Checkbox("billboard", &isBillboard);
+	ImGui::Checkbox("field", &isField);
+	if (ImGui::Button("Add Particle")) {
+		//パーティクル生成
+		particles.splice(particles.end(), Emit(emitter));
+	}
+	ImGui::DragFloat3("EmitterTranslate", &emitter.transform.translate.x, 0.01f, -100.0f, 100.0f);
+	ImGui::End();
+#endif // _DEBUG
+}
+
+void Particle::Draw(Camera* camera)
+{
 	//インスタンスの番号
 	uint32_t instanceNum = 0;
 	//エミッターの更新
@@ -83,9 +98,8 @@ void Particle::Update()
 		float alpha = 1.0f - ((*particleIterator).currentTime / (*particleIterator).lifeTime);
 
 		//レンダリングパイプライン
-		Matrix4x4 cameraMatrix = MyMath::MakeAffineMatrix(cameraTransform.scale, cameraTransform.rotate, cameraTransform.translate);
 		Matrix4x4 backToFrontMatrix = MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>);
-		Matrix4x4 billboardMatrix = MyMath::Multiply(backToFrontMatrix, cameraMatrix);
+		Matrix4x4 billboardMatrix = MyMath::Multiply(backToFrontMatrix, camera->GetWorldMatrix());
 		billboardMatrix.m[3][0] = 0.0f;
 		billboardMatrix.m[3][1] = 0.0f;
 		billboardMatrix.m[3][2] = 0.0f;
@@ -93,10 +107,6 @@ void Particle::Update()
 		if (!isBillboard) {
 			worldMatrix = MyMath::MakeAffineMatrix((*particleIterator).transform.scale, (*particleIterator).transform.rotate, (*particleIterator).transform.translate);
 		}
-		Matrix4x4 viewMatrix = MyMath::Inverse(cameraMatrix);
-		Matrix4x4 projectionMatrix = MyMath::MakePerspectiveFovMatrix(0.45f, float(WinApp::kClientWidth) / float(WinApp::kClientHeight), 0.1f, 100.0f);
-		Matrix4x4 worldViewProjectionMatrix = MyMath::Multiply(worldMatrix, MyMath::Multiply(viewMatrix, projectionMatrix));
-		particleResource_.instancingData[instanceNum].WVP = worldViewProjectionMatrix;
 		particleResource_.instancingData[instanceNum].World = worldMatrix;
 		particleResource_.instancingData[instanceNum].color = (*particleIterator).color;
 		particleResource_.instancingData[instanceNum].color.w = alpha;
@@ -110,29 +120,15 @@ void Particle::Update()
 		++particleIterator;
 	}
 
-#ifdef _DEBUG
-	ImGui::Begin("particle");
-	ImGui::Checkbox("billboard", &isBillboard);
-	ImGui::Checkbox("field", &isField);
-	if (ImGui::Button("Add Particle")) {
-		//パーティクル生成
-		particles.splice(particles.end(), Emit(emitter));
-	}
-	ImGui::DragFloat3("EmitterTranslate", &emitter.transform.translate.x, 0.01f, -100.0f, 100.0f);
-	ImGui::End();
-#endif // _DEBUG
-
-
-}
-
-void Particle::Draw()
-{
 	//平行光源の設定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(4, directionalLightResource->GetGPUVirtualAddress());
 	//座標変換行列Tableの場所を設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, SrvHandleGPU);
+	//CameraCBufferの場所を設定
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera->GetConstBuffer()->GetGPUVirtualAddress());
 	//モデルの描画
-	model_->Draw((uint32_t)particles.size());
+	model_->Draw(0, 3, (uint32_t)particles.size());
+
 }
 
 Particle::Struct::ParticleResource Particle::MakeParticleResource()
@@ -145,7 +141,6 @@ Particle::Struct::ParticleResource Particle::MakeParticleResource()
 	particleResource.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&particleResource.instancingData));
 	//データに書き込む
 	for (uint32_t index = 0; index < kNumMaxInstance_; ++index) {
-		particleResource.instancingData[index].WVP = MyMath::MakeIdentity4x4();
 		particleResource.instancingData[index].World = MyMath::MakeIdentity4x4();
 		particleResource.instancingData[index].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
 	}

@@ -56,9 +56,9 @@ void Framework::Initialize()
 	
 	//カメラの生成
 	camera_ = std::make_unique<Camera>();
+	camera_->Initialize();
 	camera_->SetRotate({ 0.0f,0.0f,0.0f });
 	camera_->SetTranslate({ 0.0f,0.0f,-15.0f });
-	Object3dCommon::GetInstance()->SetDefaultCamera(camera_.get());
 	ParticleCommon::GetInstance()->SetDefaultCamera(camera_.get());
 	LineDrawerCommon::GetInstance()->SetDefaultCamera(camera_.get());
 
@@ -93,7 +93,7 @@ void Framework::Update()
 	}
 	Input::GetInstance()->Update();
 	//カメラの更新
-	camera_->Update();
+	camera_->UpdateMatrix();
 	//シーンマネージャー更新
 	SceneManager::GetInstance()->Update();
 
