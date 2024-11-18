@@ -9,7 +9,6 @@ void Sprite::Initialize(std::string textureFilePath)
 	//リソースを作る
 	vertexResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Struct::VertexData) * 4);
 	indexResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(uint32_t) * 6);
-	directionalLightResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Struct::DirectionalLight));
 	materialResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Struct::Material));
 	transformationMatrixResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Struct::TransformationMatrix));
 
@@ -23,7 +22,6 @@ void Sprite::Initialize(std::string textureFilePath)
 	//リソースにデータをセット
 	vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&vertexData));
 	indexResource->Map(0, nullptr, reinterpret_cast<void**>(&indexData));
-	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
 	materialResource->Map(0, nullptr, reinterpret_cast<void**>(&materialData));
 	transformationMatrixResource->Map(0, nullptr, reinterpret_cast<void**>(&transformationMatrixData));
 	///データに書き込む
@@ -46,13 +44,8 @@ void Sprite::Initialize(std::string textureFilePath)
 	//インデックスデータ(当てられてる数字はVertexDataの要素)
 	indexData[0] = 0; indexData[1] = 1; indexData[2] = 2;
 	indexData[3] = 1; indexData[4] = 3; indexData[5] = 2;
-	//平行光源用データ
-	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
-	directionalLightData->intensity = 1.0f;
 	//マテリアルデータ
 	materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
-	materialData->lightingKind = NoneLighting;
 	materialData->uvTransform = MyMath::MakeIdentity4x4();
 	materialData->isTexture = true;
 	//座標変換行列データ
@@ -136,9 +129,6 @@ void Sprite::Draw()
 
 	//SRVのDescriptorTableの先頭を設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureFilePath_));
-
-	//平行光源の設定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(3, directionalLightResource->GetGPUVirtualAddress());
 
 	//描画
 	DirectXCommon::GetInstance()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);

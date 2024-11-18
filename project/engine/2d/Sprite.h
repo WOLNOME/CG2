@@ -15,18 +15,9 @@ public://インナークラス
 			Vector2 texcoord;
 			Vector3 normal;
 		};
-		//平行光源データ
-		struct DirectionalLight
-		{
-			Vector4 color;
-			Vector3 direction;
-			float intensity;
-		};
 		//マテリアルデータ
 		struct Material {
 			Vector4 color;
-			int32_t lightingKind;
-			float padding[3];
 			Matrix4x4 uvTransform;
 			int32_t isTexture;
 		};
@@ -74,13 +65,11 @@ private://メンバ変数
 	//バッファリソース
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> indexResource = nullptr;
-	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource = nullptr;
 	//バッファリソース内のデータを指すポインタ
 	Struct::VertexData* vertexData = nullptr;
 	uint32_t* indexData = nullptr;
-	Struct::DirectionalLight* directionalLightData = nullptr;
 	Struct::Material* materialData = nullptr;
 	Struct::TransformationMatrix* transformationMatrixData = nullptr;
 	//バッファリソースの使い道を補足するバッファビュー

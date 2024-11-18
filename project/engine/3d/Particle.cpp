@@ -29,15 +29,6 @@ void Particle::Initialize(const std::string& filePath)
 	//インスタンシングをSRVにセット
 	SettingSRV();
 
-	//平行光源用リソースを作る
-	directionalLightResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Struct::DirectionalLight));
-	//リソースにデータをセット
-	directionalLightResource->Map(0, nullptr, reinterpret_cast<void**>(&directionalLightData));
-	//平行光源用データ
-	directionalLightData->color = { 1.0f, 1.0f, 1.0f, 1.0f };
-	directionalLightData->direction = { 0.0f, -1.0f, 0.0f };
-	directionalLightData->intensity = 1.0f;
-
 	//エミッター生成
 	emitter.transform.scale = { 1.0f,1.0f,1.0f };
 	emitter.transform.rotate = { 0.0f,0.0f,0.0f };
@@ -125,8 +116,6 @@ void Particle::Draw(const BaseCamera& camera)
 		++particleIterator;
 	}
 
-	//平行光源の設定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(4, directionalLightResource->GetGPUVirtualAddress());
 	//座標変換行列Tableの場所を設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, particleResource_.SrvHandleGPU);
 	//CameraCBufferの場所を設定

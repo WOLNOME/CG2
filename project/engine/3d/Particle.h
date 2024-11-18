@@ -17,13 +17,6 @@ class Particle
 public://インナークラス
 	class Struct {
 	public:
-		//平行光源データ
-		struct DirectionalLight
-		{
-			Vector4 color;
-			Vector3 direction;
-			float intensity;
-		};
 		//座標変換行列データ
 		struct ParticleForGPU {
 			Matrix4x4 World;
@@ -87,10 +80,6 @@ private://メンバ変数
 	//パーティクル用リソース
 	Struct::ParticleResource particleResource_;
 
-	//平行光源用バッファリソース
-	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource = nullptr;
-	//平行光源用バッファリソース内のデータをさすポインタ
-	Struct::DirectionalLight* directionalLightData = nullptr;
 	//各インスタンシング用書き換え情報
 	std::list<Struct::Particle> particles;
 	//表示するパーティクルの最大数
