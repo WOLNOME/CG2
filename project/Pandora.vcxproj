@@ -102,6 +102,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DirectionalLight.cpp" />
     <ClCompile Include="engine\3d\DevelopCamera.cpp" />
     <ClCompile Include="engine\scene\DevelopScene.cpp" />
     <ClCompile Include="engine\scenebase\AbstractSceneFactory.cpp" />
@@ -146,6 +147,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\3d\WorldTransform.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DirectionalLight.h" />
     <ClInclude Include="engine\3d\DevelopCamera.h" />
     <ClInclude Include="engine\scene\DevelopScene.h" />
     <ClInclude Include="engine\scenebase\AbstractSceneFactory.h" />

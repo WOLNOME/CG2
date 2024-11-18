@@ -10,6 +10,7 @@
 #include "MyMath.h"
 #include "WorldTransform.h"
 #include "DevelopCamera.h"
+#include "DirectionalLight.h"
 #include <memory>
 
 class DevelopScene : public BaseScene
@@ -37,6 +38,9 @@ private://メンバ変数
 	std::unique_ptr<DevelopCamera> camera;
 	Vector3 cameraTranslate = { 0.0f,0.0f,-15.0f };
 	Vector3 cameraRotate = { 0.0f,0.0f,0.0f };
+	//平行光源
+	std::unique_ptr<DirectionalLight> dirLight;
+
 
 	std::unique_ptr<Sprite> sprite_ = nullptr;
 	std::unique_ptr<Sprite> sprite2_ = nullptr;

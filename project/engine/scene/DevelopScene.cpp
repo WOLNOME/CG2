@@ -14,10 +14,16 @@ void DevelopScene::Initialize()
 
 	input_ = Input::GetInstance();
 
+	//カメラの生成と初期化
 	camera = std::make_unique<DevelopCamera>();
 	camera->Initialize();
 	camera->SetRotate({ cameraRotate });
 	camera->SetTranslate(cameraTranslate);
+
+	//平行光源の生成と初期化
+	dirLight = std::make_unique<DirectionalLight>();
+	dirLight->Initialize();
+
 
 	//ゲームシーン変数の初期化
 	sprite_ = std::make_unique<Sprite>();
@@ -55,6 +61,9 @@ void DevelopScene::Update()
 {
 	//カメラの更新
 	camera->Update();
+
+	//平行光源の更新
+	dirLight->Update();
 
 	//モデルの更新
 	wtAxis_.rotation_.y += 0.03f;
@@ -107,7 +116,14 @@ void DevelopScene::Update()
 	ImGui::Begin("axis");
 	ImGui::DragFloat3("translate", &wtAxis_.translation_.x, 0.01f);
 	ImGui::End();
-	
+
+	ImGui::Begin("DirectionalLight");
+	ImGui::DragFloat4("color", &dirLight->color_.x, 0.01f, 0.0f, 1.0f);
+	ImGui::DragFloat3("direction", &dirLight->direction_.x, 0.01f);
+	ImGui::DragFloat("intencity", &dirLight->intencity_, 0.01f, 0.0f, 1.0f);
+	ImGui::Checkbox("isActive", &dirLight->isActive_);
+	ImGui::End();
+
 #endif // _DEBUG
 }
 
@@ -120,7 +136,7 @@ void DevelopScene::Draw()
 	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
-	axis_->Draw(wtAxis_, *camera.get());
+	axis_->Draw(wtAxis_, *camera.get(), dirLight.get());
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
