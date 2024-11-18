@@ -594,6 +594,46 @@ Matrix4x4 MyMath::MakeViewportMatrix(float left, float top, float width, float h
 	return c;
 }
 
+Matrix4x4 MyMath::CreateRotationFromEulerAngles(float pitch, float yaw, float roll)
+{
+	// ピッチ（X軸回転）、ヨー（Y軸回転）、ロール（Z軸回転）の角度をラジアンに変換
+	float cosPitch = cosf(pitch);
+	float sinPitch = sinf(pitch);
+	float cosYaw = cosf(yaw);
+	float sinYaw = sinf(yaw);
+	float cosRoll = cosf(roll);
+	float sinRoll = sinf(roll);
+
+	// X軸回転行列
+	Matrix4x4 rotationX = {
+		1, 0, 0, 0,
+		0, cosPitch, -sinPitch, 0,
+		0, sinPitch, cosPitch, 0,
+		0, 0, 0, 1
+	};
+
+	// Y軸回転行列
+	Matrix4x4 rotationY = {
+		cosYaw, 0, sinYaw, 0,
+		0, 1, 0, 0,
+		-sinYaw, 0, cosYaw, 0,
+		0, 0, 0, 1
+	};
+
+	// Z軸回転行列
+	Matrix4x4 rotationZ = {
+		cosRoll, -sinRoll, 0, 0,
+		sinRoll, cosRoll, 0, 0,
+		0, 0, 1, 0,
+		0, 0, 0, 1
+	};
+
+	// 回転行列を合成する（順番重要）
+	Matrix4x4 rotationMatrix = rotationZ * rotationY * rotationX;
+
+	return rotationMatrix;
+}
+
 float MyMath::Cot(float rad)
 {
 	float c;
@@ -1558,6 +1598,15 @@ Vector3 operator*(const Vector3& v, float s)
 Vector3 operator/(const Vector3& v, float s)
 {
 	return MyMath::Multiply(1.0f / s, v);
+}
+
+Vector3 operator*(const Matrix4x4& mat, const Vector3& vec)
+{
+	// 行列とベクトルの掛け算
+	float x = mat.m[0][0] * vec.x + mat.m[0][1] * vec.y + mat.m[0][2] * vec.z + mat.m[0][3];
+	float y = mat.m[1][0] * vec.x + mat.m[1][1] * vec.y + mat.m[1][2] * vec.z + mat.m[1][3];
+	float z = mat.m[2][0] * vec.x + mat.m[2][1] * vec.y + mat.m[2][2] * vec.z + mat.m[2][3];
+	return Vector3(x, y, z);
 }
 
 Matrix4x4 operator+(const Matrix4x4& m1, const Matrix4x4& m2)

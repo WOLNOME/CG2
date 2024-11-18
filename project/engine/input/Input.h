@@ -4,6 +4,13 @@
 #include <dinput.h>
 #include "Vector2.h"
 
+///マウスのコマンド
+enum MouseButton {
+	LeftButton,    // 左ボタン
+	RightButton,   // 右ボタン
+	MiddleButton   // 中央ボタン
+};
+
 ///ゲームパッドのコマンド
 enum GamepadButton {
 	ButtonA,     // Aボタン
@@ -21,7 +28,6 @@ enum GamepadButton {
 	DPadLeft,   // 十字キー 左
 	DPadRight   // 十字キー 右
 };
-
 
 //入力
 class Input
@@ -51,31 +57,42 @@ public://メンバ関数
 private://非公開メンバ関数
 	//ダイレクトインプットの初期化
 	void InitDirectInput();
+	//マウスデバイスの生成
+	void GenerateMouse();
 	//キーボードデバイスの生成
 	void GenerateKeyboard();
 	//ゲームパッドデバイスの生成
 	void GenerateGamepad();
 	
 public://固有の処理
+	bool PushMouseButton(MouseButton button);
+	bool TriggerMouseButton(MouseButton button);
+	void SetExclusiveMode(bool isExclusive);
 	bool PushKey(BYTE keyNumber);
 	bool TriggerKey(BYTE keyNumber);
-	bool PushButton(GamepadButton button);
-	bool TriggerButton(GamepadButton button);
+	bool PushPadButton(GamepadButton button);
+	bool TriggerPadButton(GamepadButton button);
+	Vector2 GetMousePosition();
+	Vector2 GetMouseDelta();
+	float GetMouseScrollCount();
 	Vector2 GetLeftStickDir();
 	Vector2 GetRightStickDir();
 private://インスタンス
 
 private://メンバ変数
-	//DiretInput1
+	//DiretInput
 	ComPtr<IDirectInput8> directInput;
 
+	//マウスデバイス
+	ComPtr<IDirectInputDevice8> mouse;
+	DIMOUSESTATE mouseData;
+	DIMOUSESTATE preMouseData;
 	//キーボードデバイス
 	ComPtr<IDirectInputDevice8> keyboard;
 	//全キーの状態
 	BYTE key[256] = {};
 	//前回の全キーの状態
 	BYTE preKey[256] = {};
-
 	//ゲームパッドデバイス
 	ComPtr<IDirectInputDevice8> gamepad;
 	DIJOYSTATE padData;

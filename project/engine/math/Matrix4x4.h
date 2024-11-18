@@ -34,4 +34,5 @@ struct Matrix4x4 final {
                 m[i][j] /= scalar;
         return *this;
     }
+
 };

@@ -203,6 +203,8 @@ public://静的メンバ関数
 	static Matrix4x4 MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
 	//ビューポート行列
 	static Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth);
+	// オイラー角から回転行列を作成する関数
+	static Matrix4x4 CreateRotationFromEulerAngles(float pitch, float yaw, float roll);
 
 	///------------------------------------///
 	///               float
@@ -331,7 +333,7 @@ public://静的メンバ関数
 	///------------------------------------///
 	///              図形の線描画
 	///------------------------------------///
-	
+
 	static void DrawSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDrawer);
 
 };
@@ -351,6 +353,7 @@ Vector3 operator-(const Vector3& v1, const Vector3& v2);
 Vector3 operator*(float s, const Vector3& v);
 Vector3 operator*(const Vector3& v, float s);
 Vector3 operator/(const Vector3& v, float s);
+Vector3 operator*(const Matrix4x4& mat, const Vector3& vec);
 Matrix4x4 operator+(const Matrix4x4& m1, const Matrix4x4& m2);
 Matrix4x4 operator-(const Matrix4x4& m1, const Matrix4x4& m2);
 Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2);
