@@ -29,14 +29,6 @@ public:
 	/// </summary>
 	void Draw() override;
 private://メンバ変数
-	Input* input_ = nullptr;
-
-	std::unique_ptr<Sprite> sprite_ = nullptr;
-	std::unique_ptr<Sprite> sprite2_ = nullptr;
-	Vector2 sprite2Position;
-	std::unique_ptr<Audio> audio_ = nullptr;
-
-	int button = 0;
 
 };
 

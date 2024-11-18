@@ -6,7 +6,7 @@
 #include "TextureManager.h"
 #include "ModelManager.h"
 #include "WinApp.h"
-#include "Camera.h"
+#include "BaseCamera.h"
 #include <cassert>
 
 void Object3d::Initialize(const std::string& filePath)
@@ -27,7 +27,7 @@ void Object3d::Initialize(const std::string& filePath)
 
 }
 
-void Object3d::Draw(const WorldTransform& worldTransform, const Camera& camera)
+void Object3d::Draw(const WorldTransform& worldTransform, const BaseCamera& camera)
 {
 	//平行光源の設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(4, directionalLightResource->GetGPUVirtualAddress());

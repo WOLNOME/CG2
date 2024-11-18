@@ -7,8 +7,8 @@
 #include "MyMath.h"
 #include "Model.h"
 #include "WorldTransform.h"
-#include "Camera.h"
 
+class BaseCamera;
 //モデル
 class Object3d
 {
@@ -26,7 +26,7 @@ public://インナークラス
 public://メンバ関数
 	//初期化
 	void Initialize(const std::string& filePath);
-	void Draw(const WorldTransform& worldTransform, const Camera& camera);
+	void Draw(const WorldTransform& worldTransform, const BaseCamera& camera);
 private://非公開メンバ関数
 
 private://メンバ変数

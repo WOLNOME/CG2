@@ -9,7 +9,7 @@
 #include "Input.h"
 #include "MyMath.h"
 #include "WorldTransform.h"
-#include "Camera.h"
+#include "DevelopCamera.h"
 #include <memory>
 
 class DevelopScene : public BaseScene
@@ -33,8 +33,8 @@ public:
 	void Draw() override;
 private://メンバ変数
 	Input* input_ = nullptr;
-	//仮カメラ
-	std::unique_ptr<Camera> camera;
+	//開発用カメラ
+	std::unique_ptr<DevelopCamera> camera;
 	Vector3 cameraTranslate = { 0.0f,0.0f,-15.0f };
 	Vector3 cameraRotate = { 0.0f,0.0f,0.0f };
 

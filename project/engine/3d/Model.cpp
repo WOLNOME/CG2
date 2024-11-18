@@ -1,11 +1,9 @@
 #include "Model.h"
 #include <fstream>
 #include <sstream>
-#include "ModelCommon.h"
 #include "DirectXCommon.h"
 #include "Object3d.h"
 #include "TextureManager.h"
-#include "Camera.h"
 
 void Model::Initialize(const std::string& directorypath, const std::string& filename)
 {

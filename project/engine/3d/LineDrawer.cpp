@@ -2,7 +2,7 @@
 #include "WinApp.h"
 #include "DirectXCommon.h"
 #include "SrvManager.h"
-#include "Camera.h"
+#include "BaseCamera.h"
 
 LineDrawer::LineDrawer()
 {
@@ -10,6 +10,8 @@ LineDrawer::LineDrawer()
 
 LineDrawer::~LineDrawer()
 {
+	//確保したSRVデスクリプタヒープの解放
+	SrvManager::GetInstance()->Free(lineResource_.srvIndex);
 	//ラインのリストクリア
 	lines_.clear();
 }
@@ -23,7 +25,7 @@ void LineDrawer::Initialize()
 
 }
 
-void LineDrawer::Draw(const Camera& camera)
+void LineDrawer::Draw(const BaseCamera& camera)
 {
 	uint32_t instanceNum = 0;
 
@@ -103,7 +105,7 @@ LineDrawer::LineResource LineDrawer::MakeLineResource()
 void LineDrawer::SettingSRV()
 {
 	//SRVマネージャーからデスクリプタヒープの空き番号を取得
-	uint32_t srvIndex = SrvManager::GetInstance()->Allocate();
+	lineResource_.srvIndex = SrvManager::GetInstance()->Allocate();
 
 	//srv設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
@@ -114,8 +116,8 @@ void LineDrawer::SettingSRV()
 	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 	srvDesc.Buffer.NumElements = kNumMaxLine_;
 	srvDesc.Buffer.StructureByteStride = sizeof(LineForGPU);
-	lineResource_.SrvHandleCPU = SrvManager::GetInstance()->GetCPUDescriptorHandle(srvIndex);
-	lineResource_.SrvHandleGPU = SrvManager::GetInstance()->GetGPUDescriptorHandle(srvIndex);
+	lineResource_.SrvHandleCPU = SrvManager::GetInstance()->GetCPUDescriptorHandle(lineResource_.srvIndex);
+	lineResource_.SrvHandleGPU = SrvManager::GetInstance()->GetGPUDescriptorHandle(lineResource_.srvIndex);
 	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(lineResource_.instancingResource.Get(), &srvDesc, lineResource_.SrvHandleCPU);
 }
 

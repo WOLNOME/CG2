@@ -14,7 +14,7 @@ void DevelopScene::Initialize()
 
 	input_ = Input::GetInstance();
 
-	camera = std::make_unique<Camera>();
+	camera = std::make_unique<DevelopCamera>();
 	camera->Initialize();
 	camera->SetRotate({ cameraRotate });
 	camera->SetTranslate(cameraTranslate);
@@ -54,7 +54,7 @@ void DevelopScene::Finalize()
 void DevelopScene::Update()
 {
 	//カメラの更新
-	camera->UpdateMatrix();
+	camera->Update();
 
 	//モデルの更新
 	wtObj_.rotation_.y += 0.03f;
@@ -107,15 +107,7 @@ void DevelopScene::Update()
 	ImGui::Begin("axis");
 	ImGui::DragFloat3("translate", &wtObj_.translation_.x, 0.01f);
 	ImGui::End();
-
-	ImGui::Begin("camera");
-	ImGui::DragFloat3("translate", &cameraTranslate.x, 0.01f);
-	ImGui::DragFloat3("rotate", &cameraRotate.x, 0.01f);
-	camera->SetTranslate(cameraTranslate);
-	camera->SetRotate(cameraRotate);
-	ImGui::End();
-
-
+	
 #endif // _DEBUG
 }
 

@@ -6,9 +6,16 @@
 #include "ModelManager.h"
 #include "ParticleCommon.h"
 #include "ImGuiManager.h"
+#include "BaseCamera.h"
 #include <fstream>
 #include <sstream>
 #include <random>
+
+Particle::~Particle()
+{
+	//確保したSRVデスクリプタヒープの解放
+	SrvManager::GetInstance()->Free(particleResource_.srvIndex);
+}
 
 void Particle::Initialize(const std::string& filePath)
 {
@@ -61,7 +68,7 @@ void Particle::Update()
 #endif // _DEBUG
 }
 
-void Particle::Draw(const Camera& camera)
+void Particle::Draw(const BaseCamera& camera)
 {
 	//インスタンスの番号
 	uint32_t instanceNum = 0;
@@ -121,7 +128,7 @@ void Particle::Draw(const Camera& camera)
 	//平行光源の設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(4, directionalLightResource->GetGPUVirtualAddress());
 	//座標変換行列Tableの場所を設定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, SrvHandleGPU);
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, particleResource_.SrvHandleGPU);
 	//CameraCBufferの場所を設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera.GetConstBuffer()->GetGPUVirtualAddress());
 	//モデルの描画
@@ -155,7 +162,7 @@ Particle::Struct::ParticleResource Particle::MakeParticleResource()
 void Particle::SettingSRV()
 {
 	//SRVマネージャーからデスクリプタヒープの空き番号を取得
-	uint32_t srvIndex = SrvManager::GetInstance()->Allocate();
+	particleResource_.srvIndex = SrvManager::GetInstance()->Allocate();
 
 	//srv設定
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
@@ -166,9 +173,9 @@ void Particle::SettingSRV()
 	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 	srvDesc.Buffer.NumElements = kNumMaxInstance_;
 	srvDesc.Buffer.StructureByteStride = sizeof(Struct::ParticleForGPU);
-	SrvHandleCPU = SrvManager::GetInstance()->GetCPUDescriptorHandle(srvIndex);
-	SrvHandleGPU = SrvManager::GetInstance()->GetGPUDescriptorHandle(srvIndex);
-	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(particleResource_.instancingResource.Get(), &srvDesc, SrvHandleCPU);
+	particleResource_.SrvHandleCPU = SrvManager::GetInstance()->GetCPUDescriptorHandle(particleResource_.srvIndex);
+	particleResource_.SrvHandleGPU = SrvManager::GetInstance()->GetGPUDescriptorHandle(particleResource_.srvIndex);
+	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(particleResource_.instancingResource.Get(), &srvDesc, particleResource_.SrvHandleCPU);
 }
 
 Particle::Struct::Particle Particle::MakeNewParticle(const Vector3& translate)

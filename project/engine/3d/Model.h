@@ -5,7 +5,6 @@
 #include <string>
 #include "MyMath.h"
 
-class Camera;
 class Model
 {
 private://インナークラス
@@ -57,9 +56,7 @@ public:
 	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum = 1);
 
 public://ゲッター
-	Camera* GetCamera() { return camera_; }
 public://セッター
-	void SetCamera(Camera* camera) { camera_ = camera; }
 
 private:
 	//.mtlファイルの読み取り
@@ -71,8 +68,6 @@ private:
 	//テクスチャ読み込み
 	void SettingTexture();
 private:
-	//カメラ
-	Camera* camera_ = nullptr;
 	//モデル用リソース
 	Struct::ModelResource modelResource_;
 	//モデル数

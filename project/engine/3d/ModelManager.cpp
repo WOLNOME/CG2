@@ -1,6 +1,5 @@
 #include "ModelManager.h"
 #include "Model.h"
-#include "ModelCommon.h"
 #include "DirectXCommon.h"
 
 ModelManager* ModelManager::instance = nullptr;
@@ -15,12 +14,10 @@ ModelManager* ModelManager::GetInstance()
 
 void ModelManager::Initialize()
 {
-	ModelCommon::GetInstance()->Initialize();
 }
 
 void ModelManager::Finalize()
 {
-	ModelCommon::GetInstance()->Finalize();
 	delete instance;
 	instance = nullptr;
 }

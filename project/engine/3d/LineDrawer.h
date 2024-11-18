@@ -8,7 +8,7 @@
 #include <memory>
 #include "MyMath.h"
 
-class Camera;
+class BaseCamera;
 class LineDrawer
 {
 public://構造体
@@ -34,6 +34,7 @@ public://構造体
 		Transform transform;
 		D3D12_CPU_DESCRIPTOR_HANDLE SrvHandleCPU;
 		D3D12_GPU_DESCRIPTOR_HANDLE SrvHandleGPU;
+		uint32_t srvIndex;
 	};
 	//ライン情報(外から書き換える用)
 	struct Line
@@ -48,7 +49,7 @@ public://メンバ関数
 
 	//初期化
 	void Initialize();
-	void Draw(const Camera& camera);
+	void Draw(const BaseCamera& camera);
 
 	//ライン作成関数(ハンドルを返却)
 	void CreateLine(Vector3 start, Vector3 end, Vector4 color);

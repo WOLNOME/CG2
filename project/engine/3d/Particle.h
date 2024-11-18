@@ -8,8 +8,10 @@
 #include <numbers>
 #include "Model.h"
 #include "MyMath.h"
-#include "Camera.h"
 
+
+class BaseCamera;
+//パーティクル
 class Particle
 {
 public://インナークラス
@@ -32,6 +34,9 @@ public://インナークラス
 			Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
 			ParticleForGPU* instancingData;
 			Transform transform;
+			D3D12_CPU_DESCRIPTOR_HANDLE SrvHandleCPU;
+			D3D12_GPU_DESCRIPTOR_HANDLE SrvHandleGPU;
+			uint32_t srvIndex;
 		};
 		//パーティクル構造体
 		struct Particle {
@@ -57,13 +62,14 @@ public://インナークラス
 
 	};
 public://メンバ関数
+	~Particle();
 	/// <summary>
 	/// 初期化
 	/// </summary>
 	/// <param name="filePath">オブジェクトファイルパス(.objはいらない)</param>
 	void Initialize(const std::string& filePath);
 	void Update();
-	void Draw(const Camera& camera);
+	void Draw(const BaseCamera& camera);
 private://メンバ関数(非公開)
 	//パーティクルリソース作成関数
 	Struct::ParticleResource MakeParticleResource();
@@ -87,9 +93,6 @@ private://メンバ変数
 	Struct::DirectionalLight* directionalLightData = nullptr;
 	//各インスタンシング用書き換え情報
 	std::list<Struct::Particle> particles;
-	//srvハンドル
-	D3D12_CPU_DESCRIPTOR_HANDLE SrvHandleCPU;
-	D3D12_GPU_DESCRIPTOR_HANDLE SrvHandleGPU;
 	//表示するパーティクルの最大数
 	const uint32_t kNumMaxInstance_ = 64;
 	//δtの定義
