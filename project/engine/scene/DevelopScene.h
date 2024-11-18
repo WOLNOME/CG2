@@ -41,8 +41,8 @@ private://メンバ変数
 	std::unique_ptr<Sprite> sprite_ = nullptr;
 	std::unique_ptr<Sprite> sprite2_ = nullptr;
 	Vector2 sprite2Position;
-	WorldTransform wtObj_;
-	std::unique_ptr<Object3d> obj_ = nullptr;
+	WorldTransform wtAxis_;
+	std::unique_ptr<Object3d> axis_ = nullptr;
 	std::unique_ptr<Particle> particle_ = nullptr;
 	std::unique_ptr<LineDrawer> line_ = nullptr;
 	bool isDrawSphere_ = false;

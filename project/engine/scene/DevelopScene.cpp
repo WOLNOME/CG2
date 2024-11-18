@@ -33,9 +33,9 @@ void DevelopScene::Initialize()
 	sprite2_->SetPosition(sprite2Position);
 	sprite2_->SetSize({ 300.0f,300.0f });
 
-	wtObj_.Initialize();
-	obj_ = std::make_unique<Object3d>();
-	obj_->Initialize("axis");
+	wtAxis_.Initialize();
+	axis_ = std::make_unique<Object3d>();
+	axis_->Initialize("axis");
 
 	particle_ = std::make_unique<Particle>();
 	particle_->Initialize("plane");
@@ -57,8 +57,8 @@ void DevelopScene::Update()
 	camera->Update();
 
 	//モデルの更新
-	wtObj_.rotation_.y += 0.03f;
-	wtObj_.UpdateMatrix();
+	wtAxis_.rotation_.y += 0.03f;
+	wtAxis_.UpdateMatrix();
 
 	//パーティクル
 	particle_->Update();
@@ -105,7 +105,7 @@ void DevelopScene::Update()
 	ImGui::End();
 
 	ImGui::Begin("axis");
-	ImGui::DragFloat3("translate", &wtObj_.translation_.x, 0.01f);
+	ImGui::DragFloat3("translate", &wtAxis_.translation_.x, 0.01f);
 	ImGui::End();
 	
 #endif // _DEBUG
@@ -120,7 +120,7 @@ void DevelopScene::Draw()
 	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
-	obj_->Draw(wtObj_, *camera.get());
+	axis_->Draw(wtAxis_, *camera.get());
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
