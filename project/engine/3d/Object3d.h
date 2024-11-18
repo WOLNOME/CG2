@@ -26,13 +26,13 @@ public://インナークラス
 public://メンバ関数
 	//初期化
 	void Initialize(const std::string& filePath);
-	void Draw(const WorldTransform& worldTransform,Camera* camera);
+	void Draw(const WorldTransform& worldTransform, const Camera& camera);
 private://非公開メンバ関数
 
 private://メンバ変数
 	//モデル
 	Model* model_;
-	
+
 
 	//平行光源用バッファリソース
 	Microsoft::WRL::ComPtr<ID3D12Resource> directionalLightResource = nullptr;

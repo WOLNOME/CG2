@@ -63,7 +63,7 @@ public://メンバ関数
 	/// <param name="filePath">オブジェクトファイルパス(.objはいらない)</param>
 	void Initialize(const std::string& filePath);
 	void Update();
-	void Draw(Camera* camera);
+	void Draw(const Camera& camera);
 private://メンバ関数(非公開)
 	//パーティクルリソース作成関数
 	Struct::ParticleResource MakeParticleResource();

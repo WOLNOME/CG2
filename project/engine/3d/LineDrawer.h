@@ -48,7 +48,7 @@ public://メンバ関数
 
 	//初期化
 	void Initialize();
-	void Draw(Camera* camera);
+	void Draw(const Camera& camera);
 
 	//ライン作成関数(ハンドルを返却)
 	void CreateLine(Vector3 start, Vector3 end, Vector4 color);

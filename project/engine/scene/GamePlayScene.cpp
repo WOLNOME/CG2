@@ -104,7 +104,7 @@ void GamePlayScene::Update()
 	ImGui::Checkbox("sphere", &isDrawSphere_);
 	if (isDrawSphere_) {
 		Sphere sphere;
-		sphere.center = { 0.0f,-10.0f,0.0f };
+		sphere.center = { 0.0f,-3.0f,0.0f };
 		sphere.radius = 2.0f;
 		MyMath::DrawSphere(sphere, { 1.0f,0.0f,0.0f,1.0f }, line_.get());
 	}
@@ -135,7 +135,7 @@ void GamePlayScene::Draw()
 	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
-	obj_->Draw(wtObj_, camera.get());
+	obj_->Draw(wtObj_, *camera.get());
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
@@ -148,7 +148,7 @@ void GamePlayScene::Draw()
 	///↓↓↓↓パーティクル描画開始↓↓↓↓
 	///------------------------------///
 
-	particle_->Draw(camera.get());
+	particle_->Draw(*camera.get());
 
 	///------------------------------///
 	///↑↑↑↑パーティクル描画終了↑↑↑↑
@@ -163,7 +163,7 @@ void GamePlayScene::Draw()
 	///------------------------------///
 
 	//線描画
-	line_->Draw(camera.get());
+	line_->Draw(*camera.get());
 
 	///------------------------------///
 	///↑↑↑↑線描画終了↑↑↑↑

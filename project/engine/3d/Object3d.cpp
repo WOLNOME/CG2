@@ -27,7 +27,7 @@ void Object3d::Initialize(const std::string& filePath)
 
 }
 
-void Object3d::Draw(const WorldTransform& worldTransform, Camera* camera)
+void Object3d::Draw(const WorldTransform& worldTransform, const Camera& camera)
 {
 	//平行光源の設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(4, directionalLightResource->GetGPUVirtualAddress());
@@ -36,7 +36,7 @@ void Object3d::Draw(const WorldTransform& worldTransform, Camera* camera)
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, worldTransform.GetConstBuffer()->GetGPUVirtualAddress());
 
 	//CameraCBufferの場所特定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera->GetConstBuffer()->GetGPUVirtualAddress());
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera.GetConstBuffer()->GetGPUVirtualAddress());
 
 	//モデルを描画する
 	model_->Draw(0, 3);

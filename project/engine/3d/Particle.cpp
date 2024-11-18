@@ -61,7 +61,7 @@ void Particle::Update()
 #endif // _DEBUG
 }
 
-void Particle::Draw(Camera* camera)
+void Particle::Draw(const Camera& camera)
 {
 	//インスタンスの番号
 	uint32_t instanceNum = 0;
@@ -97,7 +97,7 @@ void Particle::Draw(Camera* camera)
 
 		//レンダリングパイプライン
 		Matrix4x4 backToFrontMatrix = MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>);
-		Matrix4x4 billboardMatrix = MyMath::Multiply(backToFrontMatrix, camera->GetWorldMatrix());
+		Matrix4x4 billboardMatrix = MyMath::Multiply(backToFrontMatrix, camera.GetWorldMatrix());
 		billboardMatrix.m[3][0] = 0.0f;
 		billboardMatrix.m[3][1] = 0.0f;
 		billboardMatrix.m[3][2] = 0.0f;
@@ -123,7 +123,7 @@ void Particle::Draw(Camera* camera)
 	//座標変換行列Tableの場所を設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, SrvHandleGPU);
 	//CameraCBufferの場所を設定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera->GetConstBuffer()->GetGPUVirtualAddress());
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera.GetConstBuffer()->GetGPUVirtualAddress());
 	//モデルの描画
 	model_->Draw(0, 3, (uint32_t)particles.size());
 
