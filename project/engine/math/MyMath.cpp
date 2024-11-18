@@ -528,6 +528,38 @@ Matrix4x4 MyMath::MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, 
 	return c;
 }
 
+Matrix4x4 MyMath::MakeAffineMatrix(const Vector3& scale, const Quaternion& rotate, const Vector3& translate)
+{
+	Matrix4x4 c;
+
+	// クォータニオンから回転行列を生成
+	Matrix4x4 rotationMatrix = ToRotationMatrix(rotate);
+
+	// スケールの適用
+	c.m[0][0] = scale.x * rotationMatrix.m[0][0];
+	c.m[0][1] = scale.x * rotationMatrix.m[0][1];
+	c.m[0][2] = scale.x * rotationMatrix.m[0][2];
+	c.m[0][3] = 0;
+
+	c.m[1][0] = scale.y * rotationMatrix.m[1][0];
+	c.m[1][1] = scale.y * rotationMatrix.m[1][1];
+	c.m[1][2] = scale.y * rotationMatrix.m[1][2];
+	c.m[1][3] = 0;
+
+	c.m[2][0] = scale.z * rotationMatrix.m[2][0];
+	c.m[2][1] = scale.z * rotationMatrix.m[2][1];
+	c.m[2][2] = scale.z * rotationMatrix.m[2][2];
+	c.m[2][3] = 0;
+
+	// 平行移動の適用
+	c.m[3][0] = translate.x;
+	c.m[3][1] = translate.y;
+	c.m[3][2] = translate.z;
+	c.m[3][3] = 1;
+
+	return c;
+}
+
 Matrix4x4 MyMath::MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip)
 {
 	Matrix4x4 c;
@@ -632,6 +664,130 @@ Matrix4x4 MyMath::CreateRotationFromEulerAngles(float pitch, float yaw, float ro
 	Matrix4x4 rotationMatrix = rotationZ * rotationY * rotationX;
 
 	return rotationMatrix;
+}
+
+Quaternion MyMath::Add(const Quaternion& q1, const Quaternion& q2) {
+	return Quaternion(q1.x + q2.x, q1.y + q2.y, q1.z + q2.z, q1.w + q2.w);
+}
+
+Quaternion MyMath::Subtract(const Quaternion& q1, const Quaternion& q2) {
+	return Quaternion(q1.x - q2.x, q1.y - q2.y, q1.z - q2.z, q1.w - q2.w);
+}
+
+Quaternion MyMath::Multiply(const Quaternion& q1, const Quaternion& q2) {
+	return Quaternion(
+		q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y,
+		q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x,
+		q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w,
+		q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z
+	);
+}
+
+float MyMath::Norm(const Quaternion& q) {
+	return std::sqrt(q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z);
+}
+
+Quaternion MyMath::Normalize(const Quaternion& q) {
+	float n = Norm(q);
+	if (n == 0.0f) {
+		throw std::runtime_error("Zero norm quaternion cannot be normalized");
+	}
+	return Quaternion(q.x / n, q.y / n, q.z / n, q.w / n);
+}
+
+Quaternion MyMath::Conjugate(const Quaternion& q) {
+	return Quaternion(-q.x, -q.y, -q.z, q.w);
+}
+
+Quaternion MyMath::Inverse(const Quaternion& q) {
+	float normSquared = q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z;
+	if (normSquared == 0.0f) {
+		throw std::runtime_error("Cannot invert a quaternion with zero norm");
+	}
+	Quaternion conjugate = Conjugate(q);
+	return Quaternion(conjugate.x / normSquared, conjugate.y / normSquared,
+		conjugate.z / normSquared, conjugate.w / normSquared);
+}
+
+Quaternion MyMath::FromAxisAngle(const Vector3& axis, float angle) {
+	float halfAngle = angle * 0.5f;
+	float sinHalfAngle = sin(halfAngle);
+	return Quaternion(
+		cos(halfAngle),
+		axis.x * sinHalfAngle,
+		axis.y * sinHalfAngle,
+		axis.z * sinHalfAngle
+	);
+}
+
+Matrix4x4 MyMath::ToRotationMatrix(const Quaternion& q) {
+	Matrix4x4 result = MakeIdentity4x4();
+
+	float xx = q.x * q.x;
+	float yy = q.y * q.y;
+	float zz = q.z * q.z;
+	float xy = q.x * q.y;
+	float xz = q.x * q.z;
+	float yz = q.y * q.z;
+	float wx = q.w * q.x;
+	float wy = q.w * q.y;
+	float wz = q.w * q.z;
+
+	result.m[0][0] = 1.0f - 2.0f * (yy + zz);
+	result.m[0][1] = 2.0f * (xy - wz);
+	result.m[0][2] = 2.0f * (xz + wy);
+
+	result.m[1][0] = 2.0f * (xy + wz);
+	result.m[1][1] = 1.0f - 2.0f * (xx + zz);
+	result.m[1][2] = 2.0f * (yz - wx);
+
+	result.m[2][0] = 2.0f * (xz - wy);
+	result.m[2][1] = 2.0f * (yz + wx);
+	result.m[2][2] = 1.0f - 2.0f * (xx + yy);
+
+	// 4x4 行列の回転部分のみを設定。平行移動はなし。
+	result.m[3][3] = 1.0f;
+
+	return result;
+}
+
+Quaternion MyMath::FromEulerAngles(Vector3 euler) {
+	float cy = std::cos(euler.x * 0.5f);
+	float sy = std::sin(euler.x * 0.5f);
+	float cp = std::cos(euler.y * 0.5f);
+	float sp = std::sin(euler.y * 0.5f);
+	float cr = std::cos(euler.z * 0.5f);
+	float sr = std::sin(euler.z * 0.5f);
+
+	return Quaternion(
+		sr * cp * cy - cr * sp * sy,
+		cr * sp * cy + sr * cp * sy,
+		cr * cp * sy - sr * sp * cy,
+		cr * cp * cy + sr * sp * sy
+	);
+}
+
+Vector3 MyMath::ToEulerAngles(const Quaternion& q) {
+	Vector3 euler;
+
+	// ピッチ（x軸回り）
+	float sinp = 2.0f * (q.w * q.x + q.y * q.z);
+	if (std::abs(sinp) >= 1)
+		euler.x = std::copysign(std::numbers::pi_v<float> / 2.0f, sinp); // ピッチを -90 〜 90 度にクランプ
+	else
+		euler.x = std::asin(sinp);
+
+	// ヨー（y軸回り）
+	float siny_cosy = 2.0f * (q.w * q.y - q.z * q.x);
+	float cosy_cosy = 1.0f - 2.0f * (q.y * q.y + q.x * q.x);
+	euler.y = std::atan2(siny_cosy, cosy_cosy);
+
+	// ロール（z軸回り）
+	float sinr_cosr = 2.0f * (q.w * q.z + q.x * q.y);
+	float cosr_cosr = 1.0f - 2.0f * (q.z * q.z + q.x * q.x);
+	euler.z = std::atan2(sinr_cosr, cosr_cosr);
+
+	return euler;
 }
 
 float MyMath::Cot(float rad)
@@ -1609,6 +1765,21 @@ Vector3 operator*(const Matrix4x4& mat, const Vector3& vec)
 	return Vector3(x, y, z);
 }
 
+Vector3 operator*(const Quaternion& q, const Vector3& v) {
+	// クォータニオンを正規化
+	Quaternion normalized_q = q;
+	normalized_q.normalize();
+
+	// ベクトルをクォータニオンとして扱う
+	Quaternion q_v(0, v.x, v.y, v.z);
+
+	// クォータニオンの掛け算で回転操作: q * v * q^-1
+	Quaternion rotated_q = MyMath::Multiply(MyMath::Multiply(normalized_q, q_v), normalized_q.conjugate());
+
+	return Vector3(rotated_q.x, rotated_q.y, rotated_q.z);
+}
+
+
 Matrix4x4 operator+(const Matrix4x4& m1, const Matrix4x4& m2)
 {
 	return MyMath::Add(m1, m2);
@@ -1622,6 +1793,21 @@ Matrix4x4 operator-(const Matrix4x4& m1, const Matrix4x4& m2)
 Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2)
 {
 	return MyMath::Multiply(m1, m2);
+}
+
+Quaternion operator+(const Quaternion& q1, const Quaternion& q2)
+{
+	return MyMath::Add(q1, q2);
+}
+
+Quaternion operator-(const Quaternion& q1, const Quaternion& q2)
+{
+	return MyMath::Subtract(q1, q2);
+}
+
+Quaternion operator*(const Quaternion& q1, const Quaternion& q2)
+{
+	return MyMath::Multiply(q1, q2);
 }
 
 Vector3 operator-(const Vector3& v)

@@ -61,7 +61,7 @@ void Sprite::Initialize(std::string textureFilePath)
 void Sprite::Update()
 {
 	//トランスフォームの情報を作る
-	Transform transform;
+	TransformEuler transform;
 	transform.translate = { position.x,position.y,0.0f };
 	transform.rotate = { 0.0f,0.0f,rotation };
 	transform.scale = { size.x,size.y,1.0f };

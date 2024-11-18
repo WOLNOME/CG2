@@ -50,7 +50,7 @@ protected:
 	// マッピング済みアドレス
 	ViewProjectionTransformationMatrixForVS* data_ = nullptr;
 
-	Transform transform;
+	TransformEuler transform;
 	Matrix4x4 worldMatrix;
 	Matrix4x4 viewMatrix;
 	Matrix4x4 projectionMatrix;

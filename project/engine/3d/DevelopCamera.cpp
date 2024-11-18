@@ -1,6 +1,8 @@
 #include "DevelopCamera.h"
 #include "ImGuiManager.h"
 #include "Input.h"
+#include <algorithm>
+#include <numbers>
 
 void DevelopCamera::Initialize()
 {
@@ -21,9 +23,19 @@ void DevelopCamera::Update()
 		if (input_->TriggerMouseButton(MouseButton::RightButton)) {
 			start = input_->GetMousePosition();
 		}
-		transform.rotate.x += (input_->GetMousePosition().y - start.y) * 0.005f;
-		transform.rotate.y += -(input_->GetMousePosition().x - start.x) * 0.005f;
+		//マウスの移動幅
+		Vector2 moveValue = input_->GetMousePosition() - start;
+		//デッドゾーン
+		float deadZone = 2.0f;
+		if (moveValue.Length() > deadZone) {
+			transform.rotate.x += moveValue.y * 0.001f;
+			transform.rotate.y += moveValue.x * 0.001f;
+		}
 	}
+	//カメラの回転制限
+	const float maxPitch = (std::numbers::pi_v<float> / 2.0f) - 0.01f;
+	transform.rotate.x = std::clamp(transform.rotate.x, -maxPitch, maxPitch);
+
 
 	//行列の更新
 	BaseCamera::UpdateMatrix();

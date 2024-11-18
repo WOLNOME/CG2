@@ -44,7 +44,7 @@ private://インナークラス
 			std::vector<VertexData*> vertexData;
 			std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResource;
 			std::vector<Material*> materialData;
-			std::vector<Transform> uvTransform;
+			std::vector<TransformEuler> uvTransform;
 			std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> textureResorce;
 			std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> textureSrvHandleCPU;
 			std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> textureSrvHandleGPU;

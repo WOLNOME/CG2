@@ -76,7 +76,7 @@ private://メンバ変数
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;
 	//UVトランスフォーム
-	Transform uvTransform{
+	TransformEuler uvTransform{
 		{1.0f,1.0f,1.0f},
 		{0.0f,0.0f,0.0f},
 		{0.0f,0.0f,0.0f}

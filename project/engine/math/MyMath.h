@@ -2,7 +2,9 @@
 #include "Vector2.h"
 #include "Vector3.h"
 #include "Vector4.h"
+#include "Matrix3x3.h"
 #include "Matrix4x4.h"
+#include "Quaternion.h"
 #include <vector>
 
 ///------------------------------------///
@@ -21,9 +23,15 @@ enum LightKind {
 ///------------------------------------///
 
 //トランスフォーム
-struct Transform {
+struct TransformEuler {
 	Vector3 scale;
 	Vector3 rotate;
+	Vector3 translate;
+};
+struct TransformQuaternion
+{
+	Vector3 scale;
+	Quaternion rotate;
 	Vector3 translate;
 };
 //球体
@@ -195,8 +203,10 @@ public://静的メンバ関数
 	static Matrix4x4 MakeRotateYMatrix(float radian);
 	//Z軸回転行列
 	static Matrix4x4 MakeRotateZMatrix(float radian);
-	//アフィン変換行列
+	//オイラー角版アフィン変換行列
 	static Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate);
+	//クォータニオン版アフィン変換行列
+	static Matrix4x4 MakeAffineMatrix(const Vector3& scale, const Quaternion& rotate, const Vector3& translate);
 	//射影変換行列
 	static Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip);
 	//平行投影行列
@@ -205,6 +215,34 @@ public://静的メンバ関数
 	static Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth);
 	// オイラー角から回転行列を作成する関数
 	static Matrix4x4 CreateRotationFromEulerAngles(float pitch, float yaw, float roll);
+
+	///------------------------------------///
+	///            Quaternion
+	///------------------------------------///
+
+	// 四元数の加算
+	static Quaternion Add(const Quaternion& q1, const Quaternion& q2);
+	// 四元数の減算
+	static Quaternion Subtract(const Quaternion& q1, const Quaternion& q2);
+	// 四元数の乗算
+	static Quaternion Multiply(const Quaternion& q1, const Quaternion& q2);
+	// 四元数のノルム
+	static float Norm(const Quaternion& q);
+	// 四元数の正規化
+	static Quaternion Normalize(const Quaternion& q);
+	// 四元数の共役
+	static Quaternion Conjugate(const Quaternion& q);
+	// 四元数の逆元
+	static Quaternion Inverse(const Quaternion& q);
+	// 回転軸と角度から四元数を生成
+	static Quaternion FromAxisAngle(const Vector3& axis, float angle);
+	// 四元数から回転行列を生成
+	static Matrix4x4 ToRotationMatrix(const Quaternion& q);
+	// オイラー角から四元数を生成
+	static Quaternion FromEulerAngles(Vector3 euler);
+	// 四元数をオイラー角に変換
+	static Vector3 ToEulerAngles(const Quaternion& q);
+
 
 	///------------------------------------///
 	///               float
@@ -354,9 +392,14 @@ Vector3 operator*(float s, const Vector3& v);
 Vector3 operator*(const Vector3& v, float s);
 Vector3 operator/(const Vector3& v, float s);
 Vector3 operator*(const Matrix4x4& mat, const Vector3& vec);
+Vector3 operator*(const Quaternion& q, const Vector3& v);
 Matrix4x4 operator+(const Matrix4x4& m1, const Matrix4x4& m2);
 Matrix4x4 operator-(const Matrix4x4& m1, const Matrix4x4& m2);
 Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2);
+Quaternion operator+(const Quaternion& q1, const Quaternion& q2);
+Quaternion operator-(const Quaternion& q1, const Quaternion& q2);
+Quaternion operator*(const Quaternion& q1, const Quaternion& q2);
+
 //単項演算子
 Vector3 operator-(const Vector3& v);
 Vector3 operator+(const Vector3& v);

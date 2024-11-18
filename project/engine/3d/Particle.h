@@ -26,14 +26,14 @@ public://インナークラス
 		struct ParticleResource {
 			Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
 			ParticleForGPU* instancingData;
-			Transform transform;
+			TransformEuler transform;
 			D3D12_CPU_DESCRIPTOR_HANDLE SrvHandleCPU;
 			D3D12_GPU_DESCRIPTOR_HANDLE SrvHandleGPU;
 			uint32_t srvIndex;
 		};
 		//パーティクル構造体
 		struct Particle {
-			Transform transform;
+			TransformEuler transform;
 			Vector3 velocity;
 			Vector4 color;
 			float lifeTime;
@@ -41,7 +41,7 @@ public://インナークラス
 		};
 		//エミッター構造体
 		struct Emitter {
-			Transform transform;//エミッターのトランスフォーム
+			TransformEuler transform;//エミッターのトランスフォーム
 			uint32_t count;//発生させるパーティクルの数
 			float frequency;//発生頻度
 			float frequencyTime;//頻度用時刻

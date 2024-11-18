@@ -31,7 +31,7 @@ public://構造体
 		VertexForVS* vertexData;
 		Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
 		LineForGPU* instancingData;
-		Transform transform;
+		TransformEuler transform;
 		D3D12_CPU_DESCRIPTOR_HANDLE SrvHandleCPU;
 		D3D12_GPU_DESCRIPTOR_HANDLE SrvHandleGPU;
 		uint32_t srvIndex;
