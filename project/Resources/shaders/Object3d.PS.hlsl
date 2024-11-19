@@ -48,8 +48,6 @@ PixelShaderOutput main(VertexShaderOutput input)
     // 平行光源の計算
     if (gLightFlag.isDirectionalLight == 1)
     {
-        
-        
         if (gMaterial.lightingKind == 0)
         {
             //反射の計算
