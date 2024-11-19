@@ -10,6 +10,7 @@ void WorldTransform::Initialize()
 	resource_->Map(0, nullptr, reinterpret_cast<void**>(&data_));
 	//データに書き込み
 	data_->matWorld = MyMath::MakeIdentity4x4();
+	data_->matWorldInverseTranspose = MyMath::MakeIdentity4x4();
 }
 
 void WorldTransform::UpdateMatrix()
@@ -24,4 +25,5 @@ void WorldTransform::UpdateMatrix()
 
 	// 定数バッファに転送する
 	data_->matWorld = matWorld_;
+	data_->matWorldInverseTranspose = MyMath::Transpose(MyMath::Inverse(matWorld_));
 }

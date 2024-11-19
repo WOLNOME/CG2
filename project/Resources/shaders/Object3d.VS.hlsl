@@ -2,7 +2,8 @@
 
 struct WorldTransformationMatrix
 {
-    float32_t4x4 World;
+    float32_t4x4 World;//ワールド行列
+    float32_t4x4 WorldInverseTranspose;//ワールド逆転置行列
 };
 struct ViewProjectionTransformationMatrix
 {
@@ -24,7 +25,7 @@ VertexShaderOutput main(VertexShaderInput input)
     VertexShaderOutput output;
     output.position = mul(input.position, mul(mul(gWorldTransformationMatrix.World,gViewProjectionTransformationMatrix.View),gViewProjectionTransformationMatrix.Projection));
     output.texcoord = input.texcoord;
-    output.normal = normalize(mul(input.normal, (float32_t3x3) gWorldTransformationMatrix.World));
+    output.normal = normalize(mul(input.normal, (float32_t3x3) gWorldTransformationMatrix.WorldInverseTranspose));
     output.worldPosition = mul(input.position, gWorldTransformationMatrix.World).xyz;
     return output;
 }

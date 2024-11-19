@@ -247,7 +247,7 @@ Model::Struct::ModelResource Model::MakeModelResource(const std::string& resourc
 			isTexture = false;
 		}
 		modelResource_.materialData.at(index)->isTexture = isTexture;
-		modelResource_.materialData.at(index)->shininess = 8.0f;
+		modelResource_.materialData.at(index)->shininess = 20.0f;
 		//UVトランスフォーム
 		modelResource_.uvTransform.at(index) = {
 			{1.0f,1.0f,1.0f},

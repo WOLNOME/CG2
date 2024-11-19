@@ -113,8 +113,9 @@ void DevelopScene::Update()
 
 	ImGui::End();
 
-	ImGui::Begin("axis");
+	ImGui::Begin("teapot");
 	ImGui::DragFloat3("translate", &wtAxis_.translate_.x, 0.01f);
+	ImGui::DragFloat3("scale", &wtAxis_.scale_.x, 0.01f);
 	ImGui::End();
 
 	ImGui::Begin("DirectionalLight");
