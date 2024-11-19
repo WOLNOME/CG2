@@ -41,7 +41,7 @@ void DevelopScene::Initialize()
 
 	wtAxis_.Initialize();
 	axis_ = std::make_unique<Object3d>();
-	axis_->Initialize("axis");
+	axis_->Initialize("teapot");
 
 	particle_ = std::make_unique<Particle>();
 	particle_->Initialize("plane");
@@ -66,7 +66,7 @@ void DevelopScene::Update()
 	dirLight->Update();
 
 	//モデルの更新
-	wtAxis_.rotation_.y += 0.03f;
+	wtAxis_.rotate_.y += 0.03f;
 	wtAxis_.UpdateMatrix();
 
 	//パーティクル
@@ -114,7 +114,7 @@ void DevelopScene::Update()
 	ImGui::End();
 
 	ImGui::Begin("axis");
-	ImGui::DragFloat3("translate", &wtAxis_.translation_.x, 0.01f);
+	ImGui::DragFloat3("translate", &wtAxis_.translate_.x, 0.01f);
 	ImGui::End();
 
 	ImGui::Begin("DirectionalLight");

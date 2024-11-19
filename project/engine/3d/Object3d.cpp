@@ -41,8 +41,11 @@ void Object3d::Draw(const WorldTransform& worldTransform, const BaseCamera& came
 	//WorldTransformCBufferの場所を設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, worldTransform.GetConstBuffer()->GetGPUVirtualAddress());
 
-	//CameraCBufferの場所特定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera.GetConstBuffer()->GetGPUVirtualAddress());
+	//CameraからビュープロジェクションCBufferの場所設定
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera.GetViewProjectionConstBuffer()->GetGPUVirtualAddress());
+
+	//Cameraからカメラ座標CBufferの場所を設定
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(6, camera.GetCameraPositionConstBuffer()->GetGPUVirtualAddress());
 
 	//モデルを描画する
 	model_->Draw(0, 3);

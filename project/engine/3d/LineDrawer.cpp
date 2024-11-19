@@ -49,7 +49,7 @@ void LineDrawer::Draw(const BaseCamera& camera)
 	//座標変換行列の場所を設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(0, lineResource_.SrvHandleGPU);
 	//カメラCBuffer場所を設定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, camera.GetConstBuffer()->GetGPUVirtualAddress());
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, camera.GetViewProjectionConstBuffer()->GetGPUVirtualAddress());
 	//頂点バッファービューを設定
 	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &lineResource_.vertexBufferView);
 	//描画

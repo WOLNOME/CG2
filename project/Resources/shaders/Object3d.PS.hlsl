@@ -1,4 +1,4 @@
-#include "object3d.hlsli"
+#include "Object3d.hlsli"
 
 struct Material
 {
@@ -6,6 +6,7 @@ struct Material
     int32_t lightingKind;
     float32_t4x4 uvTransform;
     int32_t isTexture;
+    float32_t shininess;
 };
 struct DirectionalLight
 {
@@ -17,10 +18,16 @@ struct LightFlag
 {
     int32_t isDirectionalLight;
 };
+struct CameraWorldPosition
+{
+    float32_t3 worldPosition;
+};
 
 ConstantBuffer<Material> gMaterial : register(b0);
 ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
 ConstantBuffer<LightFlag> gLightFlag : register(b2);
+ConstantBuffer<CameraWorldPosition> gCameraWorldPosition : register(b3);
+
 
 struct PixelShaderOutput
 {
@@ -41,11 +48,28 @@ PixelShaderOutput main(VertexShaderOutput input)
     // 平行光源の計算
     if (gLightFlag.isDirectionalLight == 1)
     {
+        
+        
         if (gMaterial.lightingKind == 0)
         {
+            //反射の計算
+            float32_t3 toEye = normalize(gCameraWorldPosition.worldPosition - input.worldPosition);
+            float32_t3 reflectLight = reflect(gDirectionalLight.direction, normalize(input.normal));
+            float RdotE = dot(reflectLight, toEye);
+            float specularPow = pow(saturate(RdotE), gMaterial.shininess);
+            
             float NdotL = dot(normalize(input.normal), -gDirectionalLight.direction);
             float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
-            output.color = gMaterial.color * textureColor * gDirectionalLight.color * cos * gDirectionalLight.intensity;
+            //拡散反射
+            float32_t3 diffuse = gMaterial.color.rgb * textureColor.rgb * gDirectionalLight.color.rgb * cos * gDirectionalLight.intensity;
+            //鏡面反射
+            float32_t3 specularColor = { 1.0f, 1.0f, 1.0f }; //この値はMaterialで変えられるようになるとよい。
+            float32_t3 specular = gDirectionalLight.color.rgb * gDirectionalLight.intensity * specularPow * specularColor;
+            //拡散反射+鏡面反射
+            output.color.rgb = diffuse + specular;
+            //α値
+            output.color.a = gMaterial.color.a * textureColor.a;
+            
         }
         else if (gMaterial.lightingKind == 1)
         {

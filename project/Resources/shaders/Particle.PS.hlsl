@@ -6,6 +6,7 @@ struct Material
     int32_t lightingKind;
     float32_t4x4 uvTransform;
     int32_t isTexture;
+    float32_t shininess;
 };
 
 struct PixelShaderOutput

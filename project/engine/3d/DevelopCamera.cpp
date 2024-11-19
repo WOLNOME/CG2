@@ -31,6 +31,22 @@ void DevelopCamera::Update()
 			transform.rotate.x += moveValue.y * 0.001f;
 			transform.rotate.y += moveValue.x * 0.001f;
 		}
+
+		//WASDでカメラ移動
+		if (input_->PushKey(DIK_W)) {
+			transform.translate += GetForwardDirection() * 0.1f;
+		}
+		if (input_->PushKey(DIK_A)) {
+			transform.translate += GetLeftDirection() * 0.1f;
+		}
+		if (input_->PushKey(DIK_S)) {
+			transform.translate += GetBackDirection() * 0.1f;
+		}
+		if (input_->PushKey(DIK_D)) {
+			transform.translate += GetRightDirection() * 0.1f;
+		}
+
+
 	}
 	//カメラの回転制限
 	const float maxPitch = (std::numbers::pi_v<float> / 2.0f) - 0.01f;

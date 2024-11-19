@@ -1,4 +1,4 @@
-#include "object3d.hlsli"
+#include "Object3d.hlsli"
 
 struct WorldTransformationMatrix
 {
@@ -8,7 +8,6 @@ struct ViewProjectionTransformationMatrix
 {
     float32_t4x4 View;
     float32_t4x4 Projection;
-    float32_t4 cameraPos;
 };
 ConstantBuffer<WorldTransformationMatrix> gWorldTransformationMatrix : register(b0);
 ConstantBuffer<ViewProjectionTransformationMatrix> gViewProjectionTransformationMatrix : register(b1);
@@ -26,5 +25,6 @@ VertexShaderOutput main(VertexShaderInput input)
     output.position = mul(input.position, mul(mul(gWorldTransformationMatrix.World,gViewProjectionTransformationMatrix.View),gViewProjectionTransformationMatrix.Projection));
     output.texcoord = input.texcoord;
     output.normal = normalize(mul(input.normal, (float32_t3x3) gWorldTransformationMatrix.World));
+    output.worldPosition = mul(input.position, gWorldTransformationMatrix.World).xyz;
     return output;
 }

@@ -119,7 +119,7 @@ void Particle::Draw(const BaseCamera& camera)
 	//座標変換行列Tableの場所を設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, particleResource_.SrvHandleGPU);
 	//CameraCBufferの場所を設定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera.GetConstBuffer()->GetGPUVirtualAddress());
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera.GetViewProjectionConstBuffer()->GetGPUVirtualAddress());
 	//モデルの描画
 	model_->Draw(0, 3, (uint32_t)particles.size());
 

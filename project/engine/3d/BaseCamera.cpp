@@ -17,11 +17,15 @@ BaseCamera::BaseCamera()
 
 void BaseCamera::Initialize()
 {
-	resource_ = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(ViewProjectionTransformationMatrixForVS));
-	resource_->Map(0, nullptr, reinterpret_cast<void**>(&data_));
-	data_->matView = viewMatrix;
-	data_->matProjection = projectionMatrix;
-	data_->worldCameraPos = { worldMatrix.m[3][0], worldMatrix.m[3][1], worldMatrix.m[3][2], 1.0f };
+	//座標変換用リソース
+	viewProjectionResource_ = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(ViewProjectionTransformationMatrixForVS));
+	viewProjectionResource_->Map(0, nullptr, reinterpret_cast<void**>(&viewProjectionData_));
+	viewProjectionData_->matView = viewMatrix;
+	viewProjectionData_->matProjection = projectionMatrix;
+	//カメラ座標リソース
+	cameraPositionResource_ = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(ViewProjectionTransformationMatrixForVS));
+	cameraPositionResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraPositionData_));
+	cameraPositionData_->worldPosition = { worldMatrix.m[3][0], worldMatrix.m[3][1], worldMatrix.m[3][2] };
 }
 
 void BaseCamera::UpdateMatrix()
@@ -31,9 +35,10 @@ void BaseCamera::UpdateMatrix()
 	projectionMatrix = MyMath::MakePerspectiveFovMatrix(fovY, aspectRatio, nearClip, farClip);
 	viewProjectionMatrix = MyMath::Multiply(viewMatrix, projectionMatrix);
 
-	data_->matView = viewMatrix;
-	data_->matProjection = projectionMatrix;
-	data_->worldCameraPos = { worldMatrix.m[3][0], worldMatrix.m[3][1], worldMatrix.m[3][2], 1.0f };
+	viewProjectionData_->matView = viewMatrix;
+	viewProjectionData_->matProjection = projectionMatrix;
+
+	cameraPositionData_->worldPosition = { worldMatrix.m[3][0], worldMatrix.m[3][1], worldMatrix.m[3][2] };
 }
 
 const Vector3 BaseCamera::GetForwardDirection()
@@ -43,6 +48,39 @@ const Vector3 BaseCamera::GetForwardDirection()
 
 	// 回転行列を使って前方向ベクトルを計算（Z軸方向が前方向）
 	Vector3 forward = rotationMatrix * Vector3(0, 0, 1);  // Z軸方向を前方向として扱う
+
+	return forward;
+}
+
+const Vector3 BaseCamera::GetRightDirection()
+{
+	// オイラー角から回転行列を計算（X軸、Y軸、Z軸回転を順番に適用）
+	Matrix4x4 rotationMatrix = MyMath::CreateRotationFromEulerAngles(transform.rotate.x, transform.rotate.y, transform.rotate.z);
+
+	// 回転行列を使って前方向ベクトルを計算（Z軸方向が前方向）
+	Vector3 forward = rotationMatrix * Vector3(1, 0, 0);  // Z軸方向を前方向として扱う
+
+	return forward;
+}
+
+const Vector3 BaseCamera::GetLeftDirection()
+{
+	// オイラー角から回転行列を計算（X軸、Y軸、Z軸回転を順番に適用）
+	Matrix4x4 rotationMatrix = MyMath::CreateRotationFromEulerAngles(transform.rotate.x, transform.rotate.y, transform.rotate.z);
+
+	// 回転行列を使って前方向ベクトルを計算（Z軸方向が前方向）
+	Vector3 forward = rotationMatrix * Vector3(-1, 0, 0);  // Z軸方向を前方向として扱う
+
+	return forward;
+}
+
+const Vector3 BaseCamera::GetBackDirection()
+{
+	// オイラー角から回転行列を計算（X軸、Y軸、Z軸回転を順番に適用）
+	Matrix4x4 rotationMatrix = MyMath::CreateRotationFromEulerAngles(transform.rotate.x, transform.rotate.y, transform.rotate.z);
+
+	// 回転行列を使って前方向ベクトルを計算（Z軸方向が前方向）
+	Vector3 forward = rotationMatrix * Vector3(0, 0, -1);  // Z軸方向を前方向として扱う
 
 	return forward;
 }

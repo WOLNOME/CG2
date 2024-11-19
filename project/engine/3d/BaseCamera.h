@@ -11,7 +11,9 @@
 struct ViewProjectionTransformationMatrixForVS {
 	Matrix4x4 matView;         // ワールド → ビュー変換行列
 	Matrix4x4 matProjection;   // ビュー → プロジェクション変換行列
-	Vector4 worldCameraPos;    // カメラ座標（ワールド座標）
+};
+struct WorldPositionForPS {
+	Vector3 worldPosition;    // カメラ座標（ワールド座標）
 };
 
 // 基本的なカメラ機能を提供する基底クラス
@@ -33,8 +35,12 @@ public:
 	const Matrix4x4& GetViewProjectionMatrix() const { return viewProjectionMatrix; }
 	const Vector3& GetRotate() const { return transform.rotate; }
 	const Vector3& GetTranslate() const { return transform.translate; }
-	const Microsoft::WRL::ComPtr<ID3D12Resource>& GetConstBuffer() const { return resource_; }
+	const Microsoft::WRL::ComPtr<ID3D12Resource>& GetViewProjectionConstBuffer() const { return viewProjectionResource_; }
+	const Microsoft::WRL::ComPtr<ID3D12Resource>& GetCameraPositionConstBuffer() const { return cameraPositionResource_; }
 	const Vector3 GetForwardDirection();
+	const Vector3 GetRightDirection();
+	const Vector3 GetLeftDirection();
+	const Vector3 GetBackDirection();
 
 	// セッター
 	void SetRotate(const Vector3& rotate) { transform.rotate = rotate; }
@@ -46,9 +52,15 @@ public:
 
 protected:
 	// 定数バッファ(座標変換リソース)
-	Microsoft::WRL::ComPtr<ID3D12Resource> resource_ = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Resource> viewProjectionResource_ = nullptr;
 	// マッピング済みアドレス
-	ViewProjectionTransformationMatrixForVS* data_ = nullptr;
+	ViewProjectionTransformationMatrixForVS* viewProjectionData_ = nullptr;
+
+	// 定数バッファ(カメラ座標リソース)
+	Microsoft::WRL::ComPtr<ID3D12Resource> cameraPositionResource_ = nullptr;
+	// マッピング済みアドレス
+	WorldPositionForPS* cameraPositionData_ = nullptr;
+
 
 	TransformEuler transform;
 	Matrix4x4 worldMatrix;

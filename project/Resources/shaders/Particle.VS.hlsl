@@ -9,7 +9,6 @@ struct ViewProjectionTransformationMatrix
 {
     float32_t4x4 View;
     float32_t4x4 Projection;
-    float32_t4 cameraPos;
 };
 StructuredBuffer<ParticleForGPU> gParticle : register(t0);
 ConstantBuffer<ViewProjectionTransformationMatrix> gViewProjectionTransformationMatrix : register(b0);

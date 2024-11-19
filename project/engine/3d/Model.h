@@ -23,6 +23,7 @@ private://インナークラス
 			float padding[3];//(PSに送るときは16バイトに揃える)
 			Matrix4x4 uvTransform;
 			int32_t isTexture;
+			float shininess;
 		};
 		//マテリアルデータ
 		struct MaterialData {
