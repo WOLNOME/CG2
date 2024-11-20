@@ -3,7 +3,8 @@
 #include <wrl.h>
 #include <string>
 #include <vector>
-#include <unordered_map>
+#include <array>
+#include <optional>
 //DirectXTex
 #include "DirectXTex.h"
 
@@ -20,22 +21,22 @@ public://公開メンバ関数
 	//シングルトンインスタンスの取得
 	static TextureManager* GetInstance();
 	//初期化
-	void Initialize();
+	void Initialize(std::string directoryPath = "Resources/");
 	//終了
 	void Finalize();
 
 	//テクスチャファイル読み込み
-	 void LoadTexture(const std::string& filePath);
+	uint32_t LoadTexture(const std::string& filePath);
 private://非公開メンバ関数
 	//テクスチャデータの転送
 	void UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages);
 public://ゲッター
 	//メタデータを取得
-	const DirectX::TexMetadata& GetMetaData(const std::string& filePath);
-	 //SRVインデックスの取得
-	 uint32_t GetSrvIndex(const std::string& filePath);
-	 //GPUハンドルを取得
-	 D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(const std::string& filePath);
+	const DirectX::TexMetadata& GetMetaData(uint32_t textureHandle);
+	//SRVインデックスの取得
+	uint32_t GetSrvIndex(uint32_t textureHandle);
+	//GPUハンドルを取得
+	D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(uint32_t textureHandle);
 private:
 	//テクスチャデータ
 	struct TextureData
@@ -43,16 +44,19 @@ private:
 		DirectX::TexMetadata metadata;
 		Microsoft::WRL::ComPtr<ID3D12Resource> resource;
 		uint32_t srvIndex;
-		D3D12_CPU_DESCRIPTOR_HANDLE srvHandleCPU;
-		D3D12_GPU_DESCRIPTOR_HANDLE srvHandleGPU;
+		std::string textureName;
 	};
 public:
-	//SRVインデックスの開始番号
-	static uint32_t kSRVIndexTop;
+	//テクスチャデータの確保数
+	static const uint32_t kNumTextureData = 512;
+
 private://インスタンス
-	
+
 private://メンバ変数
-	//テクスチャデータ
-	std::unordered_map<std::string, TextureData> textureDatas;
+	//テクスチャデータコンテナ(要素数がテクスチャハンドル)
+	std::array<std::optional<TextureData>, kNumTextureData> textureDatas;
+	//ディレクトリパス
+	std::string directoryPath_;
+
 };
 

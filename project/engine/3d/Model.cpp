@@ -1,14 +1,20 @@
 #include "Model.h"
 #include <fstream>
 #include <sstream>
+#include <filesystem>
 #include "DirectXCommon.h"
 #include "Object3d.h"
 #include "TextureManager.h"
 
-void Model::Initialize(const std::string& directorypath, const std::string& filename)
+void Model::Initialize(const std::string& filename, std::string directorypath)
 {
+	//ディレクトリパス
+	directoryPath_ = directorypath;
+	//ファイル名
+	fileName_ = filename;
+
 	//モデルリソースの初期設定
-	modelResource_ = MakeModelResource(directorypath, filename);
+	modelResource_ = MakeModelResource();
 	//テクスチャの設定
 	SettingTexture();
 }
@@ -28,7 +34,7 @@ void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParame
 		//モデルにテクスチャがない場合、スキップ
 		if (modelResource_.modelData.at(index).material.textureFilePath.size() != 0) {
 			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
-			DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(textureRootParameterIndex, TextureManager::GetInstance()->GetSrvHandleGPU(modelResource_.modelData.at(index).material.textureFilePath));
+			DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(textureRootParameterIndex, TextureManager::GetInstance()->GetSrvHandleGPU(modelResource_.modelData.at(index).material.textureHandle));
 		}
 		//描画
 		DirectXCommon::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelResource_.modelData.at(index).vertices.size()), instancingNum, 0, 0);
@@ -36,16 +42,16 @@ void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParame
 }
 
 
-Model::Struct::MaterialData Model::LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& fileName, const std::string& materialName)
+Model::Struct::MaterialData Model::LoadMaterialTemplateFile(const std::string& materialName)
 {
 	//1.中で必要となる変数の宣言
 	Struct::MaterialData materialData;
 	std::string line;
 	bool isLoad = false;
 	//2.ファイルを開く
-	std::ifstream file(directoryPath + fileName + "/" + fileName + ".mtl");
+	std::ifstream file(directoryPath_ + fileName_ + "/" + fileName_ + ".mtl");
 	assert(file.is_open());
-	//3.実際にファイルを読み、MaterialDAtaを構築していく
+	//3.実際にファイルを読み、MaterialDataを構築していく
 	while (std::getline(file, line)) {
 		std::string identifier;
 		std::istringstream s(line);
@@ -67,7 +73,7 @@ Model::Struct::MaterialData Model::LoadMaterialTemplateFile(const std::string& d
 				std::string textureFilename;
 				s >> textureFilename;
 				//連結してファイルパスにする
-				materialData.textureFilePath = directoryPath + fileName + "/" + textureFilename;
+				materialData.textureFilePath = std::filesystem::path(textureFilename).filename().string();
 			}
 			else if (identifier == "Kd") {
 				Vector4 color;
@@ -81,7 +87,7 @@ Model::Struct::MaterialData Model::LoadMaterialTemplateFile(const std::string& d
 	return materialData;
 }
 
-std::vector<Model::Struct::ModelData> Model::LoadObjFile(const std::string& directoryPath, const std::string& fileName)
+std::vector<Model::Struct::ModelData> Model::LoadObjFile()
 {
 	//1.中で必要となる変数の宣言
 	std::vector<Struct::ModelData> modelData;
@@ -94,7 +100,7 @@ std::vector<Model::Struct::ModelData> Model::LoadObjFile(const std::string& dire
 	bool isGetVt = false;
 	size_t index = -1;
 	//2.ファイルを開く
-	std::ifstream file(directoryPath + fileName + "/" + fileName + ".obj");
+	std::ifstream file(directoryPath_ + fileName_ + "/" + fileName_ + ".obj");
 	assert(file.is_open());
 	//3.実際にファイルを読み、ModelDataを構築していく
 	while (std::getline(file, line)) {
@@ -180,7 +186,7 @@ std::vector<Model::Struct::ModelData> Model::LoadObjFile(const std::string& dire
 		}
 	}
 	//ファイルの読み直し
-	std::ifstream file2(directoryPath + fileName + "/" + fileName + ".obj");
+	std::ifstream file2(directoryPath_ + fileName_ + "/" + fileName_ + ".obj");
 	assert(file.is_open());
 	//mtlファイルを開いてマテリアル情報を得る(materialNameを基に)
 	while (std::getline(file2, line2)) {
@@ -194,7 +200,7 @@ std::vector<Model::Struct::ModelData> Model::LoadObjFile(const std::string& dire
 			s >> materialFilename;
 			for (size_t index = 0; index < modelData.size(); index++) {
 				//基本的にobjファイルと同一階層にmtlは存在させるので、ディレクトリ名とファイル名を探す。
-				modelData.at(index).material = LoadMaterialTemplateFile(directoryPath, fileName, modelData.at(index).materialName);
+				modelData.at(index).material = LoadMaterialTemplateFile(modelData.at(index).materialName);
 			}
 			//読んだら抜ける
 			break;
@@ -204,12 +210,12 @@ std::vector<Model::Struct::ModelData> Model::LoadObjFile(const std::string& dire
 	return modelData;
 }
 
-Model::Struct::ModelResource Model::MakeModelResource(const std::string& resourceFileName, const std::string& objFileName)
+Model::Struct::ModelResource Model::MakeModelResource()
 {
 	//モデルリソース
 	Struct::ModelResource modelResource_;
 
-	modelResource_.modelData = LoadObjFile(resourceFileName, objFileName);
+	modelResource_.modelData = LoadObjFile();
 	modelNum_ = modelResource_.modelData.size();
 	//std::vector型の要素数を確定
 	modelResource_.vertexResource.resize(modelNum_);
@@ -236,8 +242,6 @@ Model::Struct::ModelResource Model::MakeModelResource(const std::string& resourc
 		modelResource_.materialResource.at(index)->Map(0, nullptr, reinterpret_cast<void**>(&modelResource_.materialData.at(index)));
 		//白を書き込んでおく
 		modelResource_.materialData.at(index)->color = modelResource_.modelData.at(index).material.colorData;
-		//ライティング
-		modelResource_.materialData.at(index)->lightingKind = HalfLambert;
 		//uvTransform
 		modelResource_.materialData.at(index)->uvTransform = MyMath::MakeIdentity4x4();
 		//テクスチャを持っているか
@@ -262,9 +266,7 @@ Model::Struct::ModelResource Model::MakeModelResource(const std::string& resourc
 void Model::SettingTexture()
 {
 	for (size_t index = 0; index < modelResource_.modelData.size(); index++) {
-		//.objの参照しているテクスチャファイル読み込み
-		TextureManager::GetInstance()->LoadTexture(modelResource_.modelData.at(index).material.textureFilePath);
-		//読み込んだテクスチャの番号を取得
-		modelResource_.modelData.at(index).material.textureIndex = TextureManager::GetInstance()->GetSrvIndex(modelResource_.modelData.at(index).material.textureFilePath);
+		//.objの参照しているテクスチャファイル読み込み(TextureManagerはResources/をカットできるので)
+		modelResource_.modelData.at(index).material.textureHandle = TextureManager::GetInstance()->LoadTexture("models/" + fileName_ + "/" + modelResource_.modelData.at(index).material.textureFilePath);
 	}
 }

@@ -30,7 +30,12 @@ public://インナークラス
 	};
 
 public://メンバ関数
-	void Initialize(std::string textureFilePath);
+
+	/// <summary>
+	/// 初期化
+	/// </summary>
+	/// <param name="textureFilePath">テクスチャハンドル</param>
+	void Initialize(uint32_t textureHandle);
 	void Update();
 	void Draw();
 private://メンバ関数
@@ -47,7 +52,7 @@ public://ゲッター
 	bool GetFlipY()const { return isFlipY_; }
 	const Vector2& GetTextureLeftTop()const { return textureLeftTop; }
 	const Vector2& GetTextureSize()const { return textureSize; }
-	
+
 
 public://セッター
 	void SetPosition(const Vector2& position) { this->position = position; }
@@ -59,6 +64,7 @@ public://セッター
 	void SetFlipY(bool isFlipY) { isFlipY_ = isFlipY; }
 	void SetTextureLeftTop(const Vector2& leftTop) { textureLeftTop = leftTop; }
 	void SetTextureSize(const Vector2& size) { textureSize = size; }
+	void SetTextureHandle(uint32_t textureHandle) { textureHandle_ = textureHandle; }
 
 private://インスタンス
 private://メンバ変数
@@ -98,8 +104,7 @@ private://メンバ変数値書き換え用
 	Vector2 textureLeftTop = { 0.0f,0.0f };
 	//テクスチャ切り出しサイズ
 	Vector2 textureSize = { 100.0f,100.0f };
-	//テクスチャファイルパス
-	std::string textureFilePath_;
-
+	//登録中のテクスチャハンドル
+	uint32_t textureHandle_;
 };
 

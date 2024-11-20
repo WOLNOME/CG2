@@ -27,14 +27,14 @@ void DevelopScene::Initialize()
 
 	//ゲームシーン変数の初期化
 	sprite_ = std::make_unique<Sprite>();
-	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
-	sprite_->Initialize("Resources/monsterBall.png");
+	textureHandleSprite_ = TextureManager::GetInstance()->LoadTexture("monsterBall.png");
+	sprite_->Initialize(textureHandleSprite_);
 	sprite_->SetAnchorPoint({ 0.5f,0.5f });
 	sprite_->SetFlipX(true);
 
 	sprite2_ = std::make_unique<Sprite>();
-	TextureManager::GetInstance()->LoadTexture("Resources/monsterBall.png");
-	sprite2_->Initialize("Resources/monsterBall.png");
+	textureHandleSprite2_ = TextureManager::GetInstance()->LoadTexture("monsterBall.png");
+	sprite2_->Initialize(textureHandleSprite2_);
 	sprite2Position = { 100.0f,100.0f };
 	sprite2_->SetPosition(sprite2Position);
 	sprite2_->SetSize({ 300.0f,300.0f });

@@ -12,6 +12,7 @@
 #include "DevelopCamera.h"
 #include "DirectionalLight.h"
 #include <memory>
+#include <cstdint>
 
 class DevelopScene : public BaseScene
 {
@@ -41,8 +42,9 @@ private://メンバ変数
 	//平行光源
 	std::unique_ptr<DirectionalLight> dirLight;
 
-
+	uint32_t textureHandleSprite_ = 0u;
 	std::unique_ptr<Sprite> sprite_ = nullptr;
+	uint32_t textureHandleSprite2_ = 0u;
 	std::unique_ptr<Sprite> sprite2_ = nullptr;
 	Vector2 sprite2Position;
 	WorldTransform wtAxis_;

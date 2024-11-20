@@ -19,17 +19,15 @@ private://インナークラス
 		//マテリアル
 		struct Material {
 			Vector4 color;
-			int32_t lightingKind;
-			float padding[3];//(PSに送るときは16バイトに揃える)
 			Matrix4x4 uvTransform;
-			int32_t isTexture;
+			float isTexture;
 			float shininess;
 		};
 		//マテリアルデータ
 		struct MaterialData {
 			std::string textureFilePath;
 			Vector4 colorData;
-			uint32_t textureIndex = 0;
+			uint32_t textureHandle;
 		};
 		//モデルデータ
 		struct ModelData {
@@ -52,7 +50,7 @@ private://インナークラス
 		};
 	};
 public:
-	void Initialize(const std::string& directorypath, const std::string& filename);
+	void Initialize(const std::string& filename, std::string directorypath = "Resources/models/");
 	void Update();
 	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum = 1);
 
@@ -61,11 +59,11 @@ public://セッター
 
 private:
 	//.mtlファイルの読み取り
-	Struct::MaterialData LoadMaterialTemplateFile(const std::string& directoryPath, const std::string& fileName, const std::string& materialName);
+	Struct::MaterialData LoadMaterialTemplateFile(const std::string& materialName);
 	//.objファイルの読み取り
-	std::vector<Struct::ModelData> LoadObjFile(const std::string& directoryPath, const std::string& fileName);
+	std::vector<Struct::ModelData> LoadObjFile();
 	//モデルリソース作成関数
-	Struct::ModelResource MakeModelResource(const std::string& resourceFileName, const std::string& objFileName);
+	Struct::ModelResource MakeModelResource();
 	//テクスチャ読み込み
 	void SettingTexture();
 private:
@@ -74,5 +72,9 @@ private:
 	//モデル数
 	size_t modelNum_;
 
+	//ディレクトリパス
+	std::string directoryPath_;
+	//objファイル名
+	std::string fileName_;
 };
 
