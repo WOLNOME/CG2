@@ -91,11 +91,13 @@ PixelShaderOutput main(VertexShaderOutput input)
             
         float NdotL = dot(normalize(input.normal), -pointLightDirection);
         float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
+        float32_t distance = length(gPointLight.position - input.worldPosition); //ポイントライトへの距離
+        float32_t factor = 1.0f / (distance * distance);
         //拡散反射
-        diffusePointLight = gMaterial.color.rgb * textureColor.rgb * gPointLight.color.rgb * cos * gPointLight.intensity;
+        diffusePointLight = gMaterial.color.rgb * textureColor.rgb * gPointLight.color.rgb * cos * gPointLight.intensity * factor;
         //鏡面反射
         float32_t3 specularColor = { 1.0f, 1.0f, 1.0f }; //この値はMaterialで変えられるようになるとよい。
-        specularPointLight = gPointLight.color.rgb * gPointLight.intensity * specularPow * specularColor;
+        specularPointLight = gPointLight.color.rgb * gPointLight.intensity * specularPow * specularColor * factor;
     }
     
     
