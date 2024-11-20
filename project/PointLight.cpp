@@ -1,6 +1,5 @@
 #include "PointLight.h"
 #include "DirectXCommon.h"
-#include "MyMath.h"
 
 void PointLight::Initialize()
 {

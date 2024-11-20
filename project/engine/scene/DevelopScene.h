@@ -12,6 +12,7 @@
 #include "DevelopCamera.h"
 #include "DirectionalLight.h"
 #include "PointLight.h"
+#include "SpotLight.h"
 #include <memory>
 #include <cstdint>
 
@@ -45,8 +46,11 @@ private://メンバ変数
 	//点光源
 	std::unique_ptr<PointLight> pointLight;
 	std::unique_ptr<LineDrawer> plMark;
-	bool isDrawMark = false;
-
+	bool isDrawPLMark = false;
+	//スポットライト
+	std::unique_ptr<SpotLight> spotLight;
+	std::unique_ptr<LineDrawer> slMark;
+	bool isDrawSLMark = false;
 
 	uint32_t textureHandleSprite_ = 0u;
 	std::unique_ptr<Sprite> sprite_ = nullptr;

@@ -23,14 +23,16 @@ void Object3d::Initialize(const std::string& filePath)
 	//データに書き込み
 	lightFlagData_->isDirectionalLight = false;
 	lightFlagData_->isPointLight = false;
+	lightFlagData_->isSpotLight = false;
 
 }
 
-void Object3d::Draw(const WorldTransform& worldTransform, const BaseCamera& camera, const DirectionalLight* dirLight, const PointLight* pointLight)
+void Object3d::Draw(const WorldTransform& worldTransform, const BaseCamera& camera, const DirectionalLight* dirLight, const PointLight* pointLight, const SpotLight* spotLight)
 {
-	//平行光源有無の設定
+	//光源有無の設定
 	lightFlagData_->isDirectionalLight = (dirLight && dirLight->isActive_) ? true : false;
 	lightFlagData_->isPointLight = (pointLight && pointLight->isActive_) ? true : false;
+	lightFlagData_->isSpotLight = (spotLight && spotLight->isActive_) ? true : false;
 
 	//平行光源のCBufferの場所を設定
 	if (dirLight && dirLight->isActive_)
@@ -39,6 +41,10 @@ void Object3d::Draw(const WorldTransform& worldTransform, const BaseCamera& came
 	//点光源のCBufferの場所を設定
 	if (pointLight && pointLight->isActive_)
 		DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(7, pointLight->GetConstBuffer()->GetGPUVirtualAddress());
+
+	//スポットライトのCBufferの場所を設定
+	if (spotLight && spotLight->isActive_)
+		DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(8, spotLight->GetConstBuffer()->GetGPUVirtualAddress());
 
 	//光源有無確認用CBufferの場所を設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(5, lightFlagResource_->GetGPUVirtualAddress());

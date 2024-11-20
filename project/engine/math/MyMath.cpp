@@ -1668,7 +1668,7 @@ bool MyMath::IsCollision(const OBB& obb, const Segment& segment)
 void MyMath::DrawSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDrawer)
 {
 	float pi = std::numbers::pi_v<float>;
-	const uint32_t kSubdivision = 16;//分割数
+	const uint32_t kSubdivision = 15;//分割数
 	const float kLonEvery = 2.0f * pi / kSubdivision;//経度分割1つ分の角度
 	const float kLatEvery = pi / kSubdivision;//緯度分割1つ分の角度
 	//緯度の方向に分割 -π/2~π/2

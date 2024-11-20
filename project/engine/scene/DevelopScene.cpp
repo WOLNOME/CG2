@@ -6,6 +6,7 @@
 #include "LineDrawerCommon.h"
 #include "SpriteCommon.h"
 #include "SceneManager.h"
+#include <numbers>
 
 void DevelopScene::Initialize()
 {
@@ -29,6 +30,12 @@ void DevelopScene::Initialize()
 	//点光源目印の生成と初期化
 	plMark = std::make_unique<LineDrawer>();
 	plMark->Initialize();
+	//スポットライトの生成と初期化
+	spotLight = std::make_unique<SpotLight>();
+	spotLight->Initialize();
+	//スポットライト目印の生成と初期化
+	slMark = std::make_unique<LineDrawer>();
+	slMark->Initialize();
 
 
 	//ゲームシーン変数の初期化
@@ -78,6 +85,9 @@ void DevelopScene::Update()
 
 	//点光源の更新
 	pointLight->Update();
+
+	//スポットライトの更新
+	spotLight->Update();
 
 	//モデルの更新
 	wtAxis_.rotate_.y += 0.03f;
@@ -153,14 +163,39 @@ void DevelopScene::Update()
 	ImGui::DragFloat("radius", &pointLight->radius_, 0.01f, 0.0f, 20.0f);
 	ImGui::DragFloat("decay", &pointLight->decay_, 0.01f, 0.0f, 10.0f);
 	ImGui::Checkbox("isActive", &pointLight->isActive_);
-	ImGui::Checkbox("isDrawMark", &isDrawMark);
-	if (isDrawMark) {
+	ImGui::Checkbox("isDrawMark", &isDrawPLMark);
+	if (isDrawPLMark) {
 		//マークの生成
 		Sphere plMarkSphere;
 		plMarkSphere.center = pointLight->position_;
 		plMarkSphere.radius = 0.1f;
 		MyMath::DrawSphere(plMarkSphere, { 1.0f,0.5f,0.0f,1.0f }, plMark.get());
 
+	}
+	ImGui::End();
+
+	ImGui::Begin("SpotLight");
+	ImGui::SliderFloat4("color", &spotLight->color_.x, 0.0f, 1.0f);
+	ImGui::DragFloat3("position", &spotLight->position_.x, 0.01f);
+	ImGui::SliderFloat("intencity", &spotLight->intencity_, 0.0f, 10.0f);
+	ImGui::SliderFloat3("direction", &spotLight->direction_.x, -1.0f, 1.0f);
+	ImGui::SliderFloat("distance", &spotLight->distance_, 0.0f, 20.0f);
+	ImGui::SliderFloat("decay", &spotLight->decay_, 0.0f, 10.0f);
+	ImGui::SliderFloat("cosAngle", &spotLight->cosAngle_, -1.0f, spotLight->cosFalloffStart_ - 0.01f);
+	ImGui::SliderFloat("cosFalloffStart", &spotLight->cosFalloffStart_, 0.0f, 2.0f);
+	ImGui::Checkbox("isActive", &spotLight->isActive_);
+	ImGui::Checkbox("isDrawMark", &isDrawSLMark);
+	if (isDrawSLMark) {
+		//マークの生成
+		Sphere slMarkSphere;
+		slMarkSphere.center = spotLight->position_;
+		slMarkSphere.radius = 0.1f;
+		Sphere slMarkSphere2;
+		slMarkSphere2.center = spotLight->position_ + (spotLight->direction_.Normalized() * 0.15f);
+		slMarkSphere2.radius = 0.05f;
+
+		MyMath::DrawSphere(slMarkSphere, { 1.0f,0.25f,0.0f,1.0f }, slMark.get());
+		MyMath::DrawSphere(slMarkSphere2, { 0.0f,1.0f,0.0f,1.0f }, slMark.get());
 	}
 	ImGui::End();
 
@@ -176,9 +211,9 @@ void DevelopScene::Draw()
 	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
-	axis_->Draw(wtAxis_, *camera.get(), dirLight.get(),pointLight.get());
+	axis_->Draw(wtAxis_, *camera.get(), dirLight.get(), pointLight.get(), spotLight.get());
 
-	terrain_->Draw(wtTerrain_, *camera.get(), dirLight.get(), pointLight.get());
+	terrain_->Draw(wtTerrain_, *camera.get(), dirLight.get(), pointLight.get(), spotLight.get());
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
@@ -208,6 +243,7 @@ void DevelopScene::Draw()
 	//線描画
 	line_->Draw(*camera.get());
 	plMark->Draw(*camera.get());
+	slMark->Draw(*camera.get());
 
 	///------------------------------///
 	///↑↑↑↑線描画終了↑↑↑↑
