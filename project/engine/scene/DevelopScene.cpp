@@ -23,6 +23,12 @@ void DevelopScene::Initialize()
 	//平行光源の生成と初期化
 	dirLight = std::make_unique<DirectionalLight>();
 	dirLight->Initialize();
+	//点光源の生成と初期化
+	pointLight = std::make_unique<PointLight>();
+	pointLight->Initialize();
+	//点光源目印の生成と初期化
+	plMark = std::make_unique<LineDrawer>();
+	plMark->Initialize();
 
 
 	//ゲームシーン変数の初期化
@@ -42,6 +48,11 @@ void DevelopScene::Initialize()
 	wtAxis_.Initialize();
 	axis_ = std::make_unique<Object3d>();
 	axis_->Initialize("teapot");
+
+	wtTerrain_.Initialize();
+	wtTerrain_.translate_ = { 0.0f,-1.2f,0.0f };
+	terrain_ = std::make_unique<Object3d>();
+	terrain_->Initialize("terrain");
 
 	particle_ = std::make_unique<Particle>();
 	particle_->Initialize("plane");
@@ -65,9 +76,14 @@ void DevelopScene::Update()
 	//平行光源の更新
 	dirLight->Update();
 
+	//点光源の更新
+	pointLight->Update();
+
 	//モデルの更新
 	wtAxis_.rotate_.y += 0.03f;
 	wtAxis_.UpdateMatrix();
+	wtTerrain_.UpdateMatrix();
+
 
 	//パーティクル
 	particle_->Update();
@@ -118,11 +134,32 @@ void DevelopScene::Update()
 	ImGui::DragFloat3("scale", &wtAxis_.scale_.x, 0.01f);
 	ImGui::End();
 
+	ImGui::Begin("terrain");
+	ImGui::DragFloat3("translate", &wtTerrain_.translate_.x, 0.01f);
+	ImGui::DragFloat3("scale", &wtTerrain_.scale_.x, 0.01f);
+	ImGui::End();
+
 	ImGui::Begin("DirectionalLight");
 	ImGui::DragFloat4("color", &dirLight->color_.x, 0.01f, 0.0f, 1.0f);
 	ImGui::DragFloat3("direction", &dirLight->direction_.x, 0.01f);
 	ImGui::DragFloat("intencity", &dirLight->intencity_, 0.01f, 0.0f, 1.0f);
 	ImGui::Checkbox("isActive", &dirLight->isActive_);
+	ImGui::End();
+
+	ImGui::Begin("PoiintLight");
+	ImGui::DragFloat4("color", &pointLight->color_.x, 0.01f, 0.0f, 1.0f);
+	ImGui::DragFloat3("position", &pointLight->position_.x, 0.01f);
+	ImGui::DragFloat("intencity", &pointLight->intencity_, 0.01f, 0.0f, 1.0f);
+	ImGui::Checkbox("isActive", &pointLight->isActive_);
+	ImGui::Checkbox("isDrawMark", &isDrawMark);
+	if (isDrawMark) {
+		//マークの生成
+		Sphere plMarkSphere;
+		plMarkSphere.center = pointLight->position_;
+		plMarkSphere.radius = 0.1f;
+		MyMath::DrawSphere(plMarkSphere, { 1.0f,0.5f,0.0f,1.0f }, plMark.get());
+
+	}
 	ImGui::End();
 
 #endif // _DEBUG
@@ -137,7 +174,9 @@ void DevelopScene::Draw()
 	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
-	axis_->Draw(wtAxis_, *camera.get(), dirLight.get());
+	axis_->Draw(wtAxis_, *camera.get(), dirLight.get(),pointLight.get());
+
+	terrain_->Draw(wtTerrain_, *camera.get(), dirLight.get(), pointLight.get());
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
@@ -166,6 +205,7 @@ void DevelopScene::Draw()
 
 	//線描画
 	line_->Draw(*camera.get());
+	plMark->Draw(*camera.get());
 
 	///------------------------------///
 	///↑↑↑↑線描画終了↑↑↑↑

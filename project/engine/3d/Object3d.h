@@ -8,6 +8,7 @@
 #include "Model.h"
 #include "WorldTransform.h"
 #include "DirectionalLight.h"
+#include "PointLight.h"
 
 class BaseCamera;
 //モデル
@@ -17,6 +18,7 @@ public://構造体
 	struct LightFlagForPS
 	{
 		uint32_t isDirectionalLight;
+		uint32_t isPointLight;
 	};
 public://メンバ関数
 	//初期化
@@ -27,7 +29,7 @@ public://メンバ関数
 	/// <param name="worldTransform">ワールドトランスフォーム</param>
 	/// <param name="camera">カメラ</param>
 	/// <param name="dirLight">平行光源</param>
-	void Draw(const WorldTransform& worldTransform, const BaseCamera& camera, const DirectionalLight* dirLight = nullptr);
+	void Draw(const WorldTransform& worldTransform, const BaseCamera& camera, const DirectionalLight* dirLight = nullptr, const PointLight* pointLight = nullptr);
 private://非公開メンバ関数
 
 private://メンバ変数
