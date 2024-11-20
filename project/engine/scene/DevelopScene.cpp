@@ -150,6 +150,8 @@ void DevelopScene::Update()
 	ImGui::DragFloat4("color", &pointLight->color_.x, 0.01f, 0.0f, 1.0f);
 	ImGui::DragFloat3("position", &pointLight->position_.x, 0.01f);
 	ImGui::DragFloat("intencity", &pointLight->intencity_, 0.01f, 0.0f, 1.0f);
+	ImGui::DragFloat("radius", &pointLight->radius_, 0.01f, 0.0f, 20.0f);
+	ImGui::DragFloat("decay", &pointLight->decay_, 0.01f, 0.0f, 10.0f);
 	ImGui::Checkbox("isActive", &pointLight->isActive_);
 	ImGui::Checkbox("isDrawMark", &isDrawMark);
 	if (isDrawMark) {

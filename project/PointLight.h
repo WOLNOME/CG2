@@ -7,9 +7,12 @@
 
 // 定数バッファ用データ構造体
 struct PointLightForPS {
-	Vector4 color;
-	Vector3 position;
-	float intensity;
+	Vector4 color;		//ライトの色
+	Vector3 position;	//ライトの位置
+	float intensity;	//輝度
+	float radius;		//ライトの届く最大距離
+	float decay;		//減衰率
+	float padding[2];
 };
 /// <summary>
 /// 点光源
@@ -23,6 +26,10 @@ public:
 	Vector3 position_ = { 0.0f, 0.0f, 0.0f };
 	//輝度
 	float intencity_ = 1.0f;
+	//光の有効距離
+	float radius_ = 5.0f;
+	//減衰率
+	float decay_ = 0.5f;
 	//オンオフ
 	bool isActive_ = true;
 

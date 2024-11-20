@@ -12,6 +12,9 @@ void PointLight::Initialize()
 	data_->color = color_;
 	data_->position = position_;
 	data_->intensity = intencity_;
+	data_->radius = radius_;
+	data_->decay = decay_;
+
 }
 
 void PointLight::Update()
@@ -20,4 +23,6 @@ void PointLight::Update()
 	data_->color = color_;
 	data_->position = position_;
 	data_->intensity = intencity_;
+	data_->radius = radius_;
+	data_->decay = decay_;
 }
