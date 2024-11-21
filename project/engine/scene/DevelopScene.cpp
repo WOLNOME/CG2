@@ -150,18 +150,18 @@ void DevelopScene::Update()
 	ImGui::End();
 
 	ImGui::Begin("DirectionalLight");
-	ImGui::DragFloat4("color", &dirLight->color_.x, 0.01f, 0.0f, 1.0f);
+	ImGui::SliderFloat4("color", &dirLight->color_.x, 0.0f, 1.0f);
 	ImGui::DragFloat3("direction", &dirLight->direction_.x, 0.01f);
-	ImGui::DragFloat("intencity", &dirLight->intencity_, 0.01f, 0.0f, 1.0f);
+	ImGui::SliderFloat("intencity", &dirLight->intencity_, 0.0f, 10.0f);
 	ImGui::Checkbox("isActive", &dirLight->isActive_);
 	ImGui::End();
 
 	ImGui::Begin("PoiintLight");
-	ImGui::DragFloat4("color", &pointLight->color_.x, 0.01f, 0.0f, 1.0f);
+	ImGui::SliderFloat4("color", &pointLight->color_.x, 0.0f, 1.0f);
 	ImGui::DragFloat3("position", &pointLight->position_.x, 0.01f);
-	ImGui::DragFloat("intencity", &pointLight->intencity_, 0.01f, 0.0f, 1.0f);
-	ImGui::DragFloat("radius", &pointLight->radius_, 0.01f, 0.0f, 20.0f);
-	ImGui::DragFloat("decay", &pointLight->decay_, 0.01f, 0.0f, 10.0f);
+	ImGui::SliderFloat("intencity", &pointLight->intencity_, 0.0f, 10.0f);
+	ImGui::SliderFloat("radius", &pointLight->radius_, 0.0f, 20.0f);
+	ImGui::SliderFloat("decay", &pointLight->decay_, 0.0f, 10.0f);
 	ImGui::Checkbox("isActive", &pointLight->isActive_);
 	ImGui::Checkbox("isDrawMark", &isDrawPLMark);
 	if (isDrawPLMark) {
