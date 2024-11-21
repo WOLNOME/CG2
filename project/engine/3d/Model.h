@@ -58,8 +58,6 @@ public://ゲッター
 public://セッター
 
 private:
-	//.mtlファイルの読み取り
-	Struct::MaterialData LoadMaterialTemplateFile(const std::string& materialName);
 	//.objファイルの読み取り
 	std::vector<Struct::ModelData> LoadObjFile();
 	//モデルリソース作成関数
