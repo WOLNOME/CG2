@@ -24,7 +24,7 @@ public://構造体
 	};
 public://メンバ関数
 	//初期化
-	void Initialize(const std::string& filePath);
+	void Initialize(const std::string& filePath,Model::ModelFormat format=Model::OBJ);
 	/// <summary>
 	/// 描画
 	/// </summary>

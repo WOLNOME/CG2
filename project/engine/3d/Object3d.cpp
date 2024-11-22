@@ -9,10 +9,10 @@
 #include "BaseCamera.h"
 #include <cassert>
 
-void Object3d::Initialize(const std::string& filePath)
+void Object3d::Initialize(const std::string& filePath, Model::ModelFormat format = Model::OBJ)
 {
 	//モデルマネージャーでモデルを生成
-	ModelManager::GetInstance()->LoadModel(filePath);
+	ModelManager::GetInstance()->LoadModel(filePath, format);
 	//モデルマネージャーから検索してセットする
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
 
@@ -61,5 +61,4 @@ void Object3d::Draw(const WorldTransform& worldTransform, const BaseCamera& came
 	//モデルを描画する
 	model_->Draw(0, 3);
 }
-
 

@@ -1,5 +1,4 @@
 #include "ModelManager.h"
-#include "Model.h"
 #include "DirectXCommon.h"
 
 ModelManager* ModelManager::instance = nullptr;
@@ -22,7 +21,7 @@ void ModelManager::Finalize()
 	instance = nullptr;
 }
 
-void ModelManager::LoadModel(const std::string& filePath)
+void ModelManager::LoadModel(const std::string& filePath, Model::ModelFormat format = Model::OBJ)
 {
 	//重複防止処理！
 	if (models.contains(filePath)) {
@@ -31,7 +30,7 @@ void ModelManager::LoadModel(const std::string& filePath)
 	}
 	//モデルの生成トファイル読み込み、初期化
 	std::unique_ptr<Model> model = std::make_unique<Model>();
-	model->Initialize(filePath);
+	model->Initialize(filePath, format);
 	//モデルをmapコンテナに格納する
 	models.insert(std::make_pair(filePath, std::move(model)));
 

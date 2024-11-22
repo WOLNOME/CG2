@@ -5,16 +5,25 @@
 #include "DirectXCommon.h"
 #include "Object3d.h"
 #include "TextureManager.h"
-//assimp
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
 
 
-void Model::Initialize(const std::string& filename, std::string directorypath)
+
+void Model::Initialize(const std::string& filename, ModelFormat format, std::string directorypath)
 {
 	//ディレクトリパス
 	directoryPath_ = directorypath;
+	//モデルデータの形式
+	switch (format)
+	{
+	case Model::OBJ:
+		format_ = ".obj";
+		break;
+	case Model::GLTF:
+		format_ = ".gltf";
+		break;
+	default:
+		break;
+	}
 	//ファイル名
 	fileName_ = filename;
 
@@ -46,14 +55,14 @@ void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParame
 	}
 }
 
-std::vector<Model::Struct::ModelData> Model::LoadObjFile()
+std::vector<Model::ModelData> Model::LoadModelFile()
 {
 	// 必要な変数の宣言
-	std::vector<Struct::ModelData> modelData;
+	std::vector<ModelData> modelData;
 
 	// Assimpでシーンを読み込み
 	Assimp::Importer importer;
-	std::string filePath = directoryPath_ + fileName_ + "/" + fileName_ + ".obj";
+	std::string filePath = directoryPath_ + fileName_ + "/" + fileName_ + format_;
 	const aiScene* scene = importer.ReadFile(filePath.c_str(), aiProcess_FlipWindingOrder | aiProcess_FlipUVs);
 	assert(scene->HasMeshes()); // メッシュがない場合はエラー
 
@@ -67,7 +76,7 @@ std::vector<Model::Struct::ModelData> Model::LoadObjFile()
 		assert(mesh->HasTextureCoords(0)); // TexCoordがない場合はエラー
 
 		// モデルデータを準備
-		Struct::ModelData model;
+		ModelData model;
 		model.vertices.clear();
 
 		// メッシュが使用するマテリアルのインデックスを取得
@@ -77,7 +86,7 @@ std::vector<Model::Struct::ModelData> Model::LoadObjFile()
 		// マテリアル名を取得
 		aiString materialName;
 		if (material->Get(AI_MATKEY_NAME, materialName) == AI_SUCCESS) {
-			model.materialName = materialName.C_Str();
+			model.material.materialName = materialName.C_Str();
 		}
 
 		// Kd (拡散色) を取得
@@ -113,7 +122,7 @@ std::vector<Model::Struct::ModelData> Model::LoadObjFile()
 				aiVector3D& texcoord = mesh->mTextureCoords[0][vertexIndex];
 
 				// 頂点データを格納
-				Struct::VertexData vertex;
+				VertexData vertex;
 				vertex.position = { position.x, position.y, position.z, 1.0f };
 				vertex.normal = { normal.x, normal.y, normal.z };
 				vertex.texcoord = { texcoord.x, texcoord.y };
@@ -133,12 +142,37 @@ std::vector<Model::Struct::ModelData> Model::LoadObjFile()
 	return modelData;
 }
 
-Model::Struct::ModelResource Model::MakeModelResource()
+Model::Node Model::ReadNode(aiNode* node)
+{
+	// 新しいNodeオブジェクトを作成
+	Node currentNode;
+
+	// ノード名を設定
+	currentNode.name = node->mName.C_Str();
+
+	// ローカルマトリックスを取得して設定
+	aiMatrix4x4 aiMatrix = node->mTransformation;
+	currentNode.localMatrix = {
+		aiMatrix.a1, aiMatrix.a2, aiMatrix.a3, aiMatrix.a4,
+		aiMatrix.b1, aiMatrix.b2, aiMatrix.b3, aiMatrix.b4,
+		aiMatrix.c1, aiMatrix.c2, aiMatrix.c3, aiMatrix.c4,
+		aiMatrix.d1, aiMatrix.d2, aiMatrix.d3, aiMatrix.d4,
+	};
+
+	// 子ノードを再帰的に処理
+	for (unsigned int i = 0; i < node->mNumChildren; ++i) {
+		currentNode.children.push_back(ReadNode(node->mChildren[i]));
+	}
+
+	return currentNode;
+}
+
+Model::ModelResource Model::MakeModelResource()
 {
 	//モデルリソース
-	Struct::ModelResource modelResource_;
+	ModelResource modelResource_;
 
-	modelResource_.modelData = LoadObjFile();
+	modelResource_.modelData = LoadModelFile();
 	modelNum_ = modelResource_.modelData.size();
 	//std::vector型の要素数を確定
 	modelResource_.vertexResource.resize(modelNum_);
@@ -152,16 +186,16 @@ Model::Struct::ModelResource Model::MakeModelResource()
 	modelResource_.uvTransform.resize(modelNum_);
 	for (size_t index = 0; index < modelNum_; index++) {
 		//頂点用リソースを作る
-		modelResource_.vertexResource.at(index) = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Struct::VertexData) * modelResource_.modelData.at(index).vertices.size());
+		modelResource_.vertexResource.at(index) = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * modelResource_.modelData.at(index).vertices.size());
 		//マテリアル用のリソースを作る。
-		modelResource_.materialResource.at(index) = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Struct::Material));
+		modelResource_.materialResource.at(index) = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Material));
 		//頂点バッファービューを作成
 		modelResource_.vertexBufferView.at(index).BufferLocation = modelResource_.vertexResource.at(index)->GetGPUVirtualAddress();
-		modelResource_.vertexBufferView.at(index).SizeInBytes = UINT(sizeof(Struct::VertexData) * modelResource_.modelData.at(index).vertices.size());
-		modelResource_.vertexBufferView.at(index).StrideInBytes = sizeof(Struct::VertexData);
+		modelResource_.vertexBufferView.at(index).SizeInBytes = UINT(sizeof(VertexData) * modelResource_.modelData.at(index).vertices.size());
+		modelResource_.vertexBufferView.at(index).StrideInBytes = sizeof(VertexData);
 		//リソースにデータを書き込む
 		modelResource_.vertexResource.at(index)->Map(0, nullptr, reinterpret_cast<void**>(&modelResource_.vertexData.at(index)));
-		std::memcpy(modelResource_.vertexData.at(index), modelResource_.modelData.at(index).vertices.data(), sizeof(Struct::VertexData) * modelResource_.modelData.at(index).vertices.size());
+		std::memcpy(modelResource_.vertexData.at(index), modelResource_.modelData.at(index).vertices.data(), sizeof(VertexData) * modelResource_.modelData.at(index).vertices.size());
 		modelResource_.materialResource.at(index)->Map(0, nullptr, reinterpret_cast<void**>(&modelResource_.materialData.at(index)));
 		//白を書き込んでおく
 		modelResource_.materialData.at(index)->color = modelResource_.modelData.at(index).material.colorData;

@@ -2,8 +2,9 @@
 #include <map>
 #include <string>
 #include <memory>
+#include "Model.h"
 
-class Model;
+
 class ModelManager
 {
 private://コンストラクタ等の隠蔽
@@ -22,10 +23,9 @@ public:
 	void Finalize();
 
 	//読み込み関数
-	void LoadModel(const std::string& filePath);
+	void LoadModel(const std::string& filePath, Model::ModelFormat format = Model::OBJ);
 	//モデルデータ取得関数
 	Model* FindModel(const std::string& filePath);
-
 
 private://インスタンス
 
