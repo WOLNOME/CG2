@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "MyMath.h"
+#include "ModelFormat.h"
 //assimp
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -11,13 +12,6 @@
 
 class Model
 {
-public:
-	//読み込むモデルの形式
-	enum ModelFormat {
-		OBJ,
-		GLTF,
-	};
-
 private:
 	//頂点データ
 	struct VertexData {

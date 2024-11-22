@@ -16,10 +16,10 @@ void Model::Initialize(const std::string& filename, ModelFormat format, std::str
 	mf_ = format;
 	switch (mf_)
 	{
-	case Model::OBJ:
+	case OBJ:
 		format_ = ".obj";
 		break;
-	case Model::GLTF:
+	case GLTF:
 		format_ = ".gltf";
 		break;
 	default:
@@ -139,9 +139,9 @@ std::vector<Model::ModelData> Model::LoadModelFile()
 		// 構築したモデルデータにルートノードを設定
 		switch (mf_)
 		{
-		case Model::OBJ:
+		case OBJ:
 			break;
-		case Model::GLTF:
+		case GLTF:
 			model.rootNode = ReadNode(scene->mRootNode);
 			break;
 		default:

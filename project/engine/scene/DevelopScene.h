@@ -47,6 +47,9 @@ private://メンバ変数
 	std::unique_ptr<PointLight> pointLight;
 	std::unique_ptr<LineDrawer> plMark;
 	bool isDrawPLMark = false;
+	std::unique_ptr<PointLight> pointLight2;
+	std::unique_ptr<LineDrawer> plMark2;
+	bool isDrawPLMark2 = false;
 	//スポットライト
 	std::unique_ptr<SpotLight> spotLight;
 	std::unique_ptr<LineDrawer> slMark;

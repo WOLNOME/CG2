@@ -4,12 +4,13 @@
 #include "Vector4.h"
 #include "Vector3.h"
 
-
-// 定数バッファ用データ構造体
-struct DirectionalLightForPS {
+// データ構造体(サイズが16の倍数になるようにパディングする！)
+struct DirectionalLightData {
 	Vector4 color;
 	Vector3 direction;
 	float intensity;
+	uint32_t isActive;
+	float padding[3];
 };
 /// <summary>
 /// 平行光源
@@ -30,24 +31,19 @@ public:
 	~DirectionalLight() = default;
 
 	/// <summary>
-	/// 初期化
-	/// </summary>
-	void Initialize();
-	/// <summary>
 	/// 行列の更新
 	/// </summary>
 	void Update();
 	/// <summary>
-	/// 定数バッファの取得
+	/// 平行光源のデータを取得
 	/// </summary>
-	/// <returns>定数バッファ</returns>
-	const Microsoft::WRL::ComPtr<ID3D12Resource>& GetConstBuffer() const { return resource_; }
+	/// <returns>スポットライトのデータ</returns>
+	const DirectionalLightData& GetData() { return data_; }
 
 private:
-	// 定数バッファ
-	Microsoft::WRL::ComPtr<ID3D12Resource> resource_;
-	// マッピング済みアドレス
-	DirectionalLightForPS* data_ = nullptr;
+	//データ
+	DirectionalLightData data_;
+
 	// コピー禁止
 	DirectionalLight(const DirectionalLight&) = delete;
 	DirectionalLight& operator=(const DirectionalLight&) = delete;

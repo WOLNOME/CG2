@@ -7,6 +7,7 @@
 #include "ParticleCommon.h"
 #include "ImGuiManager.h"
 #include "BaseCamera.h"
+#include "ModelFormat.h"
 #include <fstream>
 #include <sstream>
 #include <random>
@@ -20,7 +21,7 @@ Particle::~Particle()
 void Particle::Initialize(const std::string& filePath)
 {
 	//モデルマネージャーでモデル(見た目)を生成
-	ModelManager::GetInstance()->LoadModel(filePath,Model::OBJ);
+	ModelManager::GetInstance()->LoadModel(filePath,OBJ);
 	//モデルマネージャーから検索してセットする
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
 

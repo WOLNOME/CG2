@@ -23,19 +23,25 @@ void DevelopScene::Initialize()
 
 	//平行光源の生成と初期化
 	dirLight = std::make_unique<DirectionalLight>();
-	dirLight->Initialize();
 	//点光源の生成と初期化
 	pointLight = std::make_unique<PointLight>();
-	pointLight->Initialize();
+	pointLight2 = std::make_unique<PointLight>();
 	//点光源目印の生成と初期化
 	plMark = std::make_unique<LineDrawer>();
 	plMark->Initialize();
+	plMark2 = std::make_unique<LineDrawer>();
+	plMark2->Initialize();
 	//スポットライトの生成と初期化
 	spotLight = std::make_unique<SpotLight>();
-	spotLight->Initialize();
 	//スポットライト目印の生成と初期化
 	slMark = std::make_unique<LineDrawer>();
 	slMark->Initialize();
+
+	//各光源をシーンライトにセット
+	sceneLight_->SetLight(dirLight.get());
+	sceneLight_->SetLight(pointLight.get());
+	sceneLight_->SetLight(pointLight2.get());
+	sceneLight_->SetLight(spotLight.get());
 
 
 	//ゲームシーン変数の初期化
@@ -77,23 +83,16 @@ void DevelopScene::Finalize()
 
 void DevelopScene::Update()
 {
+	//シーン共通の更新処理
+	BaseScene::Update();
+
 	//カメラの更新
 	camera->Update();
-
-	//平行光源の更新
-	dirLight->Update();
-
-	//点光源の更新
-	pointLight->Update();
-
-	//スポットライトの更新
-	spotLight->Update();
 
 	//モデルの更新
 	wtAxis_.rotate_.y += 0.03f;
 	wtAxis_.UpdateMatrix();
 	wtTerrain_.UpdateMatrix();
-
 
 	//パーティクル
 	particle_->Update();
@@ -156,6 +155,24 @@ void DevelopScene::Update()
 	ImGui::Checkbox("isActive", &dirLight->isActive_);
 	ImGui::End();
 
+	ImGui::Begin("PoiintLight2");
+	ImGui::SliderFloat4("color", &pointLight2->color_.x, 0.0f, 1.0f);
+	ImGui::DragFloat3("position", &pointLight2->position_.x, 0.01f);
+	ImGui::SliderFloat("intencity", &pointLight2->intencity_, 0.0f, 10.0f);
+	ImGui::SliderFloat("radius", &pointLight2->radius_, 0.0f, 20.0f);
+	ImGui::SliderFloat("decay", &pointLight2->decay_, 0.0f, 10.0f);
+	ImGui::Checkbox("isActive", &pointLight2->isActive_);
+	ImGui::Checkbox("isDrawMark", &isDrawPLMark2);
+	if (isDrawPLMark2) {
+		//マークの生成
+		Sphere plMarkSphere;
+		plMarkSphere.center = pointLight2->position_;
+		plMarkSphere.radius = 0.1f;
+		MyMath::DrawSphere(plMarkSphere, { 1.0f,0.5f,0.0f,1.0f }, plMark2.get());
+
+	}
+	ImGui::End();
+
 	ImGui::Begin("PoiintLight");
 	ImGui::SliderFloat4("color", &pointLight->color_.x, 0.0f, 1.0f);
 	ImGui::DragFloat3("position", &pointLight->position_.x, 0.01f);
@@ -211,9 +228,9 @@ void DevelopScene::Draw()
 	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
-	axis_->Draw(wtAxis_, *camera.get(), dirLight.get(), pointLight.get(), spotLight.get());
+	axis_->Draw(wtAxis_, *camera.get(), sceneLight_.get());
 
-	terrain_->Draw(wtTerrain_, *camera.get(), dirLight.get(), pointLight.get(), spotLight.get());
+	terrain_->Draw(wtTerrain_, *camera.get(), sceneLight_.get());
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
@@ -243,6 +260,7 @@ void DevelopScene::Draw()
 	//線描画
 	line_->Draw(*camera.get());
 	plMark->Draw(*camera.get());
+	plMark2->Draw(*camera.get());
 	slMark->Draw(*camera.get());
 
 	///------------------------------///

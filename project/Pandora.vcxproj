@@ -150,6 +150,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\3d\ParticleCommon.cpp" />
     <ClCompile Include="engine\3d\WorldTransform.cpp" />
     <ClCompile Include="PointLight.cpp" />
+    <ClCompile Include="SceneLight.cpp" />
     <ClCompile Include="SpotLight.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -194,6 +195,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\math\MyMath.h" />
     <ClInclude Include="engine\3d\LineDrawer.h" />
     <ClInclude Include="engine\3d\LineDrawerCommon.h" />
+    <ClInclude Include="ModelFormat.h" />
     <ClInclude Include="MyGame.h" />
     <ClInclude Include="engine\scenebase\SceneFactory.h" />
     <ClInclude Include="engine\scenebase\SceneManager.h" />
@@ -203,6 +205,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\3d\WorldTransform.h" />
     <ClInclude Include="PointLight.h" />
     <ClInclude Include="Quaternion.h" />
+    <ClInclude Include="SceneLight.h" />
     <ClInclude Include="SpotLight.h" />
   </ItemGroup>
   <ItemGroup>
