@@ -71,6 +71,7 @@ public:
 	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum = 1);
 
 public://ゲッター
+	const ModelResource& GetModelResource() { return modelResource_; }
 public://セッター
 
 private:
@@ -93,6 +94,7 @@ private:
 	//モデルデータファイル名
 	std::string fileName_;
 	//形式名
+	ModelFormat mf_;
 	std::string format_;
 };
 

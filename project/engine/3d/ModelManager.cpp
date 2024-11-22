@@ -21,7 +21,7 @@ void ModelManager::Finalize()
 	instance = nullptr;
 }
 
-void ModelManager::LoadModel(const std::string& filePath, Model::ModelFormat format = Model::OBJ)
+void ModelManager::LoadModel(const std::string& filePath, Model::ModelFormat format)
 {
 	//重複防止処理！
 	if (models.contains(filePath)) {

@@ -20,7 +20,7 @@ Particle::~Particle()
 void Particle::Initialize(const std::string& filePath)
 {
 	//モデルマネージャーでモデル(見た目)を生成
-	ModelManager::GetInstance()->LoadModel(filePath);
+	ModelManager::GetInstance()->LoadModel(filePath,Model::OBJ);
 	//モデルマネージャーから検索してセットする
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
 

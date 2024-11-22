@@ -13,7 +13,8 @@ void Model::Initialize(const std::string& filename, ModelFormat format, std::str
 	//ディレクトリパス
 	directoryPath_ = directorypath;
 	//モデルデータの形式
-	switch (format)
+	mf_ = format;
+	switch (mf_)
 	{
 	case Model::OBJ:
 		format_ = ".obj";
@@ -135,9 +136,22 @@ std::vector<Model::ModelData> Model::LoadModelFile()
 			}
 		}
 
+		// 構築したモデルデータにルートノードを設定
+		switch (mf_)
+		{
+		case Model::OBJ:
+			break;
+		case Model::GLTF:
+			model.rootNode = ReadNode(scene->mRootNode);
+			break;
+		default:
+			break;
+		}
+
 		// 構築したモデルデータを格納
 		modelData[meshIndex] = model;
 	}
+
 	//ModelDataを返す
 	return modelData;
 }

@@ -9,7 +9,7 @@
 #include "BaseCamera.h"
 #include <cassert>
 
-void Object3d::Initialize(const std::string& filePath, Model::ModelFormat format = Model::OBJ)
+void Object3d::Initialize(const std::string& filePath, Model::ModelFormat format)
 {
 	//モデルマネージャーでモデルを生成
 	ModelManager::GetInstance()->LoadModel(filePath, format);
