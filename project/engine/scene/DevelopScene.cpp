@@ -1,10 +1,12 @@
 #include "DevelopScene.h"
+#include "DirectXCommon.h"
 #include "TextureManager.h"
 #include "ImGuiManager.h"
 #include "Object3dCommon.h"
 #include "ParticleCommon.h"
 #include "LineDrawerCommon.h"
 #include "SpriteCommon.h"
+#include "ShadowMapGenerator.h"
 #include "SceneManager.h"
 #include <numbers>
 
@@ -83,8 +85,8 @@ void DevelopScene::Finalize()
 
 void DevelopScene::Update()
 {
-	//シーン共通の更新処理
-	BaseScene::Update();
+	//シーンライトの更新処理
+	sceneLight_->Update(camera.get());
 
 	//カメラの更新
 	camera->Update();
@@ -221,6 +223,26 @@ void DevelopScene::Update()
 
 void DevelopScene::Draw()
 {
+	///------------------------------///
+	///シャドウマップテクスチャの生成
+	///------------------------------///
+	while (true) {
+		//描画前処理(全てのシャドウマップが取れるように回す)
+		if (sceneLight_->SettingGenerateShadowMap()) {
+			//全てのシャドウマップの生成が完了したのでレンダーターゲットを通常描画用に戻す
+			DirectXCommon::GetInstance()->PreDraw();
+			// whileループから脱出
+			break;
+		}
+		//シャドウマップの共通描画設定
+		ShadowMapGenerator::GetInstance()->SettingCommonDrawing();
+
+		//モデル描画(ここにオブジェクトを追加しないと影が正しく生成されない)
+		axis_->DrawShadow(wtAxis_, sceneLight_.get());
+		terrain_->DrawShadow(wtTerrain_, sceneLight_.get());
+
+	}
+
 	//3Dモデルの共通描画設定
 	Object3dCommon::GetInstance()->SettingCommonDrawing();
 

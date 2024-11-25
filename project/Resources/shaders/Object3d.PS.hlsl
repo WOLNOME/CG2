@@ -11,11 +11,17 @@ struct CameraWorldPosition
 {
     float3 worldPosition;
 };
+struct Cascade
+{
+    float4x4 lightVPMatrix[3];
+    float cascadeSplits[3];
+};
 struct DirectionalLight
 {
     float4 color;
     float3 direction;
     float intensity;
+    Cascade cascade;
     int isActive;
 };
 struct PointLight

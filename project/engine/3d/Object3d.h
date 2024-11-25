@@ -22,14 +22,20 @@ public://メンバ関数
 	/// </summary>
 	/// <param name="worldTransform">ワールドトランスフォーム</param>
 	/// <param name="camera">カメラ</param>
-	/// <param name="dirLight">平行光源</param>
-	/// <param name="pointLight">点光源</param>
-	/// <param name="spotLight">スポットライト</param>
+	/// <param name="dirLight">シーン内光源</param>
 	void Draw(
 		const WorldTransform& worldTransform,
 		const BaseCamera& camera,
 		const SceneLight* sceneLight = nullptr
 	);
+	/// <summary>
+	/// 影テクスチャの描画
+	/// </summary>
+	/// <param name="worldTransform">ワールドトランスフォーム</param>
+	/// <param name="sceneLight">シーン内光源</param>
+	void DrawShadow(const WorldTransform& worldTransform, const SceneLight* sceneLight);
+
+
 private://非公開メンバ関数
 
 private://メンバ変数

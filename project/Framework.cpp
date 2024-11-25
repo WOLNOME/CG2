@@ -11,6 +11,7 @@
 #include "Object3dCommon.h"
 #include "ParticleCommon.h"
 #include "LineDrawerCommon.h"
+#include "ShadowMapGenerator.h"
 #include "SceneManager.h"
 
 void Framework::Initialize()
@@ -53,6 +54,9 @@ void Framework::Initialize()
 
 	//線描画共通部
 	LineDrawerCommon::GetInstance()->Initialize();
+
+	//シャドウマップジェネレーター
+	ShadowMapGenerator::GetInstance()->Initialize();
 	
 	//シーンマネージャーの生成
 	SceneManager::GetInstance()->Initialize();
@@ -62,6 +66,7 @@ void Framework::Initialize()
 void Framework::Finalize()
 {
 	SceneManager::GetInstance()->Finalize();
+	ShadowMapGenerator::GetInstance()->Finalize();
 	LineDrawerCommon::GetInstance()->Finalize();
 	ParticleCommon::GetInstance()->Finalize();
 	Object3dCommon::GetInstance()->Finalize();

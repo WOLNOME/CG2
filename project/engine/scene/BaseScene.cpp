@@ -17,8 +17,6 @@ void BaseScene::Finalize()
 
 void BaseScene::Update()
 {
-	//シーンライトの更新
-	sceneLight_->Update();
 }
 
 void BaseScene::Draw()

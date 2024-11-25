@@ -21,7 +21,7 @@ void Object3d::Initialize(const std::string& filePath, ModelFormat format)
 void Object3d::Draw(const WorldTransform& worldTransform, const BaseCamera& camera, const SceneLight* sceneLight)
 {
 	//SceneLightCBufferの場所を設定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(5, sceneLight->GetConstBuffer()->GetGPUVirtualAddress());
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(5, sceneLight->GetSceneLightConstBuffer()->GetGPUVirtualAddress());
 
 	//WorldTransformCBufferの場所を設定
 	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, worldTransform.GetConstBuffer()->GetGPUVirtualAddress());
@@ -34,5 +34,17 @@ void Object3d::Draw(const WorldTransform& worldTransform, const BaseCamera& came
 
 	//モデルを描画する
 	model_->Draw(0, 3);
+}
+
+void Object3d::DrawShadow(const WorldTransform& worldTransform, const SceneLight* sceneLight)
+{
+	//WorldTransformCBufferの場所を設定
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, worldTransform.GetConstBuffer()->GetGPUVirtualAddress());
+	
+	//SceneLightCBufferの場所を設定
+	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, sceneLight->GetLightViewProjectionConstBuffer()->GetGPUVirtualAddress());
+
+	//シャドウマップ生成用のモデルを描画
+	model_->DrawShadow();
 }
 

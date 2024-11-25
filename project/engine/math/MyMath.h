@@ -215,6 +215,9 @@ public://静的メンバ関数
 	static Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth);
 	// オイラー角から回転行列を作成する関数
 	static Matrix4x4 CreateRotationFromEulerAngles(float pitch, float yaw, float roll);
+	//視点からターゲットに向く関数
+	static Matrix4x4 LookAt(Vector3 eye, Vector3 target, Vector3 up);
+
 
 	///------------------------------------///
 	///            Quaternion
@@ -256,6 +259,8 @@ public://静的メンバ関数
 	static float Dot(const Vector3& v1, const Vector3& v2);
 	//スカラーの線形補完
 	static float Lerp(float s1, float s2, float t);
+	//CSMにおけるカスケードの分割(リニア方式)
+	static std::vector<float> CalculateCascadeSplits(int cascadeCount, float nearZ, float farZ);
 
 	///------------------------------------///
 	///             補助関数

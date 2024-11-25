@@ -19,6 +19,10 @@ private:
 		Vector2 texcoord;
 		Vector3 normal;
 	};
+	//影用頂点データ
+	struct VertexShadowData {
+		Vector4 position;
+	};
 	//マテリアル
 	struct Material {
 		Vector4 color;
@@ -42,6 +46,7 @@ private:
 	//モデルデータ
 	struct ModelData {
 		std::vector<VertexData> vertices;
+		std::vector<VertexShadowData> verticesShadow;
 		MaterialData material;
 		Node rootNode;
 	};
@@ -57,12 +62,28 @@ private:
 		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> textureResorce;
 		std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> textureSrvHandleCPU;
 		std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> textureSrvHandleGPU;
+		//影用の頂点バッファービュー
+		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> shadowVertexResource;
+		std::vector<D3D12_VERTEX_BUFFER_VIEW> shadowVertexBufferView;
+		std::vector<VertexData*> shadowVertexData;
 	};
+	
 
 public:
 	void Initialize(const std::string& filename, ModelFormat format = OBJ, std::string directorypath = "Resources/models/");
 	void Update();
+	/// <summary>
+	/// モデル描画
+	/// </summary>
+	/// <param name="materialRootParameterIndex">マテリアル設定用ルートパラメータの番号</param>
+	/// <param name="textureRootParameterIndex">テクスチャ設定用ルートパラメータの番号</param>
+	/// <param name="instancingNum">インスタンス数</param>
 	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum = 1);
+	/// <summary>
+	/// 影テクスチャの描画
+	/// </summary>
+	/// /// <param name="instancingNum">インスタンス数</param>
+	void DrawShadow(uint32_t instancingNum = 1);
 
 public://ゲッター
 	const ModelResource& GetModelResource() { return modelResource_; }

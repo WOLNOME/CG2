@@ -39,6 +39,7 @@ public:
 	void PreDraw();
 	//描画後処理
 	void PostDraw();
+	
 
 private://生成系メンバ関数
 	void GenerateDevice();

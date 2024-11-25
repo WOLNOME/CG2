@@ -207,6 +207,9 @@
     <ClCompile Include="SceneLight.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="ShadowMapGenerator.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="externals\imgui\imconfig.h">
@@ -368,6 +371,9 @@
     <ClInclude Include="SceneLight.h">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
+    <ClInclude Include="ShadowMapGenerator.h">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt">
@@ -413,5 +419,6 @@
     <FxCompile Include="Resources\shaders\Sprite.VS.hlsl">
       <Filter>シェーダーファイル</Filter>
     </FxCompile>
+    <FxCompile Include="Resources\shaders\ShadowMap.VS.hlsl" />
   </ItemGroup>
 </Project>

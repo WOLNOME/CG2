@@ -666,6 +666,21 @@ Matrix4x4 MyMath::CreateRotationFromEulerAngles(float pitch, float yaw, float ro
 	return rotationMatrix;
 }
 
+Matrix4x4 MyMath::LookAt(Vector3 eye, Vector3 target, Vector3 up)
+{
+	Vector3 forward = Normalize(target - eye);  // 視線方向
+	Vector3 right = Normalize(Cross(up, forward));  // 右方向
+	Vector3 upCorrected = Cross(forward, right);  // 上方向の修正
+	Matrix4x4 viewMatrix = {
+		right.x, upCorrected.x, -forward.x, 0.0f,
+		right.y, upCorrected.y, -forward.y, 0.0f,
+		right.z, upCorrected.z, -forward.z, 0.0f,
+		-Dot(right, eye), -Dot(upCorrected, eye), Dot(forward, eye), 1.0f
+	};
+	return viewMatrix;
+
+}
+
 Quaternion MyMath::Add(const Quaternion& q1, const Quaternion& q2) {
 	return Quaternion(q1.x + q2.x, q1.y + q2.y, q1.z + q2.z, q1.w + q2.w);
 }
@@ -816,6 +831,19 @@ float MyMath::Dot(const Vector3& v1, const Vector3& v2)
 float MyMath::Lerp(float s1, float s2, float t)
 {
 	return s1 * (1 - t) + s2 * t;
+}
+
+std::vector<float> MyMath::CalculateCascadeSplits(int cascadeCount, float nearZ, float farZ)
+{
+	std::vector<float> cascadeSplits(cascadeCount + 1);
+	float range = farZ - nearZ;
+	float step = range / cascadeCount;
+
+	for (int i = 0; i <= cascadeCount; ++i) {
+		cascadeSplits[i] = nearZ + step * i;
+	}
+
+	return cascadeSplits;
 }
 
 std::pair<float, float> MyMath::ProjectOntoAxis(const Vector3* vertices, int count, const Vector3& axis)

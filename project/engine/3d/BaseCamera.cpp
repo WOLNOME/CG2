@@ -1,6 +1,7 @@
 #include "BaseCamera.h"
 #include "WinApp.h"
 #include "DirectXCommon.h"
+#include <vector>
 
 BaseCamera::BaseCamera()
 	: transform({ {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f} })
