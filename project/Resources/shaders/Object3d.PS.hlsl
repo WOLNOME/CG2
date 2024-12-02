@@ -22,12 +22,12 @@ struct CascadeData
 };
 struct DirectionalLight
 {
+    CascadeData cascade[MAX_DL_CASCADE_NUM];
     float4 color;
     float3 direction;
     float intensity;
-    CascadeData cascade[MAX_DL_CASCADE_NUM];
-    int numCascade;
-    int isActive;
+    uint numCascade;
+    uint isActive;
 };
 struct PointLight
 {
@@ -36,7 +36,7 @@ struct PointLight
     float intensity;
     float radius;
     float decay;
-    int isActive;
+    uint isActive;
 };
 struct SpotLight
 {
@@ -48,16 +48,16 @@ struct SpotLight
     float decay;
     float cosAngle;
     float cosFalloffStart;
-    int isActive;
+    uint isActive;
 };
 struct SceneLight
 {
     DirectionalLight directionalLights[MAX_DL_NUM];
     PointLight pointLights[MAX_PL_NUM];
     SpotLight spotLights[MAX_SL_NUM];
-    int numDirectionalLights;
-    int numPointLights;
-    int numSpotLights;
+    uint numDirectionalLights;
+    uint numPointLights;
+    uint numSpotLights;
 };
 
 ConstantBuffer<Material> gMaterial : register(b0);
@@ -74,7 +74,11 @@ Texture2D<float4> gTexture : register(t0);
 //シャドウマップ(深度情報のみなのでfloat)
 Texture2DArray<float> gDirLightShadowTexture[MAX_DL_CASCADE_NUM] : register(t1);
 
+//通常サンプラー
 SamplerState gSampler : register(s0);
+//シャドウマップ用サンプラー
+SamplerComparisonState gShadowSampler : register(s1);
+
 
 PixelShaderOutput main(VertexShaderOutput input)
 {
@@ -83,7 +87,7 @@ PixelShaderOutput main(VertexShaderOutput input)
 
     // テクスチャカラーの設定
     float4 textureColor = (gMaterial.isTexture != 0) ? gTexture.Sample(gSampler, transformedUV.xy) : float4(1.0f, 1.0f, 1.0f, 1.0f);
-    
+   
     //処理するライトの数
     int useLightCount = 0;
     
@@ -104,9 +108,11 @@ PixelShaderOutput main(VertexShaderOutput input)
             int cascadeIndex = 0;
 
             // カスケードスプリットに基づいて判定
-            if (viewSpaceDepth > gSceneLight.directionalLights[i].cascade[0].cascadeSplits)
+            if (viewSpaceDepth <= gSceneLight.directionalLights[i].cascade[0].cascadeSplits)
+                cascadeIndex = 0;
+            else if (viewSpaceDepth <= gSceneLight.directionalLights[i].cascade[1].cascadeSplits)
                 cascadeIndex = 1;
-            if (viewSpaceDepth > gSceneLight.directionalLights[i].cascade[1].cascadeSplits)
+            else
                 cascadeIndex = 2;
     
             // カスケードに対応するライトのビュープロジェクション行列を使用
@@ -116,16 +122,32 @@ PixelShaderOutput main(VertexShaderOutput input)
             float2 shadowUV = lightSpacePosition.xy / lightSpacePosition.w * 0.5f + 0.5f;
 
             // 深度値の比較用にライト空間の z 値を取得
-            float shadowDepth = lightSpacePosition.z / lightSpacePosition.w;
+            float shadowDepth = clamp(lightSpacePosition.z / lightSpacePosition.w, 0.0f, 1.0f);
     
-            float shadowMapDepth = gDirLightShadowTexture[cascadeIndex].Sample(gSampler, float3(shadowUV.x, shadowUV.y, i)).r;
+            // シャドウマップの深度をサンプルして比較
+            float shadowMapDepth = gDirLightShadowTexture[cascadeIndex].SampleCmpLevelZero(gShadowSampler, float3(shadowUV.x, shadowUV.y, i), shadowDepth).r;
             
             // バイアスを適用し、影の中かどうかを判定
             float bias = max(0.05f * (1.0f - dot(normalize(input.normal), gSceneLight.directionalLights[0].direction)), 0.005f);
-            bool inShadow = (shadowDepth - bias > shadowMapDepth);
+            bool inShadow = (shadowDepth-bias > shadowMapDepth);
 
             float shadowFactor = inShadow ? 0.0f : 1.0f; // 影の中なら光を遮断
             
+             //カスケードカラー
+            float4 cascadeColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+            //if (cascadeIndex == 0)
+            //{
+            //    cascadeColor = float4(0.5f, 0.0f, 0.0f, 1.0f);
+
+            //}
+            //else if (cascadeIndex == 1)
+            //{
+            //    cascadeColor = float4(0.0f, 0.5f, 0.0f, 1.0f);
+            //}
+            //else
+            //{
+            //    cascadeColor = float4(0.0f, 0.0f, 0.5f, 1.0f);
+            //}
             
             //反射の計算
             float3 toEye = normalize(gCameraWorldPosition.worldPosition - input.worldPosition);
@@ -137,10 +159,10 @@ PixelShaderOutput main(VertexShaderOutput input)
             float NdotL = dot(normalize(input.normal), -gSceneLight.directionalLights[i].direction);
             float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
             //拡散反射
-            diffuseDirectionalLight += gMaterial.color.rgb * textureColor.rgb * gSceneLight.directionalLights[i].color.rgb * cos * gSceneLight.directionalLights[i].intensity * shadowFactor;
+            diffuseDirectionalLight += gMaterial.color.rgb * textureColor.rgb * gSceneLight.directionalLights[i].color.rgb * cascadeColor.rgb * cos * gSceneLight.directionalLights[i].intensity * shadowFactor;
             //鏡面反射
             float3 specularColor = { 1.0f, 1.0f, 1.0f }; //この値はMaterialで変えられるようになるとよい。
-            specularDirectionalLight += gSceneLight.directionalLights[i].color.rgb * gSceneLight.directionalLights[i].intensity * specularPow * specularColor * shadowFactor;
+            specularDirectionalLight += gSceneLight.directionalLights[i].color.rgb * cascadeColor.rgb * gSceneLight.directionalLights[i].intensity * specularPow * specularColor * shadowFactor;
             useLightCount++;
         }
     }

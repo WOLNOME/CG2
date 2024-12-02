@@ -103,7 +103,7 @@ void Object3dCommon::GenerateGraphicsPipeline()
 	
 
 	//Samplerの設定
-	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
+	D3D12_STATIC_SAMPLER_DESC staticSamplers[2] = {};
 	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 	staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
@@ -112,12 +112,24 @@ void Object3dCommon::GenerateGraphicsPipeline()
 	staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
 	staticSamplers[0].ShaderRegister = 0;
 	staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	//シャドウマップ専用のサンプラー
+	staticSamplers[1].Filter = D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR;  // 比較フィルタリング
+	staticSamplers[1].AddressU = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;         // ラップではなく、範囲外はクランプする
+	staticSamplers[1].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;         // 同様にV方向でもクランプ
+	staticSamplers[1].AddressW = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;         // W方向でもクランプ
+	staticSamplers[1].ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;   // シャドウ比較用、通常は「小さいか等しい」
+	staticSamplers[1].MaxLOD = D3D12_FLOAT32_MAX;                          // 最大LOD
+	staticSamplers[1].ShaderRegister = 1;                                  // シャドウサンプラーのシェーダーレジスタ
+	staticSamplers[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;    // ピクセルシェーダーで使用
+	staticSamplers[1].MaxAnisotropy = 8;
 
 	//Signatureに反映
 	descriptionRootSignature.pStaticSamplers = staticSamplers;
 	descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
 	descriptionRootSignature.pParameters = rootParameters;//ルートパラメータ配列へのポインタ
 	descriptionRootSignature.NumParameters = _countof(rootParameters);//配列の長さ
+	
+
 
 	//シリアライズしてバイナリにする
 	Microsoft::WRL::ComPtr<ID3D10Blob> signatireBlob = nullptr;

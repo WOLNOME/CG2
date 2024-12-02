@@ -21,10 +21,10 @@ struct CascadeData {
 
 // データ構造体(サイズが16の倍数になるようにパディングする！)
 struct DirectionalLightData {
+	CascadeData cascade[kCascadeCount];
 	Vector4 color;
 	Vector3 direction;
 	float intensity;
-	CascadeData cascade[kCascadeCount];
 	uint32_t numCascade;
 	uint32_t isActive;
 	float padding[2];
