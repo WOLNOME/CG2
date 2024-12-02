@@ -174,8 +174,8 @@ public://静的メンバ関数
 	static Vector3 CollisionPoint(const Segment& s, const Plane& p);
 	//反射ベクトルを求める関数
 	static Vector3 Reflect(const Vector3& input, const Vector3& normal);
-
-
+	//直交するベクトルを求める式
+	static Vector3 findOrthogonalVector(const Vector3& v);
 
 	///------------------------------------///
 	///               Matrix4x4

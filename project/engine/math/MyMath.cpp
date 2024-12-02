@@ -246,6 +246,25 @@ Vector3 MyMath::Reflect(const Vector3& input, const Vector3& normal)
 	return r;
 }
 
+Vector3 MyMath::findOrthogonalVector(const Vector3& v)
+{
+	if (v.x == 0 && v.y == 0 && v.z == 0) {
+		throw std::invalid_argument("Zero vector provided. Cannot compute orthogonal vector.");
+	}
+	Vector3 b;
+	// 基準ベクトルを適当に選択
+	if (std::abs(v.x) <= std::abs(v.y) && std::abs(v.x) <= std::abs(v.z)) {
+		b = Vector3(1, 0, 0); // x軸を基準に選択
+	}
+	else if (std::abs(v.y) <= std::abs(v.z)) {
+		b = Vector3(0, 1, 0); // y軸を基準に選択
+	}
+	else {
+		b = Vector3(0, 0, 1); // z軸を基準に選択
+	}
+	return Cross(v, b).Normalized(); // 外積で直交ベクトルを計算
+}
+
 Matrix4x4 MyMath::Add(const Matrix4x4& m1, const Matrix4x4& m2)
 {
 	Matrix4x4 c;
@@ -668,15 +687,23 @@ Matrix4x4 MyMath::CreateRotationFromEulerAngles(float pitch, float yaw, float ro
 
 Matrix4x4 MyMath::LookAt(Vector3 eye, Vector3 target, Vector3 up)
 {
-	Vector3 forward = Normalize(target - eye);  // 視線方向
-	Vector3 right = Normalize(Cross(up, forward));  // 右方向
-	Vector3 upCorrected = Cross(forward, right);  // 上方向の修正
+	// 前方向ベクトル（正規化）
+	Vector3 forward = Normalize(target - eye);
+
+	// 右方向ベクトル（正規化）
+	Vector3 right = Normalize(Cross(up, forward));
+
+	// 上方向ベクトル（修正済み）
+	Vector3 upCorrected = Cross(forward, right);
+
+	// ビュー行列を構成
 	Matrix4x4 viewMatrix = {
 		right.x, upCorrected.x, -forward.x, 0.0f,
 		right.y, upCorrected.y, -forward.y, 0.0f,
 		right.z, upCorrected.z, -forward.z, 0.0f,
 		-Dot(right, eye), -Dot(upCorrected, eye), Dot(forward, eye), 1.0f
 	};
+
 	return viewMatrix;
 
 }

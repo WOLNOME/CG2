@@ -1,12 +1,11 @@
 #include "DevelopScene.h"
-#include "DirectXCommon.h"
 #include "TextureManager.h"
+#include "ShadowMapManager.h"
 #include "ImGuiManager.h"
 #include "Object3dCommon.h"
 #include "ParticleCommon.h"
 #include "LineDrawerCommon.h"
 #include "SpriteCommon.h"
-#include "ShadowMapGenerator.h"
 #include "SceneManager.h"
 #include <numbers>
 
@@ -22,6 +21,7 @@ void DevelopScene::Initialize()
 	camera->Initialize();
 	camera->SetRotate({ cameraRotate });
 	camera->SetTranslate(cameraTranslate);
+	camera->SetFarClip(200.0f);
 
 	//平行光源の生成と初期化
 	dirLight = std::make_unique<DirectionalLight>();
@@ -85,11 +85,12 @@ void DevelopScene::Finalize()
 
 void DevelopScene::Update()
 {
+	//カメラの更新
+	camera->Update();
+
 	//シーンライトの更新処理
 	sceneLight_->Update(camera.get());
 
-	//カメラの更新
-	camera->Update();
 
 	//モデルの更新
 	wtAxis_.rotate_.y += 0.03f;
@@ -221,28 +222,30 @@ void DevelopScene::Update()
 #endif // _DEBUG
 }
 
-void DevelopScene::Draw()
+void DevelopScene::ShadowMapDraw()
 {
-	///------------------------------///
-	///シャドウマップテクスチャの生成
-	///------------------------------///
-	while (true) {
-		//描画前処理(全てのシャドウマップが取れるように回す)
-		if (sceneLight_->SettingGenerateShadowMap()) {
-			//全てのシャドウマップの生成が完了したのでレンダーターゲットを通常描画用に戻す
-			DirectXCommon::GetInstance()->PreDraw();
-			// whileループから脱出
-			break;
-		}
-		//シャドウマップの共通描画設定
-		ShadowMapGenerator::GetInstance()->SettingCommonDrawing();
-
-		//モデル描画(ここにオブジェクトを追加しないと影が正しく生成されない)
-		axis_->DrawShadow(wtAxis_, sceneLight_.get());
-		terrain_->DrawShadow(wtTerrain_, sceneLight_.get());
-
+	if (ShadowMapManager::GetInstance()->SelectResource(sceneLight_.get())) {
+		//全てのレンダリングが終わったのでループから脱出
+		ShadowMapManager::GetInstance()->isEscapeLoop = true;
+		return;
 	}
 
+
+	//描画前処理
+	uint32_t lVPMIndex = ShadowMapManager::GetInstance()->PreDraw();
+
+
+	//モデル描画
+	axis_->DrawShadow(wtAxis_, sceneLight_.get(), lVPMIndex);
+	terrain_->DrawShadow(wtTerrain_, sceneLight_.get(), lVPMIndex);
+
+	//描画後処理
+	ShadowMapManager::GetInstance()->PostDraw();
+
+}
+
+void DevelopScene::Draw()
+{
 	//3Dモデルの共通描画設定
 	Object3dCommon::GetInstance()->SettingCommonDrawing();
 

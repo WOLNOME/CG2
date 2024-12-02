@@ -8,21 +8,26 @@
 
 //カスケードの分割数
 const int kCascadeCount = 3;
-// シャドウマップの幅と高さ
-constexpr UINT shadowMapMaxWidth_ = 2048;
-constexpr UINT shadowMapMaxHeight_ = 2048;
+//マックスの解像度
+const int kMaxWidth = 2048;
+const int kMaxHeight = 2048;
 
+//カスケードごとのデータ
 struct CascadeData {
-	Matrix4x4 lightViewProjectionMatrix[kCascadeCount];
-	float cascadeSplits[kCascadeCount];
+	Matrix4x4 viewProjection;
+	float split;
+	float padding[3];
 };
+
 // データ構造体(サイズが16の倍数になるようにパディングする！)
 struct DirectionalLightData {
 	Vector4 color;
 	Vector3 direction;
 	float intensity;
-	CascadeData cascade;
+	CascadeData cascade[kCascadeCount];
+	uint32_t numCascade;
 	uint32_t isActive;
+	float padding[2];
 };
 
 /// <summary>
@@ -52,28 +57,14 @@ public:
 	/// </summary>
 	void Update(BaseCamera* camera);
 	/// <summary>
-	/// カスケードごとの描画前設定
-	/// </summary>
-	/// <param name="cascadeNum">カスケードの番号(最初は0番)</param>
-	/// <returns>設定の成功判定</returns>
-	bool PreDraw(int cascadeNum, D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle);
-	/// <summary>
 	/// 平行光源のデータを取得
 	/// </summary>
-	/// <returns>スポットライトのデータ</returns>
-	const DirectionalLightData& GetData() { return data_; }
-	/// <summary>
-	/// ライト目線のViewProjection
-	/// </summary>
-	/// <param name="cascadeNum">カスケードの番号(最初は0番)</param>
-	const Matrix4x4& GetLightViewProjection(int cascadeNum);
-
+	/// <returns>平行光源のデータ</returns>
+	const DirectionalLightData& GetData() const { return data_; }
+	
 private:
 	//データ
 	DirectionalLightData data_;
-
-	//ライトのビュープロジェクション(保存用)
-	Matrix4x4 lightViewProjection[kCascadeCount];
 
 	// コピー禁止
 	DirectionalLight(const DirectionalLight&) = delete;

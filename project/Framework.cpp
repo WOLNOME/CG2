@@ -1,7 +1,10 @@
 #include "Framework.h"
 #include "WinApp.h"
 #include "DirectXCommon.h"
+#include "ShadowMapRender.h"
+#include "MainRender.h"
 #include "SrvManager.h"
+#include "ShadowMapManager.h"
 #include "ImGuiManager.h"
 #include "TextureManager.h"
 #include "ModelManager.h"
@@ -11,7 +14,6 @@
 #include "Object3dCommon.h"
 #include "ParticleCommon.h"
 #include "LineDrawerCommon.h"
-#include "ShadowMapGenerator.h"
 #include "SceneManager.h"
 
 void Framework::Initialize()
@@ -22,11 +24,20 @@ void Framework::Initialize()
 	//WindowsAPIの初期化
 	WinApp::GetInstance()->Initialize();
 
-	//DorectX12
+	//DirectX12
 	DirectXCommon::GetInstance()->Initialize();
+
+	//シャドウマップレンダー
+	ShadowMapRender::GetInstance()->Initialize();
+
+	//メインレンダー
+	MainRender::GetInstance()->Initialize();
 
 	//SRVマネージャー
 	SrvManager::GetInstance()->Initialize();
+
+	//シャドウマップマネージャー
+	ShadowMapManager::GetInstance()->Initialize();
 
 	//ImGuiマネージャー
 	ImGuiManager::GetInstance()->Initialize();
@@ -55,9 +66,6 @@ void Framework::Initialize()
 	//線描画共通部
 	LineDrawerCommon::GetInstance()->Initialize();
 
-	//シャドウマップジェネレーター
-	ShadowMapGenerator::GetInstance()->Initialize();
-	
 	//シーンマネージャーの生成
 	SceneManager::GetInstance()->Initialize();
 
@@ -66,7 +74,6 @@ void Framework::Initialize()
 void Framework::Finalize()
 {
 	SceneManager::GetInstance()->Finalize();
-	ShadowMapGenerator::GetInstance()->Finalize();
 	LineDrawerCommon::GetInstance()->Finalize();
 	ParticleCommon::GetInstance()->Finalize();
 	Object3dCommon::GetInstance()->Finalize();
@@ -76,7 +83,10 @@ void Framework::Finalize()
 	ModelManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
 	ImGuiManager::GetInstance()->Finalize();
+	ShadowMapManager::GetInstance()->Finalize();
 	SrvManager::GetInstance()->Finalize();
+	MainRender::GetInstance()->Finalize();
+	ShadowMapRender::GetInstance()->Finalize();
 	DirectXCommon::GetInstance()->Finalize();
 	WinApp::GetInstance()->Finalize();
 }

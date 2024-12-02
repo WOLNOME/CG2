@@ -7,26 +7,22 @@
 class Sprite
 {
 public://インナークラス
-	class Struct {
-	public:
-		//頂点データ
-		struct VertexData {
-			Vector4 position;
-			Vector2 texcoord;
-			Vector3 normal;
-		};
-		//マテリアルデータ
-		struct Material {
-			Vector4 color;
-			Matrix4x4 uvTransform;
-			int32_t isTexture;
-		};
-		//座標変換行列データ
-		struct TransformationMatrix {
-			Matrix4x4 WVP;
-			Matrix4x4 World;
-		};
-
+	//頂点データ
+	struct VertexData {
+		Vector4 position;
+		Vector2 texcoord;
+		Vector3 normal;
+	};
+	//マテリアルデータ
+	struct Material {
+		Vector4 color;
+		Matrix4x4 uvTransform;
+		int32_t isTexture;
+	};
+	//座標変換行列データ
+	struct TransformationMatrix {
+		Matrix4x4 WVP;
+		Matrix4x4 World;
 	};
 
 public://メンバ関数
@@ -74,10 +70,10 @@ private://メンバ変数
 	Microsoft::WRL::ComPtr<ID3D12Resource> materialResource = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Resource> transformationMatrixResource = nullptr;
 	//バッファリソース内のデータを指すポインタ
-	Struct::VertexData* vertexData = nullptr;
+	VertexData* vertexData = nullptr;
 	uint32_t* indexData = nullptr;
-	Struct::Material* materialData = nullptr;
-	Struct::TransformationMatrix* transformationMatrixData = nullptr;
+	Material* materialData = nullptr;
+	TransformationMatrix* transformationMatrixData = nullptr;
 	//バッファリソースの使い道を補足するバッファビュー
 	D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
 	D3D12_INDEX_BUFFER_VIEW indexBufferView;

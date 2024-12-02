@@ -40,7 +40,7 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath)
 	for (size_t i = 0; i < textureDatas.size(); ++i) {
 		if (textureDatas[i].has_value() && textureDatas[i]->textureName == textureName) {
 			//同名のテクスチャが読み込み済みなのでテクスチャハンドルを返す
-			return i;
+			return (uint32_t)i;
 		}
 	}
 
@@ -93,7 +93,7 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath)
 			if (textureDatas[i].has_value()) {
 				DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(textureData.resource.Get(), &srvDesc, SrvManager::GetInstance()->GetCPUDescriptorHandle(textureDatas[i]->srvIndex));
 			}
-			return i;
+			return (uint32_t)i;
 		}
 	}
 

@@ -1,5 +1,6 @@
 #include "LineDrawerCommon.h"
 #include "DirectXCommon.h"
+#include "MainRender.h"
 #include "Logger.h"
 
 LineDrawerCommon* LineDrawerCommon::instance = nullptr;
@@ -27,11 +28,11 @@ void LineDrawerCommon::Finalize()
 void LineDrawerCommon::SettingCommonDrawing()
 {
 	//ルートシグネチャをセットするコマンド
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
+	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 	//グラフィックスパイプラインステートをセットするコマンド
-	DirectXCommon::GetInstance()->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+	MainRender::GetInstance()->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
 	//プリミティブトポロジーをセットするコマンド
-	DirectXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
+	MainRender::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);
 }
 
 void LineDrawerCommon::GenerateGraphicsPipeline()

@@ -26,6 +26,12 @@ void SceneManager::Update()
 	scene_->Update();
 }
 
+void SceneManager::ShadowMapDraw()
+{
+	//シャドウマップのレンダリング
+	scene_->ShadowMapDraw();
+}
+
 void SceneManager::Draw()
 {
 	//シーンの描画

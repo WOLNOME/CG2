@@ -1,5 +1,8 @@
 #include "MyGame.h"
 #include "DirectXCommon.h"
+#include "ShadowMapRender.h"
+#include "MainRender.h"
+#include "ShadowMapManager.h"
 #include "TextureManager.h"
 #include "SrvManager.h"
 #include "ImGuiManager.h"
@@ -41,10 +44,43 @@ void MyGame::Draw()
 	///          描画処理
 	///==============================///
 
+	///------------------------------///
+	///    シャドウマップレンダー
+	///------------------------------///
+
+	//共通描画設定
+	ShadowMapManager::GetInstance()->SettingCommonDrawing();
 	//描画前処理
-	DirectXCommon::GetInstance()->PreDraw();
-	SrvManager::GetInstance()->PreDraw();
-	
+	SrvManager::GetInstance()->PreDraw(ShadowMapRender::GetInstance()->GetCommandList());
+
+	//全てのSMのレンダリング
+	while (true)
+	{
+		//シーンの描画
+		SceneManager::GetInstance()->ShadowMapDraw();
+
+		//脱出フラグがtrueなら脱出
+		if (ShadowMapManager::GetInstance()->isEscapeLoop) {
+			ShadowMapManager::GetInstance()->isEscapeLoop = false;
+			break;
+		}
+	}
+
+	//描画後処理
+	ShadowMapRender::GetInstance()->AllPostDraw();
+	//単レンダー終了時の共通処理
+	DirectXCommon::GetInstance()->PostEachRender();
+	//コマンドのリセット
+	ShadowMapRender::GetInstance()->ReadyNextCommand();
+
+	///------------------------------///
+	///        メインレンダー
+	///------------------------------///
+
+	//描画前処理
+	MainRender::GetInstance()->PreDraw();
+	SrvManager::GetInstance()->PreDraw(MainRender::GetInstance()->GetCommandList());
+
 	//シーンの描画
 	SceneManager::GetInstance()->Draw();
 
@@ -52,6 +88,18 @@ void MyGame::Draw()
 	ImGuiManager::GetInstance()->Draw();
 
 	//描画後処理
-	DirectXCommon::GetInstance()->PostDraw();
+	MainRender::GetInstance()->PostDraw();
+	//単レンダー終了時の共通処理
+	DirectXCommon::GetInstance()->PostEachRender();
+	//コマンドのリセット
+	MainRender::GetInstance()->ReadyNextCommand();
+
+	///------------------------------///
+	///      レンダーの最終処理
+	///------------------------------///
+
+	//全レンダー終了時の共通処理
+	DirectXCommon::GetInstance()->PostAllRenders();
+
 }
 

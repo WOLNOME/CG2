@@ -3,6 +3,8 @@
 #include <sstream>
 #include <filesystem>
 #include "DirectXCommon.h"
+#include "ShadowMapRender.h"
+#include "MainRender.h"
 #include "Object3d.h"
 #include "TextureManager.h"
 
@@ -44,16 +46,16 @@ void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParame
 {
 	for (size_t index = 0; index < modelResource_.modelData.size(); index++) {
 		//頂点バッファービューを設定
-		DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &modelResource_.vertexBufferView.at(index));
+		MainRender::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &modelResource_.vertexBufferView.at(index));
 		//マテリアルCBufferの場所を設定
-		DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(materialRootParameterIndex, modelResource_.materialResource.at(index)->GetGPUVirtualAddress());
+		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(materialRootParameterIndex, modelResource_.materialResource.at(index)->GetGPUVirtualAddress());
 		//モデルにテクスチャがない場合、スキップ
 		if (modelResource_.modelData.at(index).material.textureFilePath.size() != 0) {
 			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
-			DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(textureRootParameterIndex, TextureManager::GetInstance()->GetSrvHandleGPU(modelResource_.modelData.at(index).material.textureHandle));
+			MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(textureRootParameterIndex, TextureManager::GetInstance()->GetSrvHandleGPU(modelResource_.modelData.at(index).material.textureHandle));
 		}
 		//描画
-		DirectXCommon::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelResource_.modelData.at(index).vertices.size()), instancingNum, 0, 0);
+		MainRender::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelResource_.modelData.at(index).vertices.size()), instancingNum, 0, 0);
 	}
 }
 
@@ -61,9 +63,9 @@ void Model::DrawShadow(uint32_t instancingNum)
 {
 	for (size_t index = 0; index < modelResource_.modelData.size(); index++) {
 		//頂点バッファービューを設定
-		DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &modelResource_.shadowVertexBufferView.at(index));
+		ShadowMapRender::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &modelResource_.shadowVertexBufferView.at(index));
 		//描画
-		DirectXCommon::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelResource_.modelData.at(index).verticesShadow.size()), instancingNum, 0, 0);
+		ShadowMapRender::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelResource_.modelData.at(index).verticesShadow.size()), instancingNum, 0, 0);
 	}
 }
 
@@ -226,6 +228,8 @@ Model::ModelResource Model::MakeModelResource()
 	for (size_t index = 0; index < modelNum_; index++) {
 		//頂点用リソースを作る
 		modelResource_.vertexResource.at(index) = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * modelResource_.modelData.at(index).vertices.size());
+		//影用頂点リソースを作る
+		modelResource_.shadowVertexResource.at(index) = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(VertexShadowData) * modelResource_.modelData.at(index).verticesShadow.size());
 		//マテリアル用のリソースを作る。
 		modelResource_.materialResource.at(index) = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Material));
 		//頂点バッファービューを作成

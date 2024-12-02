@@ -23,24 +23,11 @@ struct SceneLightForPS
 	uint32_t numDirectionalLights;
 	uint32_t numPointLights;
 	uint32_t numSpotLights;
+	float padding[1];
 };
-struct LightViewProjectionForVS
-{
-	Matrix4x4 viewProjectionMatrix;
-};
-
 
 class SceneLight
 {
-public:
-	//シャドウマップ情報
-	struct ShadowTexture
-	{
-		Microsoft::WRL::ComPtr<ID3D12Resource> textureResource;
-		std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> dsvHandle;			//光源の数(Texture2Dのスライス数)だけ必要サイズは固定できないのでvector型
-		uint32_t srvIndex;											//Texture2D1つにつき1個でいいのでvectorにはしない
-	};
-
 public:
 	/// <summary>
 	/// 初期化
@@ -51,20 +38,15 @@ public:
 	/// </summary>
 	void Update(BaseCamera* camera);
 	/// <summary>
-	/// シャドウマップ生成用設定
-	/// </summary>
-	/// <returns>全てのシャドウマップを生成済み判定</returns>
-	bool SettingGenerateShadowMap();
-	/// <summary>
 	/// シーンライト用定数バッファの取得
 	/// </summary>
 	/// <returns>シーンライト用定数バッファ</returns>
 	const Microsoft::WRL::ComPtr<ID3D12Resource>& GetSceneLightConstBuffer() const { return sceneLightResource_; }
 	/// <summary>
-	/// ビュープロジェクション用定数バッファの取得
+	/// シーンライト内の全データ
 	/// </summary>
-	/// <returns>ビュープロジェクション用定数バッファ</returns>
-	const Microsoft::WRL::ComPtr<ID3D12Resource>& GetLightViewProjectionConstBuffer() const { return lightViewProjectionResource_; }
+	/// <returns></returns>
+	const SceneLightForPS* GetSceneLight()const { return sceneLightData_; }
 
 	/// <summary>
 	/// 平行光源をセット
@@ -83,23 +65,11 @@ public:
 	void SetLight(SpotLight* spotLight);
 
 private:
-	//テクスチャリソース作成用関数
-	void MakeTextureResource();
-	//DSV設定
-	void SettingDSV();
-	//SRV設定
-	void SettingSRV();
-
-private:
 	//シーンライト用定数バッファ
 	Microsoft::WRL::ComPtr<ID3D12Resource> sceneLightResource_;
 	//シーンライト用マッピング済みアドレス
 	SceneLightForPS* sceneLightData_ = nullptr;
-	//シャドウマップに送る用の各ライトの視点用定数バッファ
-	Microsoft::WRL::ComPtr<ID3D12Resource> lightViewProjectionResource_;
-	//シャドウマップに送る用の各ライトの視点用マッピング済みアドレス
-	LightViewProjectionForVS* lightViewProjectionData_ = nullptr;
-
+	
 	//シーン内にある平行光源
 	std::vector<DirectionalLight*> directionalLights_;
 	//シーン内にある点光源
@@ -112,20 +82,6 @@ private:
 	//１つの光源内のカスケードカウント
 	int selectCascadeCount = 0;
 
-
-
-	///------------------------------///
-	///     シャドウマップ関連
-	///------------------------------///
-
-	//シャドウマップ用DSVのデスクリプタヒープ
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap_;
-
-
-	//テクスチャリソース
-	std::array<ShadowTexture, kCascadeCount> dirLightCascadeShadowTextureArray;
-	ShadowTexture pointLightShadowTextureArray;
-	ShadowTexture spotLightShadowTextureArray;
 
 };
 

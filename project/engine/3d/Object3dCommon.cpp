@@ -1,5 +1,7 @@
 #include "Object3dCommon.h"
 #include "DirectXCommon.h"
+#include "MainRender.h"
+#include "SceneLight.h"
 #include "Logger.h"
 
 Object3dCommon* Object3dCommon::instance = nullptr;
@@ -27,29 +29,47 @@ void Object3dCommon::Finalize()
 void Object3dCommon::SettingCommonDrawing()
 {
 	//ルートシグネチャをセットするコマンド
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
+	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 	//グラフィックスパイプラインステートをセットするコマンド
-	DirectXCommon::GetInstance()->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+	MainRender::GetInstance()->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
 	//プリミティブトポロジーをセットするコマンド
-	DirectXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	MainRender::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void Object3dCommon::GenerateGraphicsPipeline()
 {
 	HRESULT hr;
 
-	//RootSignature作成
+	//RootSignature作成（使用するレジスタ : t0）
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-	//DescriptorRange作成
+	
+	//レジスタカウント
+	int registerCount = 0;
+	//使用するデスクリプタの数
+	int numDescriptors = 0;
+	//テクスチャ用DescriptorRange作成
 	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
-	descriptorRange[0].BaseShaderRegister = 0;
-	descriptorRange[0].NumDescriptors = 1;
+	//オブジェクトのテクスチャ用
+	numDescriptors = 1;
+	descriptorRange[0].BaseShaderRegister = registerCount;
+	descriptorRange[0].NumDescriptors = numDescriptors;
 	descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	registerCount += numDescriptors;
+	
+	//平行光源用DescriptorRange作成（使用するレジスタ : t1,t2,t3）
+	D3D12_DESCRIPTOR_RANGE dirLightShadowDescriptorRange[1] = {};
+	//平行光源シャドウマップテクスチャ用
+	numDescriptors = kCascadeCount;//この数はカスケードの数
+	dirLightShadowDescriptorRange[0].BaseShaderRegister = registerCount; // 適切なレジスタ番号
+	dirLightShadowDescriptorRange[0].NumDescriptors = numDescriptors;    // シャドウマップ用に3つのテクスチャを使用
+	dirLightShadowDescriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	dirLightShadowDescriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	registerCount += numDescriptors;
 
 	//RootParameter作成。複数設定できるので配列。今回は結果1つだけなので長さ1の配列
-	D3D12_ROOT_PARAMETER rootParameters[6] = {};
+	D3D12_ROOT_PARAMETER rootParameters[7] = {};
 	//マテリアルの設定
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
@@ -75,6 +95,12 @@ void Object3dCommon::GenerateGraphicsPipeline()
 	rootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
 	rootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
 	rootParameters[5].Descriptor.ShaderRegister = 2;//レジスタ番号2とバインド
+	//平行光源用シャドウマップテクスチャの設定
+	rootParameters[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//Tableを使う
+	rootParameters[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
+	rootParameters[6].DescriptorTable.pDescriptorRanges = dirLightShadowDescriptorRange;//Tableの中身の配列を指定
+	rootParameters[6].DescriptorTable.NumDescriptorRanges = _countof(dirLightShadowDescriptorRange);
+	
 
 	//Samplerの設定
 	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};

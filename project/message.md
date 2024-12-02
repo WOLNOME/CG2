@@ -11,4 +11,12 @@
 ・アンリアルエンジンのようなメッシュの生成（円、UV球、立方体、円錐、円柱、平面）
 ・モデル描画時にライトの設定をしないといけないのを直す
 
+<シャドウマップメモ>
+model.cpp
+object3d.cpp
+directionalLight.cpp
+shadowMapGenerator.cpp
+↑コメントアウトファイル
+
+
 <<リファレンス>>

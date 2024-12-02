@@ -1,21 +1,22 @@
 #include "Sprite.h"
-#include "SpriteCommon.h"
 #include "WinApp.h"
-#include "TextureManager.h"
 #include "DirectXCommon.h"
+#include "MainRender.h"
+#include "TextureManager.h"
+#include "SpriteCommon.h"
 
 void Sprite::Initialize(uint32_t textureHandle)
 {
 	//リソースを作る
-	vertexResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Struct::VertexData) * 4);
+	vertexResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * 4);
 	indexResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(uint32_t) * 6);
-	materialResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Struct::Material));
-	transformationMatrixResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Struct::TransformationMatrix));
+	materialResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Material));
+	transformationMatrixResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(TransformationMatrix));
 
 	//バッファービューを作る
 	vertexBufferView.BufferLocation = vertexResource->GetGPUVirtualAddress();
-	vertexBufferView.SizeInBytes = sizeof(Struct::VertexData) * 4;
-	vertexBufferView.StrideInBytes = sizeof(Struct::VertexData);
+	vertexBufferView.SizeInBytes = sizeof(VertexData) * 4;
+	vertexBufferView.StrideInBytes = sizeof(VertexData);
 	indexBufferView.BufferLocation = indexResource->GetGPUVirtualAddress();
 	indexBufferView.SizeInBytes = sizeof(uint32_t) * 6;
 	indexBufferView.Format = DXGI_FORMAT_R32_UINT;
@@ -120,20 +121,20 @@ void Sprite::Draw()
 {
 
 	//頂点バッファービューを設定
-	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
+	MainRender::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vertexBufferView);
 	//インデックスバッファービューを設定
-	DirectXCommon::GetInstance()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
+	MainRender::GetInstance()->GetCommandList()->IASetIndexBuffer(&indexBufferView);
 
 	//マテリアルCBufferの場所を設定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
+	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(0, materialResource->GetGPUVirtualAddress());
 	//座標変換行列CBufferの場所を設定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
+	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, transformationMatrixResource->GetGPUVirtualAddress());
 
 	//SRVのDescriptorTableの先頭を設定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle_));
+	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(2, TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle_));
 
 	//描画
-	DirectXCommon::GetInstance()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
+	MainRender::GetInstance()->GetCommandList()->DrawIndexedInstanced(6, 1, 0, 0, 0);
 
 }
 

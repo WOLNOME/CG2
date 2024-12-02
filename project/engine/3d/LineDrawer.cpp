@@ -1,6 +1,7 @@
 #include "LineDrawer.h"
 #include "WinApp.h"
 #include "DirectXCommon.h"
+#include "MainRender.h"
 #include "SrvManager.h"
 #include "BaseCamera.h"
 
@@ -47,14 +48,14 @@ void LineDrawer::Draw(const BaseCamera& camera)
 		++lineIterator;
 	}
 	//座標変換行列の場所を設定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(0, lineResource_.SrvHandleGPU);
+	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(0, lineResource_.SrvHandleGPU);
 	//カメラCBuffer場所を設定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, camera.GetViewProjectionConstBuffer()->GetGPUVirtualAddress());
+	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, camera.GetViewProjectionConstBuffer()->GetGPUVirtualAddress());
 	//頂点バッファービューを設定
-	DirectXCommon::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &lineResource_.vertexBufferView);
+	MainRender::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &lineResource_.vertexBufferView);
 	//描画
 	if (instanceNum > 0) {
-		DirectXCommon::GetInstance()->GetCommandList()->DrawInstanced(2, instanceNum, 0, 0);
+		MainRender::GetInstance()->GetCommandList()->DrawInstanced(2, instanceNum, 0, 0);
 	}
 
 	//リストのクリア
