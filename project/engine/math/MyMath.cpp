@@ -687,6 +687,7 @@ Matrix4x4 MyMath::CreateRotationFromEulerAngles(float pitch, float yaw, float ro
 
 Matrix4x4 MyMath::LookAt(Vector3 eye, Vector3 target, Vector3 up)
 {
+	
 	// 前方向ベクトル（正規化）
 	Vector3 forward = Normalize(target - eye);
 
