@@ -176,6 +176,7 @@ public://静的メンバ関数
 	static Vector3 Reflect(const Vector3& input, const Vector3& normal);
 	//直交するベクトルを求める式
 	static Vector3 findOrthogonalVector(const Vector3& v);
+	
 
 	///------------------------------------///
 	///               Matrix4x4
@@ -217,6 +218,8 @@ public://静的メンバ関数
 	static Matrix4x4 CreateRotationFromEulerAngles(float pitch, float yaw, float roll);
 	//視点からターゲットに向く関数
 	static Matrix4x4 LookAt(Vector3 eye, Vector3 target, Vector3 up);
+	//シャドウマップ用射影変換行列
+	static Matrix4x4 MakeShadowMapProjectionMatrix(float left, float top, float right, float bottom, float nearClip, float farClip);
 
 
 	///------------------------------------///

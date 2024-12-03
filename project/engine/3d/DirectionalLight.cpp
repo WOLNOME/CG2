@@ -72,9 +72,8 @@ void DirectionalLight::Update(BaseCamera* camera)
 		}
 
 		///ビュー行列を作成
-
 		//仮想光源位置
-		Vector3 lightPos = (cascade.min + cascade.max) * 0.5f - (direction_.Normalized() * Vector3(cascade.max - cascade.min).Length() * 1.0f);
+		Vector3 lightPos = (cascade.min + cascade.max) * 0.5f - (direction_.Normalized() * Vector3(cascade.max - cascade.min).Length() * 0.5f);
 		//ターゲット(AABBの中心)
 		Vector3 lightTarget = (cascade.min + cascade.max) * 0.5f;
 		//仮想光源位置からディレクション方向のビュー行列
@@ -82,12 +81,11 @@ void DirectionalLight::Update(BaseCamera* camera)
 		Matrix4x4 lightView = MyMath::LookAt(lightPos, lightTarget, up.Normalized());
 		
 		///射影行列を作成
-
 		float cascadeWidth = Vector3(cascade.max - cascade.min).Length();
 		float cascadeHeight = Vector3(cascade.max - cascade.min).Length();
 		float cascadeDepth = Vector3(lightTarget - lightPos).Length() + (Vector3(cascade.max - cascade.min).Length() * 0.5f);
-		Matrix4x4 lightProjection = MyMath::MakeOrthographicMatrix(-cascadeWidth / 2, cascadeHeight / 2, cascadeWidth / 2, -cascadeHeight / 2, 0.1f, cascadeDepth);
-
+		Matrix4x4 lightProjection = MyMath::MakeShadowMapProjectionMatrix(-cascadeWidth / 2.0f, cascadeHeight / 2.0f, cascadeWidth / 2.0f, -cascadeHeight / 2.0f, 0.1f, cascadeDepth);
+		
 		//ライトのビュープロジェクションマトリックスを格納
 		data_.cascade[i].split = splitFar;
 		data_.cascade[i].viewProjection = lightView * lightProjection;

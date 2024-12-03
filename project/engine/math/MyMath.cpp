@@ -709,6 +709,28 @@ Matrix4x4 MyMath::LookAt(Vector3 eye, Vector3 target, Vector3 up)
 
 }
 
+Matrix4x4 MyMath::MakeShadowMapProjectionMatrix(float left, float top, float right, float bottom, float nearClip, float farClip)
+{
+	Matrix4x4 c;
+	c.m[0][0] = 2.0f / (right - left);
+	c.m[0][1] = 0.0f;
+	c.m[0][2] = 0.0f;
+	c.m[0][3] = -(right + left) / (right - left);
+	c.m[1][0] = 0.0f;
+	c.m[1][1] = 2.0f / (top - bottom);
+	c.m[1][2] = 0.0f;
+	c.m[1][3] = -(top + bottom) / (top - bottom);
+	c.m[2][0] = 0.0f;
+	c.m[2][1] = 0.0f;
+	c.m[2][2] = -2.0f / (farClip - nearClip);
+	c.m[2][3] = -(farClip + nearClip) / (farClip - nearClip);
+	c.m[3][0] = 0.0f;
+	c.m[3][1] = 0.0f;
+	c.m[3][2] = 0.0f;
+	c.m[3][3] = 1.0f;
+	return Transpose(c);//OPENGL用の関数をそのまま持ってきたので、転置処理(行と列が逆なので)
+}
+
 Quaternion MyMath::Add(const Quaternion& q1, const Quaternion& q2) {
 	return Quaternion(q1.x + q2.x, q1.y + q2.y, q1.z + q2.z, q1.w + q2.w);
 }

@@ -1,7 +1,7 @@
 #pragma once
 #include <d3d12.h>
-#include <d3dx12.h>
 #include <wrl.h>
+#include <array>
 #include "Vector4.h"
 #include "Vector3.h"
 #include "BaseCamera.h"

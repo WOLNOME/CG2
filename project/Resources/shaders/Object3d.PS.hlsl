@@ -124,13 +124,8 @@ PixelShaderOutput main(VertexShaderOutput input)
             //ピクセルの深度と深度テクスチャのサンプリング結果を抜き出す
             float shadowDepth = gDirLightShadowTexture[cascadeIndex].SampleCmpLevelZero(gShadowSampler, float3(pixelUV, i), pixelDepth).r;
             //ピクセルの深度値とテクスチャの深度値を比較してシャドウの有無を判定
-            float bias = 0.005f;
-            pixelDepth -= bias;
-            float shadowFactor = shadowDepth < pixelDepth ? 0.0f : 1.0f;
-            //if (pixelUV.x < 0.0f || pixelUV.x > 1.0f || pixelUV.y < 0.0f || pixelUV.y > 1.0f)
-            //{
-            //    shadowFactor = 1.0f;
-            //}
+           float shadowFactor = shadowDepth < pixelDepth ? 0.0f : 1.0f;
+           
             
             //反射の計算
             float3 toEye = normalize(gCameraWorldPosition.worldPosition - input.worldPosition);
@@ -142,12 +137,12 @@ PixelShaderOutput main(VertexShaderOutput input)
             float NdotL = dot(normalize(input.normal), -gSceneLight.directionalLights[i].direction);
             float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
             //拡散反射
-            //diffuseDirectionalLight += gMaterial.color.rgb * textureColor.rgb * gSceneLight.directionalLights[i].color.rgb * cos * gSceneLight.directionalLights[i].intensity * shadowFactor;
-            diffuseDirectionalLight += float3(shadowFactor, shadowFactor, shadowFactor);
+            diffuseDirectionalLight += gMaterial.color.rgb * textureColor.rgb * gSceneLight.directionalLights[i].color.rgb * cos * gSceneLight.directionalLights[i].intensity * shadowFactor;
+            // diffuseDirectionalLight += float3(shadowFactor, shadowFactor, shadowFactor);
             //鏡面反射
             float3 specularColor = { 1.0f, 1.0f, 1.0f }; //この値はMaterialで変えられるようになるとよい。
-            //specularDirectionalLight += gSceneLight.directionalLights[i].color.rgb * gSceneLight.directionalLights[i].intensity * specularPow * specularColor * shadowFactor;
-            specularDirectionalLight += float3(shadowFactor, shadowFactor, shadowFactor);
+            specularDirectionalLight += gSceneLight.directionalLights[i].color.rgb * gSceneLight.directionalLights[i].intensity * specularPow * specularColor * shadowFactor;
+            //specularDirectionalLight += float3(shadowFactor, shadowFactor, shadowFactor);
             useLightCount++;
         }
     }
