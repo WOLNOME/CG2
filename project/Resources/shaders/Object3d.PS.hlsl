@@ -119,17 +119,58 @@ PixelShaderOutput main(VertexShaderOutput input)
                 cascadeIndex = 2;
                 cascadeColor = float4(0.0f, 0.0f, 1.0f, 1.0f);
             }
+            
+            ///ピクセルの深度値を求める
+            //シャドウ判定かどうかの値
+            float shadowFactor = 1.0f;
             //ピクセルのワールド座標を光源のビュープロジェクション空間に変換
-            float4 lightSpacePosition = mul(float4(input.worldPosition, 1.0f), gSceneLight.directionalLights[i].cascade[cascadeIndex].lightVPMatrix);
+            float4 lightSpacePixelPosition = mul(float4(input.worldPosition, 1.0f), gSceneLight.directionalLights[i].cascade[cascadeIndex].lightVPMatrix);
             //射影空間座標を正規化
-            lightSpacePosition.xyz /= lightSpacePosition.w;
+            lightSpacePixelPosition.xyz /= lightSpacePixelPosition.w;
             //座標系を[0,1]に変換し、深度を抜き出す
-            float2 pixelUV = lightSpacePosition.xy * 0.5f + 0.5f;
-            float pixelDepth = lightSpacePosition.z;
-            //ピクセルの深度と深度テクスチャのサンプリング結果を抜き出す
-            float shadowDepth = gDirLightShadowTexture[cascadeIndex].SampleCmpLevelZero(gShadowSampler, float3(pixelUV, i), pixelDepth).r;
-            //ピクセルの深度値とテクスチャの深度値を比較してシャドウの有無を判定
-           float shadowFactor = shadowDepth < pixelDepth ? 0.0f : 1.0f;
+            float2 pixelUV = lightSpacePixelPosition.xy * 0.5f + 0.5f;
+            float pixelDepth = lightSpacePixelPosition.z;
+            
+            //ピクセルから平行光源と逆向きにレイを飛ばし各レイとの深度値を比較
+            for (int rayNum = 0; rayNum < 100; rayNum++)
+            {
+                //レイのワールド座標を求める
+                float3 rayPos = input.worldPosition - normalize(gSceneLight.directionalLights[i].direction) * (100 - rayNum);
+                //光源のビュープロジェクション空間に変換
+                float4 lightSpaceRayPosition = mul(float4(rayPos, 1.0f), gSceneLight.directionalLights[i].cascade[cascadeIndex].lightVPMatrix);
+                //射影空間を正規化
+                lightSpaceRayPosition.xyz /= lightSpaceRayPosition.w;
+                //座標系を[0,1]に変換し、深度を抜き出す
+                float2 rayUV = lightSpacePixelPosition.xy * 0.5f + 0.5f;
+                float rayDepth = lightSpacePixelPosition.z;
+                
+                //レイ座標を参照してサンプリングをし、SMの深度値を求める
+                float shadowDepth = gDirLightShadowTexture[cascadeIndex].SampleCmpLevelZero(gShadowSampler, float3(rayUV, i), rayDepth).r;
+                //レイの深度値とSMの深度値の比較
+                if (shadowDepth < rayDepth)
+                {
+                    //影の判定
+                    shadowFactor = 0.0f;
+                    //for文から脱出
+                    break;
+                }
+                //影の判定ではなかったらもう一度
+            }
+            
+            
+            
+            
+           // //ピクセルのワールド座標を光源のビュープロジェクション空間に変換
+           // float4 lightSpacePosition = mul(float4(input.worldPosition, 1.0f), gSceneLight.directionalLights[i].cascade[cascadeIndex].lightVPMatrix);
+           // //射影空間座標を正規化
+           // lightSpacePosition.xyz /= lightSpacePosition.w;
+           // //座標系を[0,1]に変換し、深度を抜き出す
+           // float2 pixelUV = lightSpacePosition.xy * 0.5f + 0.5f;
+           // float pixelDepth = lightSpacePosition.z;
+           // //ピクセルの深度と深度テクスチャのサンプリング結果を抜き出す
+           // float shadowDepth = gDirLightShadowTexture[cascadeIndex].SampleCmpLevelZero(gShadowSampler, float3(pixelUV, i), pixelDepth).r;
+           // //ピクセルの深度値とテクスチャの深度値を比較してシャドウの有無を判定
+           //float shadowFactor = shadowDepth < pixelDepth ? 0.0f : 1.0f;
            
             
             //反射の計算
