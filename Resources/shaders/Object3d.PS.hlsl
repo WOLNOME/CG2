@@ -18,6 +18,7 @@ struct PixelShaderOutput
     float32_t4 color : SV_Target0;
 };
 
+
 ConstantBuffer<Material> gMaterial : register(b0);
 ConstantBuffer<DirectionalLight> gDirectionalLight : register(b1);
 Texture2D<float32_t4> gTexture : register(t0);
