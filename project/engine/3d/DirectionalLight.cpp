@@ -83,7 +83,7 @@ void DirectionalLight::Update(BaseCamera* camera)
 		///射影行列を作成
 		float cascadeWidth = Vector3(cascade.max - cascade.min).Length();
 		float cascadeHeight = Vector3(cascade.max - cascade.min).Length();
-		float cascadeDepth = Vector3(lightTarget - lightPos).Length() + (Vector3(cascade.max - cascade.min).Length() * 0.5f);
+		float cascadeDepth = Vector3(lightTarget - lightPos).Length() + (Vector3(cascade.max - cascade.min).Length());
 		Matrix4x4 lightProjection = MyMath::MakeShadowMapProjectionMatrix(-cascadeWidth / 2.0f, cascadeHeight / 2.0f, cascadeWidth / 2.0f, -cascadeHeight / 2.0f, 0.1f, cascadeDepth);
 		
 		//ライトのビュープロジェクションマトリックスを格納

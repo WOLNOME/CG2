@@ -21,7 +21,7 @@ void DevelopScene::Initialize()
 	camera->Initialize();
 	camera->SetRotate({ cameraRotate });
 	camera->SetTranslate(cameraTranslate);
-	camera->SetFarClip(50.0f);
+	camera->SetFarClip(100.0f);
 
 	//平行光源の生成と初期化
 	dirLight = std::make_unique<DirectionalLight>();
