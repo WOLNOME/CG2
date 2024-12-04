@@ -71,9 +71,9 @@ void ShadowMapRender::GenerateDescriptorHeap()
 	descriptorSizeDSV = DirectXCommon::GetInstance()->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
 
 	//DSV用のヒープでディスクリプタの数はSMの合計分。DSVはShader内で触るものなのではないので、ShaderVisbleはfalse
-	int numDLSM = kCascadeCount * kMaxNumDirectionalLight;
+	int numDLSM = 0;
 	int numPLSM = 0;
-	int numSLSM = 0;
+	int numSLSM = kMaxNumSpotLight;
 	dsvDescriptorHeap = DirectXCommon::GetInstance()->CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, (numDLSM + numPLSM + numSLSM), false);
 }
 

@@ -58,14 +58,14 @@ void Object3dCommon::GenerateGraphicsPipeline()
 	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 	registerCount += numDescriptors;
 	
-	//平行光源用DescriptorRange作成（使用するレジスタ : t1,t2,t3）
-	D3D12_DESCRIPTOR_RANGE dirLightShadowDescriptorRange[1] = {};
-	//平行光源シャドウマップテクスチャ用
-	numDescriptors = kCascadeCount;//この数はカスケードの数
-	dirLightShadowDescriptorRange[0].BaseShaderRegister = registerCount; // 適切なレジスタ番号
-	dirLightShadowDescriptorRange[0].NumDescriptors = numDescriptors;    // シャドウマップ用に3つのテクスチャを使用
-	dirLightShadowDescriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	dirLightShadowDescriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	//SL用DescriptorRange作成
+	D3D12_DESCRIPTOR_RANGE SLShadowDescriptorRange[1] = {};
+	//SLシャドウマップテクスチャ用
+	numDescriptors = 1;
+	SLShadowDescriptorRange[0].BaseShaderRegister = registerCount; // 適切なレジスタ番号
+	SLShadowDescriptorRange[0].NumDescriptors = numDescriptors;    // シャドウマップ用に3つのテクスチャを使用
+	SLShadowDescriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	SLShadowDescriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 	registerCount += numDescriptors;
 
 	//RootParameter作成。複数設定できるので配列。今回は結果1つだけなので長さ1の配列
@@ -95,12 +95,11 @@ void Object3dCommon::GenerateGraphicsPipeline()
 	rootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
 	rootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
 	rootParameters[5].Descriptor.ShaderRegister = 2;//レジスタ番号2とバインド
-	//平行光源用シャドウマップテクスチャの設定
+	//SLシャドウマップテクスチャの設定
 	rootParameters[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//Tableを使う
 	rootParameters[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
-	rootParameters[6].DescriptorTable.pDescriptorRanges = dirLightShadowDescriptorRange;//Tableの中身の配列を指定
-	rootParameters[6].DescriptorTable.NumDescriptorRanges = _countof(dirLightShadowDescriptorRange);
-	
+	rootParameters[6].DescriptorTable.pDescriptorRanges = SLShadowDescriptorRange;//Tableの中身の配列を指定
+	rootParameters[6].DescriptorTable.NumDescriptorRanges = _countof(SLShadowDescriptorRange);
 
 	//Samplerの設定
 	D3D12_STATIC_SAMPLER_DESC staticSamplers[2] = {};
@@ -129,7 +128,6 @@ void Object3dCommon::GenerateGraphicsPipeline()
 	descriptionRootSignature.pParameters = rootParameters;//ルートパラメータ配列へのポインタ
 	descriptionRootSignature.NumParameters = _countof(rootParameters);//配列の長さ
 	
-
 
 	//シリアライズしてバイナリにする
 	Microsoft::WRL::ComPtr<ID3D10Blob> signatireBlob = nullptr;

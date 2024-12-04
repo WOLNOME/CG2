@@ -25,12 +25,11 @@ public:
 	//シングルトンインスタンスの取得
 	static ShadowMapManager* GetInstance();
 public:
-	//平行光源全てのSM関連情報を格納する構造体(list:各光源、vector:各カスケード)
-	struct DLShadowMapInfo {
-		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> resource;		//リソース(平行光源の数はTexture2DArrayのサイズ)
-		std::list<std::vector<uint32_t>> dsvIndex;							//DSVハンドル
-		std::vector<uint32_t> srvIndex;										//SRVインデックス
-		uint32_t cascadeNum;												//シャドウマップの数
+	//スポットライト全てのSM関連情報を格納する構造体
+	struct SLShadowMapInfo {
+		Microsoft::WRL::ComPtr<ID3D12Resource> resource;		//リソース(スポットライトの数はTexture2DArrayのサイズ)
+		std::list<uint32_t> dsvIndex;							//DSVハンドル
+		uint32_t srvIndex;										//SRVインデックス
 	};
 public:
 	//レンダーループからの脱出フラグ
@@ -48,8 +47,8 @@ public:
 	uint32_t PreDraw();
 	//描画後設定
 	void PostDraw();
-	//DL用SM情報の取得
-	const DLShadowMapInfo& GetDLSMInfo() { return dlsmInfo; }
+	//SL用SM情報の取得
+	const SLShadowMapInfo& GetSLSMInfo() { return slsmInfo; }
 	/// <summary>
 	/// 選択済みのライトビュープロジェクション定数バッファ
 	/// </summary>
@@ -62,7 +61,7 @@ private://非公開メンバ関数
 	//グラフィックスパイプライン
 	void GenerateGraphicsPipeline();
 	//SM関連情報を登録する関数
-	void InitDLShadowMapInfo();
+	void InitShadowMapInfo();
 	//Texture2D用のリソースを作る
 	Microsoft::WRL::ComPtr<ID3D12Resource> MakeTexture2DResource(int width, int height);
 	//Texture2DArray用のリソースを作る
@@ -84,8 +83,8 @@ private://メンバ変数
 	//DSVインデックスの指標(DSVマネージャーを作ったらこれも管理できる)
 	int dsvIndexCount = 0;
 
-	//DL用SM情報
-	DLShadowMapInfo dlsmInfo;
+	//SL用SM情報
+	SLShadowMapInfo slsmInfo;
 
 	//TransitionBarrier
 	D3D12_RESOURCE_BARRIER barrier{};
@@ -101,15 +100,11 @@ private://メンバ変数
 	ID3D12Resource* barrierResource;
 	uint32_t barrierSlice;
 	uint32_t targetDSVIndex;
-	int resolutionWidth;
-	int resolutionHeight;
 	Matrix4x4 lVPM_;
 
-	//DLのシャドウマップを特定する変数
-	int dlCascadeIndex = -1;//カスケードの番号
-	int dlSliceIndex = 0;//スライス(平行光源の順)の番号
-	bool isDLFinish = false;
-
+	//スポットライト専用変数
+	bool isSLFinish = false;
+	int slSliceIndex = -1;
 
 	
 };

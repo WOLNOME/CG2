@@ -1,20 +1,23 @@
 #pragma once
 #include <d3d12.h>
 #include <wrl.h>
+#include "Matrix4x4.h"
 #include "Vector4.h"
 #include "Vector3.h"
 
+//
 
 // データ構造体(サイズが16の倍数になるようにパディングする！)
 struct SpotLightData {
-	Vector4 color;			//ライトの色
-	Vector3 position;		//ライトの位置
-	float intensity;		//輝度
-	Vector3 direction;		//スポットライトの方向
-	float distance;			//ライトの届く最大距離
-	float decay;			//減衰率
-	float cosAngle;			//スポットライトの余弦
-	float cosFalloffStart;	//フォールオフの開始角度
+	Matrix4x4 viewProjection;	//ライト視点のビュープロジェクション行列
+	Vector4 color;				//ライトの色
+	Vector3 position;			//ライトの位置
+	float intensity;			//輝度
+	Vector3 direction;			//スポットライトの方向
+	float distance;				//ライトの届く最大距離
+	float decay;				//減衰率
+	float cosAngle;				//スポットライトの余弦
+	float cosFalloffStart;		//フォールオフの開始角度
 	uint32_t isActive;
 };
 /// <summary>

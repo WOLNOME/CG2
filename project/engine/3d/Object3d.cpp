@@ -24,8 +24,8 @@ void Object3d::Initialize(const std::string& filePath, ModelFormat format)
 
 void Object3d::Draw(const WorldTransform& worldTransform, const BaseCamera& camera, const SceneLight* sceneLight)
 {
-	//平行光源シャドウマップテクスチャのデータを送る
-	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(6, SrvManager::GetInstance()->GetGPUDescriptorHandle(ShadowMapManager::GetInstance()->GetDLSMInfo().srvIndex[0]));
+	//SLシャドウマップテクスチャのデータを送る
+	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(6, SrvManager::GetInstance()->GetGPUDescriptorHandle(ShadowMapManager::GetInstance()->GetSLSMInfo().srvIndex));
 
 	//SceneLightCBufferの場所を設定
 	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(5, sceneLight->GetSceneLightConstBuffer()->GetGPUVirtualAddress());

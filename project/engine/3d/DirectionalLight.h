@@ -6,28 +6,13 @@
 #include "Vector3.h"
 #include "BaseCamera.h"
 
-//カスケードの分割数
-const int kCascadeCount = 3;
-//マックスの解像度
-const int kMaxWidth = 2048;
-const int kMaxHeight = 2048;
-
-//カスケードごとのデータ
-struct CascadeData {
-	Matrix4x4 viewProjection;
-	float split;
-	float padding[3];
-};
-
 // データ構造体(サイズが16の倍数になるようにパディングする！)
 struct DirectionalLightData {
-	CascadeData cascade[kCascadeCount];
 	Vector4 color;
 	Vector3 direction;
 	float intensity;
-	uint32_t numCascade;
 	uint32_t isActive;
-	float padding[2];
+	float padding[3];
 };
 
 /// <summary>

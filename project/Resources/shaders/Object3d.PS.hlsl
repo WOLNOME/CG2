@@ -1,6 +1,5 @@
 #include "Object3d.hlsli"
 #define MAX_DL_NUM 1
-#define MAX_DL_CASCADE_NUM 3
 #define MAX_PL_NUM 16
 #define MAX_SL_NUM 16
 
@@ -15,18 +14,11 @@ struct CameraWorldPosition
 {
     float3 worldPosition;
 };
-struct CascadeData
-{
-    float4x4 lightVPMatrix;
-    float cascadeSplits;
-};
 struct DirectionalLight
 {
-    CascadeData cascade[MAX_DL_CASCADE_NUM];
     float4 color;
     float3 direction;
     float intensity;
-    uint numCascade;
     uint isActive;
 };
 struct PointLight
@@ -40,6 +32,7 @@ struct PointLight
 };
 struct SpotLight
 {
+    float4x4 viewProjection;
     float4 color;
     float3 position;
     float intensity;
@@ -71,8 +64,9 @@ struct PixelShaderOutput
 
 //通常テクスチャ
 Texture2D<float4> gTexture : register(t0);
-//シャドウマップ(深度情報のみなのでfloat)
-Texture2DArray<float> gDirLightShadowTexture[MAX_DL_CASCADE_NUM] : register(t1);
+//SLSMテクスチャ
+Texture2DArray<float> gSLSMTexture : register(t1);
+
 
 //通常サンプラー
 SamplerState gSampler : register(s0);
@@ -99,80 +93,6 @@ PixelShaderOutput main(VertexShaderOutput input)
     {
         if (gSceneLight.directionalLights[i].isActive == 1)
         {
-            ///影の計算
-            //ピクセルがどのカスケードに属しているかの計算
-            int cascadeIndex = 0;
-            float4 cascadeColor = { 1.0f, 1.0f, 1.0f, 1.0f };
-            if (length(input.worldPosition - gCameraWorldPosition.worldPosition) <= gSceneLight.directionalLights[i].cascade[0].cascadeSplits)
-            {
-                cascadeIndex = 0;
-                cascadeColor = float4(1.0f, 0.0f, 0.0f, 1.0f);
-
-            }
-            else if (length(input.worldPosition - gCameraWorldPosition.worldPosition) <= gSceneLight.directionalLights[i].cascade[1].cascadeSplits)
-            {
-                cascadeIndex = 1;
-                cascadeColor = float4(0.0f, 1.0f, 0.0f, 1.0f);
-            }
-            else
-            {
-                cascadeIndex = 2;
-                cascadeColor = float4(0.0f, 0.0f, 1.0f, 1.0f);
-            }
-            
-            ///ピクセルの深度値を求める
-            //シャドウ判定かどうかの値
-            float shadowFactor = 1.0f;
-            //ピクセルのワールド座標を光源のビュープロジェクション空間に変換
-            float4 lightSpacePixelPosition = mul(float4(input.worldPosition, 1.0f), gSceneLight.directionalLights[i].cascade[cascadeIndex].lightVPMatrix);
-            //射影空間座標を正規化
-            lightSpacePixelPosition.xyz /= lightSpacePixelPosition.w;
-            //座標系を[0,1]に変換し、深度を抜き出す
-            float2 pixelUV = lightSpacePixelPosition.xy * 0.5f + 0.5f;
-            float pixelDepth = lightSpacePixelPosition.z;
-            
-            //ピクセルから平行光源と逆向きにレイを飛ばし各レイとの深度値を比較
-            for (int rayNum = 0; rayNum < 100; rayNum++)
-            {
-                //レイのワールド座標を求める
-                float3 rayPos = input.worldPosition - normalize(gSceneLight.directionalLights[i].direction) * (100 - rayNum);
-                //光源のビュープロジェクション空間に変換
-                float4 lightSpaceRayPosition = mul(float4(rayPos, 1.0f), gSceneLight.directionalLights[i].cascade[cascadeIndex].lightVPMatrix);
-                //射影空間を正規化
-                lightSpaceRayPosition.xyz /= lightSpaceRayPosition.w;
-                //座標系を[0,1]に変換し、深度を抜き出す
-                float2 rayUV = lightSpacePixelPosition.xy * 0.5f + 0.5f;
-                float rayDepth = lightSpacePixelPosition.z;
-                
-                //レイ座標を参照してサンプリングをし、SMの深度値を求める
-                float shadowDepth = gDirLightShadowTexture[cascadeIndex].SampleCmpLevelZero(gShadowSampler, float3(rayUV, i), rayDepth).r;
-                //レイの深度値とSMの深度値の比較
-                if (shadowDepth < rayDepth)
-                {
-                    //影の判定
-                    shadowFactor = 0.0f;
-                    //for文から脱出
-                    break;
-                }
-                //影の判定ではなかったらもう一度
-            }
-            
-            
-            
-            
-           // //ピクセルのワールド座標を光源のビュープロジェクション空間に変換
-           // float4 lightSpacePosition = mul(float4(input.worldPosition, 1.0f), gSceneLight.directionalLights[i].cascade[cascadeIndex].lightVPMatrix);
-           // //射影空間座標を正規化
-           // lightSpacePosition.xyz /= lightSpacePosition.w;
-           // //座標系を[0,1]に変換し、深度を抜き出す
-           // float2 pixelUV = lightSpacePosition.xy * 0.5f + 0.5f;
-           // float pixelDepth = lightSpacePosition.z;
-           // //ピクセルの深度と深度テクスチャのサンプリング結果を抜き出す
-           // float shadowDepth = gDirLightShadowTexture[cascadeIndex].SampleCmpLevelZero(gShadowSampler, float3(pixelUV, i), pixelDepth).r;
-           // //ピクセルの深度値とテクスチャの深度値を比較してシャドウの有無を判定
-           //float shadowFactor = shadowDepth < pixelDepth ? 0.0f : 1.0f;
-           
-            
             //反射の計算
             float3 toEye = normalize(gCameraWorldPosition.worldPosition - input.worldPosition);
             float3 reflectLight = reflect(gSceneLight.directionalLights[i].direction, normalize(input.normal));
@@ -183,11 +103,11 @@ PixelShaderOutput main(VertexShaderOutput input)
             float NdotL = dot(normalize(input.normal), -gSceneLight.directionalLights[i].direction);
             float cos = pow(NdotL * 0.5f + 0.5f, 2.0f);
             //拡散反射
-            diffuseDirectionalLight += gMaterial.color.rgb * textureColor.rgb * gSceneLight.directionalLights[i].color.rgb * cascadeColor.rgb * cos * gSceneLight.directionalLights[i].intensity * shadowFactor;
+            diffuseDirectionalLight += gMaterial.color.rgb * textureColor.rgb * gSceneLight.directionalLights[i].color.rgb * cos * gSceneLight.directionalLights[i].intensity;
             // diffuseDirectionalLight += float3(shadowFactor, shadowFactor, shadowFactor);
             //鏡面反射
             float3 specularColor = { 1.0f, 1.0f, 1.0f }; //この値はMaterialで変えられるようになるとよい。
-            specularDirectionalLight += gSceneLight.directionalLights[i].color.rgb * cascadeColor.rgb * gSceneLight.directionalLights[i].intensity * specularPow * specularColor * shadowFactor;
+            specularDirectionalLight += gSceneLight.directionalLights[i].color.rgb * gSceneLight.directionalLights[i].intensity * specularPow * specularColor;
             //specularDirectionalLight += float3(shadowFactor, shadowFactor, shadowFactor);
             useLightCount++;
         }
@@ -233,6 +153,25 @@ PixelShaderOutput main(VertexShaderOutput input)
         if (gSceneLight.spotLights[k].isActive == 1)
         {
             useLightCount++;
+            
+            //シャドウマップの計算
+            //ピクセルのワールド座標を光源のビュープロジェクション空間に変換
+            float4 lightSpacePixelPosition = mul(float4(input.worldPosition, 1.0f), gSceneLight.spotLights[i].viewProjection);
+            //射影空間座標を正規化
+            lightSpacePixelPosition.xyz /= lightSpacePixelPosition.w;
+            //座標系を[0,1]に変換し、深度を抜き出す
+            float2 pixelUV = lightSpacePixelPosition.xy * 0.5f + 0.5f;
+            float pixelDepth = lightSpacePixelPosition.z;
+            //サンプリング
+            float shadowDepth = gSLSMTexture.SampleCmpLevelZero(gShadowSampler, float3(pixelUV, i), pixelDepth);
+            //深度値の比較
+            float shadowFactor = 1.0f;
+            if (pixelDepth > shadowDepth)
+            {
+                shadowFactor = 0.0f;
+            }
+            
+            
             //光源から物体表面への方向
             float3 spotLightDirectionOnSurface = normalize(input.worldPosition - gSceneLight.spotLights[k].position);
              //反射の計算
@@ -252,10 +191,10 @@ PixelShaderOutput main(VertexShaderOutput input)
             float falloffFactor = saturate((cosAngle - gSceneLight.spotLights[k].cosAngle) / (gSceneLight.spotLights[k].cosFalloffStart - gSceneLight.spotLights[k].cosAngle));
         
             //拡散反射
-            diffuseSpotLight += gMaterial.color.rgb * textureColor.rgb * gSceneLight.spotLights[k].color.rgb * cos * gSceneLight.spotLights[k].intensity * attenuationFactor * falloffFactor;
+            diffuseSpotLight += gMaterial.color.rgb * textureColor.rgb * gSceneLight.spotLights[k].color.rgb * cos * gSceneLight.spotLights[k].intensity * attenuationFactor * falloffFactor * shadowFactor;
             //鏡面反射
             float3 specularColor = { 1.0f, 1.0f, 1.0f }; //この値はMaterialで変えられるようになるとよい。
-            specularSpotLight += gSceneLight.spotLights[k].color.rgb * gSceneLight.spotLights[k].intensity * specularPow * specularColor * attenuationFactor * falloffFactor;
+            specularSpotLight += gSceneLight.spotLights[k].color.rgb * gSceneLight.spotLights[k].intensity * specularPow * specularColor * attenuationFactor * falloffFactor * shadowFactor;
         }
     }
     

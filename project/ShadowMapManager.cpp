@@ -3,7 +3,6 @@
 #include "SrvManager.h"
 #include "ShadowMapRender.h"
 #include "Logger.h"
-#include "DirectionalLight.h"
 #include "SceneLight.h"
 #include "MyMath.h"
 #include <cassert>
@@ -24,8 +23,8 @@ void ShadowMapManager::Initialize()
 	InitLVPM();
 	//グラフィックスパイプラインの設定
 	GenerateGraphicsPipeline();
-	//平行光源情報の初期化
-	InitDLShadowMapInfo();
+	//リソース関連情報の初期化
+	InitShadowMapInfo();
 
 }
 
@@ -48,38 +47,31 @@ void ShadowMapManager::SettingCommonDrawing()
 bool ShadowMapManager::SelectResource(const SceneLight* sceneLight)
 {
 	//平行光源のリソースを順番に返す。
-	if (!isDLFinish) {
-		dlCascadeIndex++;
-		if (dlCascadeIndex >= kCascadeCount) {
-			dlCascadeIndex = 0;
-			dlSliceIndex++;
-			if (dlSliceIndex >= kMaxNumDirectionalLight) {
-				isDLFinish = true;
-			}
-		}
-		if (!isDLFinish) {
-			//バリアのリソースとスライスを保存してreturn
-			barrierResource = dlsmInfo.resource[dlCascadeIndex].Get();
-			barrierSlice = dlSliceIndex;
-			std::list<std::vector<uint32_t>>::iterator it = dlsmInfo.dsvIndex.begin();
-			std::advance(it, dlSliceIndex);
-			targetDSVIndex = it->at(dlCascadeIndex);
-			resolutionWidth = kMaxWidth >> dlCascadeIndex;
-			resolutionHeight = kMaxHeight >> dlCascadeIndex;
-			lVPM_ = sceneLight->GetSceneLight()->directionalLights[dlSliceIndex].cascade[dlCascadeIndex].viewProjection;
-			return false;
-		}
-	}
 
 	//点光源のリソースを順番に返す。
 
 	//スポットライトのリソースを順番に返す。
-
+	if (!isSLFinish) {
+		slSliceIndex++;
+		if (slSliceIndex >= kMaxNumSpotLight) {
+			isSLFinish = true;
+		}
+		if (!isSLFinish) {
+			//バリアのリソースとスライスを保存してreturn
+			barrierResource = slsmInfo.resource.Get();
+			barrierSlice = slSliceIndex;
+			std::list<uint32_t>::iterator it = slsmInfo.dsvIndex.begin();
+			std::advance(it, slSliceIndex);
+			targetDSVIndex = *it;
+			lVPM_ = sceneLight->GetSceneLight()->spotLights[slSliceIndex].viewProjection;
+			return false;
+		}
+	}
 	//全てのシャドウマップのレンダリングが完了したので特定の変数をリセットしてから終了する
 	lVPMIndex = -1;
-	dlCascadeIndex = -1;
-	dlSliceIndex = 0;
-	isDLFinish = false;
+	//SL
+	slSliceIndex = -1;
+	isSLFinish = false;
 	return true;
 }
 
@@ -116,8 +108,8 @@ uint32_t ShadowMapManager::PreDraw()
 
 	//ビューポート
 	D3D12_VIEWPORT viewport{};
-	viewport.Width = static_cast<FLOAT>(resolutionWidth);
-	viewport.Height = static_cast<FLOAT>(resolutionHeight);
+	viewport.Width = 1024.0f;
+	viewport.Height = 1024.0f;
 	viewport.TopLeftX = 0;
 	viewport.TopLeftY = 0;
 	viewport.MinDepth = 0.0f;
@@ -125,9 +117,9 @@ uint32_t ShadowMapManager::PreDraw()
 	//シザー矩形
 	D3D12_RECT scissorRect{};
 	scissorRect.left = 0;
-	scissorRect.right = static_cast<LONG>(resolutionWidth);
+	scissorRect.right = 1024.0f;
 	scissorRect.top = 0;
-	scissorRect.bottom = static_cast<LONG>(resolutionHeight);
+	scissorRect.bottom = 1024.0f;
 	//コマンドを積む
 	ShadowMapRender::GetInstance()->GetCommandList()->RSSetViewports(1, &viewport);
 	ShadowMapRender::GetInstance()->GetCommandList()->RSSetScissorRects(1, &scissorRect);
@@ -145,16 +137,12 @@ void ShadowMapManager::PostDraw()
 	ShadowMapRender::GetInstance()->GetCommandList()->ResourceBarrier(1, &barrier);
 }
 
-void ShadowMapManager::InitDLShadowMapInfo()
+void ShadowMapManager::InitShadowMapInfo()
 {
-	//カスケードの数を登録
-	dlsmInfo.cascadeNum = kCascadeCount;
-	//リソースの作成
-	for (int i = 0; i < kCascadeCount; i++) {
-		Microsoft::WRL::ComPtr<ID3D12Resource> element;
-		element = MakeTexture2DArrayResource(kMaxWidth >> i, kMaxHeight >> i, kMaxNumDirectionalLight);
-		dlsmInfo.resource.push_back(element);
-	}
+	
+	//SLリソースの作成
+	slsmInfo.resource = MakeTexture2DArrayResource(1024, 1024, kMaxNumSpotLight);
+
 	//DSVデスクリプタヒープにリソースとDSVを紐づけて登録
 	SettingDSV();
 	//SRVインデックスの設定
@@ -213,7 +201,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> ShadowMapManager::MakeTexture2DArrayResou
 	resourceDesc.SampleDesc.Count = 1;                   // マルチサンプリングは無効
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D; // 2Dテクスチャ配列
 	resourceDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL; // 深度ステンシルとして使用
-
+	
 	// 利用するヒープの設定
 	D3D12_HEAP_PROPERTIES heapProperties{};
 	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT; // GPU専用ヒープ
@@ -246,85 +234,79 @@ Microsoft::WRL::ComPtr<ID3D12Resource> ShadowMapManager::MakeTexture2DArrayResou
 
 void ShadowMapManager::SettingDSV()
 {
-	//DSVインデックスの設定
-	for (int i = 0; i < kMaxNumDirectionalLight; i++) {
-		//一つの平行光源
-		std::vector<uint32_t> element;
-		for (int j = 0; j < kCascadeCount; j++) {
-			uint32_t index;
-			index = dsvIndexCount;
-			dsvIndexCount++;
-			element.push_back(index);
-		}
-		dlsmInfo.dsvIndex.push_back(element);
+
+	//SLのDSVインデックスの設定
+	for (int i = 0; i < kMaxNumSpotLight; i++) {
+		uint32_t index;
+		index = dsvIndexCount;
+		slsmInfo.dsvIndex.push_back(index);
+		dsvIndexCount++;
 	}
+
 
 	//DSVを作成
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
 	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2DARRAY;
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
-	dsvDesc.Texture2DArray.ArraySize = kMaxNumDirectionalLight;
+	dsvDesc.Texture2DArray.ArraySize = 1;
 
-	//DSVデスクリプタヒープにシャドウマップをバインド
-	int numDL = 0;
-	for (const auto& it : dlsmInfo.dsvIndex) {
-		for (int i = 0; i < kCascadeCount; i++) {
-			//DSVハンドルゲット
-			D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle;
-			dsvHandle = ShadowMapRender::GetInstance()->GetDSVCPUDescriptorHandle(it[i]);
-			//dsvDescのArrayの場所を選択
-			dsvDesc.Texture2DArray.FirstArraySlice = numDL;
-			//DSVとハンドルで指定した位置にDSVとリソースをバインドして格納
-			DirectXCommon::GetInstance()->GetDevice()->CreateDepthStencilView(
-				dlsmInfo.resource[i].Get(),
-				&dsvDesc,
-				dsvHandle
-			);
-		}
-		numDL++;
+
+	//SLのリソースをDSVデスクリプタヒープとバインド
+	int numSL = 0;
+	for (const auto& it : slsmInfo.dsvIndex) {
+		//DSVハンドルゲット
+		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle;
+		dsvHandle = ShadowMapRender::GetInstance()->GetDSVCPUDescriptorHandle(it);
+		//dsvDescのArrayの場所を選択
+		dsvDesc.Texture2DArray.FirstArraySlice = numSL;
+		//DSVとハンドルで指定した位置にDSVとリソースをバインドして格納
+		DirectXCommon::GetInstance()->GetDevice()->CreateDepthStencilView(
+			slsmInfo.resource.Get(),
+			&dsvDesc,
+			dsvHandle
+		);
+		//ここでエラー発生したらShadowMapRenderのDSVヒープのサイズ確認
+		numSL++;
 	}
 
 }
 
 void ShadowMapManager::SettingSRV()
 {
-	//カスケードごとにSRVインデックスを割り当てる
-	for (int j = 0; j < kCascadeCount; j++) {
-		uint32_t srvIndex;
-		srvIndex = SrvManager::GetInstance()->Allocate();
-		dlsmInfo.srvIndex.push_back(srvIndex);
-	}
+
+	uint32_t srvIndex;
+	//SLのSRVインデックスを割り当てる
+	srvIndex = SrvManager::GetInstance()->Allocate();
+	slsmInfo.srvIndex = srvIndex;
+
 
 	//SRVを作成
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
 	srvDesc.Format = DXGI_FORMAT_R32_FLOAT;                   // フォーマット（シャドウマップは深度値）
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2DARRAY; // 配列ビュー
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	srvDesc.Texture2DArray.ArraySize = kMaxNumDirectionalLight;
+	srvDesc.Texture2DArray.ArraySize = kMaxNumSpotLight;
 	srvDesc.Texture2DArray.FirstArraySlice = 0;
 	srvDesc.Texture2DArray.MipLevels = 1;                     // ミップレベル
 	srvDesc.Texture2DArray.MostDetailedMip = 0;
 
-	//カスケードごとにSRVデスクリプタヒープにシャドウマップをバインド
-	for (int i = 0; i < kCascadeCount; i++) {
-		//SRVのハンドルゲット
-		D3D12_CPU_DESCRIPTOR_HANDLE srvHandle;
-		srvHandle = SrvManager::GetInstance()->GetCPUDescriptorHandle(dlsmInfo.srvIndex[i]);
-		//デスクリプタヒープにセット
-		DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(
-			dlsmInfo.resource[i].Get(),
-			&srvDesc,
-			srvHandle
-		);
-	}
+
+	//SLのリソースをSRVデスクリプタヒープにバインド
+	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle;
+	srvHandle = SrvManager::GetInstance()->GetCPUDescriptorHandle(slsmInfo.srvIndex);
+	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(
+		slsmInfo.resource.Get(),
+		&srvDesc,
+		srvHandle
+	);
 
 }
 
 void ShadowMapManager::InitLVPM()
 {
 	//リソースとデータのサイズを決める
-	int size = (kMaxNumDirectionalLight * kCascadeCount) + (kMaxNumPointLight)+(kMaxNumSpotLight);
+	int size = kMaxNumSpotLight;
 	//resize
 	lightViewProjectionResources_.resize(size);
 	lightViewProjectionDatas_.resize(size);
@@ -337,6 +319,7 @@ void ShadowMapManager::InitLVPM()
 		//データの初期化
 		lightViewProjectionDatas_[i]->viewProjectionMatrix = lVPM_;
 	}
+
 
 }
 
