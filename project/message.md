@@ -1,0 +1,7 @@
+エンジンでやりたいこと
+・Object3dとModelの役割を整える
+(ModelにVertexShaderとMaterialのリソース、Object3dにWVPリソースTransformを分離させる)
+・Inputのゲームパッド改良
+・パーティクルクラス
+・オーディオマネージャの作成
+・数学関数の導入
