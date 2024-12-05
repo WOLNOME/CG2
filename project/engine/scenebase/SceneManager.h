@@ -25,10 +25,6 @@ public:
 	/// </summary>
 	void Update();
 	/// <summary>
-	/// シャドウマップのレンダリング
-	/// </summary>
-	void ShadowMapDraw();
-	/// <summary>
 	/// 描画
 	/// </summary>
 	void Draw();

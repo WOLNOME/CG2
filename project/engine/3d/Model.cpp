@@ -3,7 +3,6 @@
 #include <sstream>
 #include <filesystem>
 #include "DirectXCommon.h"
-#include "ShadowMapRender.h"
 #include "MainRender.h"
 #include "Object3d.h"
 #include "TextureManager.h"
@@ -56,16 +55,6 @@ void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParame
 		}
 		//描画
 		MainRender::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelResource_.modelData.at(index).vertices.size()), instancingNum, 0, 0);
-	}
-}
-
-void Model::DrawShadow(uint32_t instancingNum)
-{
-	for (size_t index = 0; index < modelResource_.modelData.size(); index++) {
-		//頂点バッファービューを設定
-		ShadowMapRender::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &modelResource_.shadowVertexBufferView.at(index));
-		//描画
-		ShadowMapRender::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelResource_.modelData.at(index).verticesShadow.size()), instancingNum, 0, 0);
 	}
 }
 
@@ -216,9 +205,6 @@ Model::ModelResource Model::MakeModelResource()
 	modelResource_.vertexResource.resize(modelNum_);
 	modelResource_.vertexBufferView.resize(modelNum_);
 	modelResource_.vertexData.resize(modelNum_);
-	modelResource_.shadowVertexResource.resize(modelNum_);
-	modelResource_.shadowVertexBufferView.resize(modelNum_);
-	modelResource_.shadowVertexData.resize(modelNum_);
 	modelResource_.materialResource.resize(modelNum_);
 	modelResource_.materialData.resize(modelNum_);
 	modelResource_.textureResorce.resize(modelNum_);
@@ -228,23 +214,15 @@ Model::ModelResource Model::MakeModelResource()
 	for (size_t index = 0; index < modelNum_; index++) {
 		//頂点用リソースを作る
 		modelResource_.vertexResource.at(index) = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * modelResource_.modelData.at(index).vertices.size());
-		//影用頂点リソースを作る
-		modelResource_.shadowVertexResource.at(index) = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(VertexShadowData) * modelResource_.modelData.at(index).verticesShadow.size());
 		//マテリアル用のリソースを作る。
 		modelResource_.materialResource.at(index) = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Material));
 		//頂点バッファービューを作成
 		modelResource_.vertexBufferView.at(index).BufferLocation = modelResource_.vertexResource.at(index)->GetGPUVirtualAddress();
 		modelResource_.vertexBufferView.at(index).SizeInBytes = UINT(sizeof(VertexData) * modelResource_.modelData.at(index).vertices.size());
 		modelResource_.vertexBufferView.at(index).StrideInBytes = sizeof(VertexData);
-		//シャドウ頂点バッファービューを作成
-		modelResource_.shadowVertexBufferView.at(index).BufferLocation = modelResource_.shadowVertexResource.at(index)->GetGPUVirtualAddress();
-		modelResource_.shadowVertexBufferView.at(index).SizeInBytes = UINT(sizeof(VertexShadowData) * modelResource_.modelData.at(index).verticesShadow.size());
-		modelResource_.shadowVertexBufferView.at(index).StrideInBytes = sizeof(VertexShadowData);
 		//リソースにデータを書き込む
 		modelResource_.vertexResource.at(index)->Map(0, nullptr, reinterpret_cast<void**>(&modelResource_.vertexData.at(index)));
 		std::memcpy(modelResource_.vertexData.at(index), modelResource_.modelData.at(index).vertices.data(), sizeof(VertexData) * modelResource_.modelData.at(index).verticesShadow.size());
-		modelResource_.shadowVertexResource.at(index)->Map(0, nullptr, reinterpret_cast<void**>(&modelResource_.shadowVertexData.at(index)));
-		std::memcpy(modelResource_.shadowVertexData.at(index), modelResource_.modelData.at(index).verticesShadow.data(), sizeof(VertexShadowData) * modelResource_.modelData.at(index).verticesShadow.size());
 		modelResource_.materialResource.at(index)->Map(0, nullptr, reinterpret_cast<void**>(&modelResource_.materialData.at(index)));
 		//白を書き込んでおく
 		modelResource_.materialData.at(index)->color = modelResource_.modelData.at(index).material.colorData;

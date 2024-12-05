@@ -29,13 +29,7 @@ public://メンバ関数
 		const BaseCamera& camera,
 		const SceneLight* sceneLight = nullptr
 	);
-	/// <summary>
-	/// 影テクスチャの描画
-	/// </summary>
-	/// <param name="worldTransform">ワールドトランスフォーム</param>
-	/// <param name="sceneLight">シーン内光源</param>
-	void DrawShadow(const WorldTransform& worldTransform, const SceneLight* sceneLight, uint32_t lVPMIndex);
-
+	
 
 private://非公開メンバ関数
 

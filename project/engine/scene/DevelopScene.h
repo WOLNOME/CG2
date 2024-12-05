@@ -32,10 +32,6 @@ public:
 	/// </summary>
 	void Update() override;
 	/// <summary>
-	/// シャドウマップレンダリング用
-	/// </summary>
-	void ShadowMapDraw() override;
-	/// <summary>
 	/// 描画
 	/// </summary>
 	void Draw() override;

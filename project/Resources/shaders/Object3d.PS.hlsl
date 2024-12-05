@@ -32,7 +32,6 @@ struct PointLight
 };
 struct SpotLight
 {
-    float4x4 viewProjection;
     float4 color;
     float3 position;
     float intensity;
@@ -64,15 +63,9 @@ struct PixelShaderOutput
 
 //通常テクスチャ
 Texture2D<float4> gTexture : register(t0);
-//SLSMテクスチャ
-Texture2DArray<float> gSLSMTexture : register(t1);
-
 
 //通常サンプラー
 SamplerState gSampler : register(s0);
-//シャドウマップ用サンプラー
-SamplerComparisonState gShadowSampler : register(s1);
-
 
 PixelShaderOutput main(VertexShaderOutput input)
 {
@@ -153,25 +146,7 @@ PixelShaderOutput main(VertexShaderOutput input)
         if (gSceneLight.spotLights[k].isActive == 1)
         {
             useLightCount++;
-            
-            //シャドウマップの計算
-            //ピクセルのワールド座標を光源のビュープロジェクション空間に変換
-            float4 lightSpacePixelPosition = mul(float4(input.worldPosition, 1.0f), gSceneLight.spotLights[i].viewProjection);
-            //射影空間座標を正規化
-            lightSpacePixelPosition.xyz /= lightSpacePixelPosition.w;
-            //座標系を[0,1]に変換し、深度を抜き出す
-            float2 pixelUV = lightSpacePixelPosition.xy * 0.5f + 0.5f;
-            float pixelDepth = lightSpacePixelPosition.z;
-            //サンプリング
-            float shadowDepth = gSLSMTexture.SampleCmpLevelZero(gShadowSampler, float3(pixelUV, i), pixelDepth);
-            //深度値の比較
-            float shadowFactor = 1.0f;
-            if (pixelDepth > shadowDepth)
-            {
-                shadowFactor = 0.0f;
-            }
-            
-            
+           
             //光源から物体表面への方向
             float3 spotLightDirectionOnSurface = normalize(input.worldPosition - gSceneLight.spotLights[k].position);
              //反射の計算
@@ -191,10 +166,10 @@ PixelShaderOutput main(VertexShaderOutput input)
             float falloffFactor = saturate((cosAngle - gSceneLight.spotLights[k].cosAngle) / (gSceneLight.spotLights[k].cosFalloffStart - gSceneLight.spotLights[k].cosAngle));
         
             //拡散反射
-            diffuseSpotLight += gMaterial.color.rgb * textureColor.rgb * gSceneLight.spotLights[k].color.rgb * cos * gSceneLight.spotLights[k].intensity * attenuationFactor * falloffFactor * shadowFactor;
+            diffuseSpotLight += gMaterial.color.rgb * textureColor.rgb * gSceneLight.spotLights[k].color.rgb * cos * gSceneLight.spotLights[k].intensity * attenuationFactor * falloffFactor;
             //鏡面反射
             float3 specularColor = { 1.0f, 1.0f, 1.0f }; //この値はMaterialで変えられるようになるとよい。
-            specularSpotLight += gSceneLight.spotLights[k].color.rgb * gSceneLight.spotLights[k].intensity * specularPow * specularColor * attenuationFactor * falloffFactor * shadowFactor;
+            specularSpotLight += gSceneLight.spotLights[k].color.rgb * gSceneLight.spotLights[k].intensity * specularPow * specularColor * attenuationFactor * falloffFactor;
         }
     }
     

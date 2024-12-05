@@ -1,8 +1,6 @@
 #include "MyGame.h"
 #include "DirectXCommon.h"
-#include "ShadowMapRender.h"
 #include "MainRender.h"
-#include "ShadowMapManager.h"
 #include "TextureManager.h"
 #include "SrvManager.h"
 #include "ImGuiManager.h"
@@ -44,35 +42,7 @@ void MyGame::Draw()
 	///          描画処理
 	///==============================///
 
-	///------------------------------///
-	///    シャドウマップレンダー
-	///------------------------------///
-
-	//共通描画設定
-	ShadowMapManager::GetInstance()->SettingCommonDrawing();
-	//描画前処理
-	SrvManager::GetInstance()->PreDraw(ShadowMapRender::GetInstance()->GetCommandList());
-
-	//全てのSMのレンダリング
-	while (true)
-	{
-		//シーンの描画
-		SceneManager::GetInstance()->ShadowMapDraw();
-
-		//脱出フラグがtrueなら脱出
-		if (ShadowMapManager::GetInstance()->isEscapeLoop) {
-			ShadowMapManager::GetInstance()->isEscapeLoop = false;
-			break;
-		}
-	}
-
-	//描画後処理
-	ShadowMapRender::GetInstance()->AllPostDraw();
-	//単レンダー終了時の共通処理
-	DirectXCommon::GetInstance()->PostEachRender();
-	//コマンドのリセット
-	ShadowMapRender::GetInstance()->ReadyNextCommand();
-
+	
 	///------------------------------///
 	///        メインレンダー
 	///------------------------------///

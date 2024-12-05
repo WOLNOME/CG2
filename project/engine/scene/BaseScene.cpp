@@ -19,10 +19,6 @@ void BaseScene::Update()
 {
 }
 
-void BaseScene::ShadowMapDraw()
-{
-}
-
 void BaseScene::Draw()
 {
 }

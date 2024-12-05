@@ -22,10 +22,6 @@ public:
 	/// </summary>
 	virtual void Update();
 	/// <summary>
-	/// シャドウマップレンダリング用の描画処理
-	/// </summary>
-	virtual void ShadowMapDraw();
-	/// <summary>
 	/// 描画
 	/// </summary>
 	virtual void Draw();

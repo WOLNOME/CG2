@@ -152,8 +152,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\3d\WorldTransform.cpp" />
     <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="SceneLight.cpp" />
-    <ClCompile Include="ShadowMapManager.cpp" />
-    <ClCompile Include="ShadowMapRender.cpp" />
     <ClCompile Include="SpotLight.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -210,8 +208,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="PointLight.h" />
     <ClInclude Include="Quaternion.h" />
     <ClInclude Include="SceneLight.h" />
-    <ClInclude Include="ShadowMapManager.h" />
-    <ClInclude Include="ShadowMapRender.h" />
     <ClInclude Include="SpotLight.h" />
   </ItemGroup>
   <ItemGroup>

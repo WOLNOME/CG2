@@ -9,7 +9,6 @@
 
 // データ構造体(サイズが16の倍数になるようにパディングする！)
 struct SpotLightData {
-	Matrix4x4 viewProjection;	//ライト視点のビュープロジェクション行列
 	Vector4 color;				//ライトの色
 	Vector3 position;			//ライトの位置
 	float intensity;			//輝度

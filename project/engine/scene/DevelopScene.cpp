@@ -1,6 +1,5 @@
 #include "DevelopScene.h"
 #include "TextureManager.h"
-#include "ShadowMapManager.h"
 #include "ImGuiManager.h"
 #include "Object3dCommon.h"
 #include "ParticleCommon.h"
@@ -220,28 +219,6 @@ void DevelopScene::Update()
 	ImGui::End();
 
 #endif // _DEBUG
-}
-
-void DevelopScene::ShadowMapDraw()
-{
-	if (ShadowMapManager::GetInstance()->SelectResource(sceneLight_.get())) {
-		//全てのレンダリングが終わったのでループから脱出
-		ShadowMapManager::GetInstance()->isEscapeLoop = true;
-		return;
-	}
-
-
-	//描画前処理
-	uint32_t lVPMIndex = ShadowMapManager::GetInstance()->PreDraw();
-
-
-	//モデル描画
-	axis_->DrawShadow(wtAxis_, sceneLight_.get(), lVPMIndex);
-	terrain_->DrawShadow(wtTerrain_, sceneLight_.get(), lVPMIndex);
-
-	//描画後処理
-	ShadowMapManager::GetInstance()->PostDraw();
-
 }
 
 void DevelopScene::Draw()

@@ -62,10 +62,6 @@ private:
 		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> textureResorce;
 		std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> textureSrvHandleCPU;
 		std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> textureSrvHandleGPU;
-		//影用の頂点バッファービュー
-		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> shadowVertexResource;
-		std::vector<D3D12_VERTEX_BUFFER_VIEW> shadowVertexBufferView;
-		std::vector<VertexData*> shadowVertexData;
 	};
 	
 
@@ -79,12 +75,7 @@ public:
 	/// <param name="textureRootParameterIndex">テクスチャ設定用ルートパラメータの番号</param>
 	/// <param name="instancingNum">インスタンス数</param>
 	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum = 1);
-	/// <summary>
-	/// 影テクスチャの描画
-	/// </summary>
-	/// /// <param name="instancingNum">インスタンス数</param>
-	void DrawShadow(uint32_t instancingNum = 1);
-
+	
 public://ゲッター
 	const ModelResource& GetModelResource() { return modelResource_; }
 public://セッター

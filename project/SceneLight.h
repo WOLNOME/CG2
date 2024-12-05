@@ -77,11 +77,5 @@ private:
 	//シーン内にあるスポットライト
 	std::vector<SpotLight*> spotLights_;
 
-	//シーン内にある平行光源のカウント
-	int dirLightCount = 0;
-	//１つの光源内のカスケードカウント
-	int selectCascadeCount = 0;
-
-
 };
 

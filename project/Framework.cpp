@@ -1,10 +1,8 @@
 #include "Framework.h"
 #include "WinApp.h"
 #include "DirectXCommon.h"
-#include "ShadowMapRender.h"
 #include "MainRender.h"
 #include "SrvManager.h"
-#include "ShadowMapManager.h"
 #include "ImGuiManager.h"
 #include "TextureManager.h"
 #include "ModelManager.h"
@@ -27,17 +25,11 @@ void Framework::Initialize()
 	//DirectX12
 	DirectXCommon::GetInstance()->Initialize();
 
-	//シャドウマップレンダー
-	ShadowMapRender::GetInstance()->Initialize();
-
 	//メインレンダー
 	MainRender::GetInstance()->Initialize();
 
 	//SRVマネージャー
 	SrvManager::GetInstance()->Initialize();
-
-	//シャドウマップマネージャー
-	ShadowMapManager::GetInstance()->Initialize();
 
 	//ImGuiマネージャー
 	ImGuiManager::GetInstance()->Initialize();
@@ -83,10 +75,8 @@ void Framework::Finalize()
 	ModelManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
 	ImGuiManager::GetInstance()->Finalize();
-	ShadowMapManager::GetInstance()->Finalize();
 	SrvManager::GetInstance()->Finalize();
 	MainRender::GetInstance()->Finalize();
-	ShadowMapRender::GetInstance()->Finalize();
 	DirectXCommon::GetInstance()->Finalize();
 	WinApp::GetInstance()->Finalize();
 }
