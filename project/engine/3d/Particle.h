@@ -88,7 +88,7 @@ private://メンバ変数
 	//各インスタンシング用書き換え情報
 	std::list<Struct::Particle> particles;
 	//表示するパーティクルの最大数
-	const uint32_t kNumMaxInstance_ = 64;
+	const uint32_t kNumMaxInstance_ = 128;
 	//δtの定義
 	const float kDeltaTime = 1.0f / 60.0f;
 	//ビルボードのオンオフ

@@ -34,8 +34,8 @@ void DevelopScene::Initialize()
 	emitter1_.isInfinity = false;
 	field1_.acceleration = { 0.0f,15.0f,0.0f };
 	field1_.area = {
-		{-10.0f,-10.0f,-10.0f},
-		{10.0f,10.0f,10.0f}
+		{-15.0f,-15.0f,-15.0f},
+		{15.0f,15.0f,15.0f}
 	};
 	//いたポリ
 	itapori_ = std::make_unique<Particle>();
