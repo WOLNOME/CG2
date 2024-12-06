@@ -19,10 +19,12 @@ Particle::~Particle()
 	SrvManager::GetInstance()->Free(particleResource_.srvIndex);
 }
 
-void Particle::Initialize(const std::string& filePath)
+void Particle::Initialize(const std::string& filePath, bool isItapori)
 {
+	isItapori_ = isItapori;
+
 	//モデルマネージャーでモデル(見た目)を生成
-	ModelManager::GetInstance()->LoadModel(filePath,OBJ);
+	ModelManager::GetInstance()->LoadModel(filePath, OBJ);
 	//モデルマネージャーから検索してセットする
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
 
@@ -31,18 +33,6 @@ void Particle::Initialize(const std::string& filePath)
 	//インスタンシングをSRVにセット
 	SettingSRV();
 
-	//エミッター生成
-	emitter.transform.scale = { 1.0f,1.0f,1.0f };
-	emitter.transform.rotate = { 0.0f,0.0f,0.0f };
-	emitter.transform.translate = { 0.0f,0.0f,0.0f };
-	emitter.count = 3;//1度に3個生成する
-	emitter.frequency = 0.5f;//0.5秒ごとに発生
-	emitter.frequencyTime = 0.0f;//currentTime
-
-	//フィールド生成
-	accelerationField.acceleration = { 15.0f,0.0f,0.0f };
-	accelerationField.area.min = { -1.0f,-1.0f,-1.0f };
-	accelerationField.area.max = { 1.0f,1.0f,1.0f };
 
 }
 
@@ -52,49 +42,56 @@ void Particle::Update()
 	ImGui::Begin("particle");
 	ImGui::Checkbox("billboard", &isBillboard);
 	ImGui::Checkbox("field", &isField);
-	if (ImGui::Button("Add Particle")) {
-		//パーティクル生成
-		particles.splice(particles.end(), Emit(emitter));
-	}
-	ImGui::DragFloat3("EmitterTranslate", &emitter.transform.translate.x, 0.01f, -100.0f, 100.0f);
 	ImGui::End();
 #endif // _DEBUG
 }
 
-void Particle::Draw(const BaseCamera& camera)
+void Particle::Draw(const BaseCamera& camera, Emitter& emitter, const AccelerationField& field)
 {
 	//インスタンスの番号
 	uint32_t instanceNum = 0;
 	//エミッターの更新
-	emitter.frequencyTime += kDeltaTime;
-	if (emitter.frequency <= emitter.frequencyTime) {
-		particles.splice(particles.end(), Emit(emitter));
-		emitter.frequencyTime -= emitter.frequency;
+	if (!emitter.isInfinity) {
+		emitter.frequencyTime += kDeltaTime;
+		if (emitter.frequency <= emitter.frequencyTime) {
+			particles.splice(particles.end(), Emit(emitter));
+			emitter.frequencyTime -= emitter.frequency;
+		}
 	}
 
 	for (std::list<Struct::Particle>::iterator particleIterator = particles.begin(); particleIterator != particles.end();) {
-		//時間更新
-		++(*particleIterator).currentTime;
-
-		//生存チェック
-		if ((*particleIterator).lifeTime <= (*particleIterator).currentTime) {
-			//寿命を迎えたら削除
-			particleIterator = particles.erase(particleIterator);
-			continue;
+		if (!emitter.isInfinity) {
+			//時間更新
+			++(*particleIterator).currentTime;
+			//生存チェック
+			if ((*particleIterator).lifeTime <= (*particleIterator).currentTime) {
+				//寿命を迎えたら削除
+				particleIterator = particles.erase(particleIterator);
+				continue;
+			}
 		}
 
 		//フィールドの処理
 		if (isField) {
-			if (MyMath::IsCollision(accelerationField.area, (*particleIterator).transform.translate)) {
-				(*particleIterator).velocity = MyMath::Add((*particleIterator).velocity, MyMath::Multiply(kDeltaTime, accelerationField.acceleration));
+			if (MyMath::IsCollision(field.area, (*particleIterator).transform.translate)) {
+				(*particleIterator).velocity = MyMath::Add((*particleIterator).velocity, MyMath::Multiply(kDeltaTime, field.acceleration));
 			}
 		}
 
 		//速度加算処理
 		(*particleIterator).transform.translate = MyMath::Add((*particleIterator).transform.translate, MyMath::Multiply(kDeltaTime, (*particleIterator).velocity));
+		if (isItapori_) {
+			(*particleIterator).transform.translate = {
+				0.1f * instanceNum,
+				0.1f * instanceNum,
+				0.1f * instanceNum
+			};
+		}
 		//α値設定
-		float alpha = 1.0f - ((*particleIterator).currentTime / (*particleIterator).lifeTime);
-
+		float alpha = 1.0f;
+		if (isItapori_) {
+			alpha = 1.0f - ((*particleIterator).currentTime / (*particleIterator).lifeTime);
+		}
 		//レンダリングパイプライン
 		Matrix4x4 backToFrontMatrix = MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>);
 		Matrix4x4 billboardMatrix = MyMath::Multiply(backToFrontMatrix, camera.GetWorldMatrix());
@@ -127,6 +124,12 @@ void Particle::Draw(const BaseCamera& camera)
 
 }
 
+void Particle::AddParticle(const Emitter& emitter)
+{
+	//パーティクル生成
+	particles.splice(particles.end(), Emit(emitter));
+}
+
 Particle::Struct::ParticleResource Particle::MakeParticleResource()
 {
 	//Particleリソース
@@ -139,6 +142,7 @@ Particle::Struct::ParticleResource Particle::MakeParticleResource()
 	for (uint32_t index = 0; index < kNumMaxInstance_; ++index) {
 		particleResource.instancingData[index].World = MyMath::MakeIdentity4x4();
 		particleResource.instancingData[index].color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+
 	}
 	//トランスフォーム
 	particleResource.transform = {
@@ -187,14 +191,14 @@ Particle::Struct::Particle Particle::MakeNewParticle(const Vector3& translate)
 	std::uniform_real_distribution<float> distcolor(0.0f, 1.0f);
 	particle.color = { distcolor(randomEngine) ,distcolor(randomEngine) ,distcolor(randomEngine),1.0f };
 	//寿命
-	std::uniform_real_distribution<float> distTime(1.0f * 60.0f, 3.0f * 60.0f);
+	std::uniform_real_distribution<float> distTime(2.0f * 60.0f, 4.0f * 60.0f);
 	particle.lifeTime = distTime(randomEngine);
 	particle.currentTime = 0;
 
 	return particle;
 }
 
-std::list<Particle::Struct::Particle> Particle::Emit(const Struct::Emitter& emitter)
+std::list<Particle::Struct::Particle> Particle::Emit(const Emitter& emitter)
 {
 	std::list<Struct::Particle> particle;
 

@@ -42,7 +42,16 @@ private://メンバ変数
 	Vector3 cameraTranslate = { 0.0f,0.0f,-15.0f };
 	Vector3 cameraRotate = { 0.0f,0.0f,0.0f };
 	
+	//パーティクル1
 	std::unique_ptr<Particle> particle_ = nullptr;
+	Emitter emitter1_;
+	AccelerationField field1_;
+	bool isDisplay1_ = true;
 
+	//いたポリ
+	std::unique_ptr<Particle> itapori_ = nullptr;
+	Emitter emitter2_;
+	AccelerationField field2_;
+	bool isDisplay2_ = true;
 };
 

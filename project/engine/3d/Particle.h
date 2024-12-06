@@ -10,6 +10,21 @@
 #include "MyMath.h"
 
 
+
+//エミッター構造体
+struct Emitter {
+	TransformEuler transform;//エミッターのトランスフォーム
+	int count;//発生させるパーティクルの数
+	float frequency;//発生頻度
+	float frequencyTime;//頻度用時刻
+	bool isInfinity;
+};
+//フィールド
+struct AccelerationField
+{
+	Vector3 acceleration;
+	AABB area;
+};
 class BaseCamera;
 //パーティクル
 class Particle
@@ -39,20 +54,6 @@ public://インナークラス
 			float lifeTime;
 			float currentTime;
 		};
-		//エミッター構造体
-		struct Emitter {
-			TransformEuler transform;//エミッターのトランスフォーム
-			uint32_t count;//発生させるパーティクルの数
-			float frequency;//発生頻度
-			float frequencyTime;//頻度用時刻
-		};
-		//フィールド
-		struct AccelerationField
-		{
-			Vector3 acceleration;
-			AABB area;
-		};
-
 	};
 public://メンバ関数
 	~Particle();
@@ -60,9 +61,13 @@ public://メンバ関数
 	/// 初期化
 	/// </summary>
 	/// <param name="filePath">オブジェクトファイルパス(.objはいらない)</param>
-	void Initialize(const std::string& filePath);
+	void Initialize(const std::string& filePath, bool isItapori = false);
 	void Update();
-	void Draw(const BaseCamera& camera);
+	void Draw(const BaseCamera& camera, Emitter& emitter, const AccelerationField& field);
+public://パーティクル操作用関数
+	//パーティクル追加
+	void AddParticle(const Emitter& emitter);
+
 private://メンバ関数(非公開)
 	//パーティクルリソース作成関数
 	Struct::ParticleResource MakeParticleResource();
@@ -71,7 +76,7 @@ private://メンバ関数(非公開)
 	//パーティクルの生成
 	Struct::Particle MakeNewParticle(const Vector3& translate);
 	//エミット
-	std::list<Struct::Particle> Emit(const Struct::Emitter& emitter);
+	std::list<Struct::Particle> Emit(const Emitter& emitter);
 
 private://インスタンス
 private://メンバ変数
@@ -87,11 +92,11 @@ private://メンバ変数
 	//δtの定義
 	const float kDeltaTime = 1.0f / 60.0f;
 	//ビルボードのオンオフ
-	bool isBillboard = false;
-	//エミッター
-	Struct::Emitter emitter{};
-	//フィールド
-	Struct::AccelerationField accelerationField;
+	bool isBillboard = true;
 	//フィールド値のオンオフ
-	bool isField = false;
+	bool isField = true;
+
+	//itaporiか
+	bool isItapori_ = false;
+
 };
