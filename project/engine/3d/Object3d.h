@@ -25,7 +25,7 @@ public://メンバ関数
 	/// <param name="camera">カメラ</param>
 	/// <param name="dirLight">シーン内光源</param>
 	void Draw(
-		const WorldTransform& worldTransform,
+		WorldTransform& worldTransform,
 		const BaseCamera& camera,
 		const SceneLight* sceneLight = nullptr
 	);

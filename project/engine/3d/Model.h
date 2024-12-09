@@ -2,6 +2,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <vector>
+#include <map>
 #include <string>
 #include "MyMath.h"
 #include "ModelFormat.h"
@@ -12,7 +13,37 @@
 
 class Model
 {
-private:
+private://アニメーション関連構造体
+	//キーフレーム
+	template <typename tValue>
+	struct Keyframe
+	{
+		float time;
+		tValue value;
+	};
+	using keyframeVector3 = Keyframe<Vector3>;
+	using keyframeQuaternion = Keyframe<Quaternion>;
+	//ノードアニメーション
+	template <typename tValue>
+	struct AnimationCurve
+	{
+		std::vector<Keyframe<tValue>> keyframes;
+	};
+
+	struct NodeAnimation {
+		AnimationCurve<Vector3> translate;
+		AnimationCurve<Quaternion> rotate;
+		AnimationCurve<Vector3> scale;
+	};
+	//アニメーション
+	struct Animation
+	{
+		float duration;//アニメーション全体の尺(秒)
+		//NodeAnimationの集合、Node名で開けるようにしておく
+		std::map<std::string, NodeAnimation> nodeAnimations;
+	};
+
+private://メッシュ関連構造体
 	//頂点データ
 	struct VertexData {
 		Vector4 position;
@@ -78,17 +109,26 @@ public:
 	
 public://ゲッター
 	const ModelResource& GetModelResource() { return modelResource_; }
+	//ローカル行列
+	const Matrix4x4& GetLocalMatrix() { return localMatrix_; }
 public://セッター
 
 private:
 	//モデルファイルの読み取り
 	std::vector<ModelData> LoadModelFile();
+	//アニメーションの読み取り
+	Animation LoadAnimationFile();
 	//assimpのノード→構造体ノード変換関数
 	Node ReadNode(aiNode* node);
 	//モデルリソース作成関数
 	ModelResource MakeModelResource();
 	//テクスチャ読み込み
 	void SettingTexture();
+
+	//任意の時刻に対する値を取得する関数
+	Vector3 CalculateValue(const std::vector<Keyframe<Vector3>>& keyframes, float time);
+	Quaternion CalculateValue(const std::vector<Keyframe<Quaternion>>& keyframes, float time);
+
 private:
 	//モデル用リソース
 	ModelResource modelResource_;
@@ -102,5 +142,11 @@ private:
 	//形式名
 	ModelFormat mf_;
 	std::string format_;
+
+	//アニメーション用変数
+	Animation animation_;
+	float animationTime_ = 0.0f;
+	Matrix4x4 localMatrix_;
+	bool isAnimation_ = false;
 };
 

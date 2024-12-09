@@ -3,6 +3,7 @@
 #include <wrl.h>
 #include "Matrix4x4.h"
 #include "Vector3.h"
+#include "MyMath.h"
 
 // 定数バッファ用データ構造体
 struct WorldTransformationMatrixForVS {
@@ -37,7 +38,7 @@ public:
 	/// <summary>
 	/// データの更新
 	/// </summary>
-	void UpdateMatrix();
+	void UpdateMatrix(const Matrix4x4& local = MyMath::MakeIdentity4x4());
 	/// <summary>
 	/// 定数バッファの取得
 	/// </summary>

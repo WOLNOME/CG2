@@ -34,11 +34,22 @@ void Model::Initialize(const std::string& filename, ModelFormat format, std::str
 
 	//テクスチャの設定
 	SettingTexture();
+
+	//ローカル座標の初期化
+	localMatrix_ = MyMath::MakeIdentity4x4();
 }
 
 void Model::Update()
 {
-
+	if (isAnimation_) {
+		animationTime_ += kDeltaTime;
+		animationTime_ = std::fmod(animationTime_, animation_.duration);
+		NodeAnimation& rootNodeAnimation = animation_.nodeAnimations[modelResource_.modelData[0].rootNode.name];
+		Vector3 translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime_);
+		Quaternion rotate = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime_);
+		Vector3 scale = CalculateValue(rootNodeAnimation.scale.keyframes, animationTime_);
+		localMatrix_ = MyMath::MakeAffineMatrix(scale, rotate, translate);
+	}
 }
 
 void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum)
@@ -169,6 +180,55 @@ std::vector<Model::ModelData> Model::LoadModelFile()
 	return modelData;
 }
 
+Model::Animation Model::LoadAnimationFile()
+{
+	Animation animation;
+	Assimp::Importer importer;
+	std::string filePath = directoryPath_ + fileName_ + "/" + fileName_ + format_;
+	const aiScene* scene = importer.ReadFile(filePath.c_str(), 0);
+	if (scene->mNumAnimations != 0) {
+		isAnimation_ = true;
+	}
+	else {
+		isAnimation_ = false;
+		return animation;
+	}
+	aiAnimation* animationAssimp = scene->mAnimations[0];
+	animation.duration = float(animationAssimp->mDuration / animationAssimp->mTicksPerSecond);
+
+	for (uint32_t channelIndex = 0; channelIndex < animationAssimp->mNumChannels; ++channelIndex) {
+		aiNodeAnim* nodeAnimationAssimp = animationAssimp->mChannels[channelIndex];
+		NodeAnimation& nodeAnimation = animation.nodeAnimations[nodeAnimationAssimp->mNodeName.C_Str()];
+		//translate
+		for (uint32_t keyIndex = 0; keyIndex < nodeAnimationAssimp->mNumPositionKeys; ++keyIndex) {
+			aiVectorKey& keyAssimp = nodeAnimationAssimp->mPositionKeys[keyIndex];
+			keyframeVector3 keyframe;
+			keyframe.time = float(keyAssimp.mTime / animationAssimp->mTicksPerSecond);
+			keyframe.value = { -keyAssimp.mValue.x,keyAssimp.mValue.y, keyAssimp.mValue.z };
+			nodeAnimation.translate.keyframes.push_back(keyframe);
+		}
+		//rotate
+		for (uint32_t keyIndex = 0; keyIndex < nodeAnimationAssimp->mNumRotationKeys; ++keyIndex) {
+			aiQuatKey& keyAssimp = nodeAnimationAssimp->mRotationKeys[keyIndex];
+			keyframeQuaternion keyframe;
+			keyframe.time = float(keyAssimp.mTime / animationAssimp->mTicksPerSecond);
+			keyframe.value = { keyAssimp.mValue.x,-keyAssimp.mValue.y, -keyAssimp.mValue.z,keyAssimp.mValue.w };
+			nodeAnimation.rotate.keyframes.push_back(keyframe);
+		}
+		//scale
+		for (uint32_t keyIndex = 0; keyIndex < nodeAnimationAssimp->mNumScalingKeys; ++keyIndex) {
+			aiVectorKey& keyAssimp = nodeAnimationAssimp->mScalingKeys[keyIndex];
+			keyframeVector3 keyframe;
+			keyframe.time = float(keyAssimp.mTime / animationAssimp->mTicksPerSecond);
+			keyframe.value = { keyAssimp.mValue.x,keyAssimp.mValue.y, keyAssimp.mValue.z };
+			nodeAnimation.scale.keyframes.push_back(keyframe);
+		}
+
+	}
+	//解析完了
+	return animation;
+}
+
 Model::Node Model::ReadNode(aiNode* node)
 {
 	// 新しいNodeオブジェクトを作成
@@ -200,6 +260,7 @@ Model::ModelResource Model::MakeModelResource()
 	ModelResource modelResource_;
 
 	modelResource_.modelData = LoadModelFile();
+	animation_ = LoadAnimationFile();
 	modelNum_ = modelResource_.modelData.size();
 	//std::vector型の要素数を確定
 	modelResource_.vertexResource.resize(modelNum_);
@@ -253,4 +314,45 @@ void Model::SettingTexture()
 		//.objの参照しているテクスチャファイル読み込み(TextureManagerはResources/をカットできるので)
 		modelResource_.modelData.at(index).material.textureHandle = TextureManager::GetInstance()->LoadTexture("models/" + fileName_ + "/" + modelResource_.modelData.at(index).material.textureFilePath);
 	}
+}
+
+Vector3 Model::CalculateValue(const std::vector<Keyframe<Vector3>>& keyframes, float time)
+{
+	assert(!keyframes.empty());
+	if (keyframes.size() == 1 || time <= keyframes[0].time) {
+		return keyframes[0].value;
+	}
+	for (size_t index = 0; index < keyframes.size() - 1; ++index) {
+		size_t nextIndex = index + 1;
+		//indexとnextIndexの2つのkeyframeを取得して範囲内に時刻があるかを判定
+		if (keyframes[index].time <= time && time <= keyframes[nextIndex].time) {
+			//葉にないを補完する
+			float t = (time - keyframes[index].time) / (keyframes[nextIndex].time - keyframes[index].time);
+			return MyMath::Lerp(keyframes[index].value, keyframes[nextIndex].value, t);
+		}
+
+	}
+	//ここまできた場合は一番後の時刻よりも後ろなので最後の値を返すことにする
+	return (*keyframes.rbegin()).value;
+}
+
+Quaternion Model::CalculateValue(const std::vector<Keyframe<Quaternion>>& keyframes, float time)
+{
+	assert(!keyframes.empty());
+	if (keyframes.size() == 1 || time <= keyframes[0].time) {
+		return keyframes[0].value;
+	}
+	for (size_t index = 0; index < keyframes.size() - 1; ++index) {
+		size_t nextIndex = index + 1;
+		//indexとnextIndexの2つのkeyframeを取得して範囲内に時刻があるかを判定
+		if (keyframes[index].time <= time && time <= keyframes[nextIndex].time) {
+			//葉にないを補完する
+			float t = (time - keyframes[index].time) / (keyframes[nextIndex].time - keyframes[index].time);
+			return MyMath::Slerp(keyframes[index].value, keyframes[nextIndex].value, t);
+		}
+
+	}
+	//ここまできた場合は一番後の時刻よりも後ろなので最後の値を返すことにする
+	return (*keyframes.rbegin()).value;
+
 }

@@ -68,6 +68,12 @@ void DevelopScene::Initialize()
 	terrain_ = std::make_unique<Object3d>();
 	terrain_->Initialize("terrain");
 
+	wtAnimatedCube_.Initialize();
+	wtAnimatedCube_.translate_ = { 0.0f,3.0f,0.0f };
+	animatedCube_ = std::make_unique<Object3d>();
+	animatedCube_->Initialize("AnimatedCube", GLTF);
+
+
 	particle_ = std::make_unique<Particle>();
 	particle_->Initialize("plane");
 
@@ -95,6 +101,7 @@ void DevelopScene::Update()
 	wtAxis_.rotate_.y += 0.03f;
 	wtAxis_.UpdateMatrix();
 	wtTerrain_.UpdateMatrix();
+	wtAnimatedCube_.UpdateMatrix();
 
 	//パーティクル
 	particle_->Update();
@@ -233,6 +240,8 @@ void DevelopScene::Draw()
 	axis_->Draw(wtAxis_, *camera.get(), sceneLight_.get());
 
 	terrain_->Draw(wtTerrain_, *camera.get(), sceneLight_.get());
+
+	animatedCube_->Draw(wtAnimatedCube_, *camera.get(), sceneLight_.get());
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑

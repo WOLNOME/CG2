@@ -67,6 +67,10 @@ private://メンバ変数
 	WorldTransform wtTerrain_;
 	std::unique_ptr<Object3d> terrain_ = nullptr;
 
+	WorldTransform wtAnimatedCube_;
+	std::unique_ptr<Object3d> animatedCube_ = nullptr;
+
+
 
 	std::unique_ptr<Particle> particle_ = nullptr;
 
