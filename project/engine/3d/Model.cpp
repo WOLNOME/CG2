@@ -237,14 +237,15 @@ Model::Node Model::ReadNode(aiNode* node)
 	// ノード名を設定
 	currentNode.name = node->mName.C_Str();
 
-	// ローカルマトリックスを取得して設定
-	aiMatrix4x4 aiMatrix = node->mTransformation;
-	currentNode.localMatrix = {
-		aiMatrix.a1, aiMatrix.a2, aiMatrix.a3, aiMatrix.a4,
-		aiMatrix.b1, aiMatrix.b2, aiMatrix.b3, aiMatrix.b4,
-		aiMatrix.c1, aiMatrix.c2, aiMatrix.c3, aiMatrix.c4,
-		aiMatrix.d1, aiMatrix.d2, aiMatrix.d3, aiMatrix.d4,
-	};
+	//変数宣言
+	aiVector3D scale, translate;
+	aiQuaternion rotate;
+
+	node->mTransformation.Decompose(scale, rotate, translate);
+	currentNode.transform.scale = { scale.x,scale.y,scale.z };
+	currentNode.transform.rotate = { rotate.x,-rotate.y,-rotate.z,rotate.w };
+	currentNode.transform.translate = { -translate.x,translate.y,translate.z };
+	currentNode.localMatrix = MyMath::MakeAffineMatrix(currentNode.transform.scale, currentNode.transform.rotate, currentNode.transform.translate);
 
 	// 子ノードを再帰的に処理
 	for (unsigned int i = 0; i < node->mNumChildren; ++i) {
@@ -355,4 +356,36 @@ Quaternion Model::CalculateValue(const std::vector<Keyframe<Quaternion>>& keyfra
 	//ここまできた場合は一番後の時刻よりも後ろなので最後の値を返すことにする
 	return (*keyframes.rbegin()).value;
 
+}
+
+int32_t Model::CreateJoint(const Node& node, const std::optional<int32_t>& parent, std::vector<Joint>& joints)
+{
+	Joint joint;
+	joint.name = node.name;
+	joint.localMatrix = node.localMatrix;
+	joint.skeletonSpaceMatrix = MyMath::MakeIdentity4x4();
+	joint.transform = node.transform;
+	joint.index = int32_t(joints.size());
+	joint.parent = parent;
+	joints.push_back(joint);
+	for (const Node& child : node.children) {
+		//子Jointを作成し、そのIndexを登録
+		int32_t childIndex = CreateJoint(child, joint.index, joints);
+		joints[joint.index].children.push_back(childIndex);
+	}
+	//自身のIndexを返す
+	return joint.index;
+}
+
+Model::Skeleton Model::CreateSkeleton(const Node& rootNode)
+{
+	Skeleton skeleton;
+	skeleton.root = CreateJoint(rootNode, {}, skeleton.joints);
+
+	//名前とindexのマッピングを行いアクセスしやすくする
+	for (const Joint& joint : skeleton.joints) {
+		skeleton.jointMap.emplace(joint.name, joint.index);
+	}
+
+	return skeleton;
 }

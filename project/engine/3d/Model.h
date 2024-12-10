@@ -42,6 +42,22 @@ private://アニメーション関連構造体
 		//NodeAnimationの集合、Node名で開けるようにしておく
 		std::map<std::string, NodeAnimation> nodeAnimations;
 	};
+	//joint
+	struct Joint {
+		TransformQuaternion transform;
+		Matrix4x4 localMatrix;
+		Matrix4x4 skeletonSpaceMatrix;
+		std::string name;
+		std::vector<int32_t> children;
+		int32_t index;
+		std::optional<int32_t> parent;
+	};
+	//skeleton
+	struct Skeleton {
+		int32_t root;
+		std::map<std::string, int32_t> jointMap;
+		std::vector<Joint> joints;
+	};
 
 private://メッシュ関連構造体
 	//頂点データ
@@ -63,6 +79,7 @@ private://メッシュ関連構造体
 	};
 	//ノード
 	struct Node {
+		TransformQuaternion transform;
 		Matrix4x4 localMatrix;
 		std::string name;
 		std::vector<Node> children;
@@ -128,6 +145,11 @@ private:
 	//任意の時刻に対する値を取得する関数
 	Vector3 CalculateValue(const std::vector<Keyframe<Vector3>>& keyframes, float time);
 	Quaternion CalculateValue(const std::vector<Keyframe<Quaternion>>& keyframes, float time);
+	//NodeからJointを作り出す
+	int32_t CreateJoint(const Node& node, const std::optional<int32_t>& parent, std::vector<Joint>& joints);
+	//NodeからSkeletonを作り出す関数
+	Skeleton CreateSkeleton(const Node& rootNode);
+
 
 private:
 	//モデル用リソース
