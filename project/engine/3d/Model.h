@@ -70,10 +70,6 @@ private://メッシュ関連構造体
 		Vector2 texcoord;
 		Vector3 normal;
 	};
-	//影用頂点データ
-	struct VertexShadowData {
-		Vector4 position;
-	};
 	//マテリアル
 	struct Material {
 		Vector4 color;
@@ -98,7 +94,7 @@ private://メッシュ関連構造体
 	//モデルデータ
 	struct ModelData {
 		std::vector<VertexData> vertices;
-		std::vector<VertexShadowData> verticesShadow;
+		std::vector<uint32_t> indices;
 		MaterialData material;
 		Node rootNode;
 	};

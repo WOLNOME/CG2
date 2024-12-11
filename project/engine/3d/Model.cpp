@@ -170,7 +170,6 @@ std::vector<Model::ModelData> Model::LoadModelFile()
 		// モデルデータを準備
 		ModelData model;
 		model.vertices.clear();
-		model.verticesShadow.clear();
 
 		// メッシュが使用するマテリアルのインデックスを取得
 		uint32_t materialIndex = mesh->mMaterialIndex;
@@ -226,14 +225,6 @@ std::vector<Model::ModelData> Model::LoadModelFile()
 
 				model.vertices.push_back(vertex);
 
-				// 影用頂点データを格納
-				VertexShadowData vertexShadow;
-				vertexShadow.position = { position.x, position.y, position.z, 1.0f };
-
-				// aiProcess_MakeLeftHandedの処理を手動で補正
-				vertexShadow.position.x *= -1.0f;
-
-				model.verticesShadow.push_back(vertexShadow);
 
 			}
 		}
@@ -365,7 +356,7 @@ Model::ModelResource Model::MakeModelResource()
 		modelResource_.vertexBufferView.at(index).StrideInBytes = sizeof(VertexData);
 		//リソースにデータを書き込む
 		modelResource_.vertexResource.at(index)->Map(0, nullptr, reinterpret_cast<void**>(&modelResource_.vertexData.at(index)));
-		std::memcpy(modelResource_.vertexData.at(index), modelResource_.modelData.at(index).vertices.data(), sizeof(VertexData) * modelResource_.modelData.at(index).verticesShadow.size());
+		std::memcpy(modelResource_.vertexData.at(index), modelResource_.modelData.at(index).vertices.data(), sizeof(VertexData) * modelResource_.modelData.at(index).vertices.size());
 		modelResource_.materialResource.at(index)->Map(0, nullptr, reinterpret_cast<void**>(&modelResource_.materialData.at(index)));
 		//白を書き込んでおく
 		modelResource_.materialData.at(index)->color = modelResource_.modelData.at(index).material.colorData;
