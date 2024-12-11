@@ -70,6 +70,8 @@ private://メンバ変数
 	WorldTransform wtAnimatedCube_;
 	std::unique_ptr<Object3d> animatedCube_ = nullptr;
 
+	WorldTransform wtSneakWalk_;
+	std::unique_ptr<Object3d> sneakWalk_ = nullptr;
 
 
 	std::unique_ptr<Particle> particle_ = nullptr;

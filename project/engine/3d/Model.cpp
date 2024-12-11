@@ -32,23 +32,56 @@ void Model::Initialize(const std::string& filename, ModelFormat format, std::str
 	//モデルリソースの初期設定
 	modelResource_ = MakeModelResource();
 
+	//デバッグ用のラインのサイズをjointの数と揃える
+	if (isSkeleton_) {
+		lines_.resize(skeleton_.joints.size());
+		for (auto& line : lines_) {
+			line = std::make_unique<LineDrawer>();
+			line->Initialize();
+		}
+	}
+
 	//テクスチャの設定
 	SettingTexture();
-
-	//ローカル座標の初期化
-	localMatrix_ = MyMath::MakeIdentity4x4();
 }
 
 void Model::Update()
 {
-	if (isAnimation_) {
+	//アニメーションの更新と骨への適用
+	if (isAnimation_ && isSkeleton_) {
 		animationTime_ += kDeltaTime;
 		animationTime_ = std::fmod(animationTime_, animation_.duration);
-		NodeAnimation& rootNodeAnimation = animation_.nodeAnimations[modelResource_.modelData[0].rootNode.name];
-		Vector3 translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime_);
-		Quaternion rotate = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime_);
-		Vector3 scale = CalculateValue(rootNodeAnimation.scale.keyframes, animationTime_);
-		localMatrix_ = MyMath::MakeAffineMatrix(scale, rotate, translate);
+		ApplyAnimation(skeleton_, animation_, animationTime_);
+		UpdateJoints(skeleton_);
+	}
+}
+
+void Model::UpdateJoints(Skeleton& skeleton)
+{
+	//全てのJointを更新
+	for (Joint& joint : skeleton.joints) {
+		joint.localMatrix = MyMath::MakeAffineMatrix(joint.transform.scale, joint.transform.rotate, joint.transform.translate);
+		if (joint.parent) {
+			joint.skeletonSpaceMatrix = joint.localMatrix * skeleton.joints[*joint.parent].skeletonSpaceMatrix;
+		}
+		else {
+			//親がいない(root)のでlocalMatrix=skeletonSpaceMatrixである
+			joint.skeletonSpaceMatrix = joint.localMatrix;
+		}
+	}
+
+}
+
+void Model::ApplyAnimation(Skeleton& skeleton, const Animation& animation, float animationTime)
+{
+	for (Joint& joint : skeleton.joints) {
+		//対象のJointのAnimationがあれば、値の適用を行う。下記のif文は初期化付きif文。
+		if (auto it = animation.nodeAnimations.find(joint.name); it != animation.nodeAnimations.end()) {
+			const NodeAnimation& rootNodeAnimation = (*it).second;
+			joint.transform.translate = CalculateValue(rootNodeAnimation.translate.keyframes, animationTime);
+			joint.transform.rotate = CalculateValue(rootNodeAnimation.rotate.keyframes, animationTime);
+			joint.transform.scale = CalculateValue(rootNodeAnimation.scale.keyframes, animationTime);
+		}
 	}
 }
 
@@ -67,6 +100,33 @@ void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParame
 		//描画
 		MainRender::GetInstance()->GetCommandList()->DrawInstanced(UINT(modelResource_.modelData.at(index).vertices.size()), instancingNum, 0, 0);
 	}
+}
+
+void Model::DrawLine(const WorldTransform& worldTransform, const BaseCamera& camera)
+{
+#ifdef _DEBUG
+	if (isSkeleton_) {
+		//全てのjoint(関節)を球で登録
+		int lineIndex = 0;
+		for (Joint& joint : skeleton_.joints) {
+			Sphere sphere;
+			Matrix4x4 matWorld = joint.skeletonSpaceMatrix * worldTransform.matWorld_;
+			sphere.center = MyMath::Transform(joint.transform.translate, matWorld);
+			sphere.radius = jointRadius_;
+
+			// LineDrawerを使って球を描画
+			MyMath::DrawSphere(sphere, Vector4(1, 1, 1, 1), lines_[lineIndex].get());
+
+			lineIndex++;
+		}
+
+		//線を描画
+		for (const auto& line : lines_) {
+			line->Draw(camera);
+			line->ClearLine();
+		}
+	}
+#endif // _DEBUG
 }
 
 std::vector<Model::ModelData> Model::LoadModelFile()
@@ -167,6 +227,9 @@ std::vector<Model::ModelData> Model::LoadModelFile()
 			break;
 		case GLTF:
 			model.rootNode = ReadNode(scene->mRootNode);
+			//スケルトン生成
+			skeleton_ = CreateSkeleton(model.rootNode);
+			isSkeleton_ = true;
 			break;
 		default:
 			break;

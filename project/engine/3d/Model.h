@@ -5,8 +5,11 @@
 #include <optional>
 #include <map>
 #include <string>
+#include "WorldTransform.h"
+#include "BaseCamera.h"
 #include "MyMath.h"
 #include "ModelFormat.h"
+#include "LineDrawer.h"
 //assimp
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
@@ -124,11 +127,16 @@ public:
 	/// <param name="textureRootParameterIndex">テクスチャ設定用ルートパラメータの番号</param>
 	/// <param name="instancingNum">インスタンス数</param>
 	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum = 1);
-	
+	/// <summary>
+	/// デバッグ用線描画
+	/// </summary>
+	/// <param name="worldTransform">ワールドトランスドーム</param>
+	/// <param name="camera">カメラ</param>
+	void DrawLine(const WorldTransform& worldTransform, const BaseCamera& camera);
+
 public://ゲッター
 	const ModelResource& GetModelResource() { return modelResource_; }
-	//ローカル行列
-	const Matrix4x4& GetLocalMatrix() { return localMatrix_; }
+	
 public://セッター
 
 private:
@@ -150,7 +158,10 @@ private:
 	int32_t CreateJoint(const Node& node, const std::optional<int32_t>& parent, std::vector<Joint>& joints);
 	//NodeからSkeletonを作り出す関数
 	Skeleton CreateSkeleton(const Node& rootNode);
-
+	//joint(骨)の更新
+	void UpdateJoints(Skeleton& skeleton);
+	//アニメーションを適用する関数
+	void ApplyAnimation(Skeleton& skeleton, const Animation& animation, float animationTime);
 
 private:
 	//モデル用リソース
@@ -169,7 +180,14 @@ private:
 	//アニメーション用変数
 	Animation animation_;
 	float animationTime_ = 0.0f;
-	Matrix4x4 localMatrix_;
 	bool isAnimation_ = false;
+
+	//スケルトン
+	Skeleton skeleton_;
+	bool isSkeleton_ = false;
+
+	//骨と関節のデバッグ表示
+	std::vector<std::unique_ptr<LineDrawer>> lines_;
+	float jointRadius_ = 0.02f;
 };
 

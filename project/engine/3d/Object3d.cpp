@@ -24,7 +24,7 @@ void Object3d::Draw(WorldTransform& worldTransform, const  BaseCamera& camera, c
 {
 	//アニメーション反映処理
 	model_->Update();
-	worldTransform.UpdateMatrix(model_->GetLocalMatrix());
+	//worldTransform.UpdateMatrix(model_->GetLocalMatrix());
 
 	//SceneLightCBufferの場所を設定
 	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(5, sceneLight->GetSceneLightConstBuffer()->GetGPUVirtualAddress());
@@ -40,4 +40,9 @@ void Object3d::Draw(WorldTransform& worldTransform, const  BaseCamera& camera, c
 
 	//モデルを描画する
 	model_->Draw(0, 3);
+}
+
+void Object3d::DrawLine(const WorldTransform& worldTransform, const BaseCamera& camera)
+{
+	model_->DrawLine(worldTransform, camera);
 }

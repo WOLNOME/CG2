@@ -74,6 +74,11 @@ void LineDrawer::CreateLine(Vector3 start, Vector3 end, Vector4 color)
 	lines_.push_back(newLine);
 }
 
+void LineDrawer::ClearLine()
+{
+	lines_.clear();
+}
+
 LineDrawer::LineResource LineDrawer::MakeLineResource()
 {
 	LineResource lineResource;

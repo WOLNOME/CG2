@@ -51,8 +51,10 @@ public://メンバ関数
 	void Initialize();
 	void Draw(const BaseCamera& camera);
 
-	//ライン作成関数(ハンドルを返却)
+	//ライン作成関数
 	void CreateLine(Vector3 start, Vector3 end, Vector4 color);
+	//ラインクリア関数
+	void ClearLine();
 
 private://非公開メンバ関数
 	//パーティクルリソース作成関数
@@ -62,7 +64,7 @@ private://非公開メンバ関数
 private://インスタンス
 private://メンバ変数
 	//一つのインスタンスで表示できる線の最大数
-	static const size_t kNumMaxLine_ = 1024;
+	static const size_t kNumMaxLine_ = 512;
 	//インスタンシング用書き換え情報
 	std::list<Line> lines_;
 	//パーティクル用リソース

@@ -73,6 +73,11 @@ void DevelopScene::Initialize()
 	animatedCube_ = std::make_unique<Object3d>();
 	animatedCube_->Initialize("AnimatedCube", GLTF);
 
+	wtSneakWalk_.Initialize();
+	wtSneakWalk_.translate_ = { 3.0f,3.0f,0.0f };
+	sneakWalk_ = std::make_unique<Object3d>();
+	sneakWalk_->Initialize("sneakWalk", GLTF);
+
 
 	particle_ = std::make_unique<Particle>();
 	particle_->Initialize("plane");
@@ -102,6 +107,7 @@ void DevelopScene::Update()
 	wtAxis_.UpdateMatrix();
 	wtTerrain_.UpdateMatrix();
 	wtAnimatedCube_.UpdateMatrix();
+	wtSneakWalk_.UpdateMatrix();
 
 	//パーティクル
 	particle_->Update();
@@ -243,6 +249,8 @@ void DevelopScene::Draw()
 
 	animatedCube_->Draw(wtAnimatedCube_, *camera.get(), sceneLight_.get());
 
+	sneakWalk_->Draw(wtSneakWalk_, *camera.get(), sceneLight_.get());
+
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
 	///------------------------------///
@@ -273,6 +281,9 @@ void DevelopScene::Draw()
 	plMark->Draw(*camera.get());
 	plMark2->Draw(*camera.get());
 	slMark->Draw(*camera.get());
+
+	//オブジェクトのボーン線描画
+	sneakWalk_->DrawLine(wtSneakWalk_, *camera.get());
 
 	///------------------------------///
 	///↑↑↑↑線描画終了↑↑↑↑
