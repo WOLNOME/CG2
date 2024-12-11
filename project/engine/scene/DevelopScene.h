@@ -73,6 +73,11 @@ private://メンバ変数
 	WorldTransform wtSneakWalk_;
 	std::unique_ptr<Object3d> sneakWalk_ = nullptr;
 
+	WorldTransform wtWalk_;
+	std::unique_ptr<Object3d> walk_ = nullptr;
+
+	WorldTransform wtSimpleSkin_;
+	std::unique_ptr<Object3d> simpleSkin_ = nullptr;
 
 	std::unique_ptr<Particle> particle_ = nullptr;
 

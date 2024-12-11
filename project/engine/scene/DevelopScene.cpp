@@ -78,6 +78,15 @@ void DevelopScene::Initialize()
 	sneakWalk_ = std::make_unique<Object3d>();
 	sneakWalk_->Initialize("sneakWalk", GLTF);
 
+	wtWalk_.Initialize();
+	wtWalk_.translate_ = { 4.0f,3.0f,0.0f };
+	walk_ = std::make_unique<Object3d>();
+	walk_->Initialize("walk", GLTF);
+
+	wtSimpleSkin_.Initialize();
+	wtSimpleSkin_.translate_ = { 5.0f,3.0f,0.0f };
+	simpleSkin_ = std::make_unique<Object3d>();
+	simpleSkin_->Initialize("simpleSkin", GLTF);
 
 	particle_ = std::make_unique<Particle>();
 	particle_->Initialize("plane");
@@ -108,6 +117,8 @@ void DevelopScene::Update()
 	wtTerrain_.UpdateMatrix();
 	wtAnimatedCube_.UpdateMatrix();
 	wtSneakWalk_.UpdateMatrix();
+	wtWalk_.UpdateMatrix();
+	wtSimpleSkin_.UpdateMatrix();
 
 	//パーティクル
 	particle_->Update();
@@ -251,6 +262,10 @@ void DevelopScene::Draw()
 
 	sneakWalk_->Draw(wtSneakWalk_, *camera.get(), sceneLight_.get());
 
+	walk_->Draw(wtWalk_, *camera.get(), sceneLight_.get());
+
+	simpleSkin_->Draw(wtSimpleSkin_, *camera.get(), sceneLight_.get());
+
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
 	///------------------------------///
@@ -284,6 +299,8 @@ void DevelopScene::Draw()
 
 	//オブジェクトのボーン線描画
 	sneakWalk_->DrawLine(wtSneakWalk_, *camera.get());
+	walk_->DrawLine(wtWalk_, *camera.get());
+	simpleSkin_->DrawLine(wtSimpleSkin_, *camera.get());
 
 	///------------------------------///
 	///↑↑↑↑線描画終了↑↑↑↑

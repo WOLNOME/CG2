@@ -6,6 +6,7 @@
 #include "Matrix4x4.h"
 #include "Quaternion.h"
 #include <vector>
+#include <cstdint>
 
 ///------------------------------------///
 ///              列挙体
@@ -388,7 +389,7 @@ public://静的メンバ関数
 	///              図形の線描画
 	///------------------------------------///
 
-	static void DrawSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDrawer);
+	static void DrawSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDrawer, uint32_t subdivision = 15);
 
 };
 

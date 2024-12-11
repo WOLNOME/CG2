@@ -188,6 +188,6 @@ private:
 
 	//骨と関節のデバッグ表示
 	std::vector<std::unique_ptr<LineDrawer>> lines_;
-	float jointRadius_ = 0.02f;
+	float jointRadius_ = 0.01f;
 };
 
