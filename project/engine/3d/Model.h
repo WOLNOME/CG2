@@ -104,6 +104,9 @@ private://メッシュ関連構造体
 		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> vertexResource;
 		std::vector<D3D12_VERTEX_BUFFER_VIEW> vertexBufferView;
 		std::vector<VertexData*> vertexData;
+		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> indexResource;
+		std::vector<D3D12_INDEX_BUFFER_VIEW> indexBufferView;
+		std::vector<uint32_t*> indexData;
 		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> materialResource;
 		std::vector<Material*> materialData;
 		std::vector<TransformEuler> uvTransform;
