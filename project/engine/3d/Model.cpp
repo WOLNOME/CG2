@@ -171,7 +171,6 @@ std::vector<Model::ModelData> Model::LoadModelFile()
 
 		// モデルデータを準備
 		ModelData model;
-		model.vertices.clear();
 
 		// メッシュが使用するマテリアルのインデックスを取得
 		uint32_t materialIndex = mesh->mMaterialIndex;
@@ -204,29 +203,25 @@ std::vector<Model::ModelData> Model::LoadModelFile()
 			model.material.textureFilePath = ""; // テクスチャがない場合は空文字列
 		}
 
-		// メッシュ内の頂点データ等を解析
+		//メッシュ内の頂点データを解析
+		model.vertices.resize(mesh->mNumVertices);
+		for (uint32_t vertexIndex = 0; vertexIndex < mesh->mNumVertices; ++vertexIndex) {
+			aiVector3D& position = mesh->mVertices[vertexIndex];
+			aiVector3D& normal = mesh->mNormals[vertexIndex];
+			aiVector3D& texcoord = mesh->mTextureCoords[0][vertexIndex];
+
+			model.vertices[vertexIndex].position = {-position.x, position.y, position.z, 1.0f};
+			model.vertices[vertexIndex].normal = { -normal.x, normal.y, normal.z };
+			model.vertices[vertexIndex].texcoord = { texcoord.x, texcoord.y };
+		}
+
+		// メッシュ内のフェイスを解析
 		for (uint32_t faceIndex = 0; faceIndex < mesh->mNumFaces; ++faceIndex) {
 			aiFace& face = mesh->mFaces[faceIndex];
 			assert(face.mNumIndices == 3); // 三角形のみサポート
-			//頂点データの解析
+			//フェイス内のインデックスデータの解析
 			for (uint32_t element = 0; element < face.mNumIndices; ++element) {
 				uint32_t vertexIndex = face.mIndices[element];
-				aiVector3D& position = mesh->mVertices[vertexIndex];
-				aiVector3D& normal = mesh->mNormals[vertexIndex];
-				aiVector3D& texcoord = mesh->mTextureCoords[0][vertexIndex];
-
-				// 頂点データを格納
-				VertexData vertex;
-				vertex.position = { position.x, position.y, position.z, 1.0f };
-				vertex.normal = { normal.x, normal.y, normal.z };
-				vertex.texcoord = { texcoord.x, texcoord.y };
-
-				// aiProcess_MakeLeftHandedの処理を手動で補正
-				//vertex.position.x *= -1.0f;
-				//vertex.normal.x *= -1.0f;
-
-				//頂点データ
-				model.vertices.push_back(vertex);
 				//インデックス
 				model.indices.push_back(vertexIndex);
 			}
