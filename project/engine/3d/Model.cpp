@@ -2,7 +2,9 @@
 #include <fstream>
 #include <sstream>
 #include <filesystem>
+#include <algorithm>
 #include "DirectXCommon.h"
+#include "SrvManager.h"
 #include "MainRender.h"
 #include "Object3d.h"
 #include "TextureManager.h"
@@ -32,6 +34,11 @@ void Model::Initialize(const std::string& filename, ModelFormat format, std::str
 	//モデルリソースの初期設定
 	modelResource_ = MakeModelResource();
 
+	//スキンクラスターの生成
+	if (isAnimation_) {
+		skinCluster_ = CreateSkinCluster();
+	}
+
 	//デバッグ用のラインのサイズをjointの数と揃える
 	if (isSkeleton_) {
 		lines_.resize(skeleton_.joints.size() + 1);
@@ -49,10 +56,15 @@ void Model::Update()
 {
 	//アニメーションの更新と骨への適用
 	if (isAnimation_ && isSkeleton_) {
+		//アニメーションの時間を進める
 		animationTime_ += kDeltaTime;
 		animationTime_ = std::fmod(animationTime_, animation_.duration);
+		//アニメーションの更新を行って、骨ごとのLocal情報を更新する
 		ApplyAnimation(skeleton_, animation_, animationTime_);
+		//現在の骨ごとのLocal情報を基にSkeletonSpaceの情報を更新する
 		UpdateJoints(skeleton_);
+		//SkeletonSpaceの情報を基に、SkinClusterのMatrixPaletteを更新する
+		UpdateSkinCluster(skinCluster_, skeleton_);
 	}
 }
 
@@ -85,11 +97,39 @@ void Model::ApplyAnimation(Skeleton& skeleton, const Animation& animation, float
 	}
 }
 
+void Model::UpdateSkinCluster(SkinCluster& skinCluster, const Skeleton& skeleton)
+{
+	for (size_t jointIndex = 0; jointIndex < skeleton.joints.size(); ++jointIndex) {
+		assert(jointIndex < skinCluster.inverseBindPoseMatrices.size());
+		skinCluster.mappedPalette[jointIndex].skeletonSpaceMatrix =
+			skinCluster.inverseBindPoseMatrices[jointIndex] * skeleton.joints[jointIndex].skeletonSpaceMatrix;
+		skinCluster.mappedPalette[jointIndex].skeletonSpaceInverseMatrix =
+			MyMath::Transpose(MyMath::Inverse(skinCluster.mappedPalette[jointIndex].skeletonSpaceMatrix));
+	}
+}
+
 void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum)
 {
 	for (size_t index = 0; index < modelResource_.modelData.size(); index++) {
-		//頂点バッファービューを設定
-		MainRender::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &modelResource_.vertexBufferView.at(index));
+		//アニメーションがある場合
+		if (isAnimation_) {
+			//VertexBufferViewをつなげる
+			D3D12_VERTEX_BUFFER_VIEW vbvs[2] = {
+				modelResource_.vertexBufferView[index],
+				skinCluster_.influenceBufferView
+			};
+			//配列を渡す(開始slot番号、使用slot数、VBV配列へのポインタ)
+			MainRender::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 2, vbvs);
+			
+			//paletteMatrixを送る
+			MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(6, skinCluster_.paletteSrvHandle.second);
+		}
+		else if (!isAnimation_) {
+
+			//頂点バッファービューを設定
+			MainRender::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &modelResource_.vertexBufferView.at(index));
+		}
+
 		//インデックスバッファビューを設定
 		MainRender::GetInstance()->GetCommandList()->IASetIndexBuffer(&modelResource_.indexBufferView.at(index));
 		//マテリアルCBufferの場所を設定
@@ -210,7 +250,7 @@ std::vector<Model::ModelData> Model::LoadModelFile()
 			aiVector3D& normal = mesh->mNormals[vertexIndex];
 			aiVector3D& texcoord = mesh->mTextureCoords[0][vertexIndex];
 
-			model.vertices[vertexIndex].position = {-position.x, position.y, position.z, 1.0f};
+			model.vertices[vertexIndex].position = { -position.x, position.y, position.z, 1.0f };
 			model.vertices[vertexIndex].normal = { -normal.x, normal.y, normal.z };
 			model.vertices[vertexIndex].texcoord = { texcoord.x, texcoord.y };
 		}
@@ -224,6 +264,26 @@ std::vector<Model::ModelData> Model::LoadModelFile()
 				uint32_t vertexIndex = face.mIndices[element];
 				//インデックス
 				model.indices.push_back(vertexIndex);
+			}
+		}
+
+		//スキニングに必要なデータを抽出
+		for (uint32_t boneIndex = 0; boneIndex < mesh->mNumBones; ++boneIndex) {
+			aiBone* bone = mesh->mBones[boneIndex];
+			std::string jointName = bone->mName.C_Str();
+			JointWeightData& jointWeightData = model.skinClusterData[jointName];
+
+			aiMatrix4x4 bindPoseMatrixAssimp = bone->mOffsetMatrix.Inverse();
+			aiVector3D scale, translate;
+			aiQuaternion rotate;
+			bindPoseMatrixAssimp.Decompose(scale, rotate, translate);
+			Matrix4x4 bindPoseMatrix = MyMath::MakeAffineMatrix(
+				{ scale.x,scale.y,scale.z }, { rotate.x,-rotate.y,-rotate.z,rotate.w }, { -translate.x,translate.y,translate.z }
+			);
+			jointWeightData.inverseBindPoseMatrix = MyMath::Inverse(bindPoseMatrix);
+
+			for (uint32_t weightIndex = 0; weightIndex < bone->mNumWeights; ++weightIndex) {
+				jointWeightData.vertexWeights.push_back({ bone->mWeights[weightIndex].mWeight,bone->mWeights[weightIndex].mVertexId });
 			}
 		}
 
@@ -386,6 +446,66 @@ Model::ModelResource Model::MakeModelResource()
 	}
 
 	return modelResource_;
+}
+
+Model::SkinCluster Model::CreateSkinCluster()
+{
+	SkinCluster skinCluster;
+	//palette用のResourceを確保
+	skinCluster.paletteResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(WellForGPU) * skeleton_.joints.size());
+	WellForGPU* mappedPalette = nullptr;
+	skinCluster.paletteResource->Map(0, nullptr, reinterpret_cast<void**>(&mappedPalette));
+	skinCluster.mappedPalette = { mappedPalette,skeleton_.joints.size() };//spanを使ってアクセスするようにする
+	uint32_t srvIndex = SrvManager::GetInstance()->Allocate();
+	skinCluster.paletteSrvHandle.first = SrvManager::GetInstance()->GetCPUDescriptorHandle(srvIndex);
+	skinCluster.paletteSrvHandle.second = SrvManager::GetInstance()->GetGPUDescriptorHandle(srvIndex);
+	//palette用のsrvを作成。StructuredBufferでアクセスできるようにする
+	D3D12_SHADER_RESOURCE_VIEW_DESC paletteSrvDesc{};
+	paletteSrvDesc.Format = DXGI_FORMAT_UNKNOWN;
+	paletteSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	paletteSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+	paletteSrvDesc.Buffer.FirstElement = 0;
+	paletteSrvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+	paletteSrvDesc.Buffer.NumElements = UINT(skeleton_.joints.size());
+	paletteSrvDesc.Buffer.StructureByteStride = sizeof(WellForGPU);
+	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(skinCluster.paletteResource.Get(), &paletteSrvDesc, skinCluster.paletteSrvHandle.first);
+	//influence用のResourceを確保。頂点ごとにinfluence情報を追加できるようにする
+	skinCluster.influnceResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(VertexInfluence) * modelResource_.modelData[0].vertices.size());
+	VertexInfluence* mappedInfluence = nullptr;
+	skinCluster.influnceResource->Map(0, nullptr, reinterpret_cast<void**>(&mappedInfluence));
+	std::memset(mappedInfluence, 0, sizeof(VertexInfluence) * modelResource_.modelData[0].vertices.size());
+	skinCluster.mappedInfluence = { mappedInfluence,modelResource_.modelData[0].vertices.size() };
+	//Influence用のVBVを作成
+	skinCluster.influenceBufferView.BufferLocation = skinCluster.influnceResource->GetGPUVirtualAddress();
+	skinCluster.influenceBufferView.SizeInBytes = UINT(sizeof(VertexInfluence) * modelResource_.modelData[0].vertices.size());
+	skinCluster.influenceBufferView.StrideInBytes = sizeof(VertexInfluence);
+	//InverseBindPoseMatrixを格納する場所を作成して、単位行列で埋める
+	skinCluster.inverseBindPoseMatrices.resize(skeleton_.joints.size());
+	std::generate(skinCluster.inverseBindPoseMatrices.begin(), skinCluster.inverseBindPoseMatrices.end(), MyMath::MakeIdentity4x4);
+	//ModelDataのSkinCluster情報を解析してInfuenceの中身を埋める
+	for (const auto& jointWeight : modelResource_.modelData[0].skinClusterData) {
+		auto it = skeleton_.jointMap.find(jointWeight.first);
+		//joint名の中からskeletonに対象となるjointが含まれているか判断→いなかったら次に回す
+		if (it == skeleton_.jointMap.end()) {
+			continue;
+		}
+		//(*it).secondにはjointのindexが入っているので、該当のindexのinverseBindPoseMatrixを代入
+		skinCluster.inverseBindPoseMatrices[(*it).second] = jointWeight.second.inverseBindPoseMatrix;
+		for (const auto& vertexWeight : jointWeight.second.vertexWeights) {
+			auto& currentInfluence = skinCluster.mappedInfluence[vertexWeight.vertexIndex];
+			//該当のvertexIndexのinfluence情報を参照しておく
+			for (uint32_t index = 0; index < kNumMaxInfluence; ++index) {
+				//weight==0が空き状態なので、その場所にweightとjointのindexを代入
+				if (currentInfluence.weights[index] == 0.0f) {
+					currentInfluence.weights[index] = vertexWeight.weight;
+					currentInfluence.jointIndices[index] = (*it).second;
+					break;
+				}
+			}
+		}
+	}
+
+	return skinCluster;
 }
 
 void Model::SettingTexture()

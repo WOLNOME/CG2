@@ -22,9 +22,17 @@ void Object3d::Initialize(const std::string& filePath, ModelFormat format)
 
 void Object3d::Draw(WorldTransform& worldTransform, const  BaseCamera& camera, const SceneLight* sceneLight)
 {
+
 	//アニメーション反映処理
 	model_->Update();
-	//worldTransform.UpdateMatrix(model_->GetLocalMatrix());
+
+	//使用するGPSを選択
+	if (model_->IsAnimation()) {
+		Object3dCommon::GetInstance()->SettingCommonDrawing(Object3dCommon::Animation);
+	}
+	else if (!model_->IsAnimation()) {
+		Object3dCommon::GetInstance()->SettingCommonDrawing(Object3dCommon::None);
+	}
 
 	//SceneLightCBufferの場所を設定
 	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(5, sceneLight->GetSceneLightConstBuffer()->GetGPUVirtualAddress());

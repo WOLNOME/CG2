@@ -4,6 +4,8 @@
 #include <vector>
 #include <optional>
 #include <map>
+#include <span>
+#include <array>
 #include <string>
 #include "WorldTransform.h"
 #include "BaseCamera.h"
@@ -62,7 +64,39 @@ private://アニメーション関連構造体
 		std::map<std::string, int32_t> jointMap;
 		std::vector<Joint> joints;
 	};
-
+	//頂点ウェイト
+	struct VertexWeightData {
+		float weight;
+		uint32_t vertexIndex;
+	};
+	//ジョイントウェイト
+	struct JointWeightData
+	{
+		Matrix4x4 inverseBindPoseMatrix;
+		std::vector<VertexWeightData> vertexWeights;
+	};
+	//インフルエンス
+	static const uint32_t kNumMaxInfluence = 4;
+	struct VertexInfluence {
+		std::array<float, kNumMaxInfluence> weights;
+		std::array<int32_t, kNumMaxInfluence> jointIndices;
+	};
+	//VSに送る用ウェル
+	struct WellForGPU {
+		Matrix4x4 skeletonSpaceMatrix;			//位置用
+		Matrix4x4 skeletonSpaceInverseMatrix;	//法線用
+	};
+	//スキンクラスター
+	struct SkinCluster {
+		std::vector<Matrix4x4> inverseBindPoseMatrices;
+		Microsoft::WRL::ComPtr<ID3D12Resource> influnceResource;
+		D3D12_VERTEX_BUFFER_VIEW influenceBufferView;
+		std::span<VertexInfluence> mappedInfluence;
+		Microsoft::WRL::ComPtr<ID3D12Resource> paletteResource;
+		std::span<WellForGPU> mappedPalette;
+		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> paletteSrvHandle;
+	};
+	
 private://メッシュ関連構造体
 	//頂点データ
 	struct VertexData {
@@ -93,6 +127,7 @@ private://メッシュ関連構造体
 	};
 	//モデルデータ
 	struct ModelData {
+		std::map<std::string, JointWeightData> skinClusterData;
 		std::vector<VertexData> vertices;
 		std::vector<uint32_t> indices;
 		MaterialData material;
@@ -114,7 +149,7 @@ private://メッシュ関連構造体
 		std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> textureSrvHandleCPU;
 		std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> textureSrvHandleGPU;
 	};
-	
+
 
 public:
 	void Initialize(const std::string& filename, ModelFormat format = OBJ, std::string directorypath = "Resources/models/");
@@ -135,7 +170,7 @@ public:
 
 public://ゲッター
 	const ModelResource& GetModelResource() { return modelResource_; }
-	
+	bool IsAnimation() { return isAnimation_; }
 public://セッター
 
 private:
@@ -147,6 +182,8 @@ private:
 	Node ReadNode(aiNode* node);
 	//モデルリソース作成関数
 	ModelResource MakeModelResource();
+	//スキンクラスター生成関数
+	SkinCluster CreateSkinCluster();
 	//テクスチャ読み込み
 	void SettingTexture();
 
@@ -161,6 +198,8 @@ private:
 	void UpdateJoints(Skeleton& skeleton);
 	//アニメーションを適用する関数
 	void ApplyAnimation(Skeleton& skeleton, const Animation& animation, float animationTime);
+	//SkinClusterの更新
+	void UpdateSkinCluster(SkinCluster& skinCluster, const Skeleton& skeleton);
 
 private:
 	//モデル用リソース
@@ -184,6 +223,9 @@ private:
 	//スケルトン
 	Skeleton skeleton_;
 	bool isSkeleton_ = false;
+
+	//スキンクラスター
+	SkinCluster skinCluster_;
 
 	//骨と関節のデバッグ表示
 	std::vector<std::unique_ptr<LineDrawer>> lines_;

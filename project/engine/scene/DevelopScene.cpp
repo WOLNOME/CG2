@@ -298,6 +298,7 @@ void DevelopScene::Draw()
 	slMark->Draw(*camera.get());
 
 	//オブジェクトのボーン線描画
+	animatedCube_->DrawLine(wtAnimatedCube_, *camera.get());
 	sneakWalk_->DrawLine(wtSneakWalk_, *camera.get());
 	walk_->DrawLine(wtWalk_, *camera.get());
 	simpleSkin_->DrawLine(wtSimpleSkin_, *camera.get());
