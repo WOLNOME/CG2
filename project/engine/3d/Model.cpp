@@ -39,15 +39,6 @@ void Model::Initialize(const std::string& filename, ModelFormat format, std::str
 		skinCluster_ = CreateSkinCluster();
 	}
 
-	//デバッグ用のラインのサイズをjointの数と揃える
-	if (isSkeleton_) {
-		lines_.resize(skeleton_.joints.size() + 1);
-		for (auto& line : lines_) {
-			line = std::make_unique<LineDrawer>();
-			line->Initialize();
-		}
-	}
-
 	//テクスチャの設定
 	SettingTexture();
 }
@@ -142,51 +133,6 @@ void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParame
 		//描画
 		MainRender::GetInstance()->GetCommandList()->DrawIndexedInstanced(UINT(modelResource_.modelData.at(index).indices.size()), instancingNum, 0, 0, 0);
 	}
-}
-
-void Model::DrawLine(const WorldTransform& worldTransform, const BaseCamera& camera)
-{
-#ifdef _DEBUG
-	if (isSkeleton_) {
-		//全てのjoint(関節)を球で登録
-		int lineIndex = 0;
-		for (Joint& joint : skeleton_.joints) {
-			Sphere sphere;
-			Matrix4x4 matWorld = joint.skeletonSpaceMatrix * worldTransform.matWorld_;
-			sphere.center = MyMath::Transform(joint.transform.translate, matWorld);
-			sphere.radius = jointRadius_;
-
-			// LineDrawerを使って球を描画
-			MyMath::DrawSphere(sphere, Vector4(1, 1, 1, 1), lines_[lineIndex].get(), 5);
-
-			lineIndex++;
-		}
-		//全てのjointのつなぎ(骨)を線で登録
-		for (Joint& joint : skeleton_.joints) {
-			Matrix4x4 matWorld = joint.skeletonSpaceMatrix * worldTransform.matWorld_;
-
-			Vector3 start;
-			Vector3 end;
-			if (joint.parent) {
-				start = MyMath::Transform(joint.transform.translate, matWorld);
-				int32_t parentIndex = joint.parent.has_value();
-				for (Joint& parent : skeleton_.joints) {
-					if (parent.index == parentIndex) {
-						end = MyMath::Transform(parent.transform.translate, matWorld);
-						//LineDrawerを使って線を描画
-						lines_[lineIndex]->CreateLine(start, end, Vector4(1, 1, 1, 1));
-					}
-				}
-			}
-
-		}
-
-		//線を描画
-		for (const auto& line : lines_) {
-			line->Draw(camera);
-		}
-	}
-#endif // _DEBUG
 }
 
 std::vector<Model::ModelData> Model::LoadModelFile()

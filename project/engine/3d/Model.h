@@ -161,13 +161,7 @@ public:
 	/// <param name="textureRootParameterIndex">テクスチャ設定用ルートパラメータの番号</param>
 	/// <param name="instancingNum">インスタンス数</param>
 	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum = 1);
-	/// <summary>
-	/// デバッグ用線描画
-	/// </summary>
-	/// <param name="worldTransform">ワールドトランスドーム</param>
-	/// <param name="camera">カメラ</param>
-	void DrawLine(const WorldTransform& worldTransform, const BaseCamera& camera);
-
+	
 public://ゲッター
 	const ModelResource& GetModelResource() { return modelResource_; }
 	bool IsAnimation() { return isAnimation_; }
@@ -227,8 +221,5 @@ private:
 	//スキンクラスター
 	SkinCluster skinCluster_;
 
-	//骨と関節のデバッグ表示
-	std::vector<std::unique_ptr<LineDrawer>> lines_;
-	float jointRadius_ = 0.01f;
 };
 

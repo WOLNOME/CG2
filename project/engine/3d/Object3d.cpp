@@ -49,8 +49,3 @@ void Object3d::Draw(WorldTransform& worldTransform, const  BaseCamera& camera, c
 	//モデルを描画する
 	model_->Draw(0, 3);
 }
-
-void Object3d::DrawLine(const WorldTransform& worldTransform, const BaseCamera& camera)
-{
-	model_->DrawLine(worldTransform, camera);
-}

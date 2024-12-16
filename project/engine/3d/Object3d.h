@@ -30,11 +30,6 @@ public://メンバ関数
 		const SceneLight* sceneLight = nullptr
 	);
 	
-	void DrawLine(
-		const WorldTransform& worldTransform,
-		const BaseCamera& camera
-	);
-
 private://非公開メンバ関数
 
 private://メンバ変数
