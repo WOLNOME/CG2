@@ -17,7 +17,8 @@ class Object3d
 {
 public://メンバ関数
 	//初期化
-	void Initialize(const std::string& filePath, ModelFormat format = OBJ);
+	void InitModel(const std::string& filePath, ModelFormat format = OBJ);
+	
 	/// <summary>
 	/// 描画
 	/// </summary>

@@ -11,7 +11,7 @@
 #include <sstream>
 #include <cassert>
 
-void Object3d::Initialize(const std::string& filePath, ModelFormat format)
+void Object3d::InitModel(const std::string& filePath, ModelFormat format)
 {
 	//モデルマネージャーでモデルを生成
 	ModelManager::GetInstance()->LoadModel(filePath, format);
@@ -28,10 +28,10 @@ void Object3d::Draw(WorldTransform& worldTransform, const  BaseCamera& camera, c
 
 	//使用するGPSを選択
 	if (model_->IsAnimation()) {
-		Object3dCommon::GetInstance()->SettingCommonDrawing(Object3dCommon::Animation);
+		Object3dCommon::GetInstance()->SettingCommonDrawing(Object3dCommon::kAnimation);
 	}
 	else if (!model_->IsAnimation()) {
-		Object3dCommon::GetInstance()->SettingCommonDrawing(Object3dCommon::None);
+		Object3dCommon::GetInstance()->SettingCommonDrawing(Object3dCommon::kNone);
 	}
 
 	//SceneLightCBufferの場所を設定

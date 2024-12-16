@@ -34,6 +34,7 @@ void TextureManager::Finalize()
 
 uint32_t TextureManager::LoadTexture(const std::string& filePath)
 {
+	HRESULT hr;
 	//ファイルパスを分解
 	std::string textureName = std::filesystem::path(filePath).filename().string();
 	//読み込み済みテクスチャを検索(重複防止)
@@ -49,8 +50,14 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath)
 
 	//テクスチャファイルを読んでプログラムで扱えるようにする
 	DirectX::ScratchImage image{};
-	std::wstring filePathw = StringUtility::ConvertString(directoryPath_ + filePath);
-	HRESULT hr = DirectX::LoadFromWICFile(filePathw.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+	std::wstring filePathW = StringUtility::ConvertString(directoryPath_ + filePath);
+	//DDSフォーマットの判定
+	if (filePathW.ends_with(L".dds")) {
+		hr = DirectX::LoadFromDDSFile(filePathW.c_str(), DirectX::DDS_FLAGS_NONE, nullptr, image);
+	}
+	else {
+		hr = DirectX::LoadFromWICFile(filePathW.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
+	}
 	if (FAILED(hr)) {
 		std::cerr << "Failed to load texture file: " << directoryPath_ + filePath
 			<< ", HRESULT: " << std::hex << hr << std::endl;
@@ -59,9 +66,16 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath)
 
 	//ミップマップの生成
 	DirectX::ScratchImage mipImages{};
-	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-	hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 0, mipImages);
+	//圧縮フォーマットか調べる
+	if (DirectX::IsCompressed(image.GetMetadata().format)) {
+		//圧縮フォーマットならそのまま使うのでmove
+		mipImages = std::move(image);
+	}
+	else {
+		hr = DirectX::GenerateMipMaps(image.GetImages(), image.GetImageCount(), image.GetMetadata(), DirectX::TEX_FILTER_SRGB, 4, mipImages);
+	}
 	assert(SUCCEEDED(hr));
+	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
 
 	//追加したテクスチャデータの参照を取得する
 	TextureData textureData;
@@ -87,8 +101,16 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath)
 			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 			srvDesc.Format = metadata.format;
 			srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-			srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+			if (metadata.IsCubemap()) {
+				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+				srvDesc.TextureCube.MostDetailedMip = 0;//unionがTextureCubeになったが、内部パラメーターの意味はTexture2Dと変わらない
+				srvDesc.TextureCube.MipLevels = UINT_MAX;
+				srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+			}
+			else {
+				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+				srvDesc.Texture2D.MipLevels = UINT(metadata.mipLevels);
+			}
 			//SRVの生成
 			if (textureDatas[i].has_value()) {
 				DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(textureData.resource.Get(), &srvDesc, SrvManager::GetInstance()->GetCPUDescriptorHandle(textureDatas[i]->srvIndex));

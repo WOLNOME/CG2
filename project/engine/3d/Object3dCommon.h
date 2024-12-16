@@ -10,8 +10,9 @@ class Object3dCommon
 {
 public:
 	enum NameGPS {
-		None,
-		Animation
+		kNone,
+		kAnimation,
+		kMaxNumGPS
 	};
 
 private://シングルトン
@@ -29,7 +30,7 @@ public://メンバ関数
 	//終了
 	void Finalize();
 	//共通描画設定
-	void SettingCommonDrawing(NameGPS index = None);
+	void SettingCommonDrawing(NameGPS index = kNone);
 private://非公開メンバ関数
 	//グラフィックスパイプライン
 	void GenerateGraphicsPipeline();

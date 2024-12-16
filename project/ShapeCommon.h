@@ -2,18 +2,18 @@
 #include <wrl.h>
 #include <d3d12.h>
 
-class LineDrawerCommon
+class ShapeCommon
 {
 private://コンストラクタ等の隠蔽
-	static LineDrawerCommon* instance;
+	static ShapeCommon* instance;
 
-	LineDrawerCommon() = default;//コンストラクタ隠蔽
-	~LineDrawerCommon() = default;//デストラクタ隠蔽
-	LineDrawerCommon(LineDrawerCommon&) = delete;//コピーコンストラクタ封印
-	LineDrawerCommon& operator=(LineDrawerCommon&) = delete;//コピー代入演算子封印
+	ShapeCommon() = default;//コンストラクタ隠蔽
+	~ShapeCommon() = default;//デストラクタ隠蔽
+	ShapeCommon(ShapeCommon&) = delete;//コピーコンストラクタ封印
+	ShapeCommon& operator=(ShapeCommon&) = delete;//コピー代入演算子封印
 public:
 	//シングルトンインスタンスの取得
-	static LineDrawerCommon* GetInstance();
+	static ShapeCommon* GetInstance();
 public://メンバ関数
 	//初期化
 	void Initialize();
@@ -38,3 +38,4 @@ private://メンバ変数
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
 
 };
+

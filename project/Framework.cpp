@@ -10,6 +10,7 @@
 #include "AudioCommon.h"
 #include "SpriteCommon.h"
 #include "Object3dCommon.h"
+#include "ShapeCommon.h"
 #include "ParticleCommon.h"
 #include "LineDrawerCommon.h"
 #include "SceneManager.h"
@@ -52,6 +53,9 @@ void Framework::Initialize()
 	//オブジェクト3D共通部
 	Object3dCommon::GetInstance()->Initialize();
 
+	//シェイプ共通部
+	ShapeCommon::GetInstance()->Initialize();
+
 	//パーティクル共通部
 	ParticleCommon::GetInstance()->Initialize();
 
@@ -68,6 +72,7 @@ void Framework::Finalize()
 	SceneManager::GetInstance()->Finalize();
 	LineDrawerCommon::GetInstance()->Finalize();
 	ParticleCommon::GetInstance()->Finalize();
+	ShapeCommon::GetInstance()->Finalize();
 	Object3dCommon::GetInstance()->Finalize();
 	SpriteCommon::GetInstance()->Finalize();
 	AudioCommon::GetInstance()->Finalize();

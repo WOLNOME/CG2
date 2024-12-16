@@ -59,7 +59,7 @@ void Object3dCommon::GenerateGraphicsPipeline()
 		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 		registerCount += numDescriptors;
 
-		if (index == NameGPS::None) {
+		if (index == NameGPS::kNone) {
 			//RootParameter作成。複数設定できるので配列。今回は結果1つだけなので長さ1の配列
 			D3D12_ROOT_PARAMETER rootParameters[6] = {};
 			//マテリアルの設定
@@ -91,7 +91,7 @@ void Object3dCommon::GenerateGraphicsPipeline()
 			descriptionRootSignature.pParameters = rootParameters;//ルートパラメータ配列へのポインタ
 			descriptionRootSignature.NumParameters = _countof(rootParameters);//配列の長さ
 		}
-		else if (index == NameGPS::Animation) {
+		else if (index == NameGPS::kAnimation) {
 			//RootParameter作成。複数設定できるので配列。今回は結果1つだけなので長さ1の配列
 			D3D12_ROOT_PARAMETER rootParameters[7] = {};
 			//マテリアルの設定
@@ -160,7 +160,7 @@ void Object3dCommon::GenerateGraphicsPipeline()
 		assert(SUCCEEDED(hr));
 
 		D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
-		if (index == NameGPS::None) {
+		if (index == NameGPS::kNone) {
 			//InputLayout
 			D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
 			inputElementDescs[0].SemanticName = "POSITION";
@@ -179,7 +179,7 @@ void Object3dCommon::GenerateGraphicsPipeline()
 			inputLayoutDesc.pInputElementDescs = inputElementDescs;
 			inputLayoutDesc.NumElements = _countof(inputElementDescs);
 		}
-		else if (index == NameGPS::Animation) {
+		else if (index == NameGPS::kAnimation) {
 			//InputLayout
 			D3D12_INPUT_ELEMENT_DESC inputElementDescs[5] = {};
 			inputElementDescs[0].SemanticName = "POSITION";
@@ -225,12 +225,12 @@ void Object3dCommon::GenerateGraphicsPipeline()
 		Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob;
 		switch (index)
 		{
-		case Object3dCommon::None:
+		case Object3dCommon::kNone:
 			vertexShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/Object3d.VS.hlsl",
 				L"vs_6_0");
 			assert(vertexShaderBlob != nullptr);
 			break;
-		case Object3dCommon::Animation:
+		case Object3dCommon::kAnimation:
 			vertexShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/SkinningObject3d.VS.hlsl",
 				L"vs_6_0");
 			assert(vertexShaderBlob != nullptr);
