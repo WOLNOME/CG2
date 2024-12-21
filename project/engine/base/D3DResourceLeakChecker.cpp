@@ -3,6 +3,8 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
+#pragma comment(lib,"dxcompiler.lib")
+
 
 D3DResourceLeakChecker::~D3DResourceLeakChecker()
 {

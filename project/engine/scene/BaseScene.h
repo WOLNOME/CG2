@@ -1,4 +1,6 @@
 #pragma once
+#include "SceneLight.h"
+#include <memory>
 class SceneManager;
 class BaseScene
 {
@@ -27,5 +29,8 @@ public:
 protected:
 	//シーンマネージャー
 	SceneManager* sceneManager_ = nullptr;
+	//シーンライト
+	std::unique_ptr<SceneLight> sceneLight_ = nullptr;
+
 };
 

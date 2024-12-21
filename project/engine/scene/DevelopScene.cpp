@@ -20,22 +20,29 @@ void DevelopScene::Initialize()
 	camera->Initialize();
 	camera->SetRotate({ cameraRotate });
 	camera->SetTranslate(cameraTranslate);
+	camera->SetFarClip(100.0f);
 
 	//平行光源の生成と初期化
 	dirLight = std::make_unique<DirectionalLight>();
-	dirLight->Initialize();
 	//点光源の生成と初期化
 	pointLight = std::make_unique<PointLight>();
-	pointLight->Initialize();
+	pointLight2 = std::make_unique<PointLight>();
 	//点光源目印の生成と初期化
 	plMark = std::make_unique<LineDrawer>();
 	plMark->Initialize();
+	plMark2 = std::make_unique<LineDrawer>();
+	plMark2->Initialize();
 	//スポットライトの生成と初期化
 	spotLight = std::make_unique<SpotLight>();
-	spotLight->Initialize();
 	//スポットライト目印の生成と初期化
 	slMark = std::make_unique<LineDrawer>();
 	slMark->Initialize();
+
+	//各光源をシーンライトにセット
+	sceneLight_->SetLight(dirLight.get());
+	sceneLight_->SetLight(pointLight.get());
+	sceneLight_->SetLight(pointLight2.get());
+	sceneLight_->SetLight(spotLight.get());
 
 
 	//ゲームシーン変数の初期化
@@ -61,6 +68,26 @@ void DevelopScene::Initialize()
 	terrain_ = std::make_unique<Object3d>();
 	terrain_->Initialize("terrain");
 
+	wtAnimatedCube_.Initialize();
+	wtAnimatedCube_.translate_ = { 0.0f,3.0f,0.0f };
+	animatedCube_ = std::make_unique<Object3d>();
+	animatedCube_->Initialize("AnimatedCube", GLTF);
+
+	wtSneakWalk_.Initialize();
+	wtSneakWalk_.translate_ = { 3.0f,3.0f,0.0f };
+	sneakWalk_ = std::make_unique<Object3d>();
+	sneakWalk_->Initialize("sneakWalk", GLTF);
+
+	wtWalk_.Initialize();
+	wtWalk_.translate_ = { 4.0f,3.0f,0.0f };
+	walk_ = std::make_unique<Object3d>();
+	walk_->Initialize("walk", GLTF);
+
+	wtSimpleSkin_.Initialize();
+	wtSimpleSkin_.translate_ = { 5.0f,3.0f,0.0f };
+	simpleSkin_ = std::make_unique<Object3d>();
+	simpleSkin_->Initialize("simpleSkin", GLTF);
+
 	particle_ = std::make_unique<Particle>();
 	particle_->Initialize("plane");
 
@@ -80,20 +107,18 @@ void DevelopScene::Update()
 	//カメラの更新
 	camera->Update();
 
-	//平行光源の更新
-	dirLight->Update();
+	//シーンライトの更新処理
+	sceneLight_->Update(camera.get());
 
-	//点光源の更新
-	pointLight->Update();
-
-	//スポットライトの更新
-	spotLight->Update();
 
 	//モデルの更新
 	wtAxis_.rotate_.y += 0.03f;
 	wtAxis_.UpdateMatrix();
 	wtTerrain_.UpdateMatrix();
-
+	wtAnimatedCube_.UpdateMatrix();
+	wtSneakWalk_.UpdateMatrix();
+	wtWalk_.UpdateMatrix();
+	wtSimpleSkin_.UpdateMatrix();
 
 	//パーティクル
 	particle_->Update();
@@ -156,6 +181,24 @@ void DevelopScene::Update()
 	ImGui::Checkbox("isActive", &dirLight->isActive_);
 	ImGui::End();
 
+	ImGui::Begin("PoiintLight2");
+	ImGui::SliderFloat4("color", &pointLight2->color_.x, 0.0f, 1.0f);
+	ImGui::DragFloat3("position", &pointLight2->position_.x, 0.01f);
+	ImGui::SliderFloat("intencity", &pointLight2->intencity_, 0.0f, 10.0f);
+	ImGui::SliderFloat("radius", &pointLight2->radius_, 0.0f, 20.0f);
+	ImGui::SliderFloat("decay", &pointLight2->decay_, 0.0f, 10.0f);
+	ImGui::Checkbox("isActive", &pointLight2->isActive_);
+	ImGui::Checkbox("isDrawMark", &isDrawPLMark2);
+	if (isDrawPLMark2) {
+		//マークの生成
+		Sphere plMarkSphere;
+		plMarkSphere.center = pointLight2->position_;
+		plMarkSphere.radius = 0.1f;
+		MyMath::DrawSphere(plMarkSphere, { 1.0f,0.5f,0.0f,1.0f }, plMark2.get());
+
+	}
+	ImGui::End();
+
 	ImGui::Begin("PoiintLight");
 	ImGui::SliderFloat4("color", &pointLight->color_.x, 0.0f, 1.0f);
 	ImGui::DragFloat3("position", &pointLight->position_.x, 0.01f);
@@ -211,9 +254,17 @@ void DevelopScene::Draw()
 	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
-	axis_->Draw(wtAxis_, *camera.get(), dirLight.get(), pointLight.get(), spotLight.get());
+	axis_->Draw(wtAxis_, *camera.get(), sceneLight_.get());
 
-	terrain_->Draw(wtTerrain_, *camera.get(), dirLight.get(), pointLight.get(), spotLight.get());
+	terrain_->Draw(wtTerrain_, *camera.get(), sceneLight_.get());
+
+	animatedCube_->Draw(wtAnimatedCube_, *camera.get(), sceneLight_.get());
+
+	sneakWalk_->Draw(wtSneakWalk_, *camera.get(), sceneLight_.get());
+
+	walk_->Draw(wtWalk_, *camera.get(), sceneLight_.get());
+
+	simpleSkin_->Draw(wtSimpleSkin_, *camera.get(), sceneLight_.get());
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
@@ -243,6 +294,7 @@ void DevelopScene::Draw()
 	//線描画
 	line_->Draw(*camera.get());
 	plMark->Draw(*camera.get());
+	plMark2->Draw(*camera.get());
 	slMark->Draw(*camera.get());
 
 	///------------------------------///

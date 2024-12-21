@@ -24,7 +24,7 @@ public:
 	void Finalize();
 
 	// 描画前設定
-	void PreDraw();
+	void PreDraw(ID3D12GraphicsCommandList* pCommandList);
 	// 割り当て用関数
 	uint32_t Allocate();
 	// 解放用関数
@@ -40,7 +40,7 @@ public:
 	ID3D12DescriptorHeap* GetDescriptorHeap() const { return descriptorHeap.Get(); }
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(uint32_t index);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(uint32_t index);
-	void SetGraphicsRootDescriptorTable(UINT RootParameterIndex, uint32_t srvIndex);
+	void SetGraphicsRootDescriptorTable(ID3D12GraphicsCommandList* pCommandList, UINT RootParameterIndex, uint32_t srvIndex);
 
 	static const uint32_t kMaxSRVCount;
 

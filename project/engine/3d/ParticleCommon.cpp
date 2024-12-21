@@ -1,5 +1,6 @@
 #include "ParticleCommon.h"
 #include "DirectXCommon.h"
+#include "MainRender.h"
 #include "Logger.h"
 
 ParticleCommon* ParticleCommon::instance = nullptr;
@@ -27,11 +28,11 @@ void ParticleCommon::Finalize()
 void ParticleCommon::SettingCommonDrawing()
 {
 	//ルートシグネチャをセットするコマンド
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
+	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 	//グラフィックスパイプラインステートをセットするコマンド
-	DirectXCommon::GetInstance()->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
+	MainRender::GetInstance()->GetCommandList()->SetPipelineState(graphicsPipelineState.Get());
 	//プリミティブトポロジーをセットするコマンド
-	DirectXCommon::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	MainRender::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 void ParticleCommon::GenerateGraphicsPipeline()

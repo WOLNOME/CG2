@@ -1,21 +1,23 @@
 #pragma once
 #include <d3d12.h>
 #include <wrl.h>
+#include "Matrix4x4.h"
 #include "Vector4.h"
 #include "Vector3.h"
 
+//
 
-// 定数バッファ用データ構造体
-struct SpotLightForPS {
-	Vector4 color;			//ライトの色
-	Vector3 position;		//ライトの位置
-	float intensity;		//輝度
-	Vector3 direction;		//スポットライトの方向
-	float distance;			//ライトの届く最大距離
-	float decay;			//減衰率
-	float cosAngle;			//スポットライトの余弦
-	float cosFalloffStart;	//フォールオフの開始角度
-	float padding[2];
+// データ構造体(サイズが16の倍数になるようにパディングする！)
+struct SpotLightData {
+	Vector4 color;				//ライトの色
+	Vector3 position;			//ライトの位置
+	float intensity;			//輝度
+	Vector3 direction;			//スポットライトの方向
+	float distance;				//ライトの届く最大距離
+	float decay;				//減衰率
+	float cosAngle;				//スポットライトの余弦
+	float cosFalloffStart;		//フォールオフの開始角度
+	uint32_t isActive;
 };
 /// <summary>
 /// スポットライト
@@ -46,24 +48,19 @@ public:
 	~SpotLight() = default;
 
 	/// <summary>
-	/// 初期化
-	/// </summary>
-	void Initialize();
-	/// <summary>
 	/// 行列の更新
 	/// </summary>
 	void Update();
 	/// <summary>
-	/// 定数バッファの取得
+	/// スポットライトのデータを取得
 	/// </summary>
-	/// <returns>定数バッファ</returns>
-	const Microsoft::WRL::ComPtr<ID3D12Resource>& GetConstBuffer() const { return resource_; }
+	/// <returns>スポットライトのデータ</returns>
+	const SpotLightData& GetData() { return data_; }
 
 private:
-	// 定数バッファ
-	Microsoft::WRL::ComPtr<ID3D12Resource> resource_;
-	// マッピング済みアドレス
-	SpotLightForPS* data_ = nullptr;
+	//データ
+	SpotLightData data_;
+
 	// コピー禁止
 	SpotLight(const SpotLight&) = delete;
 	SpotLight& operator=(const SpotLight&) = delete;

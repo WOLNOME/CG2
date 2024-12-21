@@ -1,12 +1,19 @@
 #pragma once
 #include <wrl.h>
 #include <d3d12.h>
+#include <array>
 
 class Camera;
 
 //モデル共通部
 class Object3dCommon
 {
+public:
+	enum NameGPS {
+		None,
+		Animation
+	};
+
 private://シングルトン
 	static Object3dCommon* instance;
 
@@ -22,7 +29,7 @@ public://メンバ関数
 	//終了
 	void Finalize();
 	//共通描画設定
-	void SettingCommonDrawing();
+	void SettingCommonDrawing(NameGPS index = None);
 private://非公開メンバ関数
 	//グラフィックスパイプライン
 	void GenerateGraphicsPipeline();
@@ -33,10 +40,12 @@ public://セッター
 private://インスタンス
 	Camera* defaultCamera = nullptr;
 private://メンバ変数
+	static const int kNumGraphicsPipeline = 2;
+
 	//ルートシグネチャ
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
+	std::array<Microsoft::WRL::ComPtr<ID3D12RootSignature>, kNumGraphicsPipeline> rootSignature;
 	//グラフィックスパイプライン
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
+	std::array<Microsoft::WRL::ComPtr<ID3D12PipelineState>, kNumGraphicsPipeline> graphicsPipelineState;
 
 
 };

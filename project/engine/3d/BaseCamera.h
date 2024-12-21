@@ -2,6 +2,7 @@
 #include <d3d12.h>
 #include <type_traits>
 #include <wrl.h>
+#include <cstdint>
 #include "MyMath.h"
 #include "Vector3.h"
 #include "Vector4.h"
@@ -35,6 +36,10 @@ public:
 	const Matrix4x4& GetViewProjectionMatrix() const { return viewProjectionMatrix; }
 	const Vector3& GetRotate() const { return transform.rotate; }
 	const Vector3& GetTranslate() const { return transform.translate; }
+	float GetFovY() { return fovY; }
+	float GetAspectRatio() { return aspectRatio; }
+	float GetNearClip() { return nearClip; }
+	float GetFarClip() { return farClip; }
 	const Microsoft::WRL::ComPtr<ID3D12Resource>& GetViewProjectionConstBuffer() const { return viewProjectionResource_; }
 	const Microsoft::WRL::ComPtr<ID3D12Resource>& GetCameraPositionConstBuffer() const { return cameraPositionResource_; }
 	const Vector3 GetForwardDirection();
@@ -72,4 +77,7 @@ protected:
 	float aspectRatio;        // アスペクト比
 	float nearClip;           // ニアクリップ距離
 	float farClip;            // ファークリップ距離
+
+	
+
 };

@@ -6,6 +6,14 @@
 #include "Matrix4x4.h"
 #include "Quaternion.h"
 #include <vector>
+#include <cstdint>
+
+///------------------------------------///
+///              列挙体
+///------------------------------------///
+
+//δタイム
+const float kDeltaTime = 1.0f / 60.0f;
 
 ///------------------------------------///
 ///              列挙体
@@ -176,7 +184,6 @@ public://静的メンバ関数
 	static Vector3 Reflect(const Vector3& input, const Vector3& normal);
 
 
-
 	///------------------------------------///
 	///               Matrix4x4
 	///------------------------------------///
@@ -215,6 +222,9 @@ public://静的メンバ関数
 	static Matrix4x4 MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth);
 	// オイラー角から回転行列を作成する関数
 	static Matrix4x4 CreateRotationFromEulerAngles(float pitch, float yaw, float roll);
+	//視点からターゲットに向く関数
+	static Matrix4x4 LookAt(Vector3 eye, Vector3 target, Vector3 up);
+
 
 	///------------------------------------///
 	///            Quaternion
@@ -226,6 +236,10 @@ public://静的メンバ関数
 	static Quaternion Subtract(const Quaternion& q1, const Quaternion& q2);
 	// 四元数の乗算
 	static Quaternion Multiply(const Quaternion& q1, const Quaternion& q2);
+	// 四元数とスカラーの乗算
+	static Quaternion Multiply(float scalar, const Quaternion& q);
+	// 四元数の内積
+	static float Dot(const Quaternion& q1, const Quaternion& q2);
 	// 四元数のノルム
 	static float Norm(const Quaternion& q);
 	// 四元数の正規化
@@ -235,14 +249,17 @@ public://静的メンバ関数
 	// 四元数の逆元
 	static Quaternion Inverse(const Quaternion& q);
 	// 回転軸と角度から四元数を生成
-	static Quaternion FromAxisAngle(const Vector3& axis, float angle);
+	static Quaternion MakeRotateAxisAngleQuaternion(const Vector3& axis, float angle);
+	//ベクトルをQuaternionで回転させた結果のベクトルを求める
+	static Vector3 RotateVector(const Vector3& vector, const Quaternion& quaternion);
 	// 四元数から回転行列を生成
-	static Matrix4x4 ToRotationMatrix(const Quaternion& q);
+	static Matrix4x4 MakeRotateMatrix(const Quaternion& q);
 	// オイラー角から四元数を生成
 	static Quaternion FromEulerAngles(Vector3 euler);
 	// 四元数をオイラー角に変換
 	static Vector3 ToEulerAngles(const Quaternion& q);
-
+	//球面線形補完
+	static Quaternion Slerp(const Quaternion& q0, const  Quaternion& q1, float t);
 
 	///------------------------------------///
 	///               float
@@ -372,7 +389,7 @@ public://静的メンバ関数
 	///              図形の線描画
 	///------------------------------------///
 
-	static void DrawSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDrawer);
+	static void DrawSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDrawer, uint32_t subdivision = 15);
 
 };
 
@@ -399,10 +416,14 @@ Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2);
 Quaternion operator+(const Quaternion& q1, const Quaternion& q2);
 Quaternion operator-(const Quaternion& q1, const Quaternion& q2);
 Quaternion operator*(const Quaternion& q1, const Quaternion& q2);
+Quaternion operator*(float s, const Quaternion& q);
+Quaternion operator*(const Quaternion& q, float s);
 
 //単項演算子
 Vector3 operator-(const Vector3& v);
 Vector3 operator+(const Vector3& v);
+Quaternion operator-(const Quaternion& q);
+Quaternion operator+(const Quaternion& q);
 
 
 

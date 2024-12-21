@@ -1,6 +1,7 @@
 #include "Framework.h"
 #include "WinApp.h"
 #include "DirectXCommon.h"
+#include "MainRender.h"
 #include "SrvManager.h"
 #include "ImGuiManager.h"
 #include "TextureManager.h"
@@ -21,8 +22,11 @@ void Framework::Initialize()
 	//WindowsAPIの初期化
 	WinApp::GetInstance()->Initialize();
 
-	//DorectX12
+	//DirectX12
 	DirectXCommon::GetInstance()->Initialize();
+
+	//メインレンダー
+	MainRender::GetInstance()->Initialize();
 
 	//SRVマネージャー
 	SrvManager::GetInstance()->Initialize();
@@ -53,7 +57,7 @@ void Framework::Initialize()
 
 	//線描画共通部
 	LineDrawerCommon::GetInstance()->Initialize();
-	
+
 	//シーンマネージャーの生成
 	SceneManager::GetInstance()->Initialize();
 
@@ -72,6 +76,7 @@ void Framework::Finalize()
 	TextureManager::GetInstance()->Finalize();
 	ImGuiManager::GetInstance()->Finalize();
 	SrvManager::GetInstance()->Finalize();
+	MainRender::GetInstance()->Finalize();
 	DirectXCommon::GetInstance()->Finalize();
 	WinApp::GetInstance()->Finalize();
 }

@@ -47,6 +47,9 @@ private://メンバ変数
 	std::unique_ptr<PointLight> pointLight;
 	std::unique_ptr<LineDrawer> plMark;
 	bool isDrawPLMark = false;
+	std::unique_ptr<PointLight> pointLight2;
+	std::unique_ptr<LineDrawer> plMark2;
+	bool isDrawPLMark2 = false;
 	//スポットライト
 	std::unique_ptr<SpotLight> spotLight;
 	std::unique_ptr<LineDrawer> slMark;
@@ -64,6 +67,17 @@ private://メンバ変数
 	WorldTransform wtTerrain_;
 	std::unique_ptr<Object3d> terrain_ = nullptr;
 
+	WorldTransform wtAnimatedCube_;
+	std::unique_ptr<Object3d> animatedCube_ = nullptr;
+
+	WorldTransform wtSneakWalk_;
+	std::unique_ptr<Object3d> sneakWalk_ = nullptr;
+
+	WorldTransform wtWalk_;
+	std::unique_ptr<Object3d> walk_ = nullptr;
+
+	WorldTransform wtSimpleSkin_;
+	std::unique_ptr<Object3d> simpleSkin_ = nullptr;
 
 	std::unique_ptr<Particle> particle_ = nullptr;
 

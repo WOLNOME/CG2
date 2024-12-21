@@ -3,6 +3,7 @@
 #include <string>
 #include <memory>
 #include "Model.h"
+#include "ModelFormat.h"
 
 
 class ModelManager
@@ -23,7 +24,7 @@ public:
 	void Finalize();
 
 	//読み込み関数
-	void LoadModel(const std::string& filePath, Model::ModelFormat format = Model::OBJ);
+	void LoadModel(const std::string& filePath,ModelFormat format = OBJ);
 	//モデルデータ取得関数
 	Model* FindModel(const std::string& filePath);
 

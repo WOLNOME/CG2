@@ -5,14 +5,15 @@
 #include "Vector3.h"
 
 
-// 定数バッファ用データ構造体
-struct PointLightForPS {
+// データ構造体(サイズが16の倍数になるようにパディングする！)
+struct PointLightData {
 	Vector4 color;		//ライトの色
 	Vector3 position;	//ライトの位置
 	float intensity;	//輝度
 	float radius;		//ライトの届く最大距離
 	float decay;		//減衰率
-	float padding[2];
+	uint32_t isActive;
+	float padding[1];
 };
 /// <summary>
 /// 点光源
@@ -37,24 +38,18 @@ public:
 	~PointLight() = default;
 
 	/// <summary>
-	/// 初期化
-	/// </summary>
-	void Initialize();
-	/// <summary>
 	/// 行列の更新
 	/// </summary>
 	void Update();
 	/// <summary>
-	/// 定数バッファの取得
+	/// 平行光源のデータを取得
 	/// </summary>
-	/// <returns>定数バッファ</returns>
-	const Microsoft::WRL::ComPtr<ID3D12Resource>& GetConstBuffer() const { return resource_; }
-
+	/// <returns>スポットライトのデータ</returns>
+	const PointLightData& GetData() { return data_; }
+	
 private:
-	// 定数バッファ
-	Microsoft::WRL::ComPtr<ID3D12Resource> resource_;
-	// マッピング済みアドレス
-	PointLightForPS* data_ = nullptr;
+	// データ
+	PointLightData data_;
 	// コピー禁止
 	PointLight(const PointLight&) = delete;
 	PointLight& operator=(const PointLight&) = delete;

@@ -1,12 +1,14 @@
 #include "Particle.h"
 #include "WinApp.h"
 #include "DirectXCommon.h"
+#include "MainRender.h"
 #include "SrvManager.h"
 #include "TextureManager.h"
 #include "ModelManager.h"
 #include "ParticleCommon.h"
 #include "ImGuiManager.h"
 #include "BaseCamera.h"
+#include "ModelFormat.h"
 #include <fstream>
 #include <sstream>
 #include <random>
@@ -20,7 +22,7 @@ Particle::~Particle()
 void Particle::Initialize(const std::string& filePath)
 {
 	//モデルマネージャーでモデル(見た目)を生成
-	ModelManager::GetInstance()->LoadModel(filePath,Model::OBJ);
+	ModelManager::GetInstance()->LoadModel(filePath,OBJ);
 	//モデルマネージャーから検索してセットする
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
 
@@ -117,9 +119,9 @@ void Particle::Draw(const BaseCamera& camera)
 	}
 
 	//座標変換行列Tableの場所を設定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, particleResource_.SrvHandleGPU);
+	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, particleResource_.SrvHandleGPU);
 	//CameraCBufferの場所を設定
-	DirectXCommon::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera.GetViewProjectionConstBuffer()->GetGPUVirtualAddress());
+	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera.GetViewProjectionConstBuffer()->GetGPUVirtualAddress());
 	//モデルの描画
 	model_->Draw(0, 3, (uint32_t)particles.size());
 

@@ -533,7 +533,7 @@ Matrix4x4 MyMath::MakeAffineMatrix(const Vector3& scale, const Quaternion& rotat
 	Matrix4x4 c;
 
 	// クォータニオンから回転行列を生成
-	Matrix4x4 rotationMatrix = ToRotationMatrix(rotate);
+	Matrix4x4 rotationMatrix = MakeRotateMatrix(rotate);
 
 	// スケールの適用
 	c.m[0][0] = scale.x * rotationMatrix.m[0][0];
@@ -666,6 +666,30 @@ Matrix4x4 MyMath::CreateRotationFromEulerAngles(float pitch, float yaw, float ro
 	return rotationMatrix;
 }
 
+Matrix4x4 MyMath::LookAt(Vector3 eye, Vector3 target, Vector3 up)
+{
+
+	// 前方向ベクトル（正規化）
+	Vector3 forward = Normalize(target - eye);
+
+	// 右方向ベクトル（正規化）
+	Vector3 right = Normalize(Cross(up, forward));
+
+	// 上方向ベクトル（修正済み）
+	Vector3 upCorrected = Cross(forward, right);
+
+	// ビュー行列を構成
+	Matrix4x4 viewMatrix = {
+		right.x, upCorrected.x, -forward.x, 0.0f,
+		right.y, upCorrected.y, -forward.y, 0.0f,
+		right.z, upCorrected.z, -forward.z, 0.0f,
+		-Dot(right, eye), -Dot(upCorrected, eye), Dot(forward, eye), 1.0f
+	};
+
+	return viewMatrix;
+
+}
+
 Quaternion MyMath::Add(const Quaternion& q1, const Quaternion& q2) {
 	return Quaternion(q1.x + q2.x, q1.y + q2.y, q1.z + q2.z, q1.w + q2.w);
 }
@@ -675,12 +699,27 @@ Quaternion MyMath::Subtract(const Quaternion& q1, const Quaternion& q2) {
 }
 
 Quaternion MyMath::Multiply(const Quaternion& q1, const Quaternion& q2) {
-	return Quaternion(
-		q1.w * q2.x + q1.x * q2.w + q1.y * q2.z - q1.z * q2.y,
-		q1.w * q2.y - q1.x * q2.z + q1.y * q2.w + q1.z * q2.x,
-		q1.w * q2.z + q1.x * q2.y - q1.y * q2.x + q1.z * q2.w,
-		q1.w * q2.w - q1.x * q2.x - q1.y * q2.y - q1.z * q2.z
-	);
+	Quaternion c;
+	//各Quaternoinのxyz成分をVector3に直す
+	Vector3 q1v = { q1.x,q1.y ,q1.z };
+	Vector3 q2v = { q2.x,q2.y ,q2.z };
+	//演算
+	c.w = q1.w * q2.w - Dot(q1v, q2v);
+	c.x = Vector3(Cross(q1v, q2v) + (q2.w * q1v) + (q1.w * q2v)).x;
+	c.y = Vector3(Cross(q1v, q2v) + (q2.w * q1v) + (q1.w * q2v)).y;
+	c.z = Vector3(Cross(q1v, q2v) + (q2.w * q1v) + (q1.w * q2v)).z;
+
+	return c;
+}
+
+Quaternion MyMath::Multiply(float scalar, const Quaternion& q)
+{
+	return { q.x * scalar,q.y * scalar, q.z * scalar, q.w * scalar };
+}
+
+float MyMath::Dot(const Quaternion& q1, const Quaternion& q2)
+{
+	return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
 }
 
 float MyMath::Norm(const Quaternion& q) {
@@ -709,7 +748,7 @@ Quaternion MyMath::Inverse(const Quaternion& q) {
 		conjugate.z / normSquared, conjugate.w / normSquared);
 }
 
-Quaternion MyMath::FromAxisAngle(const Vector3& axis, float angle) {
+Quaternion MyMath::MakeRotateAxisAngleQuaternion(const Vector3& axis, float angle) {
 	float halfAngle = angle * 0.5f;
 	float sinHalfAngle = sin(halfAngle);
 	return Quaternion(
@@ -720,35 +759,36 @@ Quaternion MyMath::FromAxisAngle(const Vector3& axis, float angle) {
 	);
 }
 
-Matrix4x4 MyMath::ToRotationMatrix(const Quaternion& q) {
-	Matrix4x4 result = MakeIdentity4x4();
+Vector3 MyMath::RotateVector(const Vector3& vector, const Quaternion& quaternion)
+{
+	Vector3 c;
+	Quaternion vtq = { vector.x,vector.y, vector.z, 0.0f };
+	Quaternion result = quaternion * vtq * Inverse(quaternion);
+	c.x = result.x;
+	c.y = result.y;
+	c.z = result.z;
+	return c;
+}
 
-	float xx = q.x * q.x;
-	float yy = q.y * q.y;
-	float zz = q.z * q.z;
-	float xy = q.x * q.y;
-	float xz = q.x * q.z;
-	float yz = q.y * q.z;
-	float wx = q.w * q.x;
-	float wy = q.w * q.y;
-	float wz = q.w * q.z;
-
-	result.m[0][0] = 1.0f - 2.0f * (yy + zz);
-	result.m[0][1] = 2.0f * (xy - wz);
-	result.m[0][2] = 2.0f * (xz + wy);
-
-	result.m[1][0] = 2.0f * (xy + wz);
-	result.m[1][1] = 1.0f - 2.0f * (xx + zz);
-	result.m[1][2] = 2.0f * (yz - wx);
-
-	result.m[2][0] = 2.0f * (xz - wy);
-	result.m[2][1] = 2.0f * (yz + wx);
-	result.m[2][2] = 1.0f - 2.0f * (xx + yy);
-
-	// 4x4 行列の回転部分のみを設定。平行移動はなし。
-	result.m[3][3] = 1.0f;
-
-	return result;
+Matrix4x4 MyMath::MakeRotateMatrix(const Quaternion& q) {
+	Matrix4x4 c;
+	c.m[0][0] = std::powf(q.w, 2) + std::powf(q.x, 2) - std::powf(q.y, 2) - std::powf(q.z, 2);
+	c.m[0][1] = 2.0f * (q.x * q.y + q.w * q.z);
+	c.m[0][2] = 2.0f * (q.x * q.z - q.w * q.y);
+	c.m[0][3] = 0.0f;
+	c.m[1][0] = 2.0f * (q.x * q.y - q.w * q.z);
+	c.m[1][1] = std::powf(q.w, 2) - std::powf(q.x, 2) + std::powf(q.y, 2) - std::powf(q.z, 2);
+	c.m[1][2] = 2.0f * (q.y * q.z + q.w * q.x);
+	c.m[1][3] = 0.0f;
+	c.m[2][0] = 2.0f * (q.x * q.z + q.w * q.y);
+	c.m[2][1] = 2.0f * (q.y * q.z - q.w * q.x);
+	c.m[2][2] = std::powf(q.w, 2) - std::powf(q.x, 2) - std::powf(q.y, 2) + std::powf(q.z, 2);
+	c.m[2][3] = 0.0f;
+	c.m[3][0] = 0.0f;
+	c.m[3][1] = 0.0f;
+	c.m[3][2] = 0.0f;
+	c.m[3][3] = 1.0f;
+	return c;
 }
 
 Quaternion MyMath::FromEulerAngles(Vector3 euler) {
@@ -788,6 +828,38 @@ Vector3 MyMath::ToEulerAngles(const Quaternion& q) {
 	euler.z = std::atan2(sinr_cosr, cosr_cosr);
 
 	return euler;
+}
+
+Quaternion MyMath::Slerp(const Quaternion& q0, const Quaternion& q1, float t)
+{
+	Quaternion c;
+	Quaternion q0c = q0;
+	Quaternion q1c = q1;
+	//q0とq1の内積
+	float dot = Dot(q0, q1);
+	if (dot < 0.0f) {
+		//もう片方の回転を利用する
+		q0c = -q0c;
+		//内積も反転
+		dot = -dot;
+	}
+	//内積が1に近い場合、線形補完を使用
+	const float EPSILON = 5e-4f;//0.0005
+	if (dot >= 1.0f - EPSILON) {
+		c = q0c * (1.0f - t) + q1c * t;
+		return c;
+	}
+
+	//なす角を求める
+	float theta = std::acosf(dot);
+	//thetaとsinを使って補間係数scale0,scale1を求める
+	float sin_theta = std::sqrt(1.0f - dot * dot);
+	float scale0 = std::sin((1.0f - t) * theta) / sin_theta;
+	float scale1 = std::sin(t * theta) / sin_theta;
+	//補間
+	c = scale0 * q0c + scale1 * q1c;
+
+	return c;
 }
 
 float MyMath::Cot(float rad)
@@ -1665,10 +1737,10 @@ bool MyMath::IsCollision(const OBB& obb, const Segment& segment)
 	return IsCollision(aabbOBBLocal, segmentOBBLocal);
 }
 
-void MyMath::DrawSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDrawer)
+void MyMath::DrawSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDrawer, uint32_t subdivision)
 {
 	float pi = std::numbers::pi_v<float>;
-	const uint32_t kSubdivision = 15;//分割数
+	const uint32_t kSubdivision = subdivision;//分割数
 	const float kLonEvery = 2.0f * pi / kSubdivision;//経度分割1つ分の角度
 	const float kLatEvery = pi / kSubdivision;//緯度分割1つ分の角度
 	//緯度の方向に分割 -π/2~π/2
@@ -1810,6 +1882,16 @@ Quaternion operator*(const Quaternion& q1, const Quaternion& q2)
 	return MyMath::Multiply(q1, q2);
 }
 
+Quaternion operator*(float s, const Quaternion& q)
+{
+	return MyMath::Multiply(s, q);
+}
+
+Quaternion operator*(const Quaternion& q, float s)
+{
+	return s * q;
+}
+
 Vector3 operator-(const Vector3& v)
 {
 	return { -v.x,-v.y,-v.z };
@@ -1818,4 +1900,14 @@ Vector3 operator-(const Vector3& v)
 Vector3 operator+(const Vector3& v)
 {
 	return v;
+}
+
+Quaternion operator-(const Quaternion& q)
+{
+	return { -q.x,-q.y,-q.z,-q.w };
+}
+
+Quaternion operator+(const Quaternion& q)
+{
+	return q;
 }

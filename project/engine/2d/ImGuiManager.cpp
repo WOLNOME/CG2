@@ -1,8 +1,9 @@
 #include "ImGuiManager.h"
 #include "imgui_impl_win32.h"
 #include "imgui_impl_dx12.h"
-#include "DirectXCommon.h"
 #include "WinApp.h"
+#include "DirectXCommon.h"
+#include "MainRender.h"
 #include "SrvManager.h"
 #include <cstdint>
 
@@ -30,7 +31,7 @@ void ImGuiManager::Initialize()
 	//dx12用初期化関数
 	ImGui_ImplDX12_Init(
 		DirectXCommon::GetInstance()->GetDevice(),
-		static_cast<int>(DirectXCommon::GetInstance()->GetBackBufferCount()),
+		static_cast<int>(MainRender::GetInstance()->GetBackBufferCount()),
 		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
 		SrvManager::GetInstance()->GetDescriptorHeap(),
 		SrvManager::GetInstance()->GetCPUDescriptorHandle(index),
@@ -65,7 +66,7 @@ void ImGuiManager::End()
 
 void ImGuiManager::Draw()
 {
-	ID3D12GraphicsCommandList* commandList = DirectXCommon::GetInstance()->GetCommandList();
+	ID3D12GraphicsCommandList* commandList = MainRender::GetInstance()->GetCommandList();
 
 	//デスクリプタヒープの配列をセットするコマンド
 	ID3D12DescriptorHeap* ppHeaps[] = { SrvManager::GetInstance()->GetDescriptorHeap() };
