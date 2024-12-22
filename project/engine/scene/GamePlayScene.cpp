@@ -66,8 +66,6 @@ void GamePlayScene::Update()
 	player_->Update();
 
 
-
-
 #ifdef _DEBUG
 	ImGui::Begin("scene");
 	ImGui::Text("%s", "GAMEPLAY");
@@ -91,7 +89,6 @@ void GamePlayScene::Draw()
 
 	//プレイヤー
 	player_->Draw(*camera_, sceneLight_.get());
-
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑

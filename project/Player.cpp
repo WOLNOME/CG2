@@ -14,7 +14,7 @@ void Player::Initialize()
 	worldTransform_.Initialize();
 	//モデルの生成と初期化
 	model_ = std::make_unique<Object3d>();
-	model_->Initialize("snowplow", OBJ);
+	model_->InitializeModel("snowplow", OBJ);
 
 
 }

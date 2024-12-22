@@ -14,7 +14,7 @@ void Skydome::Initialize()
 	worldTransform_.Initialize();
 	//モデルの生成と初期化
 	model_ = std::make_unique<Object3d>();
-	model_->Initialize("skydome", OBJ);
+	model_->InitializeModel("skydome", OBJ);
 
 }
 

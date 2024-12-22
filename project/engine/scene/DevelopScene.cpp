@@ -61,32 +61,32 @@ void DevelopScene::Initialize()
 
 	wtAxis_.Initialize();
 	axis_ = std::make_unique<Object3d>();
-	axis_->Initialize("teapot");
+	axis_->InitializeModel("teapot");
 
 	wtTerrain_.Initialize();
 	wtTerrain_.translate_ = { 0.0f,-1.2f,0.0f };
 	terrain_ = std::make_unique<Object3d>();
-	terrain_->Initialize("terrain");
+	terrain_->InitializeModel("terrain");
 
 	wtAnimatedCube_.Initialize();
 	wtAnimatedCube_.translate_ = { 0.0f,3.0f,0.0f };
 	animatedCube_ = std::make_unique<Object3d>();
-	animatedCube_->Initialize("AnimatedCube", GLTF);
+	animatedCube_->InitializeModel("AnimatedCube", GLTF);
 
 	wtSneakWalk_.Initialize();
 	wtSneakWalk_.translate_ = { 3.0f,3.0f,0.0f };
 	sneakWalk_ = std::make_unique<Object3d>();
-	sneakWalk_->Initialize("sneakWalk", GLTF);
+	sneakWalk_->InitializeModel("sneakWalk", GLTF);
 
 	wtWalk_.Initialize();
 	wtWalk_.translate_ = { 4.0f,3.0f,0.0f };
 	walk_ = std::make_unique<Object3d>();
-	walk_->Initialize("walk", GLTF);
+	walk_->InitializeModel("walk", GLTF);
 
 	wtSimpleSkin_.Initialize();
 	wtSimpleSkin_.translate_ = { 5.0f,3.0f,0.0f };
 	simpleSkin_ = std::make_unique<Object3d>();
-	simpleSkin_->Initialize("simpleSkin", GLTF);
+	simpleSkin_->InitializeModel("simpleSkin", GLTF);
 
 	particle_ = std::make_unique<Particle>();
 	particle_->Initialize("plane");

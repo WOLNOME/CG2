@@ -7,6 +7,7 @@
 #include <memory>
 #include "MyMath.h"
 #include "Model.h"
+#include "Shape.h"
 #include "ModelFormat.h"
 #include "WorldTransform.h"
 #include "SceneLight.h"
@@ -15,15 +16,26 @@ class BaseCamera;
 //モデル
 class Object3d
 {
-public:
+private://非公開列挙型
+	enum ObjectKind
+	{
+		kModel,
+		kShape,
+	};
+
+public://構造体
 	struct LightFlagForPS
 	{
 		uint32_t isActiveLights;
 	};
 
 public://メンバ関数
+	Object3d();
+
 	//初期化
-	void Initialize(const std::string& filePath, ModelFormat format = OBJ);
+	void InitializeModel(const std::string& filePath, ModelFormat format = OBJ);
+	//形状初期化
+	void InitializeShape(Shape::ShapeKind kind);
 	/// <summary>
 	/// 描画
 	/// </summary>
@@ -33,14 +45,19 @@ public://メンバ関数
 	void Draw(
 		WorldTransform& worldTransform,
 		const BaseCamera& camera,
-		const SceneLight* sceneLight = nullptr
+		const SceneLight* sceneLight = nullptr,
+		int32_t textureHandle = EOF
 	);
-	
+
 private://非公開メンバ関数
 
 private://メンバ変数
 	//モデル
-	Model* model_;
+	Model* model_ = nullptr;
+	//形状
+	std::unique_ptr<Shape> shape_ = nullptr;
+	//オブジェクトの種類
+	ObjectKind objKind_;
 
 	//ライト有無用定数バッファ
 	Microsoft::WRL::ComPtr<ID3D12Resource> lightFlagResource_;

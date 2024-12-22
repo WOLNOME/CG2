@@ -62,6 +62,7 @@
     <ClCompile Include="engine\3d\SpotLight.cpp" />
     <ClCompile Include="Skydome.cpp" />
     <ClCompile Include="Ground.cpp" />
+    <ClCompile Include="Shape.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\3d\DirectionalLight.h" />
@@ -121,6 +122,7 @@
     <ClInclude Include="engine\3d\SpotLight.h" />
     <ClInclude Include="Skydome.h" />
     <ClInclude Include="Ground.h" />
+    <ClInclude Include="Shape.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\LineDrawer.hlsli" />

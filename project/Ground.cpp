@@ -14,7 +14,7 @@ void Ground::Initialize()
 	worldTransform_.Initialize();
 	//モデルの生成と初期化
 	model_ = std::make_unique<Object3d>();
-	model_->Initialize("ground", OBJ);
+	model_->InitializeModel("ground", OBJ);
 }
 
 void Ground::Update()

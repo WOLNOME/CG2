@@ -42,7 +42,6 @@ private://メンバ変数
 
 	//プレイヤー
 	std::unique_ptr<Player> player_ = nullptr;
-
-
+	
 };
 
