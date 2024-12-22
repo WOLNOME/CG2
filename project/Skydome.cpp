@@ -1,35 +1,31 @@
-#include "Player.h"
+#include "Skydome.h"
 
-Player::Player()
+Skydome::Skydome()
 {
 }
 
-Player::~Player()
+Skydome::~Skydome()
 {
 }
 
-void Player::Initialize()
+void Skydome::Initialize()
 {
 	//ワールドトランスフォームの初期化
 	worldTransform_.Initialize();
 	//モデルの生成と初期化
 	model_ = std::make_unique<Object3d>();
-	model_->Initialize("snowplow", OBJ);
-
+	model_->Initialize("skydome", OBJ);
 
 }
 
-void Player::Update()
+void Skydome::Update()
 {
-	worldTransform_.translate_.z += 0.01f;
-
 	//ワールドトランスフォームの更新
 	worldTransform_.UpdateMatrix();
 }
 
-void Player::Draw(const BaseCamera& camera, const SceneLight* light)
+void Skydome::Draw(const BaseCamera& camera, const SceneLight* light)
 {
-	//モデルの描画
+	//モデル
 	model_->Draw(worldTransform_, camera, light);
-
 }

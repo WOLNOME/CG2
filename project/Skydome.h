@@ -1,14 +1,15 @@
 #pragma once
-#include "WorldTransform.h"
-#include "Object3d.h"
 #include "BaseCamera.h"
 #include "SceneLight.h"
+#include "WorldTransform.h"
+#include "Object3d.h"
 #include <memory>
-class Player
+
+class Skydome
 {
 public:
-	Player();
-	~Player();
+	Skydome();
+	~Skydome();
 
 	void Initialize();
 	void Update();
@@ -19,9 +20,6 @@ private:
 	WorldTransform worldTransform_;
 	//モデル
 	std::unique_ptr<Object3d> model_ = nullptr;
-
-
-
 
 };
 

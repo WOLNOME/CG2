@@ -18,11 +18,17 @@ void Object3d::Initialize(const std::string& filePath, ModelFormat format)
 	//モデルマネージャーから検索してセットする
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
 
+	//リソース作成
+	lightFlagResource_ = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(LightFlagForPS));
+	//リソースにマッピング
+	lightFlagResource_->Map(0, nullptr, reinterpret_cast<void**>(&lightFlagData_));
+	//データに書き込み
+	lightFlagData_->isActiveLights = false;
+
 }
 
 void Object3d::Draw(WorldTransform& worldTransform, const  BaseCamera& camera, const SceneLight* sceneLight)
 {
-
 	//アニメーション反映処理
 	model_->Update();
 
@@ -34,8 +40,16 @@ void Object3d::Draw(WorldTransform& worldTransform, const  BaseCamera& camera, c
 		Object3dCommon::GetInstance()->SettingCommonDrawing(Object3dCommon::None);
 	}
 
+	//シーンライト有無設定
+	lightFlagData_->isActiveLights = (sceneLight != nullptr) ? true : false;
+
+	//lightFlagCbufferの場所を設定
+	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(6, lightFlagResource_->GetGPUVirtualAddress());
+
 	//SceneLightCBufferの場所を設定
-	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(5, sceneLight->GetSceneLightConstBuffer()->GetGPUVirtualAddress());
+	if (lightFlagData_->isActiveLights) {
+		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(5, sceneLight->GetSceneLightConstBuffer()->GetGPUVirtualAddress());
+	}
 
 	//WorldTransformCBufferの場所を設定
 	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(1, worldTransform.GetConstBuffer()->GetGPUVirtualAddress());

@@ -1,15 +1,10 @@
 #pragma once
 #include "BaseScene.h"
-#include "Sprite.h"
-#include "Object3d.h"
-#include "Particle.h"
-#include "LineDrawer.h"
-#include "Audio.h"
-#include "Vector2.h"
 #include "Input.h"
-#include "MyMath.h"
-#include "WorldTransform.h"
-#include "BaseCamera.h"
+#include "DevelopCamera.h"
+#include "Skydome.h"
+#include "Ground.h"
+#include "Player.h"
 #include <memory>
 
 class GamePlayScene : public BaseScene
@@ -32,6 +27,22 @@ public:
 	/// </summary>
 	void Draw() override;
 private://メンバ変数
-	
+	//インプット
+	Input* input_ = nullptr;
+	//カメラ
+	std::unique_ptr<DevelopCamera> camera_ = nullptr;
+	//光源系
+	std::unique_ptr<DirectionalLight> dLight_ = nullptr;
+
+	//天球
+	std::unique_ptr<Skydome> skydome_ = nullptr;
+	//地面
+	std::unique_ptr<Ground> ground_ = nullptr;
+
+
+	//プレイヤー
+	std::unique_ptr<Player> player_ = nullptr;
+
+
 };
 

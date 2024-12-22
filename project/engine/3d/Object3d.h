@@ -15,6 +15,12 @@ class BaseCamera;
 //モデル
 class Object3d
 {
+public:
+	struct LightFlagForPS
+	{
+		uint32_t isActiveLights;
+	};
+
 public://メンバ関数
 	//初期化
 	void Initialize(const std::string& filePath, ModelFormat format = OBJ);
@@ -35,6 +41,11 @@ private://非公開メンバ関数
 private://メンバ変数
 	//モデル
 	Model* model_;
+
+	//ライト有無用定数バッファ
+	Microsoft::WRL::ComPtr<ID3D12Resource> lightFlagResource_;
+	//ライト有無用データ
+	LightFlagForPS* lightFlagData_ = nullptr;
 
 };
 

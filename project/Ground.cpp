@@ -1,35 +1,30 @@
-#include "Player.h"
+#include "Ground.h"
 
-Player::Player()
+Ground::Ground()
 {
 }
 
-Player::~Player()
+Ground::~Ground()
 {
 }
 
-void Player::Initialize()
+void Ground::Initialize()
 {
 	//ワールドトランスフォームの初期化
 	worldTransform_.Initialize();
 	//モデルの生成と初期化
 	model_ = std::make_unique<Object3d>();
-	model_->Initialize("snowplow", OBJ);
-
-
+	model_->Initialize("ground", OBJ);
 }
 
-void Player::Update()
+void Ground::Update()
 {
-	worldTransform_.translate_.z += 0.01f;
-
 	//ワールドトランスフォームの更新
 	worldTransform_.UpdateMatrix();
 }
 
-void Player::Draw(const BaseCamera& camera, const SceneLight* light)
+void Ground::Draw(const BaseCamera& camera, const SceneLight* light)
 {
-	//モデルの描画
+	//モデル
 	model_->Draw(worldTransform_, camera, light);
-
 }

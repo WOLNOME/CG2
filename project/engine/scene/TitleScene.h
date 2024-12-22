@@ -29,6 +29,6 @@ public:
 	/// </summary>
 	void Draw() override;
 private://メンバ変数
-
+	Input* input_ = nullptr;
 };
 

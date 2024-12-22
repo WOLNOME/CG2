@@ -130,6 +130,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\scene\GamePlayScene.cpp" />
     <ClCompile Include="engine\3d\LineDrawer.cpp" />
     <ClCompile Include="engine\3d\LineDrawerCommon.cpp" />
+    <ClCompile Include="Ground.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="engine\3d\Model.cpp" />
     <ClCompile Include="engine\3d\ModelManager.cpp" />
@@ -142,7 +143,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\base\WinApp.cpp" />
     <ClCompile Include="engine\base\SrvManager.cpp" />
     <ClCompile Include="engine\math\MyMath.cpp" />
-    <ClCompile Include="MainRender.cpp" />
+    <ClCompile Include="engine\base\MainRender.cpp" />
     <ClCompile Include="MyGame.cpp" />
     <ClCompile Include="engine\scenebase\SceneFactory.cpp" />
     <ClCompile Include="engine\scenebase\SceneManager.cpp" />
@@ -151,9 +152,10 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\3d\ParticleCommon.cpp" />
     <ClCompile Include="engine\3d\WorldTransform.cpp" />
     <ClCompile Include="Player.cpp" />
-    <ClCompile Include="PointLight.cpp" />
-    <ClCompile Include="SceneLight.cpp" />
-    <ClCompile Include="SpotLight.cpp" />
+    <ClCompile Include="engine\3d\PointLight.cpp" />
+    <ClCompile Include="engine\3d\SceneLight.cpp" />
+    <ClCompile Include="engine\3d\SpotLight.cpp" />
+    <ClCompile Include="Skydome.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\3d\DirectionalLight.h" />
@@ -197,8 +199,9 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\math\MyMath.h" />
     <ClInclude Include="engine\3d\LineDrawer.h" />
     <ClInclude Include="engine\3d\LineDrawerCommon.h" />
-    <ClInclude Include="MainRender.h" />
-    <ClInclude Include="ModelFormat.h" />
+    <ClInclude Include="engine\base\MainRender.h" />
+    <ClInclude Include="engine\3d\ModelFormat.h" />
+    <ClInclude Include="Ground.h" />
     <ClInclude Include="MyGame.h" />
     <ClInclude Include="engine\scenebase\SceneFactory.h" />
     <ClInclude Include="engine\scenebase\SceneManager.h" />
@@ -207,10 +210,11 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\3d\ParticleCommon.h" />
     <ClInclude Include="engine\3d\WorldTransform.h" />
     <ClInclude Include="Player.h" />
-    <ClInclude Include="PointLight.h" />
-    <ClInclude Include="Quaternion.h" />
-    <ClInclude Include="SceneLight.h" />
-    <ClInclude Include="SpotLight.h" />
+    <ClInclude Include="engine\3d\PointLight.h" />
+    <ClInclude Include="engine\math\Quaternion.h" />
+    <ClInclude Include="engine\3d\SceneLight.h" />
+    <ClInclude Include="engine\3d\SpotLight.h" />
+    <ClInclude Include="Skydome.h" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

@@ -113,7 +113,7 @@ void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParame
 			MainRender::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 2, vbvs);
 			
 			//paletteMatrixを送る
-			MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(6, skinCluster_.paletteSrvHandle.second);
+			MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(7, skinCluster_.paletteSrvHandle.second);
 		}
 		else if (!isAnimation_) {
 
