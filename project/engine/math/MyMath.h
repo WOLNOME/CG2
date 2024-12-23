@@ -143,7 +143,9 @@ public://静的メンバ関数
 	static Vector2 Subtract(const Vector2& v1, const Vector2& v2);
 	//乗算
 	static Vector2 Multiply(float s, const Vector2& v);
-
+	//クロス積
+	static float Cross(const Vector2& a, const Vector2& b);
+	
 	///------------------------------------///
 	///               Vector3
 	///------------------------------------///
@@ -182,7 +184,8 @@ public://静的メンバ関数
 	static Vector3 CollisionPoint(const Segment& s, const Plane& p);
 	//反射ベクトルを求める関数
 	static Vector3 Reflect(const Vector3& input, const Vector3& normal);
-
+	//2つのベクトルのなす角を求める関数
+	static float AngleOf2VectorY(const Vector3& v1, const Vector3& v2);
 
 	///------------------------------------///
 	///               Matrix4x4
@@ -269,6 +272,8 @@ public://静的メンバ関数
 	static float Cot(float rad);
 	//距離
 	static float Length(const Vector3& v);
+	//内積
+	static float Dot(const Vector2& v1, const Vector2& v2);
 	//ベクトルの内積
 	static float Dot(const Vector3& v1, const Vector3& v2);
 	//スカラーの線形補完

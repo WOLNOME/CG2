@@ -30,6 +30,15 @@ Vector2 MyMath::Multiply(float s, const Vector2& v)
 	return Vector2(s * v.x, s * v.y);
 }
 
+float MyMath::Cross(const Vector2& a, const Vector2& b)
+{
+	float c;
+
+	c = (a.x * b.y) - (a.y * b.x);
+
+	return c;
+}
+
 Vector3 MyMath::Add(const Vector3& v1, const Vector3& v2)
 {
 	Vector3 c;
@@ -244,6 +253,28 @@ Vector3 MyMath::Reflect(const Vector3& input, const Vector3& normal)
 	Vector3 r;
 	r = input - 2 * (Dot(input, normal)) * normal;
 	return r;
+}
+
+float MyMath::AngleOf2VectorY(const Vector3& v1, const Vector3& v2) {
+	//Y軸回転のため、引数のベクトルをxz成分に分解(長さの計算する手間省くため正規化)
+	Vector2 longHand = Vector2(v1.x, v1.z).Normalize();
+	Vector2 hourHand = Vector2(v2.x, v2.z).Normalize();
+	// 内積とベクトル長さを使ってcosθを求める
+	float cos_theta = MyMath::Dot(longHand, hourHand);
+	// cosθからθを求める
+	float theta = std::acos(cos_theta);
+	// 2ベクトルの外積を求め、hourHandが左にあるならマイナス
+	if (MyMath::Cross(longHand, hourHand) > 0.0f) {
+		theta = -theta;
+	}
+	// cosθの値で場合分け(NAN回避処理)
+	if (cos_theta >= 1.0f) {
+		theta = 0.0f;
+	}
+	else if (cos_theta <= -1.0f) {
+		theta = std::numbers::pi_v<float>;
+	}
+	return theta;
 }
 
 Matrix4x4 MyMath::Add(const Matrix4x4& m1, const Matrix4x4& m2)
@@ -878,12 +909,20 @@ float MyMath::Length(const Vector3& v)
 	return c;
 }
 
+float MyMath::Dot(const Vector2& v1, const Vector2& v2)
+{
+	float c;
+	c = v1.x * v2.x + v1.y * v2.y;
+	return c;
+}
+
 float MyMath::Dot(const Vector3& v1, const Vector3& v2)
 {
 	float c;
 	c = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 	return c;
 }
+
 
 float MyMath::Lerp(float s1, float s2, float t)
 {
