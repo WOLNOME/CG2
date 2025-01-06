@@ -63,6 +63,12 @@
     <ClCompile Include="Skydome.cpp" />
     <ClCompile Include="Ground.cpp" />
     <ClCompile Include="Shape.cpp" />
+    <ClCompile Include="SnowBullet.cpp" />
+    <ClCompile Include="GamePlayCamera.cpp" />
+    <ClCompile Include="Enemy.cpp" />
+    <ClCompile Include="Collider.cpp" />
+    <ClCompile Include="CollisionManager.cpp" />
+    <ClCompile Include="engine\scene\ClearScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\3d\DirectionalLight.h" />
@@ -123,6 +129,13 @@
     <ClInclude Include="Skydome.h" />
     <ClInclude Include="Ground.h" />
     <ClInclude Include="Shape.h" />
+    <ClInclude Include="SnowBullet.h" />
+    <ClInclude Include="GamePlayCamera.h" />
+    <ClInclude Include="Enemy.h" />
+    <ClInclude Include="Collider.h" />
+    <ClInclude Include="CollisionConfig.h" />
+    <ClInclude Include="CollisionManager.h" />
+    <ClInclude Include="engine\scene\ClearScene.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\LineDrawer.hlsli" />
