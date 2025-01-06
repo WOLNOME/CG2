@@ -3,6 +3,7 @@
 #include "ModelManager.h"
 #include "ImGuiManager.h"
 #include "Object3dCommon.h"
+#include "ParticleCommon.h"
 #include "SpriteCommon.h"
 #include "LineDrawerCommon.h"
 #include "SceneManager.h"
@@ -13,6 +14,11 @@ void ClearScene::Initialize()
 	BaseScene::Initialize();
 
 	input_ = Input::GetInstance();
+
+	textureHandleClear_ = TextureManager::GetInstance()->LoadTexture("clear.png");
+	spriteClear_ = std::make_unique<Sprite>();
+	spriteClear_->Initialize(textureHandleClear_);
+
 
 }
 
@@ -26,6 +32,7 @@ void ClearScene::Update()
 		sceneManager_->SetNextScene("TITLE");
 	}
 
+	spriteClear_->Update();
 
 #ifdef _DEBUG
 	ImGui::Begin("scene");
@@ -36,4 +43,55 @@ void ClearScene::Update()
 
 void ClearScene::Draw()
 {
+	//3Dモデルの共通描画設定
+	Object3dCommon::GetInstance()->SettingCommonDrawing();
+
+	///------------------------------///
+	///↓↓↓↓モデル描画開始↓↓↓↓
+	///------------------------------///
+
+
+
+	///------------------------------///
+	///↑↑↑↑モデル描画終了↑↑↑↑
+	///------------------------------///
+
+	//パーティクルの共通描画設定
+	ParticleCommon::GetInstance()->SettingCommonDrawing();
+
+	///------------------------------///
+	///↓↓↓↓パーティクル描画開始↓↓↓↓
+	///------------------------------///
+
+
+	///------------------------------///
+	///↑↑↑↑パーティクル描画終了↑↑↑↑
+	///------------------------------///
+
+
+	//線描画共通描画設定
+	LineDrawerCommon::GetInstance()->SettingCommonDrawing();
+
+	///------------------------------///
+	///↓↓↓↓線描画開始↓↓↓↓
+	///------------------------------///
+
+
+
+	///------------------------------///
+	///↑↑↑↑線描画終了↑↑↑↑
+	///------------------------------///
+
+	//スプライトの共通描画設定
+	SpriteCommon::GetInstance()->SettingCommonDrawing();
+
+	///------------------------------///
+	///↓↓↓↓スプライト描画開始↓↓↓↓
+	///------------------------------///
+
+	spriteClear_->Draw();
+
+	///------------------------------///
+	///↑↑↑↑スプライト描画終了↑↑↑↑
+	///------------------------------///
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include "Collider.h"
+#include "Sprite.h"
 #include "WorldTransform.h"
 #include "BaseCamera.h"
 #include "SceneLight.h"
@@ -14,6 +15,7 @@ public:
 	void Update();
 	void Draw(const BaseCamera& camera, const SceneLight* light);
 	void DrawLine(const BaseCamera& camera);
+	void DrawSprite();
 
 	bool GetIsDead() { return isDead_; }
 public://コライダー関連
@@ -30,6 +32,13 @@ private:
 	int32_t hp_ = 100;
 	//死亡判定
 	bool isDead_ = false;
+
+	//HPバー
+	uint32_t textureHandleRedBar_ = 0u;
+	uint32_t textureHandleGreenBar_ = 0u;
+	std::unique_ptr<Sprite> spriteRedBar_ = nullptr;
+	std::unique_ptr<Sprite> spriteGreenBar_ = nullptr;
+	Vector2 greenBarSize;
 
 	//デバッグ用線
 	std::unique_ptr<LineDrawer> debugLine_ = nullptr;

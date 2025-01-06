@@ -30,5 +30,9 @@ public:
 	void Draw() override;
 private://メンバ変数
 	Input* input_ = nullptr;
+
+	//タイトルスプライト
+	uint32_t textureHandleTitle_ = 0u;
+	std::unique_ptr<Sprite> spriteTitle_ = nullptr;
 };
 

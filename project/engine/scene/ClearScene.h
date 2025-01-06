@@ -1,6 +1,9 @@
 #pragma once
 #include "BaseScene.h"
 #include "Input.h"
+#include "Sprite.h"
+#include <memory>
+#include <cstdint>
 class ClearScene : public BaseScene
 {
 public:
@@ -23,5 +26,11 @@ public:
 private://メンバ変数
 	//インプット
 	Input* input_ = nullptr;
+
+	//スプライト
+	uint32_t textureHandleClear_ = 0u;
+	std::unique_ptr<Sprite> spriteClear_ = nullptr;
+
+
 };
 

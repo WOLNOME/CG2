@@ -18,8 +18,8 @@ void GamePlayScene::Initialize()
 	//カメラの生成と初期化
 	camera_ = std::make_unique<GamePlayCamera>();
 	camera_->Initialize();
-	camera_->SetTranslate({ 0.0f,30.0f,-95.0f });
-	camera_->SetRotate({ 0.2f,0.0f,0.0f });
+	camera_->SetTranslate({ 0.0f,28.0f,-100.0f });
+	camera_->SetRotate({ 0.15f,0.0f,0.0f });
 	camera_->SetFarClip(1000.0f);
 	
 	//光源系の生成と初期化
@@ -46,6 +46,11 @@ void GamePlayScene::Initialize()
 	//エネミーの生成と初期化
 	enemy_ = std::make_unique<Enemy>();
 	enemy_->Initialize();
+
+	//UIの生成と初期化
+	textureHandleUI_ = TextureManager::GetInstance()->LoadTexture("UI.png");
+	spriteUI_ = std::make_unique<Sprite>();
+	spriteUI_->Initialize(textureHandleUI_);
 
 	//衝突マネージャーの生成
 	collisionManager_ = std::make_unique<CollisionManager>();
@@ -84,6 +89,9 @@ void GamePlayScene::Update()
 	player_->Update();
 	//エネミーの更新
 	enemy_->Update();
+
+	//UIの更新
+	spriteUI_->Update();
 
 	//当たり判定処理
 	CheckAllCollision();
@@ -155,7 +163,8 @@ void GamePlayScene::Draw()
 	///↓↓↓↓スプライト描画開始↓↓↓↓
 	///------------------------------///
 
-
+	spriteUI_->Draw();
+	enemy_->DrawSprite();
 
 	///------------------------------///
 	///↑↑↑↑スプライト描画終了↑↑↑↑

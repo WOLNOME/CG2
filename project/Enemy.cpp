@@ -1,4 +1,5 @@
 #include "Enemy.h"
+#include "TextureManager.h"
 #include "ImGuiManager.h"
 #include "CollisionConfig.h"
 #include <numbers>
@@ -13,9 +14,20 @@ void Enemy::Initialize()
 	//モデルの生成と初期化
 	model_ = std::make_unique<Object3d>();
 	model_->InitializeModel("winterGeneral", GLTF);
+	//UIの生成と初期化
+	textureHandleRedBar_ = TextureManager::GetInstance()->LoadTexture("redBar.png");
+	textureHandleGreenBar_ = TextureManager::GetInstance()->LoadTexture("greenBar.png");
+	spriteRedBar_ = std::make_unique<Sprite>();
+	spriteGreenBar_ = std::make_unique<Sprite>();
+	spriteRedBar_->Initialize(textureHandleRedBar_);
+	spriteGreenBar_->Initialize(textureHandleGreenBar_);
+	spriteRedBar_->SetPosition({ 270.0f,32.0f });
+	spriteGreenBar_->SetPosition({ 270.0f,32.0f });
+	greenBarSize = spriteGreenBar_->GetSize();
+
 	//コライダー関連の初期化
 	SetCollisionAttribute(kCollisionAttributeEnemy);
-	radius_ = 15.1f;
+	radius_ = 15.2f;
 	debugLine_ = std::make_unique<LineDrawer>();
 	debugLine_->Initialize();
 }
@@ -29,6 +41,14 @@ void Enemy::Update()
 	if (hp_ <= 0) {
 		isDead_ = true;
 	}
+
+	//スプライトの更新処理
+	spriteRedBar_->Update();
+	spriteGreenBar_->Update();
+
+	//HPに応じて緑バーを縮小させる
+	spriteGreenBar_->SetSize({ greenBarSize.x * (hp_ / 100.0f),greenBarSize.y });
+
 
 #ifdef _DEBUG
 	ImGui::Begin("enemy");
@@ -60,6 +80,12 @@ void Enemy::DrawLine(const BaseCamera& camera)
 	debugLine_->Draw(camera);
 #endif // _DEBUG
 
+}
+
+void Enemy::DrawSprite()
+{
+	spriteRedBar_->Draw();
+	spriteGreenBar_->Draw();
 }
 
 void Enemy::OnCollision()

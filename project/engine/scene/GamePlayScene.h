@@ -1,6 +1,7 @@
 #pragma once
 #include "BaseScene.h"
 #include "Input.h"
+#include "Sprite.h"
 #include "DevelopCamera.h"
 #include "GamePlayCamera.h"
 #include "Skydome.h"
@@ -53,6 +54,10 @@ private://メンバ変数
 	std::unique_ptr<Player> player_ = nullptr;
 	//エネミー
 	std::unique_ptr<Enemy> enemy_ = nullptr;
+
+	//UI
+	uint32_t textureHandleUI_ = 0u;
+	std::unique_ptr<Sprite> spriteUI_ = nullptr;
 
 	//衝突マネージャー
 	std::unique_ptr<CollisionManager> collisionManager_ = nullptr;

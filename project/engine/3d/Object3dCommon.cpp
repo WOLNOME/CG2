@@ -38,99 +38,155 @@ void Object3dCommon::SettingCommonDrawing(NameGPS index)
 
 void Object3dCommon::GenerateGraphicsPipeline()
 {
+	//必要な変数
+	HRESULT hr;
 	for (uint32_t index = 0; index < kNumGraphicsPipeline; ++index) {
-		HRESULT hr;
 
 		//RootSignature作成（使用するレジスタ : t0）
-		D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature = {};
+		D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 		descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
+		//レジスタカウント
+		int registerCount = 0;
+		//使用するデスクリプタの数
+		int numDescriptors = 0;
 		//テクスチャ用DescriptorRange作成
 		D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
 		//オブジェクトのテクスチャ用
-		descriptorRange[0].BaseShaderRegister = 0;
-		descriptorRange[0].NumDescriptors = 1;
+		numDescriptors = 1;
+		descriptorRange[0].BaseShaderRegister = registerCount;
+		descriptorRange[0].NumDescriptors = numDescriptors;
 		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		registerCount += numDescriptors;
 
-		if (index == NameGPS::None) {
-			//RootParameter作成。複数設定できるので配列。今回は結果1つだけなので長さ1の配列
-			D3D12_ROOT_PARAMETER rootParameters[7] = {};
-			//マテリアルの設定
-			rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
-			rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
-			rootParameters[0].Descriptor.ShaderRegister = 0;//レジスタ番号0とバインド
-			//ワールドトランスフォーム関連の設定
-			rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
-			rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;//VertexShaderで使う
-			rootParameters[1].Descriptor.ShaderRegister = 0;//レジスタ番号0とバインド
-			//ビュープロジェクション関連の設定
-			rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
-			rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;//VertexShaderで使う
-			rootParameters[2].Descriptor.ShaderRegister = 1;//レジスタ番号0とバインド
-			//テクスチャの設定
-			rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//Tableを使う
-			rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
-			rootParameters[3].DescriptorTable.pDescriptorRanges = descriptorRange;//Tableの中身の配列を指定
-			rootParameters[3].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
-			//カメラ座標用定数バッファの設定
-			rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
-			rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
-			rootParameters[4].Descriptor.ShaderRegister = 1;//レジスタ番号1とバインド
-			//シーンライト用の設定
-			rootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
-			rootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
-			rootParameters[5].Descriptor.ShaderRegister = 2;//レジスタ番号2とバインド
-			//光源有無用の設定
-			rootParameters[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-			rootParameters[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-			rootParameters[6].Descriptor.ShaderRegister = 3;
-			//Signatureに反映
-			descriptionRootSignature.pParameters = rootParameters;//ルートパラメータ配列へのポインタ
-			descriptionRootSignature.NumParameters = _countof(rootParameters);//配列の長さ
+		std::vector<D3D12_ROOT_PARAMETER> rootParameters;
+		switch (index)
+		{
+		case NameGPS::None: {
+			// マテリアルの設定
+			D3D12_ROOT_PARAMETER materialParam = {};
+			materialParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+			materialParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			materialParam.Descriptor.ShaderRegister = 0;
+			rootParameters.push_back(materialParam);
 
+			// ワールドトランスフォーム関連の設定
+			D3D12_ROOT_PARAMETER worldTransformParam = {};
+			worldTransformParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+			worldTransformParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			worldTransformParam.Descriptor.ShaderRegister = 0;
+			rootParameters.push_back(worldTransformParam);
+
+			// ビュープロジェクション関連の設定
+			D3D12_ROOT_PARAMETER viewProjParam = {};
+			viewProjParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+			viewProjParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			viewProjParam.Descriptor.ShaderRegister = 1;
+			rootParameters.push_back(viewProjParam);
+
+			// テクスチャの設定
+			D3D12_ROOT_PARAMETER textureParam = {};
+			textureParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			textureParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			textureParam.DescriptorTable.pDescriptorRanges = descriptorRange;
+			textureParam.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+			rootParameters.push_back(textureParam);
+
+			// カメラ座標用定数バッファの設定
+			D3D12_ROOT_PARAMETER cameraParam = {};
+			cameraParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+			cameraParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			cameraParam.Descriptor.ShaderRegister = 1;
+			rootParameters.push_back(cameraParam);
+
+			// シーンライト用の設定
+			D3D12_ROOT_PARAMETER lightParam = {};
+			lightParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+			lightParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			lightParam.Descriptor.ShaderRegister = 2;
+			rootParameters.push_back(lightParam);
+
+			// 光源有無用の設定
+			D3D12_ROOT_PARAMETER lightExistParam = {};
+			lightExistParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+			lightExistParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			lightExistParam.Descriptor.ShaderRegister = 3;
+			rootParameters.push_back(lightExistParam);
+
+			// ルートシグネチャの記述
+			descriptionRootSignature.pParameters = rootParameters.data(); // std::vectorのデータポインタを使用
+			descriptionRootSignature.NumParameters = static_cast<UINT>(rootParameters.size()); // 要素数を取得
+
+			break;
 		}
-		else if (index == NameGPS::Animation) {
-			//RootParameter作成。複数設定できるので配列。今回は結果1つだけなので長さ1の配列
-			D3D12_ROOT_PARAMETER rootParameters[8] = {};
-			//マテリアルの設定
-			rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
-			rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
-			rootParameters[0].Descriptor.ShaderRegister = 0;//レジスタ番号0とバインド
-			//ワールドトランスフォーム関連の設定
-			rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
-			rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;//VertexShaderで使う
-			rootParameters[1].Descriptor.ShaderRegister = 0;//レジスタ番号0とバインド
-			//ビュープロジェクション関連の設定
-			rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
-			rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;//VertexShaderで使う
-			rootParameters[2].Descriptor.ShaderRegister = 1;//レジスタ番号0とバインド
+		case NameGPS::Animation: {
+			// マテリアルの設定
+			D3D12_ROOT_PARAMETER materialParam = {};
+			materialParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+			materialParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			materialParam.Descriptor.ShaderRegister = 0;
+			rootParameters.push_back(materialParam);
 
-			//テクスチャの設定
-			rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//Tableを使う
-			rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
-			rootParameters[3].DescriptorTable.pDescriptorRanges = descriptorRange;//Tableの中身の配列を指定
-			rootParameters[3].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
-			//カメラ座標用定数バッファの設定
-			rootParameters[4].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
-			rootParameters[4].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
-			rootParameters[4].Descriptor.ShaderRegister = 1;//レジスタ番号1とバインド
-			//シーンライト用の設定
-			rootParameters[5].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
-			rootParameters[5].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
-			rootParameters[5].Descriptor.ShaderRegister = 2;//レジスタ番号2とバインド
-			//光源有無用の設定
-			rootParameters[6].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
-			rootParameters[6].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
-			rootParameters[6].Descriptor.ShaderRegister = 3;
+			// ワールドトランスフォーム関連の設定
+			D3D12_ROOT_PARAMETER worldTransformParam = {};
+			worldTransformParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+			worldTransformParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			worldTransformParam.Descriptor.ShaderRegister = 0;
+			rootParameters.push_back(worldTransformParam);
+
+			// ビュープロジェクション関連の設定
+			D3D12_ROOT_PARAMETER viewProjParam = {};
+			viewProjParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+			viewProjParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			viewProjParam.Descriptor.ShaderRegister = 1;
+			rootParameters.push_back(viewProjParam);
+
+			// テクスチャの設定
+			D3D12_ROOT_PARAMETER textureParam = {};
+			textureParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			textureParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			textureParam.DescriptorTable.pDescriptorRanges = descriptorRange;
+			textureParam.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+			rootParameters.push_back(textureParam);
+
+			// カメラ座標用定数バッファの設定
+			D3D12_ROOT_PARAMETER cameraParam = {};
+			cameraParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+			cameraParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			cameraParam.Descriptor.ShaderRegister = 1;
+			rootParameters.push_back(cameraParam);
+
+			// シーンライト用の設定
+			D3D12_ROOT_PARAMETER lightParam = {};
+			lightParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+			lightParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			lightParam.Descriptor.ShaderRegister = 2;
+			rootParameters.push_back(lightParam);
+
+			// 光源有無用の設定
+			D3D12_ROOT_PARAMETER lightExistParam = {};
+			lightExistParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+			lightExistParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+			lightExistParam.Descriptor.ShaderRegister = 3;
+			rootParameters.push_back(lightExistParam);
+
 			//MatrixPalette用の設定
-			rootParameters[7].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-			rootParameters[7].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-			rootParameters[7].DescriptorTable.pDescriptorRanges = descriptorRange;
-			rootParameters[7].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
-			//Signatureに反映
-			descriptionRootSignature.pParameters = rootParameters;//ルートパラメータ配列へのポインタ
-			descriptionRootSignature.NumParameters = _countof(rootParameters);//配列の長さ
+			D3D12_ROOT_PARAMETER matrixPaletteParam = {};
+			matrixPaletteParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+			matrixPaletteParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+			matrixPaletteParam.DescriptorTable.pDescriptorRanges = descriptorRange;
+			matrixPaletteParam.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+			rootParameters.push_back(matrixPaletteParam);
+
+			// ルートシグネチャの記述
+			descriptionRootSignature.pParameters = rootParameters.data(); // std::vectorのデータポインタを使用
+			descriptionRootSignature.NumParameters = static_cast<UINT>(rootParameters.size()); // 要素数を取得
+
+			break;
+		}
+		default:
+			break;
 		}
 
 		//Samplerの設定
@@ -148,16 +204,14 @@ void Object3dCommon::GenerateGraphicsPipeline()
 		descriptionRootSignature.pStaticSamplers = staticSamplers;
 		descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
 
+
 		//シリアライズしてバイナリにする
 		Microsoft::WRL::ComPtr<ID3D10Blob> signatireBlob = nullptr;
 		Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
 		hr = D3D12SerializeRootSignature(&descriptionRootSignature,
 			D3D_ROOT_SIGNATURE_VERSION_1, &signatireBlob, &errorBlob);
 		if (FAILED(hr)) {
-			if (errorBlob) {
-				const char* errorMessage = reinterpret_cast<const char*>(errorBlob->GetBufferPointer());
-				Logger::Log(errorMessage); // エラーメッセージをログに出力
-			}
+			Logger::Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
 			assert(false);
 		}
 		//バイナリをもとに生成
@@ -166,54 +220,78 @@ void Object3dCommon::GenerateGraphicsPipeline()
 		assert(SUCCEEDED(hr));
 
 		D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
-		if (index == NameGPS::None) {
-			//InputLayout
-			D3D12_INPUT_ELEMENT_DESC inputElementDescs[3] = {};
-			inputElementDescs[0].SemanticName = "POSITION";
-			inputElementDescs[0].SemanticIndex = 0;
-			inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-			inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-			inputElementDescs[1].SemanticName = "TEXCOORD";
-			inputElementDescs[1].SemanticIndex = 0;
-			inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-			inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-			inputElementDescs[2].SemanticName = "NORMAL";
-			inputElementDescs[2].SemanticIndex = 0;
-			inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-			inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-			//インプットレイアウトディスクに登録
-			inputLayoutDesc.pInputElementDescs = inputElementDescs;
-			inputLayoutDesc.NumElements = _countof(inputElementDescs);
+		std::vector<D3D12_INPUT_ELEMENT_DESC> inputElementDesc;
+		switch (index)
+		{
+		case NameGPS::None: {
+			//宣言
+			D3D12_INPUT_ELEMENT_DESC ied0 = {};
+			D3D12_INPUT_ELEMENT_DESC ied1 = {};
+			D3D12_INPUT_ELEMENT_DESC ied2 = {};
+			//定義
+			ied0.SemanticName = "POSITION";
+			ied0.SemanticIndex = 0;
+			ied0.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			ied0.AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+			ied1.SemanticName = "TEXCOORD";
+			ied1.SemanticIndex = 0;
+			ied1.Format = DXGI_FORMAT_R32G32_FLOAT;
+			ied1.AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+			ied2.SemanticName = "NORMAL";
+			ied2.SemanticIndex = 0;
+			ied2.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+			ied2.AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+			//登録
+			inputElementDesc.push_back(ied0);
+			inputElementDesc.push_back(ied1);
+			inputElementDesc.push_back(ied2);
+			
+			break;
 		}
-		else if (index == NameGPS::Animation) {
-			//InputLayout
-			D3D12_INPUT_ELEMENT_DESC inputElementDescs[5] = {};
-			inputElementDescs[0].SemanticName = "POSITION";
-			inputElementDescs[0].SemanticIndex = 0;
-			inputElementDescs[0].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-			inputElementDescs[0].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-			inputElementDescs[1].SemanticName = "TEXCOORD";
-			inputElementDescs[1].SemanticIndex = 0;
-			inputElementDescs[1].Format = DXGI_FORMAT_R32G32_FLOAT;
-			inputElementDescs[1].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-			inputElementDescs[2].SemanticName = "NORMAL";
-			inputElementDescs[2].SemanticIndex = 0;
-			inputElementDescs[2].Format = DXGI_FORMAT_R32G32B32_FLOAT;
-			inputElementDescs[2].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-			inputElementDescs[3].SemanticName = "WEIGHT";
-			inputElementDescs[3].SemanticIndex = 0;
-			inputElementDescs[3].Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-			inputElementDescs[3].InputSlot = 1;//1番目のslotのVBVの事だと伝える
-			inputElementDescs[3].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-			inputElementDescs[4].SemanticName = "INDEX";
-			inputElementDescs[4].SemanticIndex = 0;
-			inputElementDescs[4].Format = DXGI_FORMAT_R32G32B32A32_SINT;
-			inputElementDescs[4].InputSlot = 1;//1番目のslotのVBVの事だと伝える
-			inputElementDescs[4].AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-			//インプットレイアウトディスクに登録
-			inputLayoutDesc.pInputElementDescs = inputElementDescs;
-			inputLayoutDesc.NumElements = _countof(inputElementDescs);
+		case NameGPS::Animation: {
+			//宣言
+			D3D12_INPUT_ELEMENT_DESC ied0 = {};
+			D3D12_INPUT_ELEMENT_DESC ied1 = {};
+			D3D12_INPUT_ELEMENT_DESC ied2 = {};
+			D3D12_INPUT_ELEMENT_DESC ied3 = {};
+			D3D12_INPUT_ELEMENT_DESC ied4 = {};
+			//定義
+			ied0.SemanticName = "POSITION";
+			ied0.SemanticIndex = 0;
+			ied0.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			ied0.AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+			ied1.SemanticName = "TEXCOORD";
+			ied1.SemanticIndex = 0;
+			ied1.Format = DXGI_FORMAT_R32G32_FLOAT;
+			ied1.AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+			ied2.SemanticName = "NORMAL";
+			ied2.SemanticIndex = 0;
+			ied2.Format = DXGI_FORMAT_R32G32B32_FLOAT;
+			ied2.AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+			ied3.SemanticName = "WEIGHT";
+			ied3.SemanticIndex = 0;
+			ied3.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+			ied3.InputSlot = 1;//1番目のslotのVBVの事だと伝える
+			ied3.AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+			ied4.SemanticName = "INDEX";
+			ied4.SemanticIndex = 0;
+			ied4.Format = DXGI_FORMAT_R32G32B32A32_SINT;
+			ied4.InputSlot = 1;//1番目のslotのVBVの事だと伝える
+			ied4.AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
+			//登録
+			inputElementDesc.push_back(ied0);
+			inputElementDesc.push_back(ied1);
+			inputElementDesc.push_back(ied2);
+			inputElementDesc.push_back(ied3);
+			inputElementDesc.push_back(ied4);
+			break;
 		}
+		default:
+			break;
+		}
+		//インプットレイアウトディスクに登録
+		inputLayoutDesc.pInputElementDescs = inputElementDesc.data();
+		inputLayoutDesc.NumElements = static_cast<UINT>(inputElementDesc.size());
 
 		//BlendSyayeの設定
 		D3D12_BLEND_DESC blendDesc{};
