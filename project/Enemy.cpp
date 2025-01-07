@@ -88,6 +88,10 @@ void Enemy::DrawSprite()
 	spriteGreenBar_->Draw();
 }
 
+void Enemy::DeadProcess()
+{
+}
+
 void Enemy::OnCollision()
 {
 	hp_ -= 10;

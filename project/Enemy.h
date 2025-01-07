@@ -6,6 +6,7 @@
 #include "SceneLight.h"
 #include "Object3d.h"
 #include "LineDrawer.h"
+#include "Particle.h"
 #include <cstdint>
 #include <memory>
 class Enemy : public Collider
@@ -16,6 +17,9 @@ public:
 	void Draw(const BaseCamera& camera, const SceneLight* light);
 	void DrawLine(const BaseCamera& camera);
 	void DrawSprite();
+	void DrawParticle();
+
+	void DeadProcess();
 
 	bool GetIsDead() { return isDead_; }
 public://コライダー関連
@@ -43,5 +47,11 @@ private:
 	//デバッグ用線
 	std::unique_ptr<LineDrawer> debugLine_ = nullptr;
 	Vector4 debugColor_ = { 0.0f,0.0f,1.0f,1.0f };
+
+	//パーティクル関連
+	uint32_t particleTimer_ = 0;
+	uint32_t particleTime_ = 60;
+
+
 };
 

@@ -33,7 +33,7 @@ void SnowBullet::Update()
 		if (isMove_) {
 			radius_ += 0.003f;
 			//雪玉の最大値で留まらせる
-			radius_ = std::min(radius_, 5.0f);
+			radius_ = std::min(radius_, 15.0f);
 
 			//回転
 			worldTransform_.rotate_.x += 0.03f;
@@ -54,7 +54,7 @@ void SnowBullet::Update()
 		//半径を大きくする
 		radius_ += 0.009f;
 		//雪玉の最大値で留まらせる
-		radius_ = std::min(radius_, 5.0f);
+		radius_ = std::min(radius_, 15.0f);
 		//回転
 		worldTransform_.rotate_.x += 0.05f;
 		//移動
