@@ -17,6 +17,11 @@ void SceneManager::Initialize()
 {
 	//シーンファクトリーの生成
 	sceneFactory_ = new SceneFactory();
+
+	//BGMの初期化
+	bgm_ = std::make_unique<Audio>();
+	bgm_->Initialize("BGM.wav");
+	bgm_->Play(true, 0.3f);
 }
 
 void SceneManager::Update()
@@ -25,7 +30,6 @@ void SceneManager::Update()
 	ChangeScene();
 	//実行中シーンを更新する
 	scene_->Update();
-
 
 
 

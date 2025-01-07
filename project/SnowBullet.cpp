@@ -23,6 +23,7 @@ void SnowBullet::Initialize()
 	radius_ = 0.5f;
 	debugLine_ = std::make_unique<LineDrawer>();
 	debugLine_->Initialize();
+	
 }
 
 void SnowBullet::Update()
@@ -104,6 +105,7 @@ void SnowBullet::OnCollision()
 {
 	isDead_ = true;
 	debugColor_ = { 1.0f,0.0f,0.0f,1.0f };
+	
 }
 
 Vector3 SnowBullet::GetWorldPosition()

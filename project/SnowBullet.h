@@ -5,6 +5,7 @@
 #include "WorldTransform.h"
 #include "Object3d.h"
 #include "LineDrawer.h"
+#include "Audio.h"
 #include <cstdint>
 #include <memory>
 
@@ -44,5 +45,6 @@ private:
 	//デバッグ用の線描画
 	std::unique_ptr<LineDrawer> debugLine_ = nullptr;
 	Vector4 debugColor_ = { 0.0f,0.0f,1.0f,1.0f };
+
 };
 

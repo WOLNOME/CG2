@@ -40,9 +40,9 @@ void Particle::Initialize(const std::string& filePath)
 	emitter.frequencyTime = 0.0f;//currentTime
 
 	//フィールド生成
-	accelerationField.acceleration = { 15.0f,0.0f,0.0f };
-	accelerationField.area.min = { -1.0f,-1.0f,-1.0f };
-	accelerationField.area.max = { 1.0f,1.0f,1.0f };
+	accelerationField.acceleration = { 0.0f,-1.0f,0.0f };
+	accelerationField.area.min = { -100.0f,-100.0f,-100.0f };
+	accelerationField.area.max = { 100.0f,100.0f,100.0f };
 
 }
 

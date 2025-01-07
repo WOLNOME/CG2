@@ -30,6 +30,10 @@ void Enemy::Initialize()
 	radius_ = 15.2f;
 	debugLine_ = std::make_unique<LineDrawer>();
 	debugLine_->Initialize();
+
+	//効果音
+	audio_ = std::make_unique<Audio>();
+	audio_->Initialize("breakSnow.wav");
 }
 
 void Enemy::Update()
@@ -88,14 +92,12 @@ void Enemy::DrawSprite()
 	spriteGreenBar_->Draw();
 }
 
-void Enemy::DeadProcess()
-{
-}
-
 void Enemy::OnCollision()
 {
 	hp_ -= 10;
 	debugColor_ = { 1.0f,0.0f,0.0f,1.0f };
+	audio_->Play(false,1.2f);
+
 }
 
 Vector3 Enemy::GetWorldPosition()

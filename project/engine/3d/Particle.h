@@ -87,11 +87,11 @@ private://メンバ変数
 	//δtの定義
 	const float kDeltaTime = 1.0f / 60.0f;
 	//ビルボードのオンオフ
-	bool isBillboard = false;
+	bool isBillboard = true;
 	//エミッター
 	Struct::Emitter emitter{};
 	//フィールド
 	Struct::AccelerationField accelerationField;
 	//フィールド値のオンオフ
-	bool isField = false;
+	bool isField = true;
 };

@@ -1,7 +1,9 @@
 #pragma once
 #include "BaseScene.h"
 #include "AbstractSceneFactory.h"
+#include "Audio.h"
 #include <string>
+#include <memory>
 //シーン管理
 class SceneManager
 {
@@ -47,6 +49,9 @@ private:
 	BaseScene* nextScene_ = nullptr;
 	//シーンファクトリー
 	AbstractSceneFactory* sceneFactory_ = nullptr;
+
+	//BGM
+	std::unique_ptr<Audio> bgm_ = nullptr;
 
 };
 
