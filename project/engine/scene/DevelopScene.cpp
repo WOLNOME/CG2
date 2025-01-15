@@ -88,6 +88,16 @@ void DevelopScene::Initialize()
 	simpleSkin_ = std::make_unique<Object3d>();
 	simpleSkin_->InitializeModel("simpleSkin", GLTF);
 
+
+	emitter_.transform.scale = { 1.0f,1.0f,1.0f };
+	emitter_.transform.rotate = { 0.0f,0.0f,0.0f };
+	emitter_.transform.translate = { 0.0f,5.0f,0.0f };
+	emitter_.count = 3;
+	emitter_.frequency = 0.0f;
+	emitter_.frequencyTime = 0.3f;
+	field_.acceleration = { 0.0f,0.5f,0.0f };
+	field_.area.min = { -100.0f,-100.0f,-100.0f };
+	field_.area.max = { 100.0f,100.0f,100.0f };
 	particle_ = std::make_unique<Particle>();
 	particle_->Initialize("plane");
 
@@ -119,9 +129,6 @@ void DevelopScene::Update()
 	wtSneakWalk_.UpdateMatrix();
 	wtWalk_.UpdateMatrix();
 	wtSimpleSkin_.UpdateMatrix();
-
-	//パーティクル
-	particle_->Update();
 
 	//スプライトの更新
 	sprite_->Update();
@@ -277,7 +284,7 @@ void DevelopScene::Draw()
 	///↓↓↓↓パーティクル描画開始↓↓↓↓
 	///------------------------------///
 
-	particle_->Draw(*camera.get());
+	particle_->Draw(*camera.get(), emitter_, &field_);
 
 	///------------------------------///
 	///↑↑↑↑パーティクル描画終了↑↑↑↑

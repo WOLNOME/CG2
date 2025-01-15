@@ -22,7 +22,7 @@ Particle::~Particle()
 void Particle::Initialize(const std::string& filePath)
 {
 	//モデルマネージャーでモデル(見た目)を生成
-	ModelManager::GetInstance()->LoadModel(filePath,OBJ);
+	ModelManager::GetInstance()->LoadModel(filePath, OBJ);
 	//モデルマネージャーから検索してセットする
 	model_ = ModelManager::GetInstance()->FindModel(filePath);
 
@@ -30,38 +30,9 @@ void Particle::Initialize(const std::string& filePath)
 	particleResource_ = MakeParticleResource();
 	//インスタンシングをSRVにセット
 	SettingSRV();
-
-	//エミッター生成
-	emitter.transform.scale = { 1.0f,1.0f,1.0f };
-	emitter.transform.rotate = { 0.0f,0.0f,0.0f };
-	emitter.transform.translate = { 0.0f,0.0f,0.0f };
-	emitter.count = 3;//1度に3個生成する
-	emitter.frequency = 0.5f;//0.5秒ごとに発生
-	emitter.frequencyTime = 0.0f;//currentTime
-
-	//フィールド生成
-	accelerationField.acceleration = { 0.0f,-1.0f,0.0f };
-	accelerationField.area.min = { -100.0f,-100.0f,-100.0f };
-	accelerationField.area.max = { 100.0f,100.0f,100.0f };
-
 }
 
-void Particle::Update()
-{
-#ifdef _DEBUG
-	ImGui::Begin("particle");
-	ImGui::Checkbox("billboard", &isBillboard);
-	ImGui::Checkbox("field", &isField);
-	if (ImGui::Button("Add Particle")) {
-		//パーティクル生成
-		particles.splice(particles.end(), Emit(emitter));
-	}
-	ImGui::DragFloat3("EmitterTranslate", &emitter.transform.translate.x, 0.01f, -100.0f, 100.0f);
-	ImGui::End();
-#endif // _DEBUG
-}
-
-void Particle::Draw(const BaseCamera& camera)
+void Particle::Draw(const BaseCamera& camera, Emitter& emitter, AccelerationField* field)
 {
 	//インスタンスの番号
 	uint32_t instanceNum = 0;
@@ -72,7 +43,7 @@ void Particle::Draw(const BaseCamera& camera)
 		emitter.frequencyTime -= emitter.frequency;
 	}
 
-	for (std::list<Struct::Particle>::iterator particleIterator = particles.begin(); particleIterator != particles.end();) {
+	for (std::list<ParticleData>::iterator particleIterator = particles.begin(); particleIterator != particles.end();) {
 		//時間更新
 		++(*particleIterator).currentTime;
 
@@ -84,9 +55,11 @@ void Particle::Draw(const BaseCamera& camera)
 		}
 
 		//フィールドの処理
-		if (isField) {
-			if (MyMath::IsCollision(accelerationField.area, (*particleIterator).transform.translate)) {
-				(*particleIterator).velocity = MyMath::Add((*particleIterator).velocity, MyMath::Multiply(kDeltaTime, accelerationField.acceleration));
+		if (field) {
+			if (field->isActive) {
+				if (MyMath::IsCollision(field->area, (*particleIterator).transform.translate)) {
+					(*particleIterator).velocity = MyMath::Add((*particleIterator).velocity, MyMath::Multiply(kDeltaTime, field->acceleration));
+				}
 			}
 		}
 
@@ -127,12 +100,12 @@ void Particle::Draw(const BaseCamera& camera)
 
 }
 
-Particle::Struct::ParticleResource Particle::MakeParticleResource()
+Particle::ParticleResource Particle::MakeParticleResource()
 {
 	//Particleリソース
-	Struct::ParticleResource particleResource;
+	ParticleResource particleResource;
 	//インスタンシングリソース作成
-	particleResource.instancingResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Struct::ParticleForGPU) * kNumMaxInstance_);
+	particleResource.instancingResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(ParticleForGPU) * kNumMaxInstance_);
 	//リソースにデータを書き込む
 	particleResource.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&particleResource.instancingData));
 	//データに書き込む
@@ -163,15 +136,15 @@ void Particle::SettingSRV()
 	srvDesc.Buffer.FirstElement = 0;
 	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 	srvDesc.Buffer.NumElements = kNumMaxInstance_;
-	srvDesc.Buffer.StructureByteStride = sizeof(Struct::ParticleForGPU);
+	srvDesc.Buffer.StructureByteStride = sizeof(ParticleForGPU);
 	particleResource_.SrvHandleCPU = SrvManager::GetInstance()->GetCPUDescriptorHandle(particleResource_.srvIndex);
 	particleResource_.SrvHandleGPU = SrvManager::GetInstance()->GetGPUDescriptorHandle(particleResource_.srvIndex);
 	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(particleResource_.instancingResource.Get(), &srvDesc, particleResource_.SrvHandleCPU);
 }
 
-Particle::Struct::Particle Particle::MakeNewParticle(const Vector3& translate)
+Particle::ParticleData Particle::MakeNewParticle(const Vector3& translate)
 {
-	Struct::Particle particle;
+	ParticleData particle;
 	//ランダムエンジンの生成
 	std::random_device seedGenerator;
 	std::mt19937 randomEngine(seedGenerator());
@@ -194,9 +167,9 @@ Particle::Struct::Particle Particle::MakeNewParticle(const Vector3& translate)
 	return particle;
 }
 
-std::list<Particle::Struct::Particle> Particle::Emit(const Struct::Emitter& emitter)
+std::list<Particle::ParticleData> Particle::Emit(const Emitter& emitter)
 {
-	std::list<Struct::Particle> particle;
+	std::list<ParticleData> particle;
 
 	for (uint32_t count = 0; count < emitter.count; ++count) {
 		particle.push_back(MakeNewParticle(emitter.transform.translate));

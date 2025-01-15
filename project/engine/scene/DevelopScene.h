@@ -79,6 +79,8 @@ private://メンバ変数
 	WorldTransform wtSimpleSkin_;
 	std::unique_ptr<Object3d> simpleSkin_ = nullptr;
 
+	Particle::Emitter emitter_;
+	Particle::AccelerationField field_;
 	std::unique_ptr<Particle> particle_ = nullptr;
 
 	std::unique_ptr<LineDrawer> line_ = nullptr;
