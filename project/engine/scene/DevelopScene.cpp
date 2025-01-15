@@ -93,9 +93,9 @@ void DevelopScene::Initialize()
 	emitter_.transform.rotate = { 0.0f,0.0f,0.0f };
 	emitter_.transform.translate = { 0.0f,0.0f,0.0f };
 	emitter_.count = 3;
-	emitter_.frequency = 0.0f;
-	emitter_.frequencyTime = 0.3f;
-	field_.acceleration = { 0.0f,2.0f,0.0f };
+	emitter_.frequency = 0.3f;
+	emitter_.frequencyTime = 0.0f;
+	field_.acceleration = { 0.0f,5.0f,0.0f };
 	field_.area.min = { -100.0f,-100.0f,-100.0f };
 	field_.area.max = { 100.0f,100.0f,100.0f };
 	field_.isActive = true;
