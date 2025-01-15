@@ -2,26 +2,26 @@
 
 struct LineForGPU
 {
-    float32_t4x4 World;
-    float32_t4 start;
-    float32_t4 end;
-    float32_t4 color;
+    float4x4 World;
+    float4 start;
+    float4 end;
+    float4 color;
 };
 struct ViewProjectionTransformationMatrix
 {
-    float32_t4x4 View;
-    float32_t4x4 Projection;
+    float4x4 View;
+    float4x4 Projection;
 };
 StructuredBuffer<LineForGPU> gLine : register(t0);
 ConstantBuffer<ViewProjectionTransformationMatrix> gViewProjectionTransformationMatrix : register(b0);
 
 struct VertexShaderInput
 {
-    float32_t4 position : POSITION0;
-    float32_t vertexIndex : VERTEXINDEX0;
+    float4 position : POSITION0;
+    float vertexIndex : VERTEXINDEX0;
 };
 
-VertexShaderOutput main(VertexShaderInput input, uint32_t instanceId : SV_InstanceID)
+VertexShaderOutput main(VertexShaderInput input, uint instanceId : SV_InstanceID)
 {
     VertexShaderOutput output;
     //もし頂点番号(始点か終点かのデータ)が0(始点)だったら

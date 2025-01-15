@@ -2,7 +2,7 @@
 
 struct PixelShaderOutput
 {
-    float32_t4 color : SV_Target0;
+    float4 color : SV_Target0;
 };
 
 PixelShaderOutput main(VertexShaderOutput input)
