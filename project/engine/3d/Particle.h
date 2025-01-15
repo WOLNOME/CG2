@@ -84,4 +84,5 @@ private://メンバ変数
 	//ビルボードのオンオフ
 	bool isBillboard = true;
 
+
 };

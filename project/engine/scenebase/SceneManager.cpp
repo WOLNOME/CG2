@@ -31,8 +31,6 @@ void SceneManager::Update()
 	//実行中シーンを更新する
 	scene_->Update();
 
-
-
 }
 
 void SceneManager::Draw()
