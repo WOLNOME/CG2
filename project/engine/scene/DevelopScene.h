@@ -42,27 +42,27 @@ private://メンバ変数
 	Vector3 cameraTranslate = { 0.0f,0.0f,-15.0f };
 	Vector3 cameraRotate = { 0.0f,0.0f,0.0f };
 	//平行光源
-	std::unique_ptr<DirectionalLight> dirLight;
-	//点光源
-	std::unique_ptr<PointLight> pointLight;
-	std::unique_ptr<LineDrawer> plMark;
-	bool isDrawPLMark = false;
-	std::unique_ptr<PointLight> pointLight2;
-	std::unique_ptr<LineDrawer> plMark2;
-	bool isDrawPLMark2 = false;
+	std::unique_ptr<DirectionalLight> dirLight_;
+	//ポイントライト
+	std::unique_ptr<PointLight> pointLight1_ = nullptr;
+	std::unique_ptr<PointLight> pointLight2_ = nullptr;
+	Vector3 pl1Velocity_ = { 0.0f,0.0f,0.0f };
+	Vector3 pl2Velocity_ = { 0.0f,0.0f,0.0f };
 	//スポットライト
-	std::unique_ptr<SpotLight> spotLight;
-	std::unique_ptr<LineDrawer> slMark;
-	bool isDrawSLMark = false;
+	std::unique_ptr<SpotLight> spotLight1_ = nullptr;
+	std::unique_ptr<SpotLight> spotLight2_ = nullptr;
 
-	uint32_t textureHandleSprite_ = 0u;
-	std::unique_ptr<Sprite> sprite_ = nullptr;
-	uint32_t textureHandleSprite2_ = 0u;
-	std::unique_ptr<Sprite> sprite2_ = nullptr;
-	Vector2 sprite2Position;
+	//UV球
+	WorldTransform wtSphere_;
+	uint32_t thSphere_ = 0u;
+	std::unique_ptr<Object3d> sphere_ = nullptr;
+	//plane.obj
+	WorldTransform wtPlaneObj_;
+	std::unique_ptr<Object3d> planeObj_ = nullptr;
+	//plane.glTF
+	WorldTransform wtPlaneGltf_;
+	std::unique_ptr<Object3d> planeGltf_ = nullptr;
 
-	WorldTransform wtAxis_;
-	std::unique_ptr<Object3d> axis_ = nullptr;
 
 	WorldTransform wtTerrain_;
 	std::unique_ptr<Object3d> terrain_ = nullptr;
@@ -78,10 +78,6 @@ private://メンバ変数
 
 	WorldTransform wtSimpleSkin_;
 	std::unique_ptr<Object3d> simpleSkin_ = nullptr;
-
-	Particle::Emitter emitter_;
-	Particle::AccelerationField field_;
-	std::unique_ptr<Particle> particle_ = nullptr;
 
 	std::unique_ptr<LineDrawer> line_ = nullptr;
 

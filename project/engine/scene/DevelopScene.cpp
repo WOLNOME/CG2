@@ -7,6 +7,7 @@
 #include "SpriteCommon.h"
 #include "SceneManager.h"
 #include <numbers>
+#include <random>
 
 void DevelopScene::Initialize()
 {
@@ -23,45 +24,52 @@ void DevelopScene::Initialize()
 	camera->SetFarClip(100.0f);
 
 	//平行光源の生成と初期化
-	dirLight = std::make_unique<DirectionalLight>();
+	dirLight_ = std::make_unique<DirectionalLight>();
 	//点光源の生成と初期化
-	pointLight = std::make_unique<PointLight>();
-	pointLight2 = std::make_unique<PointLight>();
-	//点光源目印の生成と初期化
-	plMark = std::make_unique<LineDrawer>();
-	plMark->Initialize();
-	plMark2 = std::make_unique<LineDrawer>();
-	plMark2->Initialize();
+	pointLight1_ = std::make_unique<PointLight>();
+	pointLight2_ = std::make_unique<PointLight>();
 	//スポットライトの生成と初期化
-	spotLight = std::make_unique<SpotLight>();
-	//スポットライト目印の生成と初期化
-	slMark = std::make_unique<LineDrawer>();
-	slMark->Initialize();
-
+	spotLight1_ = std::make_unique<SpotLight>();
+	spotLight2_ = std::make_unique<SpotLight>();
+	
 	//各光源をシーンライトにセット
-	sceneLight_->SetLight(dirLight.get());
-	sceneLight_->SetLight(pointLight.get());
-	sceneLight_->SetLight(pointLight2.get());
-	sceneLight_->SetLight(spotLight.get());
+	sceneLight_->SetLight(dirLight_.get());
+	sceneLight_->SetLight(pointLight1_.get());
+	sceneLight_->SetLight(pointLight2_.get());
+	sceneLight_->SetLight(spotLight1_.get());
+	sceneLight_->SetLight(spotLight2_.get());
 
+	//ポイントライトの速度決定
+	std::random_device seedGenerator;
+	std::mt19937 randomEngine(seedGenerator());
+	std::uniform_real_distribution<float> distribution(-0.1f, 0.1f);
+	pl1Velocity_ = { distribution(randomEngine),distribution(randomEngine), distribution(randomEngine) };
+	pl2Velocity_ = { distribution(randomEngine),distribution(randomEngine), distribution(randomEngine) };
+
+	//スポットライトの位置と向きを固定
+	spotLight1_->position_ = { -1.8f,-0.99f,-1.32f };
+	spotLight1_->direction_ = { 1.0f,-0.349f,1.0f };
+	spotLight2_->position_ = { 1.84f,-0.78f,0.0f };
+	spotLight2_->direction_ = { -1.0f,1.0f,0.086f };
 
 	//ゲームシーン変数の初期化
-	sprite_ = std::make_unique<Sprite>();
-	textureHandleSprite_ = TextureManager::GetInstance()->LoadTexture("monsterBall.png");
-	sprite_->Initialize(textureHandleSprite_);
-	sprite_->SetAnchorPoint({ 0.5f,0.5f });
-	sprite_->SetFlipX(true);
+	wtSphere_.Initialize();
+	thSphere_ = TextureManager::GetInstance()->LoadTexture("monsterBall.png");
+	sphere_ = std::make_unique<Object3d>();
+	sphere_->InitializeShape(Shape::kSphere);
 
-	sprite2_ = std::make_unique<Sprite>();
-	textureHandleSprite2_ = TextureManager::GetInstance()->LoadTexture("monsterBall.png");
-	sprite2_->Initialize(textureHandleSprite2_);
-	sprite2Position = { 100.0f,100.0f };
-	sprite2_->SetPosition(sprite2Position);
-	sprite2_->SetSize({ 300.0f,300.0f });
+	wtPlaneObj_.Initialize();
+	wtPlaneObj_.translate_ = { -4.86f,1.66f,0.0f };
+	wtPlaneObj_.rotate_ = { 0.0f,3.14f,0.0f };
+	planeObj_ = std::make_unique<Object3d>();
+	planeObj_->InitializeModel("plane", OBJ);
 
-	wtAxis_.Initialize();
-	axis_ = std::make_unique<Object3d>();
-	axis_->InitializeModel("teapot");
+	wtPlaneGltf_.Initialize();
+	wtPlaneGltf_.translate_ = { -2.67f,1.66f,0.0f };
+	wtPlaneGltf_.rotate_ = { 0.0f,3.14f,0.0f };
+	planeGltf_ = std::make_unique<Object3d>();
+	planeGltf_->InitializeModel("plane", GLTF);
+
 
 	wtTerrain_.Initialize();
 	wtTerrain_.translate_ = { 0.0f,-1.2f,0.0f };
@@ -88,20 +96,6 @@ void DevelopScene::Initialize()
 	simpleSkin_ = std::make_unique<Object3d>();
 	simpleSkin_->InitializeModel("simpleSkin", GLTF);
 
-
-	emitter_.transform.scale = { 1.0f,1.0f,1.0f };
-	emitter_.transform.rotate = { 0.0f,0.0f,0.0f };
-	emitter_.transform.translate = { 0.0f,0.0f,0.0f };
-	emitter_.count = 3;
-	emitter_.frequency = 0.3f;
-	emitter_.frequencyTime = 0.0f;
-	field_.acceleration = { 0.0f,5.0f,0.0f };
-	field_.area.min = { -100.0f,-100.0f,-100.0f };
-	field_.area.max = { 100.0f,100.0f,100.0f };
-	field_.isActive = true;
-	particle_ = std::make_unique<Particle>();
-	particle_->Initialize("circle");
-
 	line_ = std::make_unique<LineDrawer>();
 	line_->Initialize();
 
@@ -123,25 +117,17 @@ void DevelopScene::Update()
 
 
 	//モデルの更新
-	wtAxis_.rotate_.y += 0.03f;
-	wtAxis_.UpdateMatrix();
+	wtSphere_.rotate_.y += 0.03f;
+	wtSphere_.UpdateMatrix();
+	wtPlaneObj_.UpdateMatrix();
+	wtPlaneGltf_.UpdateMatrix();
 	wtTerrain_.UpdateMatrix();
 	wtAnimatedCube_.UpdateMatrix();
 	wtSneakWalk_.UpdateMatrix();
 	wtWalk_.UpdateMatrix();
 	wtSimpleSkin_.UpdateMatrix();
 
-	//スプライトの更新
-	sprite_->Update();
-	sprite_->SetRotation(sprite_->GetRotation() + 0.03f);
-	sprite2_->Update();
-
 #ifdef _DEBUG
-	ImGui::SetNextWindowSize(ImVec2(500, 100));
-	ImGui::Begin("MosterBall");
-	ImGui::SliderFloat2("position", &sprite2Position.x, 0.0f, 1200.0f, "%5.1f");
-	sprite2_->SetPosition(sprite2Position);
-	ImGui::End();
 
 	ImGui::Begin("Audio");
 	if (ImGui::Button("PlayAudio")) {
@@ -172,9 +158,22 @@ void DevelopScene::Update()
 
 	ImGui::End();
 
-	ImGui::Begin("teapot");
-	ImGui::DragFloat3("translate", &wtAxis_.translate_.x, 0.01f);
-	ImGui::DragFloat3("scale", &wtAxis_.scale_.x, 0.01f);
+	ImGui::Begin("sphere");
+	ImGui::DragFloat3("translate", &wtSphere_.translate_.x, 0.01f);
+	ImGui::DragFloat3("rotate", &wtSphere_.rotate_.x, 0.01f);
+	ImGui::DragFloat3("scale", &wtSphere_.scale_.x, 0.01f);
+	ImGui::End();
+
+	ImGui::Begin("planeObj");
+	ImGui::DragFloat3("translate", &wtPlaneObj_.translate_.x, 0.01f);
+	ImGui::DragFloat3("rotate", &wtPlaneObj_.rotate_.x, 0.01f);
+	ImGui::DragFloat3("scale", &wtPlaneObj_.scale_.x, 0.01f);
+	ImGui::End();
+
+	ImGui::Begin("planeGltf");
+	ImGui::DragFloat3("translate", &wtPlaneGltf_.translate_.x, 0.01f);
+	ImGui::DragFloat3("rotate", &wtPlaneGltf_.rotate_.x, 0.01f);
+	ImGui::DragFloat3("scale", &wtPlaneGltf_.scale_.x, 0.01f);
 	ImGui::End();
 
 	ImGui::Begin("terrain");
@@ -183,72 +182,57 @@ void DevelopScene::Update()
 	ImGui::End();
 
 	ImGui::Begin("DirectionalLight");
-	ImGui::SliderFloat4("color", &dirLight->color_.x, 0.0f, 1.0f);
-	ImGui::DragFloat3("direction", &dirLight->direction_.x, 0.01f);
-	ImGui::SliderFloat("intencity", &dirLight->intencity_, 0.0f, 10.0f);
-	ImGui::Checkbox("isActive", &dirLight->isActive_);
+	ImGui::SliderFloat4("color", &dirLight_->color_.x, 0.0f, 1.0f);
+	ImGui::DragFloat3("direction", &dirLight_->direction_.x, 0.01f);
+	ImGui::SliderFloat("intencity", &dirLight_->intencity_, 0.0f, 10.0f);
+	ImGui::Checkbox("isActive", &dirLight_->isActive_);
 	ImGui::End();
-
-	ImGui::Begin("PoiintLight2");
-	ImGui::SliderFloat4("color", &pointLight2->color_.x, 0.0f, 1.0f);
-	ImGui::DragFloat3("position", &pointLight2->position_.x, 0.01f);
-	ImGui::SliderFloat("intencity", &pointLight2->intencity_, 0.0f, 10.0f);
-	ImGui::SliderFloat("radius", &pointLight2->radius_, 0.0f, 20.0f);
-	ImGui::SliderFloat("decay", &pointLight2->decay_, 0.0f, 10.0f);
-	ImGui::Checkbox("isActive", &pointLight2->isActive_);
-	ImGui::Checkbox("isDrawMark", &isDrawPLMark2);
-	if (isDrawPLMark2) {
-		//マークの生成
-		Sphere plMarkSphere;
-		plMarkSphere.center = pointLight2->position_;
-		plMarkSphere.radius = 0.1f;
-		MyMath::DrawSphere(plMarkSphere, { 1.0f,0.5f,0.0f,1.0f }, plMark2.get());
-
+	//点光源の移動処理
+	pointLight1_->position_ += pl1Velocity_;
+	pointLight2_->position_ += pl2Velocity_;
+	if (pointLight1_->position_.x > 4.0f || pointLight1_->position_.x < -4.0f) {
+		pl1Velocity_.x *= -1.0f;
 	}
-	ImGui::End();
-
-	ImGui::Begin("PoiintLight");
-	ImGui::SliderFloat4("color", &pointLight->color_.x, 0.0f, 1.0f);
-	ImGui::DragFloat3("position", &pointLight->position_.x, 0.01f);
-	ImGui::SliderFloat("intencity", &pointLight->intencity_, 0.0f, 10.0f);
-	ImGui::SliderFloat("radius", &pointLight->radius_, 0.0f, 20.0f);
-	ImGui::SliderFloat("decay", &pointLight->decay_, 0.0f, 10.0f);
-	ImGui::Checkbox("isActive", &pointLight->isActive_);
-	ImGui::Checkbox("isDrawMark", &isDrawPLMark);
-	if (isDrawPLMark) {
-		//マークの生成
-		Sphere plMarkSphere;
-		plMarkSphere.center = pointLight->position_;
-		plMarkSphere.radius = 0.1f;
-		MyMath::DrawSphere(plMarkSphere, { 1.0f,0.5f,0.0f,1.0f }, plMark.get());
-
+	if (pointLight1_->position_.y > 4.0f || pointLight1_->position_.y < 0.0f) {
+		pl1Velocity_.y *= -1.0f;
 	}
-	ImGui::End();
-
-	ImGui::Begin("SpotLight");
-	ImGui::SliderFloat4("color", &spotLight->color_.x, 0.0f, 1.0f);
-	ImGui::DragFloat3("position", &spotLight->position_.x, 0.01f);
-	ImGui::SliderFloat("intencity", &spotLight->intencity_, 0.0f, 10.0f);
-	ImGui::SliderFloat3("direction", &spotLight->direction_.x, -1.0f, 1.0f);
-	ImGui::SliderFloat("distance", &spotLight->distance_, 0.0f, 20.0f);
-	ImGui::SliderFloat("decay", &spotLight->decay_, 0.0f, 10.0f);
-	ImGui::SliderFloat("cosAngle", &spotLight->cosAngle_, -1.0f, spotLight->cosFalloffStart_ - 0.01f);
-	ImGui::SliderFloat("cosFalloffStart", &spotLight->cosFalloffStart_, 0.0f, 2.0f);
-	ImGui::Checkbox("isActive", &spotLight->isActive_);
-	ImGui::Checkbox("isDrawMark", &isDrawSLMark);
-	if (isDrawSLMark) {
-		//マークの生成
-		Sphere slMarkSphere;
-		slMarkSphere.center = spotLight->position_;
-		slMarkSphere.radius = 0.1f;
-		Sphere slMarkSphere2;
-		slMarkSphere2.center = spotLight->position_ + (spotLight->direction_.Normalized() * 0.15f);
-		slMarkSphere2.radius = 0.05f;
-
-		MyMath::DrawSphere(slMarkSphere, { 1.0f,0.25f,0.0f,1.0f }, slMark.get());
-		MyMath::DrawSphere(slMarkSphere2, { 0.0f,1.0f,0.0f,1.0f }, slMark.get());
+	if (pointLight1_->position_.z > 4.0f || pointLight1_->position_.z < -4.0f) {
+		pl1Velocity_.z *= -1.0f;
 	}
-	ImGui::End();
+	if (pointLight2_->position_.x > 4.0f || pointLight2_->position_.x < -4.0f) {
+		pl2Velocity_.x *= -1.0f;
+	}
+	if (pointLight2_->position_.y > 4.0f || pointLight2_->position_.y < 0.0f) {
+		pl2Velocity_.y *= -1.0f;
+	}
+	if (pointLight2_->position_.z > 4.0f || pointLight2_->position_.z < -4.0f) {
+		pl2Velocity_.z *= -1.0f;
+	}
+
+
+
+	//点光源とスポットライトの座標にマークをつける
+	Sphere sphere;
+	Sphere sphere2;
+	sphere.center = pointLight1_->position_;
+	sphere.radius = 0.1f;
+	MyMath::DrawSphere(sphere, { 1,1,0,1 }, line_.get(), 5);
+	sphere.center = pointLight2_->position_;
+	sphere.radius = 0.1f;
+	MyMath::DrawSphere(sphere, { 1,1,0,1 }, line_.get(), 5);
+	sphere.center = spotLight1_->position_;
+	sphere.radius = 0.1f;
+	sphere2.center = spotLight1_->position_ + (spotLight1_->direction_.Normalized() * 0.01f);
+	sphere2.radius = 0.05f;
+	MyMath::DrawSphere(sphere, { 0,1,0,1 }, line_.get(), 5);
+	MyMath::DrawSphere(sphere2, { 1,0.25f,0,1 }, line_.get(), 5);
+	sphere.center = spotLight2_->position_;
+	sphere.radius = 0.1f;
+	sphere2.center = spotLight2_->position_ + (spotLight2_->direction_.Normalized() * 0.01f);
+	sphere2.radius = 0.05f;
+	MyMath::DrawSphere(sphere, { 0,1,0,1 }, line_.get(), 5);
+	MyMath::DrawSphere(sphere2, { 1,0.25f,0,1 }, line_.get(), 5);
+
 
 #endif // _DEBUG
 }
@@ -262,7 +246,12 @@ void DevelopScene::Draw()
 	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
-	axis_->Draw(wtAxis_, *camera.get(), sceneLight_.get());
+	sphere_->Draw(wtSphere_, *camera.get(), sceneLight_.get(), thSphere_);
+
+	planeObj_->Draw(wtPlaneObj_, *camera.get(), sceneLight_.get());
+
+	planeGltf_->Draw(wtPlaneGltf_, *camera.get(), sceneLight_.get());
+
 
 	terrain_->Draw(wtTerrain_, *camera.get(), sceneLight_.get());
 
@@ -285,8 +274,6 @@ void DevelopScene::Draw()
 	///↓↓↓↓パーティクル描画開始↓↓↓↓
 	///------------------------------///
 
-	particle_->Draw(*camera.get(), emitter_, &field_);
-
 	///------------------------------///
 	///↑↑↑↑パーティクル描画終了↑↑↑↑
 	///------------------------------///
@@ -301,9 +288,6 @@ void DevelopScene::Draw()
 
 	//線描画
 	line_->Draw(*camera.get());
-	plMark->Draw(*camera.get());
-	plMark2->Draw(*camera.get());
-	slMark->Draw(*camera.get());
 
 	///------------------------------///
 	///↑↑↑↑線描画終了↑↑↑↑
@@ -315,11 +299,6 @@ void DevelopScene::Draw()
 	///------------------------------///
 	///↓↓↓↓スプライト描画開始↓↓↓↓
 	///------------------------------///
-
-	//スプライト描画
-	sprite_->Draw();
-	sprite2_->Draw();
-
 
 	///------------------------------///
 	///↑↑↑↑スプライト描画終了↑↑↑↑

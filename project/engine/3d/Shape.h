@@ -51,7 +51,7 @@ private:
 	ShapeResource shapeResource_;
 
 	//球体の分割数
-	const uint32_t kSubdivision = 15;
+	const uint32_t kSubdivision = 16;
 
 };
 
