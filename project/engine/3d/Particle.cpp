@@ -67,6 +67,11 @@ void Particle::Draw(const BaseCamera& camera, Emitter& emitter, AccelerationFiel
 		(*particleIterator).transform.translate = MyMath::Add((*particleIterator).transform.translate, MyMath::Multiply(kDeltaTime, (*particleIterator).velocity));
 		//α値設定
 		float alpha = 1.0f - ((*particleIterator).currentTime / (*particleIterator).lifeTime);
+		//サイズ縮小処理
+		float size = MyMath::Lerp(1.0f, 0.0f, MyMath::EaseInOutBounce((*particleIterator).currentTime / (*particleIterator).lifeTime));
+		(*particleIterator).transform.scale.x = size;
+		(*particleIterator).transform.scale.y = size;
+		(*particleIterator).transform.scale.z = size;
 
 		//レンダリングパイプライン
 		Matrix4x4 backToFrontMatrix = MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>);
@@ -160,7 +165,7 @@ Particle::ParticleData Particle::MakeNewParticle(const Vector3& translate)
 	std::uniform_real_distribution<float> distcolor(0.0f, 1.0f);
 	particle.color = { distcolor(randomEngine) ,distcolor(randomEngine) ,distcolor(randomEngine),1.0f };
 	//寿命
-	std::uniform_real_distribution<float> distTime(1.0f * 60.0f, 3.0f * 60.0f);
+	std::uniform_real_distribution<float> distTime(1.0f * 60.0f, 4.0f * 60.0f);
 	particle.lifeTime = distTime(randomEngine);
 	particle.currentTime = 0;
 

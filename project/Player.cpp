@@ -60,6 +60,13 @@ void Player::DrawLine(const BaseCamera& camera)
 	}
 }
 
+void Player::DrawParticle(const BaseCamera& camera)
+{
+	if (snowBullet_) {
+		snowBullet_->DrawParticle(camera);
+	}
+}
+
 void Player::Move()
 {
 	bool isMove = false;

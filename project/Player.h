@@ -19,6 +19,7 @@ public:
 	void Update();
 	void Draw(const BaseCamera& camera, const SceneLight* light = nullptr);
 	void DrawLine(const BaseCamera& camera);
+	void DrawParticle(const BaseCamera& camera);
 
 	const std::unique_ptr<SnowBullet>& GetBullet() { return snowBullet_; }
 private:

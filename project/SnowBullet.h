@@ -6,7 +6,9 @@
 #include "Object3d.h"
 #include "LineDrawer.h"
 #include "Audio.h"
+#include "Particle.h"
 #include <cstdint>
+#include <list>
 #include <memory>
 
 class SnowBullet : public Collider
@@ -22,6 +24,9 @@ public:
 	void SetDirection(const Vector3& direction) { direction_ = direction; }
 
 	bool GetIsDead() { return isDead_; }
+
+	void UpdateParticle();
+	void DrawParticle(const BaseCamera& camera);
 
 public://公開メンバ変数
 	bool isFire_;
@@ -45,6 +50,17 @@ private:
 	//デバッグ用の線描画
 	std::unique_ptr<LineDrawer> debugLine_ = nullptr;
 	Vector4 debugColor_ = { 0.0f,0.0f,1.0f,1.0f };
+
+	//パーティクル
+	static const int kNumParticle_ = 10;
+	static const int kParticleTime_ = 160;
+	int particleTimer_ = 0;
+	bool isParticleActive = false;
+	std::array<Vector3, kNumParticle_> particleVelocity_;
+	std::array<std::unique_ptr<Particle>, kNumParticle_> particles_;
+	std::array<Particle::Emitter, kNumParticle_ > emitters_;
+	std::array<Particle::AccelerationField, kNumParticle_ > fields_;
+
 
 };
 
