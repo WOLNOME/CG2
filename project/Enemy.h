@@ -7,18 +7,24 @@
 #include "SceneLight.h"
 #include "Object3d.h"
 #include "LineDrawer.h"
+#include "EnemyBullet.h"
 #include <cstdint>
 #include <memory>
 class Enemy : public Collider
 {
 public:
 	void Initialize();
-	void Update();
+	void Update(const Vector3& playerPosition);
 	void Draw(const BaseCamera& camera, const SceneLight* light);
 	void DrawLine(const BaseCamera& camera);
+	void DrawParticle(const BaseCamera& camera);
 	void DrawSprite();
 
+	const std::unique_ptr<EnemyBullet>& GetBullet() { return bullet_; }
 	bool GetIsDead() { return isDead_; }
+private:
+	void Attack(const Vector3& playerPosition);
+
 public://コライダー関連
 	// 衝突を検出したら呼び出されるコールバック関数
 	void OnCollision() override;
@@ -47,6 +53,16 @@ private:
 
 	//効果音
 	std::unique_ptr<Audio> audio_ = nullptr;
+
+	//攻撃に関する変数
+	std::unique_ptr<EnemyBullet> bullet_ = nullptr;
+	int timer_ = 0;
+	const int readyTime_ = 240;
+	const int attackTime_ = 360;
+	const int endTime_ = 540;
+	bool isReady_ = false;
+	bool isAttack_ = false;
+
 
 };
 

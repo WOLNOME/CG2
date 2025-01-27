@@ -175,4 +175,3 @@ void Player::Bullet()
 		snowBullet_->Update();
 	}
 }
-

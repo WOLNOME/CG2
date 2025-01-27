@@ -69,6 +69,7 @@
     <ClCompile Include="Collider.cpp" />
     <ClCompile Include="CollisionManager.cpp" />
     <ClCompile Include="engine\scene\ClearScene.cpp" />
+    <ClCompile Include="EnemyBullet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\3d\DirectionalLight.h" />
@@ -136,6 +137,7 @@
     <ClInclude Include="CollisionConfig.h" />
     <ClInclude Include="CollisionManager.h" />
     <ClInclude Include="engine\scene\ClearScene.h" />
+    <ClInclude Include="EnemyBullet.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\LineDrawer.hlsli" />

@@ -88,7 +88,7 @@ void GamePlayScene::Update()
 	//プレイヤーの更新
 	player_->Update();
 	//エネミーの更新
-	enemy_->Update();
+	enemy_->Update(player_->GetPosition());
 
 	//UIの更新
 	spriteUI_->Update();
@@ -137,6 +137,7 @@ void GamePlayScene::Draw()
 	///------------------------------///
 
 	player_->DrawParticle(*camera_);
+	enemy_->DrawParticle(*camera_);
 
 	///------------------------------///
 	///↑↑↑↑パーティクル描画終了↑↑↑↑
@@ -182,6 +183,7 @@ void GamePlayScene::CheckAllCollision()
 	std::list<Collider*> colliders;
 	//コライダーをリストに登録
 	colliders.push_back(player_->GetBullet().get());
+	colliders.push_back(enemy_->GetBullet().get());
 	colliders.push_back(enemy_.get());
 
 	//衝突マネージャーのリストにコライダーを登録する

@@ -11,28 +11,22 @@
 #include <list>
 #include <memory>
 
-class SnowBullet : public Collider
+class EnemyBullet : public Collider
 {
 public:
-	void Initialize();
+	EnemyBullet();
+
+	void Initialize(const Vector3& enemyPosition, const Vector3& playerPosition);
 	void Update();
 	void Draw(const BaseCamera& camera, const SceneLight* light);
 	void DrawLine(const BaseCamera& camera);
 	void DrawParticle(const BaseCamera& camera);
 
-	void SetParent(const WorldTransform* parent) { worldTransform_.parent_ = parent; }
-	void CancelParent() { worldTransform_.parent_ = nullptr; }
-	void SetDirection(const Vector3& direction) { direction_ = direction; }
-
 	bool GetIsDead() { return isDead_; }
 
 private:
-	//パーティクルのアップデート
 	void UpdateParticle();
 
-public://公開メンバ変数
-	bool isFire_;
-	bool isMove_;
 public://コライダー関連
 	// 衝突を検出したら呼び出されるコールバック関数
 	void OnCollision() override;
@@ -51,13 +45,13 @@ private:
 
 	//デバッグ用の線描画
 	std::unique_ptr<LineDrawer> debugLine_ = nullptr;
-	Vector4 debugColor_ = { 0.0f,0.0f,1.0f,1.0f };
+	Vector4 debugColor_;
 
 	//パーティクル
 	static const int kNumParticle_ = 10;
 	static const int kParticleTime_ = 160;
-	int particleTimer_ = 0;
-	bool isParticleActive = false;
+	int particleTimer_;
+	bool isParticleActive;
 	std::array<Vector3, kNumParticle_> particleVelocity_;
 	std::array<std::unique_ptr<Particle>, kNumParticle_> particles_;
 	std::array<Particle::Emitter, kNumParticle_ > emitters_;

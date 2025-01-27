@@ -22,6 +22,7 @@ public:
 	void DrawParticle(const BaseCamera& camera);
 
 	const std::unique_ptr<SnowBullet>& GetBullet() { return snowBullet_; }
+	const Vector3& GetPosition() { return worldTransform_.worldTranslate_; }
 private:
 	//移動
 	void Move();

@@ -162,7 +162,7 @@ Particle::ParticleData Particle::MakeNewParticle(const Vector3& translate)
 	//速度
 	particle.velocity = { distribution(randomEngine) ,distribution(randomEngine) ,distribution(randomEngine) };
 	//色
-	std::uniform_real_distribution<float> distcolor(0.0f, 1.0f);
+	std::uniform_real_distribution<float> distcolor(1.0f, 1.0f);
 	particle.color = { distcolor(randomEngine) ,distcolor(randomEngine) ,distcolor(randomEngine),1.0f };
 	//寿命
 	std::uniform_real_distribution<float> distTime(1.0f * 60.0f, 4.0f * 60.0f);
