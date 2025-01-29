@@ -84,7 +84,6 @@ void GamePlayScene::Update()
 	//移動制限枠の更新
 	wtFrameObject_.UpdateMatrix();
 
-
 	//プレイヤーの更新
 	player_->Update();
 	//エネミーの更新
