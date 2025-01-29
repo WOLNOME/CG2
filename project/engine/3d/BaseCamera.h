@@ -26,8 +26,10 @@ public:
 
 	// 初期化
 	virtual void Initialize();
+	// 更新
+	virtual void Update() = 0;
 	// 更新（行列の計算）
-	virtual void UpdateMatrix();
+	void UpdateMatrix();
 
 	// ゲッター
 	const Matrix4x4& GetWorldMatrix() const { return worldMatrix; }
@@ -78,6 +80,6 @@ protected:
 	float nearClip;           // ニアクリップ距離
 	float farClip;            // ファークリップ距離
 
-	
+
 
 };

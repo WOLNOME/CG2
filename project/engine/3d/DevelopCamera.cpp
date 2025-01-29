@@ -54,7 +54,7 @@ void DevelopCamera::Update()
 
 
 	//行列の更新
-	BaseCamera::UpdateMatrix();
+	UpdateMatrix();
 
 #ifdef _DEBUG
 
