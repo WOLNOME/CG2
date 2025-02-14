@@ -33,7 +33,6 @@
     <ClCompile Include="engine\base\Logger.cpp" />
     <ClCompile Include="engine\2d\ImGuiManager.cpp" />
     <ClCompile Include="Framework.cpp" />
-    <ClCompile Include="engine\scene\GamePlayScene.cpp" />
     <ClCompile Include="engine\3d\LineDrawer.cpp" />
     <ClCompile Include="engine\3d\LineDrawerCommon.cpp" />
     <ClCompile Include="main.cpp" />
@@ -56,20 +55,13 @@
     <ClCompile Include="engine\3d\Particle.cpp" />
     <ClCompile Include="engine\3d\ParticleCommon.cpp" />
     <ClCompile Include="engine\3d\WorldTransform.cpp" />
-    <ClCompile Include="Player.cpp" />
     <ClCompile Include="engine\3d\PointLight.cpp" />
     <ClCompile Include="engine\3d\SceneLight.cpp" />
     <ClCompile Include="engine\3d\SpotLight.cpp" />
-    <ClCompile Include="Skydome.cpp" />
-    <ClCompile Include="Ground.cpp" />
-    <ClCompile Include="Shape.cpp" />
-    <ClCompile Include="SnowBullet.cpp" />
-    <ClCompile Include="GamePlayCamera.cpp" />
-    <ClCompile Include="Enemy.cpp" />
-    <ClCompile Include="Collider.cpp" />
-    <ClCompile Include="CollisionManager.cpp" />
+    <ClCompile Include="engine\3d\Shape.cpp" />
+    <ClCompile Include="engine\collision\Collider.cpp" />
+    <ClCompile Include="engine\collision\CollisionManager.cpp" />
     <ClCompile Include="engine\scene\ClearScene.cpp" />
-    <ClCompile Include="EnemyBullet.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\3d\DirectionalLight.h" />
@@ -109,7 +101,6 @@
     <ClInclude Include="engine\2d\ImGuiManager.h" />
     <ClInclude Include="engine\base\SrvManager.h" />
     <ClInclude Include="Framework.h" />
-    <ClInclude Include="engine\scene\GamePlayScene.h" />
     <ClInclude Include="engine\math\MyMath.h" />
     <ClInclude Include="engine\3d\LineDrawer.h" />
     <ClInclude Include="engine\3d\LineDrawerCommon.h" />
@@ -122,22 +113,15 @@
     <ClInclude Include="engine\3d\Particle.h" />
     <ClInclude Include="engine\3d\ParticleCommon.h" />
     <ClInclude Include="engine\3d\WorldTransform.h" />
-    <ClInclude Include="Player.h" />
     <ClInclude Include="engine\3d\PointLight.h" />
     <ClInclude Include="engine\math\Quaternion.h" />
     <ClInclude Include="engine\3d\SceneLight.h" />
     <ClInclude Include="engine\3d\SpotLight.h" />
-    <ClInclude Include="Skydome.h" />
-    <ClInclude Include="Ground.h" />
-    <ClInclude Include="Shape.h" />
-    <ClInclude Include="SnowBullet.h" />
-    <ClInclude Include="GamePlayCamera.h" />
-    <ClInclude Include="Enemy.h" />
-    <ClInclude Include="Collider.h" />
-    <ClInclude Include="CollisionConfig.h" />
-    <ClInclude Include="CollisionManager.h" />
+    <ClInclude Include="engine\3d\Shape.h" />
+    <ClInclude Include="engine\collision\Collider.h" />
+    <ClInclude Include="engine\collision\CollisionConfig.h" />
+    <ClInclude Include="engine\collision\CollisionManager.h" />
     <ClInclude Include="engine\scene\ClearScene.h" />
-    <ClInclude Include="EnemyBullet.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\LineDrawer.hlsli" />

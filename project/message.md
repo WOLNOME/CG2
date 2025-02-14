@@ -7,17 +7,6 @@
 アイテム
 パーティクル
 
-
-＜エンジンに移植するもの＞
-objectCommon.cppのグラフィックスパイプラインの処理全て
-→リリースビルドが通るようになっている
-collision関連
-→衝突判定の移植
-Shape関連
-→モデルを用いずに簡単な3D図形を描画できる
-BaseSceneに汎用的なincludeを記述
-→簡略化のため
-
 <今回の制作の煩わしかった点>
 ・パーティクルを付けづらい
 ・
@@ -34,6 +23,5 @@ BaseSceneに汎用的なincludeを記述
 スケールを徐々に小さくする場合のイージング方法
 スケールを徐々に大きくする場合の目標値とイージング方法
 
-
-
-<<リファレンス>>
+<スケジュール>
+https://brabioproject.jp/group/ahJzfmJyYWJpb3Byb2plY3RocmRyDwsSBUdyb3VwGIPG0MJEDA/
