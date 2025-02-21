@@ -99,7 +99,7 @@ void Model::UpdateSkinCluster(SkinCluster& skinCluster, const Skeleton& skeleton
 	}
 }
 
-void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum)
+void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum, int32_t textureHandle)
 {
 	for (size_t index = 0; index < modelResource_.modelData.size(); index++) {
 		//アニメーションがある場合
@@ -127,6 +127,10 @@ void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParame
 		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(materialRootParameterIndex, modelResource_.materialResource.at(index)->GetGPUVirtualAddress());
 		//モデルにテクスチャがない場合、スキップ
 		if (modelResource_.modelData.at(index).material.textureFilePath.size() != 0) {
+			//テクスチャハンドルがEOFでない場合、テクスチャハンドルを設定
+			if (textureHandle != EOF) {
+				modelResource_.modelData.at(index).material.textureHandle = textureHandle;
+			}
 			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
 			MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(textureRootParameterIndex, TextureManager::GetInstance()->GetSrvHandleGPU(modelResource_.modelData.at(index).material.textureHandle));
 		}

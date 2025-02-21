@@ -33,6 +33,7 @@ void ParticleEmitter::Update()
 	if (ImGui::Button("Emit")) {
 		Emit();
 	}
+	ImGui::DragFloat3("Translate", &emitter_.transform.translate.x, 0.01f);
 	ImGui::End();
 #endif // _DEBUG
 

@@ -99,11 +99,10 @@ void ParticleManager::Draw(const BaseCamera* camera) {
 		//座標変換行列Tableの場所を設定
 		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, srvManager_->GetGPUDescriptorHandle((*particleGroupIterator).second.instancingSrvIndex));
 		//モデルの描画
-		(*particleGroupIterator).second.model->Draw(0,3,(*particleGroupIterator).second.particles.size());
+		(*particleGroupIterator).second.model->Draw(0, 2, (*particleGroupIterator).second.particles.size(),textureHandle_);
 
 		++particleGroupIterator;
 	}
-
 }
 
 void ParticleManager::Finalize() {
@@ -163,6 +162,8 @@ void ParticleManager::SetTexture(const std::string& name, const std::string& tex
 		//nameキーが読み込んでいないのでreturn;
 		return;
 	}
+	//テクスチャの生成
+	textureHandle_ = TextureManager::GetInstance()->LoadTexture(textureFilePath);
 	//テクスチャのセット
 	particleGroups_.find(name)->second.materialData.textureFilePath = textureFilePath;
 
@@ -182,7 +183,7 @@ void ParticleManager::GenerateGraphicsPipeline() {
 	descriptorRangeForInstancing[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	//RootParameter作成。複数設定できるので配列。今回は結果1つだけなので長さ1の配列
-	D3D12_ROOT_PARAMETER rootParameters[4] = {};
+	D3D12_ROOT_PARAMETER rootParameters[3] = {};
 	//マテリアルの設定
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
@@ -197,10 +198,6 @@ void ParticleManager::GenerateGraphicsPipeline() {
 	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
 	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRangeForInstancing;//Tableの中身の配列を指定
 	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeForInstancing);
-	//平行光源用の設定
-	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
-	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
-	rootParameters[3].Descriptor.ShaderRegister = 1;//レジスタ番号1とバインド
 
 	//Samplerの設定
 	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};

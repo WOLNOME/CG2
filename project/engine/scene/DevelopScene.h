@@ -13,6 +13,7 @@
 #include "DirectionalLight.h"
 #include "PointLight.h"
 #include "SpotLight.h"
+#include "ParticleEmitter.h"
 #include <memory>
 #include <cstdint>
 
@@ -88,5 +89,9 @@ private://メンバ変数
 	bool isDrawSphere_ = false;
 	std::unique_ptr<Audio> audio_ = nullptr;
 	float volume = 0.5f;
+
+	//パーティクルエミッター
+	std::unique_ptr<ParticleEmitter> emitter_ = nullptr;
+	std::unique_ptr<ParticleEmitter> emitter2_ = nullptr;
 };
 

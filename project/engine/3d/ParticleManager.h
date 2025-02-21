@@ -103,5 +103,7 @@ private://メンバ変数
 	Struct::AccelerationField accelerationField;
 	//δtの定義
 	const float kDeltaTime = 1.0f / 60.0f;
+	//テクスチャハンドル
+	int32_t textureHandle_=EOF;
 };
 

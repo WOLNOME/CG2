@@ -6,6 +6,7 @@
 #include "LineDrawerCommon.h"
 #include "SpriteCommon.h"
 #include "SceneManager.h"
+#include "ParticleManager.h"
 #include <numbers>
 
 void DevelopScene::Initialize() {
@@ -48,6 +49,14 @@ void DevelopScene::Initialize() {
 	textureHandleSkybox_ = TextureManager::GetInstance()->LoadTexture("rostock_laage_airport_4k.dds");
 	skybox_ = std::make_unique<Skybox>();
 	skybox_->Initialize();
+	//パーティクルエミッターの初期化
+	emitter_ = std::make_unique<ParticleEmitter>();
+	ParticleManager::GetInstance()->CreateParticleGroup("particle", "plane");
+	emitter_->Initialize("particle");
+	emitter2_ = std::make_unique<ParticleEmitter>();
+	ParticleManager::GetInstance()->CreateParticleGroup("particle2", "circle");
+	emitter2_->Initialize("particle2");
+
 
 	//ゲームシーン変数の初期化
 	sprite_ = std::make_unique<Sprite>();
@@ -109,6 +118,11 @@ void DevelopScene::Update() {
 	//シーンライトの更新処理
 	sceneLight_->Update(camera.get());
 
+	//パーティクルマネージャーの更新
+	ParticleManager::GetInstance()->Update(camera.get());
+	//パーティクルエミッターの更新
+	emitter_->Update();
+	emitter2_->Update();
 
 	//モデルの更新
 	wtAxis_.rotate_.y += 0.03f;
@@ -126,51 +140,7 @@ void DevelopScene::Update() {
 	sprite2_->Update();
 
 #ifdef _DEBUG
-	ImGui::SetNextWindowSize(ImVec2(500, 100));
-	ImGui::Begin("MosterBall");
-	ImGui::SliderFloat2("position", &sprite2Position.x, 0.0f, 1200.0f, "%5.1f");
-	sprite2_->SetPosition(sprite2Position);
-	ImGui::End();
-
-	ImGui::Begin("Audio");
-	if (ImGui::Button("PlayAudio")) {
-		audio_->Play();
-	}
-	if (ImGui::Button("StopAudio")) {
-		audio_->Stop();
-	}
-	if (ImGui::Button("PauseAudio")) {
-		audio_->Pause();
-	}
-	if (ImGui::Button("ResumeAudio")) {
-		audio_->Resume();
-	}
-	ImGui::SliderFloat("SetVolume", &volume, 0.0f, 1.0f);
-	audio_->SetVolume(volume);
-
-	ImGui::End();
-
-	ImGui::Begin("line");
-	ImGui::Checkbox("sphere", &isDrawSphere_);
-	if (isDrawSphere_) {
-		Sphere sphere;
-		sphere.center = { 0.0f,-3.0f,0.0f };
-		sphere.radius = 2.0f;
-		MyMath::DrawSphere(sphere, { 1.0f,0.0f,0.0f,1.0f }, line_.get());
-	}
-
-	ImGui::End();
-
-	ImGui::Begin("teapot");
-	ImGui::DragFloat3("translate", &wtAxis_.translate_.x, 0.01f);
-	ImGui::DragFloat3("scale", &wtAxis_.scale_.x, 0.01f);
-	ImGui::End();
-
-	ImGui::Begin("terrain");
-	ImGui::DragFloat3("translate", &wtTerrain_.translate_.x, 0.01f);
-	ImGui::DragFloat3("scale", &wtTerrain_.scale_.x, 0.01f);
-	ImGui::End();
-
+	
 	ImGui::Begin("DirectionalLight");
 	ImGui::SliderFloat4("color", &dirLight->color_.x, 0.0f, 1.0f);
 	ImGui::DragFloat3("direction", &dirLight->direction_.x, 0.01f);
@@ -250,7 +220,7 @@ void DevelopScene::Draw() {
 	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
-	axis_->Draw(wtAxis_, *camera.get(), sceneLight_.get());
+	/*axis_->Draw(wtAxis_, *camera.get(), sceneLight_.get());
 
 	terrain_->Draw(wtTerrain_, *camera.get(), sceneLight_.get());
 
@@ -260,11 +230,23 @@ void DevelopScene::Draw() {
 
 	walk_->Draw(wtWalk_, *camera.get(), sceneLight_.get());
 
-	simpleSkin_->Draw(wtSimpleSkin_, *camera.get(), sceneLight_.get());
+	simpleSkin_->Draw(wtSimpleSkin_, *camera.get(), sceneLight_.get());*/
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
 	///------------------------------///
+	
+	///------------------------------///
+	///↓↓↓↓パーティクル描画開始↓↓↓↓
+	///------------------------------///
+
+	//パーティクル描画
+	ParticleManager::GetInstance()->Draw(camera.get());
+
+	///------------------------------///
+	///↑↑↑↑パーティクル描画終了↑↑↑↑
+	///------------------------------///
+
 
 	//スカイボックスの共通描画設定
 	SkyboxCommon::GetInstance()->SettingCommonDrawing();
@@ -274,7 +256,7 @@ void DevelopScene::Draw() {
 	///------------------------------///
 
 	//スカイボックス描画
-	skybox_->Draw(wtSkybox_, *camera.get(), textureHandleSkybox_);
+	//skybox_->Draw(wtSkybox_, *camera.get(), textureHandleSkybox_);
 
 	///------------------------------///
 	///↑↑↑↑スカイボックス描画終了↑↑↑↑
@@ -287,11 +269,11 @@ void DevelopScene::Draw() {
 	///↓↓↓↓線描画開始↓↓↓↓
 	///------------------------------///
 
-	//線描画
-	line_->Draw(*camera.get());
-	plMark->Draw(*camera.get());
-	plMark2->Draw(*camera.get());
-	slMark->Draw(*camera.get());
+	////線描画
+	//line_->Draw(*camera.get());
+	//plMark->Draw(*camera.get());
+	//plMark2->Draw(*camera.get());
+	//slMark->Draw(*camera.get());
 
 	///------------------------------///
 	///↑↑↑↑線描画終了↑↑↑↑
