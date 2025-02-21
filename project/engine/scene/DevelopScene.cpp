@@ -3,7 +3,6 @@
 #include "ImGuiManager.h"
 #include "Object3dCommon.h"
 #include "SkyboxCommon.h"
-#include "ParticleCommon.h"
 #include "LineDrawerCommon.h"
 #include "SpriteCommon.h"
 #include "SceneManager.h"
@@ -92,20 +91,6 @@ void DevelopScene::Initialize() {
 	wtSimpleSkin_.translate_ = { 5.0f,3.0f,0.0f };
 	simpleSkin_ = std::make_unique<Object3d>();
 	simpleSkin_->InitializeModel("simpleSkin", GLTF);
-
-
-	emitter_.transform.scale = { 1.0f,1.0f,1.0f };
-	emitter_.transform.rotate = { 0.0f,0.0f,0.0f };
-	emitter_.transform.translate = { 0.0f,0.0f,0.0f };
-	emitter_.count = 3;
-	emitter_.frequency = 0.3f;
-	emitter_.frequencyTime = 0.0f;
-	field_.acceleration = { 0.0f,5.0f,0.0f };
-	field_.area.min = { -100.0f,-100.0f,-100.0f };
-	field_.area.max = { 100.0f,100.0f,100.0f };
-	field_.isActive = true;
-	particle_ = std::make_unique<Particle>();
-	particle_->Initialize("circle");
 
 	line_ = std::make_unique<LineDrawer>();
 	line_->Initialize();
@@ -294,20 +279,6 @@ void DevelopScene::Draw() {
 	///------------------------------///
 	///↑↑↑↑スカイボックス描画終了↑↑↑↑
 	///------------------------------///
-
-	//パーティクルの共通描画設定
-	ParticleCommon::GetInstance()->SettingCommonDrawing();
-
-	///------------------------------///
-	///↓↓↓↓パーティクル描画開始↓↓↓↓
-	///------------------------------///
-
-	particle_->Draw(*camera.get(), emitter_, &field_);
-
-	///------------------------------///
-	///↑↑↑↑パーティクル描画終了↑↑↑↑
-	///------------------------------///
-
 
 	//線描画共通描画設定
 	LineDrawerCommon::GetInstance()->SettingCommonDrawing();

@@ -97,7 +97,7 @@ private://アニメーション関連構造体
 		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> paletteSrvHandle;
 	};
 	
-private://メッシュ関連構造体
+public://メッシュ関連構造体
 	//頂点データ
 	struct VertexData {
 		Vector4 position;

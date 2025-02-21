@@ -6,12 +6,12 @@
 #include "ImGuiManager.h"
 #include "TextureManager.h"
 #include "ModelManager.h"
+#include "ParticleManager.h"
 #include "Input.h"
 #include "AudioCommon.h"
 #include "SpriteCommon.h"
 #include "Object3dCommon.h"
 #include "SkyboxCommon.h"
-#include "ParticleCommon.h"
 #include "LineDrawerCommon.h"
 #include "SceneManager.h"
 
@@ -41,6 +41,9 @@ void Framework::Initialize()
 	//モデルマネージャー
 	ModelManager::GetInstance()->Initialize();
 
+	//パーティクルマネージャー
+	ParticleManager::GetInstance()->Initialize();
+
 	//インプット
 	Input::GetInstance()->Initialize();
 
@@ -56,9 +59,6 @@ void Framework::Initialize()
 	//スカイボックス共通部
 	SkyboxCommon::GetInstance()->Initialize();
 
-	//パーティクル共通部
-	ParticleCommon::GetInstance()->Initialize();
-
 	//線描画共通部
 	LineDrawerCommon::GetInstance()->Initialize();
 
@@ -71,12 +71,12 @@ void Framework::Finalize()
 {
 	SceneManager::GetInstance()->Finalize();
 	LineDrawerCommon::GetInstance()->Finalize();
-	ParticleCommon::GetInstance()->Finalize();
 	SkyboxCommon::GetInstance()->Finalize();
 	Object3dCommon::GetInstance()->Finalize();
 	SpriteCommon::GetInstance()->Finalize();
 	AudioCommon::GetInstance()->Finalize();
 	Input::GetInstance()->Finalize();
+	ParticleManager::GetInstance()->Finalize();
 	ModelManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
 	ImGuiManager::GetInstance()->Finalize();
