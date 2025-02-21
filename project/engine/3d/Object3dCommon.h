@@ -3,8 +3,6 @@
 #include <d3d12.h>
 #include <array>
 
-class Camera;
-
 //モデル共通部
 class Object3dCommon
 {
@@ -37,8 +35,6 @@ private://非公開メンバ関数
 public://ゲッター
 public://セッター
 
-private://インスタンス
-	Camera* defaultCamera = nullptr;
 private://メンバ変数
 	static const int kNumGraphicsPipeline = 2;
 
@@ -46,7 +42,5 @@ private://メンバ変数
 	std::array<Microsoft::WRL::ComPtr<ID3D12RootSignature>, kNumGraphicsPipeline> rootSignature;
 	//グラフィックスパイプライン
 	std::array<Microsoft::WRL::ComPtr<ID3D12PipelineState>, kNumGraphicsPipeline> graphicsPipelineState;
-
-
 };
 

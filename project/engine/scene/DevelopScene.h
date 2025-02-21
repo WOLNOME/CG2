@@ -2,6 +2,7 @@
 #include "BaseScene.h"
 #include "Sprite.h"
 #include "Object3d.h"
+#include "Skybox.h"
 #include "Particle.h"
 #include "LineDrawer.h"
 #include "Audio.h"
@@ -54,10 +55,14 @@ private://メンバ変数
 	std::unique_ptr<SpotLight> spotLight;
 	std::unique_ptr<LineDrawer> slMark;
 	bool isDrawSLMark = false;
+	//スカイボックス
+	WorldTransform wtSkybox_;
+	uint32_t textureHandleSkybox_ = UINT32_MAX;
+	std::unique_ptr<Skybox> skybox_ = nullptr;
 
-	uint32_t textureHandleSprite_ = 0u;
+	uint32_t textureHandleSprite_ = UINT32_MAX;
 	std::unique_ptr<Sprite> sprite_ = nullptr;
-	uint32_t textureHandleSprite2_ = 0u;
+	uint32_t textureHandleSprite2_ = UINT32_MAX;
 	std::unique_ptr<Sprite> sprite2_ = nullptr;
 	Vector2 sprite2Position;
 

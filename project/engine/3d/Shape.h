@@ -1,6 +1,7 @@
 #pragma once
 #include <wrl.h>
 #include <d3d12.h>
+#include <cstdint>
 #include "MyMath.h"
 
 class Shape
@@ -49,7 +50,6 @@ private:
 	ShapeKind shapeKind_;
 	//形状用リソース
 	ShapeResource shapeResource_;
-
 	//球体の分割数
 	const uint32_t kSubdivision = 15;
 

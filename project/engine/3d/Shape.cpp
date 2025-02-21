@@ -134,10 +134,10 @@ Shape::ShapeResource Shape::MakeShapeResource()
 	case ShapeKind::kCube:
 		break;
 	default:
-		assert(0);
+		//未定義の形状が入力された場合
+		assert(0 && "未定義の形状が入力されました");
 		break;
 	}
-
 
 	return resource;
 }

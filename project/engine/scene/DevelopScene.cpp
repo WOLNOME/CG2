@@ -2,14 +2,14 @@
 #include "TextureManager.h"
 #include "ImGuiManager.h"
 #include "Object3dCommon.h"
+#include "SkyboxCommon.h"
 #include "ParticleCommon.h"
 #include "LineDrawerCommon.h"
 #include "SpriteCommon.h"
 #include "SceneManager.h"
 #include <numbers>
 
-void DevelopScene::Initialize()
-{
+void DevelopScene::Initialize() {
 	//シーン共通の初期化
 	BaseScene::Initialize();
 
@@ -43,7 +43,12 @@ void DevelopScene::Initialize()
 	sceneLight_->SetLight(pointLight.get());
 	sceneLight_->SetLight(pointLight2.get());
 	sceneLight_->SetLight(spotLight.get());
-
+	//スカイボックスの初期化
+	wtSkybox_.Initialize();
+	wtSkybox_.scale_ = { 100.0f,100.0f,100.0f };
+	textureHandleSkybox_ = TextureManager::GetInstance()->LoadTexture("rostock_laage_airport_4k.dds");
+	skybox_ = std::make_unique<Skybox>();
+	skybox_->Initialize();
 
 	//ゲームシーン変数の初期化
 	sprite_ = std::make_unique<Sprite>();
@@ -109,12 +114,10 @@ void DevelopScene::Initialize()
 	audio_->Initialize("Alarm01.wav");
 }
 
-void DevelopScene::Finalize()
-{
+void DevelopScene::Finalize() {
 }
 
-void DevelopScene::Update()
-{
+void DevelopScene::Update() {
 	//カメラの更新
 	camera->Update();
 
@@ -125,6 +128,7 @@ void DevelopScene::Update()
 	//モデルの更新
 	wtAxis_.rotate_.y += 0.03f;
 	wtAxis_.UpdateMatrix();
+	wtSkybox_.UpdateMatrix();
 	wtTerrain_.UpdateMatrix();
 	wtAnimatedCube_.UpdateMatrix();
 	wtSneakWalk_.UpdateMatrix();
@@ -253,8 +257,7 @@ void DevelopScene::Update()
 #endif // _DEBUG
 }
 
-void DevelopScene::Draw()
-{
+void DevelopScene::Draw() {
 	//3Dモデルの共通描画設定
 	Object3dCommon::GetInstance()->SettingCommonDrawing();
 
@@ -276,6 +279,20 @@ void DevelopScene::Draw()
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
+	///------------------------------///
+
+	//スカイボックスの共通描画設定
+	SkyboxCommon::GetInstance()->SettingCommonDrawing();
+
+	///------------------------------///
+	///↓↓↓↓スカイボックス描画開始↓↓↓↓
+	///------------------------------///
+
+	//スカイボックス描画
+	skybox_->Draw(wtSkybox_, *camera.get(), textureHandleSkybox_);
+
+	///------------------------------///
+	///↑↑↑↑スカイボックス描画終了↑↑↑↑
 	///------------------------------///
 
 	//パーティクルの共通描画設定
@@ -317,8 +334,8 @@ void DevelopScene::Draw()
 	///------------------------------///
 
 	//スプライト描画
-	sprite_->Draw();
-	sprite2_->Draw();
+	//sprite_->Draw();
+	//sprite2_->Draw();
 
 
 	///------------------------------///
