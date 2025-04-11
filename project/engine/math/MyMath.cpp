@@ -5,8 +5,7 @@
 #include <numbers>
 #include "LineDrawer.h"
 
-Vector2 MyMath::Add(const Vector2& v1, const Vector2& v2)
-{
+Vector2 MyMath::Add(const Vector2& v1, const Vector2& v2) {
 	Vector2 c;
 	c = {
 		v1.x + v2.x,
@@ -15,8 +14,7 @@ Vector2 MyMath::Add(const Vector2& v1, const Vector2& v2)
 	return c;
 }
 
-Vector2 MyMath::Subtract(const Vector2& v1, const Vector2& v2)
-{
+Vector2 MyMath::Subtract(const Vector2& v1, const Vector2& v2) {
 	Vector2 c;
 	c = {
 		v1.x - v2.x,
@@ -25,13 +23,11 @@ Vector2 MyMath::Subtract(const Vector2& v1, const Vector2& v2)
 	return c;
 }
 
-Vector2 MyMath::Multiply(float s, const Vector2& v)
-{
+Vector2 MyMath::Multiply(float s, const Vector2& v) {
 	return Vector2(s * v.x, s * v.y);
 }
 
-float MyMath::Cross(const Vector2& a, const Vector2& b)
-{
+float MyMath::Cross(const Vector2& a, const Vector2& b) {
 	float c;
 
 	c = (a.x * b.y) - (a.y * b.x);
@@ -39,8 +35,14 @@ float MyMath::Cross(const Vector2& a, const Vector2& b)
 	return c;
 }
 
-Vector3 MyMath::Add(const Vector3& v1, const Vector3& v2)
-{
+Vector2 MyMath::Lerp(const Vector2& v1, const Vector2& v2, float t) {
+	Vector2 result;
+	result.x = Lerp(v1.x, v2.x, t);
+	result.y = Lerp(v1.y, v2.y, t);
+	return result;
+}
+
+Vector3 MyMath::Add(const Vector3& v1, const Vector3& v2) {
 	Vector3 c;
 	c = {
 		v1.x + v2.x,
@@ -50,8 +52,7 @@ Vector3 MyMath::Add(const Vector3& v1, const Vector3& v2)
 	return c;
 }
 
-Vector3 MyMath::Subtract(const Vector3& v1, const Vector3& v2)
-{
+Vector3 MyMath::Subtract(const Vector3& v1, const Vector3& v2) {
 	Vector3 c;
 	c = {
 		v1.x - v2.x,
@@ -61,13 +62,11 @@ Vector3 MyMath::Subtract(const Vector3& v1, const Vector3& v2)
 	return c;
 }
 
-Vector3 MyMath::Multiply(float s, const Vector3& v)
-{
+Vector3 MyMath::Multiply(float s, const Vector3& v) {
 	return Vector3(s * v.x, s * v.y, s * v.z);
 }
 
-Vector3 MyMath::Cross(const Vector3& a, const Vector3& b)
-{
+Vector3 MyMath::Cross(const Vector3& a, const Vector3& b) {
 	Vector3 c;
 
 	c.x = (a.y * b.z) - (a.z * b.y);
@@ -77,8 +76,7 @@ Vector3 MyMath::Cross(const Vector3& a, const Vector3& b)
 	return c;
 }
 
-Vector3 MyMath::Normalize(const Vector3& v)
-{
+Vector3 MyMath::Normalize(const Vector3& v) {
 	Vector3 c;
 	//長さを求める
 	float length = Length(v);
@@ -94,15 +92,15 @@ Vector3 MyMath::Normalize(const Vector3& v)
 	return c;
 }
 
-Vector3 MyMath::Lerp(const Vector3& v1, const Vector3& v2, float t)
-{
+Vector3 MyMath::Lerp(const Vector3& v1, const Vector3& v2, float t) {
 	Vector3 result;
-	result = Add(v1, Multiply(t, Subtract(v2, v1)));
+	result.x = Lerp(v1.x, v2.x, t);
+	result.y = Lerp(v1.y, v2.y, t);
+	result.z = Lerp(v1.z, v2.z, t);
 	return result;
 }
 
-Vector3 MyMath::Slerp(const Vector3& vector1, const Vector3& vector2, float t)
-{
+Vector3 MyMath::Slerp(const Vector3& vector1, const Vector3& vector2, float t) {
 	// 正規化ベクトルを求める
 	Vector3 start = Normalize(vector1);
 	Vector3 end = Normalize(vector2);
@@ -125,12 +123,10 @@ Vector3 MyMath::Slerp(const Vector3& vector1, const Vector3& vector2, float t)
 
 	Vector3 normalizeVector;
 	// ゼロ除算を防ぐ
-	if (sinTheta < 1.0e-5)
-	{
+	if (sinTheta < 1.0e-5) {
 		normalizeVector = start;
 	}
-	else
-	{
+	else {
 		// 球面線形補間したベクトル(単位ベクトル)
 		normalizeVector = Add(Multiply(sinThetaFrom / sinTheta, start), Multiply(sinThetaTo / sinTheta, end));
 	}
@@ -145,8 +141,7 @@ Vector3 MyMath::Slerp(const Vector3& vector1, const Vector3& vector2, float t)
 	return Multiply(length, normalizeVector);
 }
 
-Vector3 MyMath::Transform(const Vector3& vector, const Matrix4x4& matrix)
-{
+Vector3 MyMath::Transform(const Vector3& vector, const Matrix4x4& matrix) {
 	Vector3 result;
 	result.x = vector.x * matrix.m[0][0] + vector.y * matrix.m[1][0] + vector.z * matrix.m[2][0] + 1.0f * matrix.m[3][0];
 	result.y = vector.x * matrix.m[0][1] + vector.y * matrix.m[1][1] + vector.z * matrix.m[2][1] + 1.0f * matrix.m[3][1];
@@ -159,8 +154,7 @@ Vector3 MyMath::Transform(const Vector3& vector, const Matrix4x4& matrix)
 	return result;
 }
 
-Vector3 MyMath::TransformNormal(const Vector3& vector, const Matrix4x4& matrix)
-{
+Vector3 MyMath::TransformNormal(const Vector3& vector, const Matrix4x4& matrix) {
 	Vector3 result;
 
 	result.x = vector.x * matrix.m[0][0] + vector.y * matrix.m[1][0] + vector.z * matrix.m[2][0];
@@ -170,8 +164,7 @@ Vector3 MyMath::TransformNormal(const Vector3& vector, const Matrix4x4& matrix)
 	return result;
 }
 
-Vector3 MyMath::Project(const Vector3& v1, const Vector3& v2)
-{
+Vector3 MyMath::Project(const Vector3& v1, const Vector3& v2) {
 	Vector3 c;
 	float n = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 	float l = powf(sqrtf(powf(v2.x, 2) + powf(v2.y, 2) + powf(v2.z, 2)), 2);
@@ -181,8 +174,7 @@ Vector3 MyMath::Project(const Vector3& v1, const Vector3& v2)
 	return c;
 }
 
-Vector3 MyMath::ClosestPoint(const Vector3& point, const Segment& segment)
-{
+Vector3 MyMath::ClosestPoint(const Vector3& point, const Segment& segment) {
 	Vector3 cp;
 	Vector3 a;
 	Vector3 proj;
@@ -196,8 +188,7 @@ Vector3 MyMath::ClosestPoint(const Vector3& point, const Segment& segment)
 	return cp;
 }
 
-Vector3 MyMath::Perpendicular(const Vector3& vector)
-{
+Vector3 MyMath::Perpendicular(const Vector3& vector) {
 	if (vector.x != 0.0f || vector.y != 0.0f) {
 		return { -vector.y,vector.x,0.0f };
 	}
@@ -205,8 +196,7 @@ Vector3 MyMath::Perpendicular(const Vector3& vector)
 	return{ 0.0f,-vector.z,vector.y };
 }
 
-Vector3 MyMath::ClosestPoint(const AABB& aabb, const Sphere& sphere)
-{
+Vector3 MyMath::ClosestPoint(const AABB& aabb, const Sphere& sphere) {
 	Vector3 closestPoint{
 		std::clamp(sphere.center.x,aabb.min.x,aabb.max.x),
 		std::clamp(sphere.center.y,aabb.min.y,aabb.max.y),
@@ -215,8 +205,7 @@ Vector3 MyMath::ClosestPoint(const AABB& aabb, const Sphere& sphere)
 	return closestPoint;
 }
 
-Vector3 MyMath::CollisionPoint(const Line& l, const Plane& p)
-{
+Vector3 MyMath::CollisionPoint(const Line& l, const Plane& p) {
 	///衝突している前提の関数
 	Vector3 result;
 	float dot = Dot(l.diff, p.normal);
@@ -226,8 +215,7 @@ Vector3 MyMath::CollisionPoint(const Line& l, const Plane& p)
 	return result;
 }
 
-Vector3 MyMath::CollisionPoint(const Ray& r, const Plane& p)
-{
+Vector3 MyMath::CollisionPoint(const Ray& r, const Plane& p) {
 	///衝突している前提の関数
 	Vector3 result;
 	float dot = Dot(r.diff, p.normal);
@@ -237,8 +225,7 @@ Vector3 MyMath::CollisionPoint(const Ray& r, const Plane& p)
 	return result;
 }
 
-Vector3 MyMath::CollisionPoint(const Segment& s, const Plane& p)
-{
+Vector3 MyMath::CollisionPoint(const Segment& s, const Plane& p) {
 	///衝突している前提の関数
 	Vector3 result;
 	float dot = Dot(s.diff, p.normal);
@@ -248,8 +235,7 @@ Vector3 MyMath::CollisionPoint(const Segment& s, const Plane& p)
 	return result;
 }
 
-Vector3 MyMath::Reflect(const Vector3& input, const Vector3& normal)
-{
+Vector3 MyMath::Reflect(const Vector3& input, const Vector3& normal) {
 	Vector3 r;
 	r = input - 2 * (Dot(input, normal)) * normal;
 	return r;
@@ -277,8 +263,16 @@ float MyMath::AngleOf2VectorY(const Vector3& v1, const Vector3& v2) {
 	return theta;
 }
 
-Matrix4x4 MyMath::Add(const Matrix4x4& m1, const Matrix4x4& m2)
-{
+Vector4 MyMath::Lerp(const Vector4& v1, const Vector4& v2, float t) {
+	Vector4 result;
+	result.x = Lerp(v1.x, v2.x, t);
+	result.y = Lerp(v1.y, v2.y, t);
+	result.z = Lerp(v1.z, v2.z, t);
+	result.w = Lerp(v1.w, v2.w, t);
+	return result;
+}
+
+Matrix4x4 MyMath::Add(const Matrix4x4& m1, const Matrix4x4& m2) {
 	Matrix4x4 c;
 	c.m[0][0] = m1.m[0][0] + m2.m[0][0];
 	c.m[0][1] = m1.m[0][1] + m2.m[0][1];
@@ -299,8 +293,7 @@ Matrix4x4 MyMath::Add(const Matrix4x4& m1, const Matrix4x4& m2)
 	return c;
 }
 
-Matrix4x4 MyMath::Subtract(const Matrix4x4& m1, const Matrix4x4& m2)
-{
+Matrix4x4 MyMath::Subtract(const Matrix4x4& m1, const Matrix4x4& m2) {
 	Matrix4x4 c;
 	c.m[0][0] = m1.m[0][0] - m2.m[0][0];
 	c.m[0][1] = m1.m[0][1] - m2.m[0][1];
@@ -321,8 +314,7 @@ Matrix4x4 MyMath::Subtract(const Matrix4x4& m1, const Matrix4x4& m2)
 	return c;
 }
 
-Matrix4x4 MyMath::Multiply(const Matrix4x4& m1, const Matrix4x4& m2)
-{
+Matrix4x4 MyMath::Multiply(const Matrix4x4& m1, const Matrix4x4& m2) {
 	Matrix4x4 c;
 	c.m[0][0] = m1.m[0][0] * m2.m[0][0] + m1.m[0][1] * m2.m[1][0] + m1.m[0][2] * m2.m[2][0] + m1.m[0][3] * m2.m[3][0];
 	c.m[0][1] = m1.m[0][0] * m2.m[0][1] + m1.m[0][1] * m2.m[1][1] + m1.m[0][2] * m2.m[2][1] + m1.m[0][3] * m2.m[3][1];
@@ -343,8 +335,7 @@ Matrix4x4 MyMath::Multiply(const Matrix4x4& m1, const Matrix4x4& m2)
 	return c;
 }
 
-Matrix4x4 MyMath::Inverse(const Matrix4x4& m)
-{
+Matrix4x4 MyMath::Inverse(const Matrix4x4& m) {
 	Matrix4x4 c;
 	float A;
 	A = m.m[0][0] * m.m[1][1] * m.m[2][2] * m.m[3][3] + m.m[0][0] * m.m[1][2] * m.m[2][3] * m.m[3][1] + m.m[0][0] * m.m[1][3] * m.m[2][1] * m.m[3][2] -
@@ -376,8 +367,7 @@ Matrix4x4 MyMath::Inverse(const Matrix4x4& m)
 	return c;
 }
 
-Matrix4x4 MyMath::Transpose(const Matrix4x4& m)
-{
+Matrix4x4 MyMath::Transpose(const Matrix4x4& m) {
 	Matrix4x4 c;
 	c.m[0][0] = m.m[0][0];
 	c.m[0][1] = m.m[1][0];
@@ -398,8 +388,7 @@ Matrix4x4 MyMath::Transpose(const Matrix4x4& m)
 	return c;
 }
 
-Matrix4x4 MyMath::MakeIdentity4x4()
-{
+Matrix4x4 MyMath::MakeIdentity4x4() {
 	Matrix4x4 c;
 	c.m[0][0] = 1.0f;
 	c.m[0][1] = 0.0f;
@@ -420,8 +409,7 @@ Matrix4x4 MyMath::MakeIdentity4x4()
 	return c;
 }
 
-Matrix4x4 MyMath::MakeTranslateMatrix(const Vector3& translate)
-{
+Matrix4x4 MyMath::MakeTranslateMatrix(const Vector3& translate) {
 	Matrix4x4 c;
 	c.m[0][0] = 1;
 	c.m[0][1] = 0;
@@ -442,8 +430,7 @@ Matrix4x4 MyMath::MakeTranslateMatrix(const Vector3& translate)
 	return c;
 }
 
-Matrix4x4 MyMath::MakeScaleMatrix(const Vector3& scale)
-{
+Matrix4x4 MyMath::MakeScaleMatrix(const Vector3& scale) {
 	Matrix4x4 c;
 	c.m[0][0] = scale.x;
 	c.m[0][1] = 0;
@@ -464,8 +451,7 @@ Matrix4x4 MyMath::MakeScaleMatrix(const Vector3& scale)
 	return c;
 }
 
-Matrix4x4 MyMath::MakeRotateXMatrix(float radian)
-{
+Matrix4x4 MyMath::MakeRotateXMatrix(float radian) {
 	Matrix4x4 c;
 	c.m[0][0] = 1;
 	c.m[0][1] = 0;
@@ -486,8 +472,7 @@ Matrix4x4 MyMath::MakeRotateXMatrix(float radian)
 	return c;
 }
 
-Matrix4x4 MyMath::MakeRotateYMatrix(float radian)
-{
+Matrix4x4 MyMath::MakeRotateYMatrix(float radian) {
 	Matrix4x4 c;
 	c.m[0][0] = std::cos(radian);
 	c.m[0][1] = 0;
@@ -508,8 +493,7 @@ Matrix4x4 MyMath::MakeRotateYMatrix(float radian)
 	return c;
 }
 
-Matrix4x4 MyMath::MakeRotateZMatrix(float radian)
-{
+Matrix4x4 MyMath::MakeRotateZMatrix(float radian) {
 	Matrix4x4 c;
 	c.m[0][0] = std::cos(radian);
 	c.m[0][1] = std::sin(radian);
@@ -530,8 +514,7 @@ Matrix4x4 MyMath::MakeRotateZMatrix(float radian)
 	return c;
 }
 
-Matrix4x4 MyMath::MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate)
-{
+Matrix4x4 MyMath::MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, const Vector3& translate) {
 	Matrix4x4 c;
 	//回転行列統合
 	Matrix4x4 rx = MakeRotateXMatrix(rotate.x);
@@ -559,8 +542,7 @@ Matrix4x4 MyMath::MakeAffineMatrix(const Vector3& scale, const Vector3& rotate, 
 	return c;
 }
 
-Matrix4x4 MyMath::MakeAffineMatrix(const Vector3& scale, const Quaternion& rotate, const Vector3& translate)
-{
+Matrix4x4 MyMath::MakeAffineMatrix(const Vector3& scale, const Quaternion& rotate, const Vector3& translate) {
 	Matrix4x4 c;
 
 	// クォータニオンから回転行列を生成
@@ -591,8 +573,7 @@ Matrix4x4 MyMath::MakeAffineMatrix(const Vector3& scale, const Quaternion& rotat
 	return c;
 }
 
-Matrix4x4 MyMath::MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip)
-{
+Matrix4x4 MyMath::MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip) {
 	Matrix4x4 c;
 	c.m[0][0] = (1 / aspectRatio) * Cot(fovY / 2);
 	c.m[0][1] = 0;
@@ -613,8 +594,7 @@ Matrix4x4 MyMath::MakePerspectiveFovMatrix(float fovY, float aspectRatio, float 
 	return c;
 }
 
-Matrix4x4 MyMath::MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip)
-{
+Matrix4x4 MyMath::MakeOrthographicMatrix(float left, float top, float right, float bottom, float nearClip, float farClip) {
 	Matrix4x4 c;
 	c.m[0][0] = 2 / (right - left);
 	c.m[0][1] = 0;
@@ -635,8 +615,7 @@ Matrix4x4 MyMath::MakeOrthographicMatrix(float left, float top, float right, flo
 	return c;
 }
 
-Matrix4x4 MyMath::MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth)
-{
+Matrix4x4 MyMath::MakeViewportMatrix(float left, float top, float width, float height, float minDepth, float maxDepth) {
 	Matrix4x4 c;
 	c.m[0][0] = width / 2;
 	c.m[0][1] = 0;
@@ -657,8 +636,7 @@ Matrix4x4 MyMath::MakeViewportMatrix(float left, float top, float width, float h
 	return c;
 }
 
-Matrix4x4 MyMath::CreateRotationFromEulerAngles(float pitch, float yaw, float roll)
-{
+Matrix4x4 MyMath::CreateRotationFromEulerAngles(float pitch, float yaw, float roll) {
 	// ピッチ（X軸回転）、ヨー（Y軸回転）、ロール（Z軸回転）の角度をラジアンに変換
 	float cosPitch = cosf(pitch);
 	float sinPitch = sinf(pitch);
@@ -697,8 +675,7 @@ Matrix4x4 MyMath::CreateRotationFromEulerAngles(float pitch, float yaw, float ro
 	return rotationMatrix;
 }
 
-Matrix4x4 MyMath::LookAt(Vector3 eye, Vector3 target, Vector3 up)
-{
+Matrix4x4 MyMath::LookAt(Vector3 eye, Vector3 target, Vector3 up) {
 
 	// 前方向ベクトル（正規化）
 	Vector3 forward = Normalize(target - eye);
@@ -743,13 +720,11 @@ Quaternion MyMath::Multiply(const Quaternion& q1, const Quaternion& q2) {
 	return c;
 }
 
-Quaternion MyMath::Multiply(float scalar, const Quaternion& q)
-{
+Quaternion MyMath::Multiply(float scalar, const Quaternion& q) {
 	return { q.x * scalar,q.y * scalar, q.z * scalar, q.w * scalar };
 }
 
-float MyMath::Dot(const Quaternion& q1, const Quaternion& q2)
-{
+float MyMath::Dot(const Quaternion& q1, const Quaternion& q2) {
 	return q1.w * q2.w + q1.x * q2.x + q1.y * q2.y + q1.z * q2.z;
 }
 
@@ -790,8 +765,7 @@ Quaternion MyMath::MakeRotateAxisAngleQuaternion(const Vector3& axis, float angl
 	);
 }
 
-Vector3 MyMath::RotateVector(const Vector3& vector, const Quaternion& quaternion)
-{
+Vector3 MyMath::RotateVector(const Vector3& vector, const Quaternion& quaternion) {
 	Vector3 c;
 	Quaternion vtq = { vector.x,vector.y, vector.z, 0.0f };
 	Quaternion result = quaternion * vtq * Inverse(quaternion);
@@ -861,8 +835,7 @@ Vector3 MyMath::ToEulerAngles(const Quaternion& q) {
 	return euler;
 }
 
-Quaternion MyMath::Slerp(const Quaternion& q0, const Quaternion& q1, float t)
-{
+Quaternion MyMath::Slerp(const Quaternion& q0, const Quaternion& q1, float t) {
 	Quaternion c;
 	Quaternion q0c = q0;
 	Quaternion q1c = q1;
@@ -893,8 +866,7 @@ Quaternion MyMath::Slerp(const Quaternion& q0, const Quaternion& q1, float t)
 	return c;
 }
 
-float MyMath::Cot(float rad)
-{
+float MyMath::Cot(float rad) {
 	float c;
 
 	c = 1 / std::tan(rad);
@@ -902,35 +874,30 @@ float MyMath::Cot(float rad)
 	return c;
 }
 
-float MyMath::Length(const Vector3& v)
-{
+float MyMath::Length(const Vector3& v) {
 	float c;
 	c = std::sqrt(static_cast<float>(std::pow(v.x, 2) + std::pow(v.y, 2) + std::pow(v.z, 2)));
 	return c;
 }
 
-float MyMath::Dot(const Vector2& v1, const Vector2& v2)
-{
+float MyMath::Dot(const Vector2& v1, const Vector2& v2) {
 	float c;
 	c = v1.x * v2.x + v1.y * v2.y;
 	return c;
 }
 
-float MyMath::Dot(const Vector3& v1, const Vector3& v2)
-{
+float MyMath::Dot(const Vector3& v1, const Vector3& v2) {
 	float c;
 	c = v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
 	return c;
 }
 
 
-float MyMath::Lerp(float s1, float s2, float t)
-{
+float MyMath::Lerp(float s1, float s2, float t) {
 	return s1 * (1 - t) + s2 * t;
 }
 
-std::pair<float, float> MyMath::ProjectOntoAxis(const Vector3* vertices, int count, const Vector3& axis)
-{
+std::pair<float, float> MyMath::ProjectOntoAxis(const Vector3* vertices, int count, const Vector3& axis) {
 	float min = Dot(vertices[0], axis);
 	float max = min;
 	for (int i = 1; i < count; ++i) {
@@ -941,70 +908,57 @@ std::pair<float, float> MyMath::ProjectOntoAxis(const Vector3* vertices, int cou
 	return { min, max };
 }
 
-float MyMath::EaseInSine(float ratio)
-{
+float MyMath::EaseInSine(float ratio) {
 	return float(1 - std::cos((ratio * std::numbers::pi_v<float>) / 2));
 }
 
-float MyMath::EaseOutSine(float ratio)
-{
+float MyMath::EaseOutSine(float ratio) {
 	return float(std::sin((ratio * std::numbers::pi_v<float>) / 2));
 }
 
-float MyMath::EaseInOutSine(float ratio)
-{
+float MyMath::EaseInOutSine(float ratio) {
 	return float(-(std::cos(std::numbers::pi_v<float> *ratio) - 1) / 2);
 }
 
-float MyMath::EaseInCubic(float ratio)
-{
+float MyMath::EaseInCubic(float ratio) {
 	return float(ratio * ratio * ratio);
 }
 
-float MyMath::EaseOutCubic(float ratio)
-{
+float MyMath::EaseOutCubic(float ratio) {
 	return float(1 - std::pow(1 - ratio, 3));
 }
 
-float MyMath::EaseInOutCubic(float ratio)
-{
+float MyMath::EaseInOutCubic(float ratio) {
 	return float(ratio < 0.5 ? 4 * ratio * ratio * ratio : 1 - std::pow(-2 * ratio + 2, 3) / 2);
 }
 
-float MyMath::EaseInQuint(float ratio)
-{
+float MyMath::EaseInQuint(float ratio) {
 	return float(ratio * ratio * ratio * ratio * ratio);
 }
 
-float MyMath::EaseOutQuint(float ratio)
-{
+float MyMath::EaseOutQuint(float ratio) {
 	return float(1 - std::pow(1 - ratio, 5));
 }
 
-float MyMath::EaseInOutQuint(float ratio)
-{
+float MyMath::EaseInOutQuint(float ratio) {
 	return float(ratio < 0.5 ? 16 * ratio * ratio * ratio * ratio * ratio : 1 - std::pow(-2 * ratio + 2, 5) / 2);
 }
 
-float MyMath::EaseInCirc(float ratio)
-{
+float MyMath::EaseInCirc(float ratio) {
 	return float(1 - std::sqrt(1 - std::pow(ratio, 2)));
 }
 
-float MyMath::EaseOutCirc(float ratio)
-{
+float MyMath::EaseOutCirc(float ratio) {
 	return float(std::sqrt(1 - std::pow(ratio - 1, 2)));
 }
 
-float MyMath::EaseInOutCirc(float ratio)
-{
+float MyMath::EaseInOutCirc(float ratio) {
 	return float(ratio < 0.5
 		? (1 - std::sqrt(1 - std::pow(2 * ratio, 2))) / 2
 		: (std::sqrt(1 - std::pow(-2 * ratio + 2, 2)) + 1) / 2);
 }
 
-float MyMath::EaseInElastic(float ratio)
-{
+float MyMath::EaseInElastic(float ratio) {
 	const float c4 = (2 * std::numbers::pi_v<float>) / 3;
 
 	return float(ratio == 0
@@ -1014,8 +968,7 @@ float MyMath::EaseInElastic(float ratio)
 		: -std::pow(2, 10 * ratio - 10) * std::sin((ratio * 10 - 10.75) * c4));
 }
 
-float MyMath::EaseOutElastic(float ratio)
-{
+float MyMath::EaseOutElastic(float ratio) {
 	const float c4 = (2 * std::numbers::pi_v<float>) / 3;
 
 	return float(ratio == 0
@@ -1025,8 +978,7 @@ float MyMath::EaseOutElastic(float ratio)
 		: std::pow(2, -10 * ratio) * std::sin((ratio * 10 - 0.75) * c4) + 1);
 }
 
-float MyMath::EaseInOutElastic(float ratio)
-{
+float MyMath::EaseInOutElastic(float ratio) {
 	const float c5 = (2 * std::numbers::pi_v<float>) / 4.5f;
 
 	return float(ratio == 0
@@ -1038,48 +990,39 @@ float MyMath::EaseInOutElastic(float ratio)
 		: (std::pow(2, -20 * ratio + 10) * std::sin((20 * ratio - 11.125) * c5)) / 2 + 1);
 }
 
-float MyMath::EaseInQuad(float ratio)
-{
+float MyMath::EaseInQuad(float ratio) {
 	return float(ratio * ratio);
 }
 
-float MyMath::EaseOutQuad(float ratio)
-{
+float MyMath::EaseOutQuad(float ratio) {
 	return float(1 - (1 - ratio) * (1 - ratio));
 }
 
-float MyMath::EaseInOutQuad(float ratio)
-{
+float MyMath::EaseInOutQuad(float ratio) {
 	return float(ratio < 0.5 ? 2 * ratio * ratio : 1 - std::pow(-2 * ratio + 2, 2) / 2);
 }
 
-float MyMath::EaseInQuart(float ratio)
-{
+float MyMath::EaseInQuart(float ratio) {
 	return float(ratio * ratio * ratio * ratio);
 }
 
-float MyMath::EaseOutQuart(float ratio)
-{
+float MyMath::EaseOutQuart(float ratio) {
 	return float(1 - std::pow(1 - ratio, 4));
 }
 
-float MyMath::EaseInOutQuart(float ratio)
-{
+float MyMath::EaseInOutQuart(float ratio) {
 	return float(ratio < 0.5 ? 8 * ratio * ratio * ratio * ratio : 1 - std::pow(-2 * ratio + 2, 4) / 2);
 }
 
-float MyMath::EaseInExpo(float ratio)
-{
+float MyMath::EaseInExpo(float ratio) {
 	return float(ratio == 0 ? 0 : std::pow(2, 10 * ratio - 10));
 }
 
-float MyMath::EaseOutExpo(float ratio)
-{
+float MyMath::EaseOutExpo(float ratio) {
 	return float(ratio == 1 ? 1 : 1 - std::pow(2, -10 * ratio));
 }
 
-float MyMath::EaseInOutExpo(float ratio)
-{
+float MyMath::EaseInOutExpo(float ratio) {
 	return float(ratio == 0
 		? 0
 		: ratio == 1
@@ -1088,24 +1031,21 @@ float MyMath::EaseInOutExpo(float ratio)
 		: (2 - std::pow(2, -20 * ratio + 10)) / 2);
 }
 
-float MyMath::EaseInBack(float ratio)
-{
+float MyMath::EaseInBack(float ratio) {
 	const float c1 = 1.70158f;
 	const float c3 = c1 + 1;
 
 	return float(c3 * ratio * ratio * ratio - c1 * ratio * ratio);
 }
 
-float MyMath::EaseOutBack(float ratio)
-{
+float MyMath::EaseOutBack(float ratio) {
 	const float c1 = 1.70158f;
 	const float c3 = c1 + 1;
 
 	return float(1 + c3 * std::pow(ratio - 1, 3) + c1 * std::pow(ratio - 1, 2));
 }
 
-float MyMath::EaseInOutBack(float ratio)
-{
+float MyMath::EaseInOutBack(float ratio) {
 	const float c1 = 1.70158f;
 	const float c2 = c1 * 1.525f;
 
@@ -1114,13 +1054,11 @@ float MyMath::EaseInOutBack(float ratio)
 		: (std::pow(2 * ratio - 2, 2) * ((c2 + 1) * (ratio * 2 - 2) + c2) + 2) / 2);
 }
 
-float MyMath::EaseInBounce(float ratio)
-{
+float MyMath::EaseInBounce(float ratio) {
 	return float(1 - EaseOutBounce(1 - ratio));
 }
 
-float MyMath::EaseOutBounce(float ratio)
-{
+float MyMath::EaseOutBounce(float ratio) {
 	const float n1 = 7.5625f;
 	const float d1 = 2.75f;
 
@@ -1138,15 +1076,13 @@ float MyMath::EaseOutBounce(float ratio)
 	}
 }
 
-float MyMath::EaseInOutBounce(float ratio)
-{
+float MyMath::EaseInOutBounce(float ratio) {
 	return float(ratio < 0.5
 		? (1 - EaseOutBounce(1 - 2 * ratio)) / 2
 		: (1 + EaseOutBounce(2 * ratio - 1)) / 2);
 }
 
-bool MyMath::IsCollision(const Sphere& s1, const Sphere& s2)
-{
+bool MyMath::IsCollision(const Sphere& s1, const Sphere& s2) {
 	//2つの球の中心点間の距離を求める
 	float distance = Length(Subtract(s2.center, s1.center));
 	//半径の合計よりも短ければ衝突
@@ -1158,8 +1094,7 @@ bool MyMath::IsCollision(const Sphere& s1, const Sphere& s2)
 	}
 }
 
-bool MyMath::IsCollision(const Plane& plane, const Sphere& sphere)
-{
+bool MyMath::IsCollision(const Plane& plane, const Sphere& sphere) {
 	//球の中心と平面との距離を計算
 	float distance;
 	float k;
@@ -1176,8 +1111,7 @@ bool MyMath::IsCollision(const Plane& plane, const Sphere& sphere)
 	}
 }
 
-bool MyMath::IsCollision(const Line& line, const Plane& plane)
-{
+bool MyMath::IsCollision(const Line& line, const Plane& plane) {
 	//垂直判定を求める
 	float dot = Dot(plane.normal, line.diff);
 	//平行の場合衝突していない。
@@ -1195,8 +1129,7 @@ bool MyMath::IsCollision(const Line& line, const Plane& plane)
 	}
 }
 
-bool MyMath::IsCollision(const Ray& ray, const Plane& plane)
-{
+bool MyMath::IsCollision(const Ray& ray, const Plane& plane) {
 	//垂直判定を求める
 	float dot = Dot(plane.normal, ray.diff);
 	//平行の場合衝突していない。
@@ -1214,8 +1147,7 @@ bool MyMath::IsCollision(const Ray& ray, const Plane& plane)
 	}
 }
 
-bool MyMath::IsCollision(const Segment& segment, const Plane& plane)
-{
+bool MyMath::IsCollision(const Segment& segment, const Plane& plane) {
 	//平行判定
 	float dot = Dot(segment.diff, plane.normal);
 	if (dot == 0.0f) {
@@ -1234,8 +1166,7 @@ bool MyMath::IsCollision(const Segment& segment, const Plane& plane)
 	}
 }
 
-bool MyMath::IsCollision(const Segment& segment, const Triangle& triangle)
-{
+bool MyMath::IsCollision(const Segment& segment, const Triangle& triangle) {
 	//三角形のある面を作る
 	Plane plane;
 	//三角形の座標から、法線nを求める
@@ -1283,8 +1214,7 @@ bool MyMath::IsCollision(const Segment& segment, const Triangle& triangle)
 	}
 }
 
-bool MyMath::IsCollision(const AABB& a, const AABB& b)
-{
+bool MyMath::IsCollision(const AABB& a, const AABB& b) {
 	if ((a.min.x <= b.max.x && a.max.x >= b.min.x) &&
 		(a.min.y <= b.max.y && a.max.y >= b.min.y) &&
 		(a.min.z <= b.max.z && a.max.z >= b.min.z)) {
@@ -1296,8 +1226,7 @@ bool MyMath::IsCollision(const AABB& a, const AABB& b)
 	}
 }
 
-bool MyMath::IsCollision(const AABB& aabb, const Vector3& point)
-{
+bool MyMath::IsCollision(const AABB& aabb, const Vector3& point) {
 	//点の全ての座標成分がAABB内にあるなら衝突
 	if ((point.x >= aabb.min.x && point.x <= aabb.max.x) &&
 		(point.y >= aabb.min.y && point.y <= aabb.max.y) &&
@@ -1307,8 +1236,7 @@ bool MyMath::IsCollision(const AABB& aabb, const Vector3& point)
 	return false;
 }
 
-bool MyMath::IsCollision(const AABB& aabb, const Sphere& sphere)
-{
+bool MyMath::IsCollision(const AABB& aabb, const Sphere& sphere) {
 	//球の中心とAABBとの最近接点を求める
 	Vector3 closestPoint = ClosestPoint(aabb, sphere);
 	//最近接点と球の中心の距離を求める
@@ -1322,8 +1250,7 @@ bool MyMath::IsCollision(const AABB& aabb, const Sphere& sphere)
 	}
 }
 
-bool MyMath::IsCollision(const AABB& aabb, const Line& line)
-{
+bool MyMath::IsCollision(const AABB& aabb, const Line& line) {
 	//segmentの成分が全て0(点)の場合エラー
 	if (line.diff.x == 0 && line.diff.y == 0 && line.diff.z == 0) {
 		assert("線の成分が全て0");
@@ -1415,8 +1342,7 @@ bool MyMath::IsCollision(const AABB& aabb, const Line& line)
 	return false;
 }
 
-bool MyMath::IsCollision(const AABB& aabb, const Ray& ray)
-{
+bool MyMath::IsCollision(const AABB& aabb, const Ray& ray) {
 	//segmentの成分が全て0(点)の場合エラー
 	if (ray.diff.x == 0 && ray.diff.y == 0 && ray.diff.z == 0) {
 		assert("線の成分が全て0");
@@ -1508,8 +1434,7 @@ bool MyMath::IsCollision(const AABB& aabb, const Ray& ray)
 	return false;
 }
 
-bool MyMath::IsCollision(const AABB& aabb, const Segment& segment)
-{
+bool MyMath::IsCollision(const AABB& aabb, const Segment& segment) {
 	//segmentの成分が全て0(点)の場合エラー
 	if (segment.diff.x == 0 && segment.diff.y == 0 && segment.diff.z == 0) {
 		assert("線の成分が全て0");
@@ -1614,8 +1539,7 @@ bool MyMath::IsCollision(const AABB& aabb, const Segment& segment)
 	return false;
 }
 
-bool MyMath::IsCollision(const OBB& obb1, const OBB& obb2)
-{
+bool MyMath::IsCollision(const OBB& obb1, const OBB& obb2) {
 	// 各OBBの頂点をローカル座標で定義
 	Vector3 obb1Vertex[8] = {
 		{ -obb1.size.x, obb1.size.y, -obb1.size.z },
@@ -1693,8 +1617,7 @@ bool MyMath::IsCollision(const OBB& obb1, const OBB& obb2)
 	return true; // すべての軸で重なりあり → 衝突している
 }
 
-bool MyMath::IsCollision(const OBB& obb, const Sphere& sphere)
-{
+bool MyMath::IsCollision(const OBB& obb, const Sphere& sphere) {
 	// ワールド行列
 	Matrix4x4 obbWorldMatrix = {
 		obb.orientations[0].x, obb.orientations[0].y, obb.orientations[0].z, 0,
@@ -1713,8 +1636,7 @@ bool MyMath::IsCollision(const OBB& obb, const Sphere& sphere)
 	return IsCollision(aabbOBBLocal, sphereOBBLocal);
 }
 
-bool MyMath::IsCollision(const OBB& obb, const Line& line)
-{
+bool MyMath::IsCollision(const OBB& obb, const Line& line) {
 	// ワールド行列
 	Matrix4x4 obbWorldMatrix = {
 		obb.orientations[0].x, obb.orientations[0].y, obb.orientations[0].z, 0,
@@ -1734,8 +1656,7 @@ bool MyMath::IsCollision(const OBB& obb, const Line& line)
 	return IsCollision(aabbOBBLocal, lineOBBLocal);
 }
 
-bool MyMath::IsCollision(const OBB& obb, const Ray& ray)
-{
+bool MyMath::IsCollision(const OBB& obb, const Ray& ray) {
 	// ワールド行列
 	Matrix4x4 obbWorldMatrix = {
 		obb.orientations[0].x, obb.orientations[0].y, obb.orientations[0].z, 0,
@@ -1755,8 +1676,7 @@ bool MyMath::IsCollision(const OBB& obb, const Ray& ray)
 	return IsCollision(aabbOBBLocal, rayOBBLocal);
 }
 
-bool MyMath::IsCollision(const OBB& obb, const Segment& segment)
-{
+bool MyMath::IsCollision(const OBB& obb, const Segment& segment) {
 	// ワールド行列
 	Matrix4x4 obbWorldMatrix = {
 		obb.orientations[0].x, obb.orientations[0].y, obb.orientations[0].z, 0,
@@ -1776,8 +1696,7 @@ bool MyMath::IsCollision(const OBB& obb, const Segment& segment)
 	return IsCollision(aabbOBBLocal, segmentOBBLocal);
 }
 
-void MyMath::DrawSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDrawer, uint32_t subdivision)
-{
+void MyMath::DrawSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDrawer, uint32_t subdivision) {
 	float pi = std::numbers::pi_v<float>;
 	const uint32_t kSubdivision = subdivision;//分割数
 	const float kLonEvery = 2.0f * pi / kSubdivision;//経度分割1つ分の角度
@@ -1812,63 +1731,52 @@ void MyMath::DrawSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDra
 	}
 }
 
-
 ///------------------------------------///
 ///       演算子のオーバーロード
 ///------------------------------------///
 
-Vector2 operator+(const Vector2& v1, const Vector2& v2)
-{
+Vector2 operator+(const Vector2& v1, const Vector2& v2) {
 	return MyMath::Add(v1, v2);
 }
 
-Vector2 operator-(const Vector2& v1, const Vector2& v2)
-{
+Vector2 operator-(const Vector2& v1, const Vector2& v2) {
 	return MyMath::Subtract(v1, v2);
 }
 
-Vector2 operator*(float s, const Vector2& v)
-{
+Vector2 operator*(float s, const Vector2& v) {
 	return MyMath::Multiply(s, v);
 }
 
-Vector2 operator*(const Vector2& v, float s)
-{
+Vector2 operator*(const Vector2& v, float s) {
 	return s * v;
 }
 
-Vector2 operator/(const Vector2& v, float s)
-{
+Vector2 operator/(const Vector2& v, float s) {
 	return MyMath::Multiply(1.0f / s, v);
 }
 
-Vector3 operator+(const Vector3& v1, const Vector3& v2)
-{
+Vector3 operator+(const Vector3& v1, const Vector3& v2) {
 	return MyMath::Add(v1, v2);
 }
 
-Vector3 operator-(const Vector3& v1, const Vector3& v2)
-{
-	return MyMath::Subtract(v1, v2);
-}
+//Vector3 operator-(const Vector3& v1, const Vector3& v2)
+//{
+//	return MyMath::Subtract(v1, v2);
+//}
 
-Vector3 operator*(float s, const Vector3& v)
-{
+Vector3 operator*(float s, const Vector3& v) {
 	return MyMath::Multiply(s, v);
 }
 
-Vector3 operator*(const Vector3& v, float s)
-{
+Vector3 operator*(const Vector3& v, float s) {
 	return s * v;
 }
 
-Vector3 operator/(const Vector3& v, float s)
-{
+Vector3 operator/(const Vector3& v, float s) {
 	return MyMath::Multiply(1.0f / s, v);
 }
 
-Vector3 operator*(const Matrix4x4& mat, const Vector3& vec)
-{
+Vector3 operator*(const Matrix4x4& mat, const Vector3& vec) {
 	// 行列とベクトルの掛け算
 	float x = mat.m[0][0] * vec.x + mat.m[0][1] * vec.y + mat.m[0][2] * vec.z + mat.m[0][3];
 	float y = mat.m[1][0] * vec.x + mat.m[1][1] * vec.y + mat.m[1][2] * vec.z + mat.m[1][3];
@@ -1891,62 +1799,50 @@ Vector3 operator*(const Quaternion& q, const Vector3& v) {
 }
 
 
-Matrix4x4 operator+(const Matrix4x4& m1, const Matrix4x4& m2)
-{
+Matrix4x4 operator+(const Matrix4x4& m1, const Matrix4x4& m2) {
 	return MyMath::Add(m1, m2);
 }
 
-Matrix4x4 operator-(const Matrix4x4& m1, const Matrix4x4& m2)
-{
+Matrix4x4 operator-(const Matrix4x4& m1, const Matrix4x4& m2) {
 	return MyMath::Subtract(m1, m2);
 }
 
-Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2)
-{
+Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2) {
 	return MyMath::Multiply(m1, m2);
 }
 
-Quaternion operator+(const Quaternion& q1, const Quaternion& q2)
-{
+Quaternion operator+(const Quaternion& q1, const Quaternion& q2) {
 	return MyMath::Add(q1, q2);
 }
 
-Quaternion operator-(const Quaternion& q1, const Quaternion& q2)
-{
+Quaternion operator-(const Quaternion& q1, const Quaternion& q2) {
 	return MyMath::Subtract(q1, q2);
 }
 
-Quaternion operator*(const Quaternion& q1, const Quaternion& q2)
-{
+Quaternion operator*(const Quaternion& q1, const Quaternion& q2) {
 	return MyMath::Multiply(q1, q2);
 }
 
-Quaternion operator*(float s, const Quaternion& q)
-{
+Quaternion operator*(float s, const Quaternion& q) {
 	return MyMath::Multiply(s, q);
 }
 
-Quaternion operator*(const Quaternion& q, float s)
-{
+Quaternion operator*(const Quaternion& q, float s) {
 	return s * q;
 }
 
-Vector3 operator-(const Vector3& v)
-{
+Vector3 operator-(const Vector3& v) {
 	return { -v.x,-v.y,-v.z };
 }
 
-Vector3 operator+(const Vector3& v)
-{
+Vector3 operator+(const Vector3& v) {
 	return v;
 }
 
-Quaternion operator-(const Quaternion& q)
-{
+Quaternion operator-(const Quaternion& q) {
 	return { -q.x,-q.y,-q.z,-q.w };
 }
 
-Quaternion operator+(const Quaternion& q)
-{
+Quaternion operator+(const Quaternion& q) {
 	return q;
 }

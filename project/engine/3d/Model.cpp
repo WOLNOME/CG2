@@ -9,16 +9,12 @@
 #include "Object3d.h"
 #include "TextureManager.h"
 
-
-
-void Model::Initialize(const std::string& filename, ModelFormat format, std::string directorypath)
-{
+void Model::Initialize(const std::string& filename, ModelFormat format, std::string directorypath) {
 	//ディレクトリパス
 	directoryPath_ = directorypath;
 	//モデルデータの形式
 	mf_ = format;
-	switch (mf_)
-	{
+	switch (mf_) {
 	case OBJ:
 		format_ = ".obj";
 		break;
@@ -43,8 +39,7 @@ void Model::Initialize(const std::string& filename, ModelFormat format, std::str
 	SettingTexture();
 }
 
-void Model::Update()
-{
+void Model::Update() {
 	//アニメーションの更新と骨への適用
 	if (isAnimation_ && isSkeleton_) {
 		//アニメーションの時間を進める
@@ -59,8 +54,7 @@ void Model::Update()
 	}
 }
 
-void Model::UpdateJoints(Skeleton& skeleton)
-{
+void Model::UpdateJoints(Skeleton& skeleton) {
 	//全てのJointを更新
 	for (Joint& joint : skeleton.joints) {
 		joint.localMatrix = MyMath::MakeAffineMatrix(joint.transform.scale, joint.transform.rotate, joint.transform.translate);
@@ -75,8 +69,7 @@ void Model::UpdateJoints(Skeleton& skeleton)
 
 }
 
-void Model::ApplyAnimation(Skeleton& skeleton, const Animation& animation, float animationTime)
-{
+void Model::ApplyAnimation(Skeleton& skeleton, const Animation& animation, float animationTime) {
 	for (Joint& joint : skeleton.joints) {
 		//対象のJointのAnimationがあれば、値の適用を行う。下記のif文は初期化付きif文。
 		if (auto it = animation.nodeAnimations.find(joint.name); it != animation.nodeAnimations.end()) {
@@ -88,8 +81,7 @@ void Model::ApplyAnimation(Skeleton& skeleton, const Animation& animation, float
 	}
 }
 
-void Model::UpdateSkinCluster(SkinCluster& skinCluster, const Skeleton& skeleton)
-{
+void Model::UpdateSkinCluster(SkinCluster& skinCluster, const Skeleton& skeleton) {
 	for (size_t jointIndex = 0; jointIndex < skeleton.joints.size(); ++jointIndex) {
 		assert(jointIndex < skinCluster.inverseBindPoseMatrices.size());
 		skinCluster.mappedPalette[jointIndex].skeletonSpaceMatrix =
@@ -99,8 +91,7 @@ void Model::UpdateSkinCluster(SkinCluster& skinCluster, const Skeleton& skeleton
 	}
 }
 
-void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum)
-{
+void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum, int32_t textureHandle) {
 	for (size_t index = 0; index < modelResource_.modelData.size(); index++) {
 		//アニメーションがある場合
 		if (isAnimation_) {
@@ -111,7 +102,7 @@ void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParame
 			};
 			//配列を渡す(開始slot番号、使用slot数、VBV配列へのポインタ)
 			MainRender::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 2, vbvs);
-			
+
 			//paletteMatrixを送る
 			MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(7, skinCluster_.paletteSrvHandle.second);
 		}
@@ -124,19 +115,29 @@ void Model::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParame
 		//インデックスバッファビューを設定
 		MainRender::GetInstance()->GetCommandList()->IASetIndexBuffer(&modelResource_.indexBufferView.at(index));
 		//マテリアルCBufferの場所を設定
-		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(materialRootParameterIndex, modelResource_.materialResource.at(index)->GetGPUVirtualAddress());
-		//モデルにテクスチャがない場合、スキップ
-		if (modelResource_.modelData.at(index).material.textureFilePath.size() != 0) {
-			//SRVのDescriptorTableの先頭を設定。2はrootParameter[2]でテクスチャの設定をしているため。
-			MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(textureRootParameterIndex, TextureManager::GetInstance()->GetSrvHandleGPU(modelResource_.modelData.at(index).material.textureHandle));
+		if (color_) {
+			modelResource_.materialData.at(index)->color = *color_;
 		}
+		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(materialRootParameterIndex, modelResource_.materialResource.at(index)->GetGPUVirtualAddress());
+		//テクスチャが外部から設定されている場合
+		if (textureHandle != -1) {
+			//SRVのDescriptorTableの先頭を設定。
+			MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(textureRootParameterIndex, TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle));
+		}
+		else {
+			//モデルにテクスチャがない場合、スキップ
+			if (modelResource_.modelData.at(index).material.textureFilePath.size() != 0) {
+				//SRVのDescriptorTableの先頭を設定。
+				MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(textureRootParameterIndex, TextureManager::GetInstance()->GetSrvHandleGPU(modelResource_.modelData.at(index).material.textureHandle));
+			}
+		}
+
 		//描画
 		MainRender::GetInstance()->GetCommandList()->DrawIndexedInstanced(UINT(modelResource_.modelData.at(index).indices.size()), instancingNum, 0, 0, 0);
 	}
 }
 
-std::vector<Model::ModelData> Model::LoadModelFile()
-{
+std::vector<Model::ModelData> Model::LoadModelFile() {
 	// 必要な変数の宣言
 	std::vector<ModelData> modelData;
 
@@ -234,8 +235,7 @@ std::vector<Model::ModelData> Model::LoadModelFile()
 		}
 
 		// 構築したモデルデータにルートノードを設定
-		switch (mf_)
-		{
+		switch (mf_) {
 		case OBJ:
 			break;
 		case GLTF:
@@ -256,8 +256,7 @@ std::vector<Model::ModelData> Model::LoadModelFile()
 	return modelData;
 }
 
-Model::Animation Model::LoadAnimationFile()
-{
+Model::Animation Model::LoadAnimationFile() {
 	Animation animation;
 	Assimp::Importer importer;
 	std::string filePath = directoryPath_ + fileName_ + "/" + fileName_ + format_;
@@ -305,8 +304,7 @@ Model::Animation Model::LoadAnimationFile()
 	return animation;
 }
 
-Model::Node Model::ReadNode(aiNode* node)
-{
+Model::Node Model::ReadNode(aiNode* node) {
 	// 新しいNodeオブジェクトを作成
 	Node currentNode;
 
@@ -331,8 +329,7 @@ Model::Node Model::ReadNode(aiNode* node)
 	return currentNode;
 }
 
-Model::ModelResource Model::MakeModelResource()
-{
+Model::ModelResource Model::MakeModelResource() {
 	//モデルリソース
 	ModelResource modelResource_;
 
@@ -394,8 +391,7 @@ Model::ModelResource Model::MakeModelResource()
 	return modelResource_;
 }
 
-Model::SkinCluster Model::CreateSkinCluster()
-{
+Model::SkinCluster Model::CreateSkinCluster() {
 	SkinCluster skinCluster;
 	//palette用のResourceを確保
 	skinCluster.paletteResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(WellForGPU) * skeleton_.joints.size());
@@ -454,16 +450,14 @@ Model::SkinCluster Model::CreateSkinCluster()
 	return skinCluster;
 }
 
-void Model::SettingTexture()
-{
+void Model::SettingTexture() {
 	for (size_t index = 0; index < modelResource_.modelData.size(); index++) {
 		//.objの参照しているテクスチャファイル読み込み(TextureManagerはResources/をカットできるので)
-		modelResource_.modelData.at(index).material.textureHandle = TextureManager::GetInstance()->LoadTexture("models/" + fileName_ + "/" + modelResource_.modelData.at(index).material.textureFilePath);
+		modelResource_.modelData.at(index).material.textureHandle = TextureManager::GetInstance()->LoadTexture("../models/" + fileName_ + "/" + modelResource_.modelData.at(index).material.textureFilePath);
 	}
 }
 
-Vector3 Model::CalculateValue(const std::vector<Keyframe<Vector3>>& keyframes, float time)
-{
+Vector3 Model::CalculateValue(const std::vector<Keyframe<Vector3>>& keyframes, float time) {
 	assert(!keyframes.empty());
 	if (keyframes.size() == 1 || time <= keyframes[0].time) {
 		return keyframes[0].value;
@@ -482,8 +476,7 @@ Vector3 Model::CalculateValue(const std::vector<Keyframe<Vector3>>& keyframes, f
 	return (*keyframes.rbegin()).value;
 }
 
-Quaternion Model::CalculateValue(const std::vector<Keyframe<Quaternion>>& keyframes, float time)
-{
+Quaternion Model::CalculateValue(const std::vector<Keyframe<Quaternion>>& keyframes, float time) {
 	assert(!keyframes.empty());
 	if (keyframes.size() == 1 || time <= keyframes[0].time) {
 		return keyframes[0].value;
@@ -503,8 +496,7 @@ Quaternion Model::CalculateValue(const std::vector<Keyframe<Quaternion>>& keyfra
 
 }
 
-int32_t Model::CreateJoint(const Node& node, const std::optional<int32_t>& parent, std::vector<Joint>& joints)
-{
+int32_t Model::CreateJoint(const Node& node, const std::optional<int32_t>& parent, std::vector<Joint>& joints) {
 	Joint joint;
 	joint.name = node.name;
 	joint.localMatrix = node.localMatrix;
@@ -522,8 +514,7 @@ int32_t Model::CreateJoint(const Node& node, const std::optional<int32_t>& paren
 	return joint.index;
 }
 
-Model::Skeleton Model::CreateSkeleton(const Node& rootNode)
-{
+Model::Skeleton Model::CreateSkeleton(const Node& rootNode) {
 	Skeleton skeleton;
 	skeleton.root = CreateJoint(rootNode, {}, skeleton.joints);
 

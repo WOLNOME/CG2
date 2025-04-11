@@ -14,7 +14,7 @@ LineDrawer::~LineDrawer()
 	//確保したSRVデスクリプタヒープの解放
 	SrvManager::GetInstance()->Free(lineResource_.srvIndex);
 	//ラインのリストクリア
-	lines_.clear();
+	ClearLine();
 }
 
 void LineDrawer::Initialize()
@@ -59,7 +59,7 @@ void LineDrawer::Draw(const BaseCamera& camera)
 	}
 
 	//リストのクリア
-	lines_.clear();
+	ClearLine();
 }
 
 void LineDrawer::CreateLine(Vector3 start, Vector3 end, Vector4 color)

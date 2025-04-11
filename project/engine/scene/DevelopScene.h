@@ -1,21 +1,9 @@
 #pragma once
 #include "BaseScene.h"
-#include "Sprite.h"
-#include "Object3d.h"
-#include "Skybox.h"
-#include "Particle.h"
-#include "LineDrawer.h"
-#include "Audio.h"
 #include "Vector2.h"
-#include "Input.h"
 #include "MyMath.h"
 #include "WorldTransform.h"
 #include "DevelopCamera.h"
-#include "DirectionalLight.h"
-#include "PointLight.h"
-#include "SpotLight.h"
-#include <memory>
-#include <cstdint>
 
 class DevelopScene : public BaseScene
 {
@@ -36,6 +24,11 @@ public:
 	/// 描画
 	/// </summary>
 	void Draw() override;
+	/// <summary>
+	///	テキスト描画
+	/// </summary>
+	void TextDraw() override;
+
 private://メンバ変数
 	Input* input_ = nullptr;
 	//開発用カメラ
@@ -55,17 +48,13 @@ private://メンバ変数
 	std::unique_ptr<SpotLight> spotLight;
 	std::unique_ptr<LineDrawer> slMark;
 	bool isDrawSLMark = false;
-	//スカイボックス
-	WorldTransform wtSkybox_;
-	uint32_t textureHandleSkybox_ = UINT32_MAX;
-	std::unique_ptr<Skybox> skybox_ = nullptr;
-
-	uint32_t textureHandleSprite_ = UINT32_MAX;
+	//スプライト
+	uint32_t textureHandleSprite_ = 0u;
 	std::unique_ptr<Sprite> sprite_ = nullptr;
-	uint32_t textureHandleSprite2_ = UINT32_MAX;
+	uint32_t textureHandleSprite2_ = 0u;
 	std::unique_ptr<Sprite> sprite2_ = nullptr;
 	Vector2 sprite2Position;
-
+	//3Dオブジェクト
 	WorldTransform wtAxis_;
 	std::unique_ptr<Object3d> axis_ = nullptr;
 
@@ -84,14 +73,19 @@ private://メンバ変数
 	WorldTransform wtSimpleSkin_;
 	std::unique_ptr<Object3d> simpleSkin_ = nullptr;
 
-	Particle::Emitter emitter_;
-	Particle::AccelerationField field_;
+	//パーティクル
 	std::unique_ptr<Particle> particle_ = nullptr;
-
+	
+	//線
 	std::unique_ptr<LineDrawer> line_ = nullptr;
 
+	//オーディオ
 	bool isDrawSphere_ = false;
 	std::unique_ptr<Audio> audio_ = nullptr;
 	float volume = 0.5f;
+
+	//テキスト
+	int timer_ = 0;
+	std::unique_ptr<TextWrite> text_;
 };
 

@@ -4,7 +4,6 @@
 #include <array>
 #include "Vector4.h"
 #include "Vector3.h"
-#include "BaseCamera.h"
 
 // データ構造体(サイズが16の倍数になるようにパディングする！)
 struct DirectionalLightData {
@@ -18,8 +17,7 @@ struct DirectionalLightData {
 /// <summary>
 /// 平行光源
 /// </summary>
-class DirectionalLight
-{
+class DirectionalLight {
 public:
 	//色
 	Vector4 color_ = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -40,13 +38,13 @@ public:
 	/// <summary>
 	/// 行列の更新
 	/// </summary>
-	void Update(BaseCamera* camera);
+	void Update();
 	/// <summary>
 	/// 平行光源のデータを取得
 	/// </summary>
 	/// <returns>平行光源のデータ</returns>
 	const DirectionalLightData& GetData() const { return data_; }
-	
+
 private:
 	//データ
 	DirectionalLightData data_;

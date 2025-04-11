@@ -1,7 +1,6 @@
 #pragma once
 #include <wrl.h>
 #include <d3d12.h>
-#include <cstdint>
 #include "MyMath.h"
 
 class Shape
@@ -44,7 +43,6 @@ public:
 private://非公開メンバ関数
 	//形状リソース作成関数
 	ShapeResource MakeShapeResource();
-
 private:
 	//形状の種類
 	ShapeKind shapeKind_;

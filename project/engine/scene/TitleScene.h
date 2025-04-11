@@ -1,16 +1,8 @@
 #pragma once
 #include "BaseScene.h"
-#include "Sprite.h"
-#include "Object3d.h"
-#include "Audio.h"
-#include "Vector2.h"
-#include "Input.h"
-#include "LineDrawer.h"
-#include <cstdint>
-#include <memory>
+#include "DevelopCamera.h"
 
-class TitleScene : public BaseScene
-{
+class TitleScene : public BaseScene {
 public:
 	/// <summary>
 	/// 初期化
@@ -28,11 +20,23 @@ public:
 	/// 描画
 	/// </summary>
 	void Draw() override;
+	/// <summary>
+	/// テキスト描画
+	/// </summary>
+	void TextDraw() override;
+
 private://メンバ変数
 	Input* input_ = nullptr;
 
 	//タイトルスプライト
-	uint32_t textureHandleTitle_ = 0u;
-	std::unique_ptr<Sprite> spriteTitle_ = nullptr;
+	uint32_t textureHandleUI_ = 0u;
+	std::unique_ptr<Sprite> spriteUI_ = nullptr;
+
+	//開発用カメラ
+	std::unique_ptr<DevelopCamera> camera;
+	
+	//タイトル
+	std::unique_ptr<TextWrite> title_;
+
 };
 

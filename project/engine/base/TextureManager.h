@@ -21,7 +21,7 @@ public://公開メンバ関数
 	//シングルトンインスタンスの取得
 	static TextureManager* GetInstance();
 	//初期化
-	void Initialize(std::string directoryPath = "Resources/");
+	void Initialize();
 	//終了
 	void Finalize();
 

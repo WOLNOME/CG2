@@ -5,14 +5,14 @@
 #include <string>
 #include <list>
 #include <memory>
-#include <numbers>
+#include "json.hpp"
 #include "Model.h"
 #include "MyMath.h"
 
-class BaseCamera;
+using json = nlohmann::json;
+
 //パーティクル
-class Particle
-{
+class Particle {
 public:
 	//座標変換行列データ
 	struct ParticleForGPU {
@@ -23,66 +23,64 @@ public:
 	struct ParticleResource {
 		Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
 		ParticleForGPU* instancingData;
-		TransformEuler transform;
-		D3D12_CPU_DESCRIPTOR_HANDLE SrvHandleCPU;
-		D3D12_GPU_DESCRIPTOR_HANDLE SrvHandleGPU;
 		uint32_t srvIndex;
 	};
-	//パーティクル構造体
-	struct ParticleData {
-		TransformEuler transform;
-		Vector3 velocity;
-		Vector4 color;
-		float lifeTime;
-		float currentTime;
+	//エフェクト構造体
+	struct EffectData {
+		TransformEuler transform;	//エフェクトのトランスフォーム
+		Vector4 startColor;			//最初の色
+		Vector4 endColor;			//最後の色
+		Vector3 velocity;			//速度
+		float startSize;			//最初のサイズ
+		float endSize;				//最後のサイズ
+		float lifeTime;				//寿命
+		float currentTime;			//現在の時間
 	};
-	//エミッター構造体
+	//エミッター
 	struct Emitter {
-		TransformEuler transform;//エミッターのトランスフォーム
-		uint32_t count;//発生させるパーティクルの数
-		float frequency;//発生頻度
-		float frequencyTime;//頻度用時刻
-	};
-	//フィールド
-	struct AccelerationField
-	{
-		Vector3 acceleration;
-		AABB area;
-		bool isActive;
+		TransformEuler transform;	//エミッターのトランスフォーム
+		float gravity;				//重力値
+		float repulsion;			//床の反発値
+		float floorHeight;			//床の高さ
+		bool isAffectedField;		//フィールドに影響を受けるか
+		bool isBillboard;			//ビルボードを適用するか
+		bool isGravity;				//重力を適用するか
+		bool isBound;				//バウンドを適用するか
+		bool isPlay;				//パーティクルを生成するか
 	};
 public://メンバ関数
 	~Particle();
 	/// <summary>
 	/// 初期化
 	/// </summary>
-	/// <param name="filePath">オブジェクトファイルパス(.objはいらない)</param>
-	void Initialize(const std::string& filePath);
-	void Draw(const BaseCamera& camera, Emitter& emitter, AccelerationField* field = nullptr);
+	/// <param name="name">インスタンスの名前</param>
+	/// <param name="fileName">使用するパーティクルの名前(.jsonは省略)</param>
+	void Initialize(const std::string& name,const std::string& fileName);
 private://メンバ関数(非公開)
 	//パーティクルリソース作成関数
 	ParticleResource MakeParticleResource();
 	//SRVの設定
 	void SettingSRV();
-	//パーティクルの生成
-	ParticleData MakeNewParticle(const Vector3& translate);
-	//エミット
-	std::list<ParticleData> Emit(const Emitter& emitter);
 
-private://インスタンス
-private://メンバ変数
+public: //getter
+	//パラメーター
+	const json& GetParam() { return param_; }
+public: //setter
+	//パラメーター
+	void SetParam(const json& param) { param_ = param; }
+public: //マネージャー共有用変数
 	//モデル(見た目)
 	Model* model_;
 	//パーティクル用リソース
 	ParticleResource particleResource_;
-
-	//各インスタンシング用書き換え情報
-	std::list<ParticleData> particles;
-	//表示するパーティクルの最大数
-	const uint32_t kNumMaxInstance_ = 64;
-	//δtの定義
-	const float kDeltaTime = 1.0f / 60.0f;
-	//ビルボードのオンオフ
-	bool isBillboard = true;
-
+	//各インスタンシング（エフェクト）用書き換え情報
+	std::list<EffectData> effects_;
+public://エミッター
+	Emitter emitter_;
+private: //メンバ変数
+	//インスタンスの名前
+	std::string name_;
+	//各エフェクトのパラメーター
+	json param_;
 
 };

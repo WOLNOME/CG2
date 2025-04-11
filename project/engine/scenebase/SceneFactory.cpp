@@ -3,6 +3,9 @@
 #include "TitleScene.h"
 #include "ClearScene.h"
 
+// パーティクルクリエイター
+#include "ParticleCreatorScene.h"
+
 BaseScene* SceneFactory::CreateScene(const std::string& sceneName)
 {
 	//次のシーンを生成
@@ -16,6 +19,10 @@ BaseScene* SceneFactory::CreateScene(const std::string& sceneName)
 	}
 	else if (sceneName == "CLEAR") {
 		newScene = new ClearScene();
+	}
+	//パーティクルクリエイター
+	else if (sceneName == "PARTICLECREATOR") {
+		newScene = new ParticleCreatorScene();
 	}
 
 	return newScene;

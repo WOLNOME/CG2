@@ -18,8 +18,7 @@ struct PointLightData {
 /// <summary>
 /// 点光源
 /// </summary>
-class PointLight
-{
+class PointLight {
 public:
 	//色
 	Vector4 color_ = { 1.0f, 1.0f, 1.0f, 1.0f };
@@ -46,7 +45,7 @@ public:
 	/// </summary>
 	/// <returns>スポットライトのデータ</returns>
 	const PointLightData& GetData() { return data_; }
-	
+
 private:
 	// データ
 	PointLightData data_;

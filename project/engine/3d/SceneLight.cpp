@@ -4,8 +4,7 @@
 #include <cassert>
 #include <algorithm>
 
-void SceneLight::Initialize()
-{
+void SceneLight::Initialize() {
 	//各光源のサイズを確定
 	directionalLights_.resize(kMaxNumDirectionalLight);
 	pointLights_.resize(kMaxNumPointLight);
@@ -43,12 +42,11 @@ void SceneLight::Initialize()
 
 }
 
-void SceneLight::Update(BaseCamera* camera)
-{
+void SceneLight::Update() {
 	//登録済みの光源の更新処理
 	for (const auto& dirLight : directionalLights_) {
 		if (dirLight) {
-			dirLight->Update(camera);
+			dirLight->Update();
 		}
 	}
 	for (const auto& pointLight : pointLights_) {
@@ -90,8 +88,7 @@ void SceneLight::Update(BaseCamera* camera)
 
 }
 
-void SceneLight::SetLight(DirectionalLight* dirLight)
-{
+void SceneLight::SetLight(DirectionalLight* dirLight) {
 	// 現在登録されている光源の数を取得
 	size_t currentNumLights = std::count_if(
 		directionalLights_.begin(),
@@ -114,8 +111,7 @@ void SceneLight::SetLight(DirectionalLight* dirLight)
 	assert(false && "Failed to set light - no available slots!");
 }
 
-void SceneLight::SetLight(PointLight* pointLight)
-{
+void SceneLight::SetLight(PointLight* pointLight) {
 	// 現在登録されている光源の数を取得
 	size_t currentNumLights = std::count_if(
 		pointLights_.begin(),
@@ -138,8 +134,7 @@ void SceneLight::SetLight(PointLight* pointLight)
 	assert(false && "Failed to set light - no available slots!");
 }
 
-void SceneLight::SetLight(SpotLight* spotLight)
-{
+void SceneLight::SetLight(SpotLight* spotLight) {
 	// 現在登録されている光源の数を取得
 	size_t currentNumLights = std::count_if(
 		spotLights_.begin(),

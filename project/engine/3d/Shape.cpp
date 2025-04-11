@@ -5,23 +5,19 @@
 #include <numbers>
 #include <cassert>
 
-void Shape::Initialize(ShapeKind shapeKind)
-{
+void Shape::Initialize(ShapeKind shapeKind) {
 	//形状の種類
 	shapeKind_ = shapeKind;
 	//形状リソースの初期設定
 	shapeResource_ = MakeShapeResource();
 }
 
-void Shape::Update()
-{
+void Shape::Update() {
 }
 
-void Shape::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, int32_t textureHandle)
-{
+void Shape::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, int32_t textureHandle) {
 	//頂点バッファビューを設定
 	MainRender::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &shapeResource_.vertexBufferView);
-	//マテリアルCBufferの場所を設定
 	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(materialRootParameterIndex, shapeResource_.materialResource->GetGPUVirtualAddress());
 	//テクスチャがない場合は飛ばす
 	shapeResource_.materialData->isTexture = (textureHandle != EOF) ? true : false;
@@ -32,8 +28,7 @@ void Shape::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParame
 	MainRender::GetInstance()->GetCommandList()->DrawInstanced(shapeResource_.vertexNum, 1, 0, 0);
 }
 
-Shape::ShapeResource Shape::MakeShapeResource()
-{
+Shape::ShapeResource Shape::MakeShapeResource() {
 	//形状リソース
 	ShapeResource resource;
 
@@ -45,8 +40,7 @@ Shape::ShapeResource Shape::MakeShapeResource()
 	sphere.center = { 0.0f,0.0f,0.0f };
 	sphere.radius = 1.0f;
 
-	switch (shapeKind_)
-	{
+	switch (shapeKind_) {
 	case ShapeKind::kSphere:
 		//頂点数を保持
 		resource.vertexNum = kSubdivision * kSubdivision * 6;
@@ -134,10 +128,10 @@ Shape::ShapeResource Shape::MakeShapeResource()
 	case ShapeKind::kCube:
 		break;
 	default:
-		//未定義の形状が入力された場合
-		assert(0 && "未定義の形状が入力されました");
+		assert(0);
 		break;
 	}
+
 
 	return resource;
 }

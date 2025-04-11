@@ -14,18 +14,15 @@
 
 class BaseCamera;
 //モデル
-class Object3d
-{
+class Object3d {
 private://非公開列挙型
-	enum ObjectKind
-	{
+	enum ObjectKind {
 		kModel,
 		kShape,
 	};
 
 public://構造体
-	struct LightFlagForPS
-	{
+	struct LightFlagForPS {
 		uint32_t isActiveLights;
 	};
 
@@ -48,12 +45,12 @@ public://メンバ関数
 		const SceneLight* sceneLight = nullptr,
 		int32_t textureHandle = EOF
 	);
-
 private://非公開メンバ関数
 
 private://メンバ変数
 	//モデル
 	Model* model_ = nullptr;
+
 	//形状
 	std::unique_ptr<Shape> shape_ = nullptr;
 	//オブジェクトの種類

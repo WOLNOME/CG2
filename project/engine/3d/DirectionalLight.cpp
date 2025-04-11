@@ -1,11 +1,9 @@
 #include "DirectionalLight.h"
 
-void DirectionalLight::Initialize()
-{
+void DirectionalLight::Initialize() {
 }
 
-void DirectionalLight::Update(BaseCamera* camera)
-{
+void DirectionalLight::Update() {
 	//データを転送
 	data_.color = color_;
 	data_.direction = direction_;

@@ -1,8 +1,7 @@
 #include "PointLight.h"
 #include "DirectXCommon.h"
 
-void PointLight::Update()
-{
+void PointLight::Update() {
 	//データを転送
 	data_.color = color_;
 	data_.position = position_;

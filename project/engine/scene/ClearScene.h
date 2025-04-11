@@ -1,9 +1,5 @@
 #pragma once
 #include "BaseScene.h"
-#include "Input.h"
-#include "Sprite.h"
-#include <memory>
-#include <cstdint>
 class ClearScene : public BaseScene
 {
 public:
@@ -23,6 +19,10 @@ public:
 	/// 描画
 	/// </summary>
 	void Draw() override;
+	/// <summary>
+	/// テキスト描画
+	/// </summary>
+	void TextDraw() override;
 private://メンバ変数
 	//インプット
 	Input* input_ = nullptr;
@@ -31,6 +31,8 @@ private://メンバ変数
 	uint32_t textureHandleClear_ = 0u;
 	std::unique_ptr<Sprite> spriteClear_ = nullptr;
 
+	uint32_t textureHandleUI_SPACE_ = 0u;
+	std::unique_ptr<Sprite> spriteUI_SPACE_ = nullptr;
 
 };
 

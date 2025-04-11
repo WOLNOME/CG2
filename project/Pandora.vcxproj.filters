@@ -34,7 +34,6 @@
     <ClCompile Include="engine\input\Input.cpp" />
     <ClCompile Include="engine\base\Logger.cpp" />
     <ClCompile Include="engine\2d\ImGuiManager.cpp" />
-    <ClCompile Include="Framework.cpp" />
     <ClCompile Include="engine\3d\LineDrawer.cpp" />
     <ClCompile Include="engine\3d\LineDrawerCommon.cpp" />
     <ClCompile Include="main.cpp" />
@@ -55,7 +54,6 @@
     <ClCompile Include="engine\scenebase\SceneManager.cpp" />
     <ClCompile Include="engine\scene\TitleScene.cpp" />
     <ClCompile Include="engine\3d\Particle.cpp" />
-    <ClCompile Include="engine\3d\ParticleCommon.cpp" />
     <ClCompile Include="engine\3d\WorldTransform.cpp" />
     <ClCompile Include="engine\3d\PointLight.cpp" />
     <ClCompile Include="engine\3d\SceneLight.cpp" />
@@ -66,6 +64,15 @@
     <ClCompile Include="engine\scene\ClearScene.cpp" />
     <ClCompile Include="engine\3d\Skybox.cpp" />
     <ClCompile Include="engine\3d\SkyboxCommon.cpp" />
+    <ClCompile Include="engine\util\RandomStringUtil.cpp" />
+    <ClCompile Include="engine\2d\TextWrite.cpp" />
+    <ClCompile Include="engine\2d\TextWriteManager.cpp" />
+    <ClCompile Include="engine\3d\ParticleManager.cpp" />
+    <ClCompile Include="engine\base\Framework.cpp" />
+    <ClCompile Include="engine\math\Vector3.cpp" />
+    <ClCompile Include="engine\scene\ParticleCreatorScene.cpp" />
+    <ClCompile Include="engine\scenebase\SceneTransitionAnimation.cpp" />
+    <ClCompile Include="engine\util\JsonUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\3d\DirectionalLight.h" />
@@ -104,7 +111,6 @@
     <ClInclude Include="engine\base\WinApp.h" />
     <ClInclude Include="engine\2d\ImGuiManager.h" />
     <ClInclude Include="engine\base\SrvManager.h" />
-    <ClInclude Include="Framework.h" />
     <ClInclude Include="engine\math\MyMath.h" />
     <ClInclude Include="engine\3d\LineDrawer.h" />
     <ClInclude Include="engine\3d\LineDrawerCommon.h" />
@@ -115,7 +121,6 @@
     <ClInclude Include="engine\scenebase\SceneManager.h" />
     <ClInclude Include="engine\scene\TitleScene.h" />
     <ClInclude Include="engine\3d\Particle.h" />
-    <ClInclude Include="engine\3d\ParticleCommon.h" />
     <ClInclude Include="engine\3d\WorldTransform.h" />
     <ClInclude Include="engine\3d\PointLight.h" />
     <ClInclude Include="engine\math\Quaternion.h" />
@@ -128,6 +133,14 @@
     <ClInclude Include="engine\scene\ClearScene.h" />
     <ClInclude Include="engine\3d\Skybox.h" />
     <ClInclude Include="engine\3d\SkyboxCommon.h" />
+    <ClInclude Include="engine\util\RandomStringUtil.h" />
+    <ClInclude Include="engine\2d\TextWrite.h" />
+    <ClInclude Include="engine\2d\TextWriteManager.h" />
+    <ClInclude Include="engine\3d\ParticleManager.h" />
+    <ClInclude Include="engine\base\Framework.h" />
+    <ClInclude Include="engine\scene\ParticleCreatorScene.h" />
+    <ClInclude Include="engine\scenebase\SceneTransitionAnimation.h" />
+    <ClInclude Include="engine\util\JsonUtil.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\LineDrawer.hlsli" />

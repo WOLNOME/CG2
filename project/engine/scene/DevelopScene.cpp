@@ -1,12 +1,4 @@
 #include "DevelopScene.h"
-#include "TextureManager.h"
-#include "ImGuiManager.h"
-#include "Object3dCommon.h"
-#include "SkyboxCommon.h"
-#include "ParticleCommon.h"
-#include "LineDrawerCommon.h"
-#include "SpriteCommon.h"
-#include "SceneManager.h"
 #include <numbers>
 
 void DevelopScene::Initialize() {
@@ -43,12 +35,7 @@ void DevelopScene::Initialize() {
 	sceneLight_->SetLight(pointLight.get());
 	sceneLight_->SetLight(pointLight2.get());
 	sceneLight_->SetLight(spotLight.get());
-	//スカイボックスの初期化
-	wtSkybox_.Initialize();
-	wtSkybox_.scale_ = { 100.0f,100.0f,100.0f };
-	textureHandleSkybox_ = TextureManager::GetInstance()->LoadTexture("rostock_laage_airport_4k.dds");
-	skybox_ = std::make_unique<Skybox>();
-	skybox_->Initialize();
+
 
 	//ゲームシーン変数の初期化
 	sprite_ = std::make_unique<Sprite>();
@@ -93,42 +80,35 @@ void DevelopScene::Initialize() {
 	simpleSkin_ = std::make_unique<Object3d>();
 	simpleSkin_->InitializeModel("simpleSkin", GLTF);
 
-
-	emitter_.transform.scale = { 1.0f,1.0f,1.0f };
-	emitter_.transform.rotate = { 0.0f,0.0f,0.0f };
-	emitter_.transform.translate = { 0.0f,0.0f,0.0f };
-	emitter_.count = 3;
-	emitter_.frequency = 0.3f;
-	emitter_.frequencyTime = 0.0f;
-	field_.acceleration = { 0.0f,5.0f,0.0f };
-	field_.area.min = { -100.0f,-100.0f,-100.0f };
-	field_.area.max = { 100.0f,100.0f,100.0f };
-	field_.isActive = true;
+	ParticleManager::GetInstance()->SetCamera(camera.get());
 	particle_ = std::make_unique<Particle>();
-	particle_->Initialize("circle");
+	particle_->Initialize("develop", "heart");
 
 	line_ = std::make_unique<LineDrawer>();
 	line_->Initialize();
 
 	audio_ = std::make_unique<Audio>();
-	audio_->Initialize("Alarm01.wav");
+	audio_->Initialize("demo2.wav");
+
+	text_ = std::make_unique<TextWrite>();
+	text_->Initialize("text");
+	text_->SetParam({ 0.0f,0.0f }, Font::UDDegitalN_R, 32.0f, { 1,1,0,1 });
+	text_->SetEdgeParam({ 1,0,0,1 }, 10.0f, 0.0f, true);
 }
 
 void DevelopScene::Finalize() {
 }
 
 void DevelopScene::Update() {
+	//シーン共通の更新
+	BaseScene::Update();
+
 	//カメラの更新
 	camera->Update();
-
-	//シーンライトの更新処理
-	sceneLight_->Update(camera.get());
-
 
 	//モデルの更新
 	wtAxis_.rotate_.y += 0.03f;
 	wtAxis_.UpdateMatrix();
-	wtSkybox_.UpdateMatrix();
 	wtTerrain_.UpdateMatrix();
 	wtAnimatedCube_.UpdateMatrix();
 	wtSneakWalk_.UpdateMatrix();
@@ -253,6 +233,8 @@ void DevelopScene::Update() {
 		MyMath::DrawSphere(slMarkSphere2, { 0.0f,1.0f,0.0f,1.0f }, slMark.get());
 	}
 	ImGui::End();
+	//テキスト用ImGui
+	text_->DebugWithImGui();
 
 #endif // _DEBUG
 }
@@ -265,9 +247,9 @@ void DevelopScene::Draw() {
 	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
-	axis_->Draw(wtAxis_, *camera.get(), sceneLight_.get());
 
 	terrain_->Draw(wtTerrain_, *camera.get(), sceneLight_.get());
+	axis_->Draw(wtAxis_, *camera.get(), sceneLight_.get());
 
 	animatedCube_->Draw(wtAnimatedCube_, *camera.get(), sceneLight_.get());
 
@@ -279,33 +261,6 @@ void DevelopScene::Draw() {
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
-	///------------------------------///
-
-	//スカイボックスの共通描画設定
-	SkyboxCommon::GetInstance()->SettingCommonDrawing();
-
-	///------------------------------///
-	///↓↓↓↓スカイボックス描画開始↓↓↓↓
-	///------------------------------///
-
-	//スカイボックス描画
-	skybox_->Draw(wtSkybox_, *camera.get(), textureHandleSkybox_);
-
-	///------------------------------///
-	///↑↑↑↑スカイボックス描画終了↑↑↑↑
-	///------------------------------///
-
-	//パーティクルの共通描画設定
-	ParticleCommon::GetInstance()->SettingCommonDrawing();
-
-	///------------------------------///
-	///↓↓↓↓パーティクル描画開始↓↓↓↓
-	///------------------------------///
-
-	particle_->Draw(*camera.get(), emitter_, &field_);
-
-	///------------------------------///
-	///↑↑↑↑パーティクル描画終了↑↑↑↑
 	///------------------------------///
 
 
@@ -333,12 +288,26 @@ void DevelopScene::Draw() {
 	///↓↓↓↓スプライト描画開始↓↓↓↓
 	///------------------------------///
 
-	//スプライト描画
+	////スプライト描画
 	//sprite_->Draw();
 	//sprite2_->Draw();
 
 
 	///------------------------------///
 	///↑↑↑↑スプライト描画終了↑↑↑↑
+	///------------------------------///
+}
+
+void DevelopScene::TextDraw() {
+	///------------------------------///
+	///↑↑↑↑テキスト描画終了↑↑↑↑
+	///------------------------------///
+
+	timer_++;
+	float time = timer_ / 60.0f;
+	text_->WriteText(L"フォント確認 0123 現在時刻 : {:.1f}",time);
+
+	///------------------------------///
+	///↑↑↑↑テキスト描画終了↑↑↑↑
 	///------------------------------///
 }

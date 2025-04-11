@@ -17,14 +17,11 @@ void DevelopCamera::Update()
 {
 	////開発用カメラのマウス操作処理
 	//スクロールで前進後退
-	transform.translate += GetForwardDirection() * (input_->GetMouseScrollCount() * 1.0f);
+	transform.translate += GetForwardDirection() * (input_->GetMouseScrollCount() * 1.3f);
 	//ドラッグアンドドロップでカメラの向きを変える
 	if (input_->PushMouseButton(MouseButton::RightButton)) {
-		if (input_->TriggerMouseButton(MouseButton::RightButton)) {
-			start = input_->GetMousePosition();
-		}
 		//マウスの移動幅
-		Vector2 moveValue = input_->GetMousePosition() - start;
+		Vector2 moveValue = input_->GetMousePosition();
 		//デッドゾーン
 		float deadZone = 2.0f;
 		if (moveValue.Length() > deadZone) {
@@ -56,6 +53,9 @@ void DevelopCamera::Update()
 	//行列の更新
 	BaseCamera::UpdateMatrix();
 
+}
+
+void DevelopCamera::DebugWithImGui() {
 #ifdef _DEBUG
 
 	ImGui::Begin("DevelopCamera");
@@ -78,6 +78,4 @@ void DevelopCamera::Update()
 	ImGui::End();
 
 #endif // _DEBUG
-
-
 }

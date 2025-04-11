@@ -27,6 +27,9 @@ public:
 	void PreDraw();
 	//描画後処理
 	void PostDraw();
+	//画面切り替え処理
+	void ExchangeScreen();
+
 	//コマンドの準備
 	void ReadyNextCommand();
 private://生成系メンバ関数
@@ -51,6 +54,10 @@ public://ゲッター
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
 	//バックバッファの数を取得
 	size_t GetBackBufferCount()const { return swapChainDesc.BufferCount; }
+	//スワップチェーン
+	IDXGISwapChain4* GetSwapChain()const { return swapChain.Get(); }
+	//スワップチェーンのリソース
+	ID3D12Resource* GetSwapChainResource(uint32_t index)const { return swapChainResources[index].Get(); }
 
 private://インスタンス
 

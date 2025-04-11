@@ -61,7 +61,6 @@ private://非公開メンバ関数
 	LineResource MakeLineResource();
 	//インスタンシングをSRVにセット
 	void SettingSRV();
-private://インスタンス
 private://メンバ変数
 	//一つのインスタンスで表示できる線の最大数
 	static const size_t kNumMaxLine_ = 512;

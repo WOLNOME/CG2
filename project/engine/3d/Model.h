@@ -17,13 +17,11 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
-class Model
-{
+class Model {
 private://アニメーション関連構造体
 	//キーフレーム
 	template <typename tValue>
-	struct Keyframe
-	{
+	struct Keyframe {
 		float time;
 		tValue value;
 	};
@@ -31,8 +29,7 @@ private://アニメーション関連構造体
 	using keyframeQuaternion = Keyframe<Quaternion>;
 	//ノードアニメーション
 	template <typename tValue>
-	struct AnimationCurve
-	{
+	struct AnimationCurve {
 		std::vector<Keyframe<tValue>> keyframes;
 	};
 
@@ -42,8 +39,7 @@ private://アニメーション関連構造体
 		AnimationCurve<Vector3> scale;
 	};
 	//アニメーション
-	struct Animation
-	{
+	struct Animation {
 		float duration;//アニメーション全体の尺(秒)
 		//NodeAnimationの集合、Node名で開けるようにしておく
 		std::map<std::string, NodeAnimation> nodeAnimations;
@@ -70,8 +66,7 @@ private://アニメーション関連構造体
 		uint32_t vertexIndex;
 	};
 	//ジョイントウェイト
-	struct JointWeightData
-	{
+	struct JointWeightData {
 		Matrix4x4 inverseBindPoseMatrix;
 		std::vector<VertexWeightData> vertexWeights;
 	};
@@ -96,7 +91,7 @@ private://アニメーション関連構造体
 		std::span<WellForGPU> mappedPalette;
 		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> paletteSrvHandle;
 	};
-	
+
 private://メッシュ関連構造体
 	//頂点データ
 	struct VertexData {
@@ -160,13 +155,13 @@ public:
 	/// <param name="materialRootParameterIndex">マテリアル設定用ルートパラメータの番号</param>
 	/// <param name="textureRootParameterIndex">テクスチャ設定用ルートパラメータの番号</param>
 	/// <param name="instancingNum">インスタンス数</param>
-	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum = 1);
-	
+	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum = 1, int32_t textureHandle = -1);
+
 public://ゲッター
 	const ModelResource& GetModelResource() { return modelResource_; }
 	bool IsAnimation() { return isAnimation_; }
 public://セッター
-
+	void SetColor(Vector4& color) { color_ = &color; }
 private:
 	//モデルファイルの読み取り
 	std::vector<ModelData> LoadModelFile();
@@ -200,6 +195,8 @@ private:
 	ModelResource modelResource_;
 	//モデル数
 	size_t modelNum_;
+	//色
+	Vector4* color_ = nullptr;
 
 	//ディレクトリパス
 	std::string directoryPath_;

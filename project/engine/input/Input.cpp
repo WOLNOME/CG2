@@ -2,6 +2,7 @@
 #include <cassert>
 #include <Windows.h>
 #include "WinApp.h"
+#include "Logger.h"
 
 #pragma comment(lib,"dinput8.lib")
 #pragma comment(lib,"dxguid.lib")
@@ -139,6 +140,11 @@ void Input::GenerateKeyboard()
 	//入力データ形式のセット
 	hr = keyboard->SetDataFormat(&c_dfDIKeyboard);
 	assert(SUCCEEDED(hr));
+	//ウィンドウがないためスキップ
+	if (!IsWindow(WinApp::GetInstance()->GetHwnd())) {
+		Logger::Log("ウィンドウ消えてるからSetCooperativeLevelスキップ");
+		return;
+	}
 	//排他制御レベルのセット
 	hr = keyboard->SetCooperativeLevel(
 		WinApp::GetInstance()->GetHwnd(), DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);

@@ -39,57 +39,71 @@ void AudioCommon::Finalize()
 
 uint32_t AudioCommon::SoundLoadWave(const std::string& filename)
 {
-	// 1. 既存のサウンドデータを検索
+	// 既存のサウンドデータを検索
 	for (uint32_t i = kStartSoundDataIndex; i < soundDatas_.size(); ++i) {
 		if (soundDatas_[i].name == filename) {  // 名前が一致するサウンドデータを発見
 			return i;                           // 既存のインデックスを返す
 		}
 	}
 
-	// 2. ファイルオープン
+	// ファイルオープン
 	std::ifstream file;
 	file.open(filename, std::ios_base::binary);
 	assert(file.is_open());
 
-	// 3. 「.wav」データ読み込み
+	// RIFFヘッダの読み込み
 	RiffHeader riff;
 	file.read((char*)&riff, sizeof(riff));
-	if (strncmp(riff.chunk.id, "RIFF", 4) != 0) {
-		assert(0);
-	}
-	if (strncmp(riff.type, "WAVE", 4) != 0) {
-		assert(0);
-	}
+	// ファイルがRIFFかチェック
+	assert(strncmp(riff.chunk.id, "RIFF", 4) == 0);
+	// タイプがWAVEかチェック
+	assert(strncmp(riff.type, "WAVE", 4) == 0);
 
+	// 'fmt 'チャンクと'data'チャンクを見つけるまでループ
 	FormatChunk format = {};
-	file.read((char*)&format, sizeof(ChunkHeader));
-	if (strncmp(format.chunk.id, "fmt ", 4) != 0) {
-		assert(0);
-	}
-	assert(format.chunk.size <= sizeof(format.fmt));
-	file.read((char*)&format.fmt, format.chunk.size);
+	BYTE* pBuffer = nullptr;
+	unsigned int dataSize = 0;
 
-	ChunkHeader data;
-	file.read((char*)&data, sizeof(data));
-	if (strncmp(data.id, "JUNK", 4) == 0) {
-		file.seekg(data.size, std::ios_base::cur);
-		file.read((char*)&data, sizeof(data));
-	}
-	if (strncmp(data.id, "data", 4) != 0) {
-		assert(0);
+	while (file.peek() != EOF) {
+		// チャンクヘッダの読み込み
+		ChunkHeader chunkHeader;
+		file.read((char*)&chunkHeader, sizeof(chunkHeader));
+
+		// チャンクIDに応じて処理
+		if (strncmp(chunkHeader.id, "fmt ", 4) == 0) {
+			// 'fmt 'チャンクの読み込み
+			assert(chunkHeader.size <= sizeof(format.fmt));
+			file.read((char*)&format.fmt, chunkHeader.size);
+		}
+		else if (strncmp(chunkHeader.id, "data", 4) == 0) {
+			// 'data'チャンクの読み込み
+			pBuffer = new BYTE[chunkHeader.size];
+			dataSize = chunkHeader.size;
+			file.read(reinterpret_cast<char*>(pBuffer), chunkHeader.size);
+		}
+		else {
+			// 他のチャンクは読み飛ばす
+			file.seekg(chunkHeader.size, std::ios::cur);
+		}
+
+		// 必要なチャンクが見つかったら終了
+		if (format.fmt.wFormatTag && pBuffer) {
+			break;
+		}
 	}
 
-	char* pBuffer = new char[data.size];
-	file.read(pBuffer, data.size);
+	// チャンクが見つかったか確認
+	assert(format.fmt.wFormatTag != 0);
+	assert(pBuffer != nullptr);
 
-	// 4. ファイルクローズ
+	// ファイルクローズ
 	file.close();
 
-	// 5. サウンドデータの登録
+	// サウンドデータの登録
 	SoundData soundData = {};
 	soundData.wfex = format.fmt;
 	soundData.pBuffer = reinterpret_cast<BYTE*>(pBuffer);
-	soundData.bufferSize = data.size;
+	soundData.bufferSize = dataSize;
 	soundData.name = filename;  // ファイル名を保存
 
 	// soundDatas_に空きがある場所を検索して登録

@@ -145,6 +145,8 @@ public://静的メンバ関数
 	static Vector2 Multiply(float s, const Vector2& v);
 	//クロス積
 	static float Cross(const Vector2& a, const Vector2& b);
+	//線形補完
+	static Vector2 Lerp(const Vector2& v1, const Vector2& v2, float t);
 	
 	///------------------------------------///
 	///               Vector3
@@ -186,6 +188,13 @@ public://静的メンバ関数
 	static Vector3 Reflect(const Vector3& input, const Vector3& normal);
 	//2つのベクトルのなす角を求める関数
 	static float AngleOf2VectorY(const Vector3& v1, const Vector3& v2);
+
+	///------------------------------------///
+	///             Vector4
+	///------------------------------------///
+
+	//線形補完
+	static Vector4 Lerp(const Vector4& v1, const Vector4& v2, float t);
 
 	///------------------------------------///
 	///               Matrix4x4
@@ -409,7 +418,7 @@ Vector2 operator*(float s, const Vector2& v);
 Vector2 operator*(const Vector2& v, float s);
 Vector2 operator/(const Vector2& v, float s);
 Vector3 operator+(const Vector3& v1, const Vector3& v2);
-Vector3 operator-(const Vector3& v1, const Vector3& v2);
+//Vector3 operator-(const Vector3& v1, const Vector3& v2);  Vector3のクラスで定義してます。そっちで使いたかったので byイイオカ
 Vector3 operator*(float s, const Vector3& v);
 Vector3 operator*(const Vector3& v, float s);
 Vector3 operator/(const Vector3& v, float s);

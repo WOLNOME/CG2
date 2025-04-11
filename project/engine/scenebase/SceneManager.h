@@ -1,12 +1,12 @@
 #pragma once
 #include "BaseScene.h"
 #include "AbstractSceneFactory.h"
+#include "SceneTransitionAnimation.h"
 #include "Audio.h"
 #include <string>
 #include <memory>
 //シーン管理
-class SceneManager
-{
+class SceneManager {
 private://コンストラクタ等の隠蔽
 	static SceneManager* instance;
 
@@ -31,6 +31,10 @@ public:
 	/// </summary>
 	void Draw();
 	/// <summary>
+	///	文字描画
+	/// </summary>
+	void TextDraw();
+	/// <summary>
 	/// 終了
 	/// </summary>
 	void Finalize();
@@ -40,7 +44,7 @@ private:
 	void ChangeScene();
 public:
 	//次シーンのセット
-	void SetNextScene(const std::string& nextSceneName);
+	void SetNextScene(const std::string& nextSceneName, SceneTransitionAnimation::TransitionType transitionType = SceneTransitionAnimation::TransitionType::FADE, uint32_t frame = 60);
 
 private:
 	//今のシーン
@@ -49,9 +53,8 @@ private:
 	BaseScene* nextScene_ = nullptr;
 	//シーンファクトリー
 	AbstractSceneFactory* sceneFactory_ = nullptr;
-
-	//BGM
-	std::unique_ptr<Audio> bgm_ = nullptr;
+	//シーン遷移アニメーション
+	std::unique_ptr<SceneTransitionAnimation> sceneTransitionAnimation_ = nullptr;
 
 };
 

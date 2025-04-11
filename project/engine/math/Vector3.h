@@ -67,4 +67,19 @@ struct Vector3 final {
 		z /= len;
 		return *this;
 	}
+
+	Vector3 operator-(const Vector3& other) const {
+		return Vector3(x - other.x, y - other.y, z - other.z);
+	}
+
+
+	/////////// 以下追加 ///////////
+
+	float   Dot(const Vector3& _v)                  const;
+	Vector3 Cross(const Vector3& _v)                const;
+	float   LengthWithoutRoot()                     const;
+	Vector3 Normalize()                             const;
+	float   Distance(const Vector3& _destination)   const;
+	float   Projection(const Vector3& _a)           const;
+	void    Theta(float& _azimuth, float& _elevation, const Vector3& _origin = { 0.0f, 0.0f }) const;
 };

@@ -6,6 +6,7 @@
 #include "MainRender.h"
 #include "SrvManager.h"
 #include <cstdint>
+#include <cassert>
 
 ImGuiManager* ImGuiManager::instance = nullptr;
 
@@ -37,6 +38,13 @@ void ImGuiManager::Initialize()
 		SrvManager::GetInstance()->GetCPUDescriptorHandle(index),
 		SrvManager::GetInstance()->GetGPUDescriptorHandle(index)
 	);
+
+	//日本語を使用するための設定
+	ImGuiIO& io = ImGui::GetIO();
+	ImFont* font = io.Fonts->AddFontFromFileTTF("Resources/fonts/meiryo.ttc", 18.0f, nullptr, io.Fonts->GetGlyphRangesJapanese());
+	if (font == nullptr) {
+		assert(0 && "フォントの読み込みに失敗しました");
+	}
 }
 
 void ImGuiManager::Finalize()

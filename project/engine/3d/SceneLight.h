@@ -2,7 +2,6 @@
 #include "DirectionalLight.h"
 #include "PointLight.h"
 #include "SpotLight.h"
-#include "BaseCamera.h"
 #include <d3d12.h>
 #include <wrl.h>
 #include <vector>
@@ -36,7 +35,7 @@ public:
 	/// <summary>
 	/// 更新
 	/// </summary>
-	void Update(BaseCamera* camera);
+	void Update();
 	/// <summary>
 	/// シーンライト用定数バッファの取得
 	/// </summary>

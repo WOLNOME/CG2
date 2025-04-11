@@ -1,11 +1,4 @@
 #include "ClearScene.h"
-#include "TextureManager.h"
-#include "ModelManager.h"
-#include "ImGuiManager.h"
-#include "Object3dCommon.h"
-#include "ParticleCommon.h"
-#include "SpriteCommon.h"
-#include "LineDrawerCommon.h"
 #include "SceneManager.h"
 
 void ClearScene::Initialize()
@@ -15,28 +8,35 @@ void ClearScene::Initialize()
 
 	input_ = Input::GetInstance();
 
-	textureHandleClear_ = TextureManager::GetInstance()->LoadTexture("clear.png");
+	textureHandleClear_ = TextureManager::GetInstance()->LoadTexture("Clear.png");
 	spriteClear_ = std::make_unique<Sprite>();
 	spriteClear_->Initialize(textureHandleClear_);
 
+	textureHandleUI_SPACE_ = TextureManager::GetInstance()->LoadTexture("UI_SPACE2.png");
+	spriteUI_SPACE_ = std::make_unique<Sprite>();
+	spriteUI_SPACE_->Initialize(textureHandleUI_SPACE_);
 
 }
 
 void ClearScene::Finalize()
 {
+	
 }
 
 void ClearScene::Update()
 {
-	if (input_->TriggerKey(DIK_TAB)) {
+	if (input_->TriggerKey(DIK_SPACE)) {
 		sceneManager_->SetNextScene("TITLE");
 	}
 
 	spriteClear_->Update();
+	spriteUI_SPACE_->Update();
 
 #ifdef _DEBUG
 	ImGui::Begin("scene");
 	ImGui::Text("%s", "CLEAR");
+	ImGui::Text("%s", "ToTitle : TAB");
+
 	ImGui::End();
 #endif // _DEBUG
 }
@@ -54,18 +54,6 @@ void ClearScene::Draw()
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
-	///------------------------------///
-
-	//パーティクルの共通描画設定
-	ParticleCommon::GetInstance()->SettingCommonDrawing();
-
-	///------------------------------///
-	///↓↓↓↓パーティクル描画開始↓↓↓↓
-	///------------------------------///
-
-
-	///------------------------------///
-	///↑↑↑↑パーティクル描画終了↑↑↑↑
 	///------------------------------///
 
 
@@ -90,8 +78,21 @@ void ClearScene::Draw()
 	///------------------------------///
 
 	spriteClear_->Draw();
+	spriteUI_SPACE_->Draw();
 
 	///------------------------------///
 	///↑↑↑↑スプライト描画終了↑↑↑↑
+	///------------------------------///
+}
+
+void ClearScene::TextDraw() {
+	///------------------------------///
+	///↑↑↑↑テキスト描画終了↑↑↑↑
+	///------------------------------///
+
+	
+
+	///------------------------------///
+	///↑↑↑↑テキスト描画終了↑↑↑↑
 	///------------------------------///
 }
