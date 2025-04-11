@@ -3,13 +3,12 @@
 #include <d3d12.h>
 #include "MyMath.h"
 
-class Shape
-{
+class Shape {
 public://列挙型
-	enum ShapeKind
-	{
-		kSphere,
-		kCube,
+	enum ShapeKind {
+		kSphere,		//球体
+		kCube,			//立方体	
+		kPlane,			//平面
 	};
 private:
 	//頂点データ
@@ -43,6 +42,14 @@ public:
 private://非公開メンバ関数
 	//形状リソース作成関数
 	ShapeResource MakeShapeResource();
+
+	//球体リソースの作成関数
+	ShapeResource MakeSphereResource();
+	//立方体リソースの作成関数
+	ShapeResource MakeCubeResource();
+	//平面リソースの作成関数
+	ShapeResource MakePlaneResource();
+
 private:
 	//形状の種類
 	ShapeKind shapeKind_;

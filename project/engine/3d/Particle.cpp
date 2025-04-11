@@ -55,7 +55,7 @@ Particle::ParticleResource Particle::MakeParticleResource() {
 	//Particleリソース
 	ParticleResource particleResource;
 	//インスタンシングリソース作成
-	uint32_t kNumMaxInstance = param_["MaxEffects"];
+	uint32_t kNumMaxInstance = param_["MaxGrains"];
 	particleResource.instancingResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(ParticleForGPU) * kNumMaxInstance);
 	//リソースにデータを書き込む
 	particleResource.instancingResource->Map(0, nullptr, reinterpret_cast<void**>(&particleResource.instancingData));
@@ -73,7 +73,7 @@ void Particle::SettingSRV() {
 	particleResource_.srvIndex = SrvManager::GetInstance()->Allocate();
 
 	//srv設定
-	uint32_t kNumMaxInstance = param_["MaxEffects"];
+	uint32_t kNumMaxInstance = param_["MaxGrains"];
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;

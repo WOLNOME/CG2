@@ -60,9 +60,9 @@ public://パーティクルコンテナの操作
 private://パーティクル全体の操作
 	//グラフィックスパイプライン
 	void GenerateGraphicsPipeline();
-private://エフェクトの操作
-	//エフェクトの生成
-	std::list<Particle::EffectData> GenerateEffect(Particle* particle, int genNum);
+private://粒の操作
+	//粒の生成
+	std::list<Particle::GrainData> GenerateGrain(Particle* particle, int genNum);
 
 public://ゲッター
 public://セッター

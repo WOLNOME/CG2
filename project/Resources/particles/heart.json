@@ -23,7 +23,7 @@
         "Max": 3.071000099182129,
         "Min": 1.0
     },
-    "MaxEffects": 30,
+    "MaxGrains": 30,
     "StartColor": {
         "Max": {
             "w": 1.0,

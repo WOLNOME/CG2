@@ -425,20 +425,20 @@ void ParticleCreatorScene::Editor() {
 		ImGui::DragFloat("LifeTimeMax", &lifeTimeMax, 0.1f, lifeTimeMin, 30.0f);
 		ImGui::DragFloat("LifeTimeMin", &lifeTimeMin, 0.1f, 0.0f, lifeTimeMax);
 	}
-	//エフェクトの最大数を写す
-	int maxEffects = editParam_["MaxEffects"];
-	if (ImGui::CollapsingHeader("エフェクトの最大数")) {
+	//粒の最大数を写す
+	int maxGrains = editParam_["MaxGrains"];
+	if (ImGui::CollapsingHeader("粒の最大数")) {
 		//推奨値の計算
 		int RecommendValue = lifeTimeMax * editParam_["EmitRate"];
 		ImGui::Text("推奨値 : %d　(最低限の数で回せる値)", RecommendValue);
 		if (ImGui::Button("推奨値を適用")) {
-			maxEffects = RecommendValue;
+			maxGrains = RecommendValue;
 		}
-		ImGui::SliderInt("MaxEffects", &maxEffects, 1, 1000);
+		ImGui::SliderInt("MaxGrains", &maxGrains, 1, 1000);
 	}
-	//1秒あたりのエフェクトの生成量を写す
+	//1秒あたりの粒の生成量を写す
 	int emitRate = editParam_["EmitRate"];
-	if (ImGui::CollapsingHeader("1秒あたりのエフェクトの生成量")) {
+	if (ImGui::CollapsingHeader("1秒あたりの粒の生成量")) {
 		ImGui::SliderInt("EmitRate", &emitRate, 1, 100);
 	}
 	//ブレンドモードを写す
@@ -477,7 +477,7 @@ void ParticleCreatorScene::Editor() {
 	editParam_["Velocity"]["Min"]["z"] = velocityMin.z;
 	editParam_["LifeTime"]["Max"] = lifeTimeMax;
 	editParam_["LifeTime"]["Min"] = lifeTimeMin;
-	editParam_["MaxEffects"] = maxEffects;
+	editParam_["MaxGrains"] = maxGrains;
 	editParam_["EmitRate"] = emitRate;
 	editParam_["BlendMode"] = blendMode;
 	//パーティクルに反映

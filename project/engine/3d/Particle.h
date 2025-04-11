@@ -25,9 +25,9 @@ public:
 		ParticleForGPU* instancingData;
 		uint32_t srvIndex;
 	};
-	//エフェクト構造体
-	struct EffectData {
-		TransformEuler transform;	//エフェクトのトランスフォーム
+	//粒の構造体
+	struct GrainData {
+		TransformEuler transform;	//粒のトランスフォーム
 		Vector4 startColor;			//最初の色
 		Vector4 endColor;			//最後の色
 		Vector3 velocity;			//速度
@@ -73,14 +73,14 @@ public: //マネージャー共有用変数
 	Model* model_;
 	//パーティクル用リソース
 	ParticleResource particleResource_;
-	//各インスタンシング（エフェクト）用書き換え情報
-	std::list<EffectData> effects_;
+	//各インスタンシング（粒）用書き換え情報
+	std::list<GrainData> grains_;
 public://エミッター
 	Emitter emitter_;
 private: //メンバ変数
 	//インスタンスの名前
 	std::string name_;
-	//各エフェクトのパラメーター
+	//各粒のパラメーター
 	json param_;
 
 };

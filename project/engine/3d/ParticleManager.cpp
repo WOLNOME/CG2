@@ -26,9 +26,9 @@ void ParticleManager::Initialize() {
 void ParticleManager::Update() {
 	//各パーティクルの更新
 	for (const auto& particle : particles) {
-		//空いているエフェクトの中から確率で生成
+		//空いている粒の中から確率で生成
 		if (particle.second->emitter_.isPlay) {
-			int max = particle.second->GetParam()["MaxEffects"];
+			int max = particle.second->GetParam()["MaxGrains"];
 			int rate = particle.second->GetParam()["EmitRate"];
 			float ratePerFrame = rate * kDeltaTime;
 			int genNum = 0;
@@ -42,66 +42,66 @@ void ParticleManager::Update() {
 					genNum++;
 				}
 			}
-			//エフェクトの生成
-			if (genNum > 0 && particle.second->effects_.size() + genNum < max) {
-				particle.second->effects_.splice(particle.second->effects_.end(), GenerateEffect(particle.second, genNum));
+			//粒の生成
+			if (genNum > 0 && particle.second->grains_.size() + genNum < max) {
+				particle.second->grains_.splice(particle.second->grains_.end(), GenerateGrain(particle.second, genNum));
 			}
 		}
 
 		//インスタンスの番号
 		uint32_t instanceNum = 0;
-		//パーティクル内各エフェクトの更新
-		for (std::list<Particle::EffectData>::iterator effectIterator = particle.second->effects_.begin(); effectIterator != particle.second->effects_.end();) {
-			//各エフェクト(生きている)の寿命更新
-			(*effectIterator).currentTime += kDeltaTime;
-			//各エフェクトの生存チェック(寿命を迎えたら削除)
-			if ((*effectIterator).currentTime > (*effectIterator).lifeTime) {
-				effectIterator = particle.second->effects_.erase(effectIterator);
+		//パーティクル内各粒の更新
+		for (std::list<Particle::GrainData>::iterator grainIterator = particle.second->grains_.begin(); grainIterator != particle.second->grains_.end();) {
+			//各粒(生きている)の寿命更新
+			(*grainIterator).currentTime += kDeltaTime;
+			//各粒の生存チェック(寿命を迎えたら削除)
+			if ((*grainIterator).currentTime > (*grainIterator).lifeTime) {
+				grainIterator = particle.second->grains_.erase(grainIterator);
 				continue;
 			}
-			//各エフェクトとエミッターとの処理
+			//各粒とエミッターとの処理
 			if (particle.second->emitter_.isGravity) {
 				//重力処理
-				(*effectIterator).velocity.y += particle.second->emitter_.gravity * kDeltaTime;
+				(*grainIterator).velocity.y += particle.second->emitter_.gravity * kDeltaTime;
 			}
 			if (particle.second->emitter_.isBound) {
-				//エフェクトの足
-				float leg = (*effectIterator).transform.translate.y - MyMath::Lerp((*effectIterator).startSize, (*effectIterator).endSize, (*effectIterator).currentTime);
+				//粒の足
+				float leg = (*grainIterator).transform.translate.y - MyMath::Lerp((*grainIterator).startSize, (*grainIterator).endSize, (*grainIterator).currentTime);
 				//床の反発処理
-				if (leg > particle.second->emitter_.floorHeight && leg + (kDeltaTime * (*effectIterator).velocity.y) < particle.second->emitter_.floorHeight) {
-					(*effectIterator).velocity.y *= (-1.0f) * particle.second->emitter_.repulsion;
+				if (leg > particle.second->emitter_.floorHeight && leg + (kDeltaTime * (*grainIterator).velocity.y) < particle.second->emitter_.floorHeight) {
+					(*grainIterator).velocity.y *= (-1.0f) * particle.second->emitter_.repulsion;
 				}
 			}
-			//各エフェクトとフィールドとの処理
+			//各粒とフィールドとの処理
 			if (field_) {
 				if (field_->isActive && particle.second->emitter_.isAffectedField) {
-					if (MyMath::IsCollision(field_->area, (*effectIterator).transform.translate)) {
-						(*effectIterator).velocity = (*effectIterator).velocity + (kDeltaTime * field_->acceleration);
+					if (MyMath::IsCollision(field_->area, (*grainIterator).transform.translate)) {
+						(*grainIterator).velocity = (*grainIterator).velocity + (kDeltaTime * field_->acceleration);
 					}
 				}
 			}
-			//各エフェクトの速度加算
-			(*effectIterator).transform.translate = (*effectIterator).transform.translate + (kDeltaTime * (*effectIterator).velocity);
-			//各エフェクトの色更新
-			Vector4 currentColor = MyMath::Lerp((*effectIterator).startColor, (*effectIterator).endColor, (*effectIterator).currentTime / (*effectIterator).lifeTime);
-			//各エフェクトのサイズ更新
-			(*effectIterator).transform.scale = Vector3(MyMath::Lerp((*effectIterator).startSize, (*effectIterator).endSize, (*effectIterator).currentTime / (*effectIterator).lifeTime), MyMath::Lerp((*effectIterator).startSize, (*effectIterator).endSize, (*effectIterator).currentTime / (*effectIterator).lifeTime), MyMath::Lerp((*effectIterator).startSize, (*effectIterator).endSize, (*effectIterator).currentTime / (*effectIterator).lifeTime));
+			//各粒の速度加算
+			(*grainIterator).transform.translate = (*grainIterator).transform.translate + (kDeltaTime * (*grainIterator).velocity);
+			//各粒の色更新
+			Vector4 currentColor = MyMath::Lerp((*grainIterator).startColor, (*grainIterator).endColor, (*grainIterator).currentTime / (*grainIterator).lifeTime);
+			//各粒のサイズ更新
+			(*grainIterator).transform.scale = Vector3(MyMath::Lerp((*grainIterator).startSize, (*grainIterator).endSize, (*grainIterator).currentTime / (*grainIterator).lifeTime), MyMath::Lerp((*grainIterator).startSize, (*grainIterator).endSize, (*grainIterator).currentTime / (*grainIterator).lifeTime), MyMath::Lerp((*grainIterator).startSize, (*grainIterator).endSize, (*grainIterator).currentTime / (*grainIterator).lifeTime));
 			//座標情報からワールド行列を作成(ビルボード行列の計算もここで)
 			Matrix4x4 backToFrontMatrix = MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>);
 			Matrix4x4 billboardMatrix = MyMath::Multiply(backToFrontMatrix, camera_->GetWorldMatrix());
 			billboardMatrix.m[3][0] = 0.0f;
 			billboardMatrix.m[3][1] = 0.0f;
 			billboardMatrix.m[3][2] = 0.0f;
-			Matrix4x4 worldMatrix = MyMath::Multiply(MyMath::Multiply(MyMath::MakeScaleMatrix((*effectIterator).transform.scale), billboardMatrix), MyMath::MakeTranslateMatrix((*effectIterator).transform.translate));
+			Matrix4x4 worldMatrix = MyMath::Multiply(MyMath::Multiply(MyMath::MakeScaleMatrix((*grainIterator).transform.scale), billboardMatrix), MyMath::MakeTranslateMatrix((*grainIterator).transform.translate));
 			if (!particle.second->emitter_.isBillboard) {
-				worldMatrix = MyMath::MakeAffineMatrix((*effectIterator).transform.scale, (*effectIterator).transform.rotate, (*effectIterator).transform.translate);
+				worldMatrix = MyMath::MakeAffineMatrix((*grainIterator).transform.scale, (*grainIterator).transform.rotate, (*grainIterator).transform.translate);
 			}
-			//各エフェクトのワールド行列と色情報をパーティクルリソースに書き込む
+			//各粒のワールド行列と色情報をパーティクルリソースに書き込む
 			particle.second->particleResource_.instancingData[instanceNum].World = worldMatrix;
 			particle.second->particleResource_.instancingData[instanceNum].color = currentColor;
 
-			//次のエフェクトへ
-			++effectIterator;
+			//次の粒へ
+			++grainIterator;
 			//インスタンスの番号をインクリメント
 			++instanceNum;
 		}
@@ -134,7 +134,7 @@ void ParticleManager::Draw() {
 		//各パーティクルモデルの描画
 		std::string textureName = particle.second->GetParam()["Texture"];
 		int textureHandle = TextureManager::GetInstance()->LoadTexture(textureName);
-		particle.second->model_->Draw(0, 3, (uint32_t)particle.second->effects_.size(), textureHandle);
+		particle.second->model_->Draw(0, 3, (uint32_t)particle.second->grains_.size(), textureHandle);
 	}
 }
 
@@ -354,11 +354,11 @@ void ParticleManager::GenerateGraphicsPipeline() {
 	}
 }
 
-std::list<Particle::EffectData> ParticleManager::GenerateEffect(Particle* particle, int genNum) {
+std::list<Particle::GrainData> ParticleManager::GenerateGrain(Particle* particle, int genNum) {
 
-	std::list<Particle::EffectData> effects;
+	std::list<Particle::GrainData> grains;
 	for (int i = 0; i < genNum; i++) {
-		Particle::EffectData effect;
+		Particle::GrainData grain;
 		//ランダム
 		std::random_device rd;
 		std::mt19937 gen(rd());
@@ -415,18 +415,18 @@ std::list<Particle::EffectData> ParticleManager::GenerateEffect(Particle* partic
 		std::uniform_real_distribution<float> distVelocityZ(std::min(velocityMin.z, velocityMax.z), std::max(velocityMin.z, velocityMax.z));
 		std::uniform_real_distribution<float> distLifeTime(particle->GetParam()["LifeTime"]["Min"], particle->GetParam()["LifeTime"]["Max"]);
 		//パラメータの初期化
-		effect.transform.translate = Vector3(distTranslateX(gen), distTranslateY(gen), distTranslateZ(gen));
-		effect.transform.rotate = Vector3(0.0f, 0.0f, 0.0f);
-		effect.startSize = distStartSize(gen);
-		effect.endSize = distEndSize(gen);
-		effect.transform.scale = Vector3(effect.startSize, effect.startSize, effect.startSize);
-		effect.startColor = Vector4(distStartColorX(gen), distStartColorY(gen), distStartColorZ(gen), distStartColorW(gen));
-		effect.endColor = Vector4(distEndColorX(gen), distEndColorY(gen), distEndColorZ(gen), distEndColorW(gen));
-		effect.velocity = Vector3(distVelocityX(gen), distVelocityY(gen), distVelocityZ(gen));
-		effect.lifeTime = distLifeTime(gen);
-		effect.currentTime = 0.0f;
+		grain.transform.translate = Vector3(distTranslateX(gen), distTranslateY(gen), distTranslateZ(gen));
+		grain.transform.rotate = Vector3(0.0f, 0.0f, 0.0f);
+		grain.startSize = distStartSize(gen);
+		grain.endSize = distEndSize(gen);
+		grain.transform.scale = Vector3(grain.startSize, grain.startSize, grain.startSize);
+		grain.startColor = Vector4(distStartColorX(gen), distStartColorY(gen), distStartColorZ(gen), distStartColorW(gen));
+		grain.endColor = Vector4(distEndColorX(gen), distEndColorY(gen), distEndColorZ(gen), distEndColorW(gen));
+		grain.velocity = Vector3(distVelocityX(gen), distVelocityY(gen), distVelocityZ(gen));
+		grain.lifeTime = distLifeTime(gen);
+		grain.currentTime = 0.0f;
 		//プッシュバック
-		effects.push_back(effect);
+		grains.push_back(grain);
 	}
-	return effects;
+	return grains;
 }
