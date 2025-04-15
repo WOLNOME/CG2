@@ -3,10 +3,6 @@
 #include <filesystem>
 #include <cassert>
 
-#pragma comment(lib, "d2d1.lib")
-#pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "dwrite.lib")
-
 namespace fs = std::filesystem;
 
 TextWriteManager* TextWriteManager::instance = nullptr;
@@ -21,12 +17,6 @@ TextWriteManager* TextWriteManager::GetInstance() {
 void TextWriteManager::Initialize() {
 	//DWriteFactoryの生成
 	CreateIDWriteFactory();
-	//D3D11On12Deviceの生成
-	CreateD3D11On12Device();
-	//D2DDeviceContextの生成
-	CreateDirect2DDeviceContext();
-	//D2DRenderTargetの生成
-	CreateD2DRenderTarget();
 
 	//フォントファイルの生成
 	CreateFontFile();
@@ -99,80 +89,6 @@ void TextWriteManager::CreateIDWriteFactory() {
 	//IDWriteFactoryの生成
 	hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), &directWriteFactory);
 	assert(SUCCEEDED(hr));
-}
-
-void TextWriteManager::CreateD3D11On12Device() {
-	HRESULT hr;
-	//ID3D11On12Deviceの生成
-	ComPtr<ID3D11Device
-	> d3d11Device = nullptr;
-	UINT d3d11DeviceFlags = 0U;
-#ifdef _DEBUG
-	d3d11DeviceFlags = D3D11_CREATE_DEVICE_DEBUG | D3D11_CREATE_DEVICE_BGRA_SUPPORT;
-#else
-	d3d11DeviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
-#endif // _DEBUG
-	hr = D3D11On12CreateDevice(
-		dxcommon->GetDevice(),
-		d3d11DeviceFlags,
-		nullptr,
-		0,
-		reinterpret_cast<IUnknown**>(dxcommon->GetAddressOfCommandQueue()),
-		1,
-		0,
-		&d3d11Device,
-		&d3d11On12DeviceContext,
-		nullptr
-	);
-	assert(SUCCEEDED(hr));
-	//D3D11->D3D11On12
-	hr = d3d11Device.As(&d3d11On12Device);
-	assert(SUCCEEDED(hr));
-}
-
-void TextWriteManager::CreateDirect2DDeviceContext() {
-	HRESULT hr;
-	//ID2D1Factory3の生成
-	D2D1_FACTORY_OPTIONS factoryOptions{};
-	factoryOptions.debugLevel = D2D1_DEBUG_LEVEL_INFORMATION;
-	hr = D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory3), &factoryOptions, &d2dFactory);
-	assert(SUCCEEDED(hr));
-	//IDXGIDeviceの生成
-	ComPtr<IDXGIDevice> dxgiDevice = nullptr;
-	hr = d3d11On12Device.As(&dxgiDevice);
-	assert(SUCCEEDED(hr));
-	//ID2D1Device2の生成
-	ComPtr<ID2D1Device2> d2dDevice = nullptr;
-	hr = d2dFactory->CreateDevice(dxgiDevice.Get(), d2dDevice.ReleaseAndGetAddressOf());
-	//d2dDeviceContextの生成
-	hr = d2dDevice->CreateDeviceContext(D2D1_DEVICE_CONTEXT_OPTIONS_NONE, d2dDeviceContext.ReleaseAndGetAddressOf());
-	assert(SUCCEEDED(hr));
-}
-
-void TextWriteManager::CreateD2DRenderTarget() {
-	HRESULT hr;
-	//DirectWriteの描画先の生成
-	D3D11_RESOURCE_FLAGS resourceFlags = { D3D11_BIND_RENDER_TARGET };
-	const UINT dpi = GetDpiForWindow(winapp->GetHwnd());
-	D2D1_BITMAP_PROPERTIES1 bitmapProperties = D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW, D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED), static_cast<float>(dpi), static_cast<float>(dpi));
-
-	for (UINT i = 0U; i < mainrender->GetBackBufferCount(); ++i) {
-		ComPtr<ID3D11Resource> wrappedBackBuffer = nullptr;
-		//ID3D11Resourceの生成
-		hr = d3d11On12Device->CreateWrappedResource(mainrender->GetSwapChainResource(i), &resourceFlags, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT, IID_PPV_ARGS(wrappedBackBuffer.ReleaseAndGetAddressOf()));
-		assert(SUCCEEDED(hr));
-		//IDXGISurfaceの生成
-		ComPtr<IDXGISurface> dxgiSurface = nullptr;
-		hr = wrappedBackBuffer.As(&dxgiSurface);
-		assert(SUCCEEDED(hr));
-		//ID2D1Bitmap1の生成
-		ComPtr<ID2D1Bitmap1> d2dRenderTarget = nullptr;
-		hr = d2dDeviceContext->CreateBitmapFromDxgiSurface(dxgiSurface.Get(), &bitmapProperties, &d2dRenderTarget);
-		assert(SUCCEEDED(hr));
-
-		wrappedBackBuffers.emplace_back(wrappedBackBuffer);
-		d2dRenderTargets.emplace_back(d2dRenderTarget);
-	}
 }
 
 void TextWriteManager::CreateFontFile() {
@@ -259,7 +175,7 @@ void TextWriteManager::EditSolidColorBrash(const std::string& key, const Vector4
 	FLOAT alpha = static_cast<FLOAT>(color.w);
 	//ブラシを作って登録(すでに作っていたら編集)
 	ComPtr<ID2D1SolidColorBrush> brush = nullptr;
-	hr = d2dDeviceContext->CreateSolidColorBrush(rgb, &brush);
+	hr = d2drender->GetD2DDeviceContext()->CreateSolidColorBrush(rgb, &brush);
 	assert(SUCCEEDED(hr));
 	brush->SetOpacity(alpha);
 	solidColorBrushMap[key] = brush;
@@ -289,22 +205,12 @@ void TextWriteManager::EditTextFormat(const std::string& key, const std::wstring
 	textFormatMap[key] = textFormat;
 }
 
-void TextWriteManager::BeginDrawWithD2D() const noexcept {
-	const auto backBufferIndex = mainrender->GetSwapChain()->GetCurrentBackBufferIndex();
-	const auto wrappedBackBuffer = wrappedBackBuffers[backBufferIndex];
-	const auto backBufferForD2D = d2dRenderTargets[backBufferIndex];
-
-	d3d11On12Device->AcquireWrappedResources(wrappedBackBuffer.GetAddressOf(), 1);
-	d2dDeviceContext->SetTarget(backBufferForD2D.Get());
-	d2dDeviceContext->BeginDraw();
-	d2dDeviceContext->SetTransform(D2D1::Matrix3x2F::Identity());
-}
-
 void TextWriteManager::WriteText(const std::string& key) {
 	const auto textFormat = textFormatMap.at(key);
 	const auto solidColorBrush = solidColorBrushMap[key];
 	const auto textWrite = textWriteMap[key];
 
+	d2drender->GetD2DDeviceContext()->SetTransform(D2D1::Matrix3x2F::Identity());
 	//アウトライン描画
 	if (textWriteMap[key]->GetIsEdgeDisplay()) {
 		DrawOutline(key);
@@ -318,26 +224,16 @@ void TextWriteManager::WriteText(const std::string& key) {
 		textWrite->GetPosition().y + textWrite->GetHeight()
 	};
 	//テキスト描画処理
-	d2dDeviceContext->SetTransform(
+	d2drender->GetD2DDeviceContext()->SetTransform(
 		D2D1::Matrix3x2F::Identity()
 	);
-	d2dDeviceContext->DrawTextW(
+	d2drender->GetD2DDeviceContext()->DrawTextW(
 		textWrite->GetText().c_str(),
 		static_cast<UINT32>(textWrite->GetText().length()),
 		textFormat.Get(),
 		&rect,
 		solidColorBrush.Get()
 	);
-}
-
-void TextWriteManager::EndDrawWithD2D() const noexcept {
-	const auto backBufferIndex = mainrender->GetSwapChain()->GetCurrentBackBufferIndex();
-	const auto wrappedBackBuffer = wrappedBackBuffers[backBufferIndex];
-
-	d2dDeviceContext->EndDraw();
-	d3d11On12Device->ReleaseWrappedResources(wrappedBackBuffer.GetAddressOf(), 1);
-	//描画内容の確定(スワップ可能状態に移行)
-	d3d11On12DeviceContext->Flush();
 }
 
 void TextWriteManager::DrawOutline(const std::string& key) {
@@ -353,7 +249,7 @@ void TextWriteManager::DrawOutline(const std::string& key) {
 	hr = fontFace->GetGlyphIndicesW(codePoints.data(), static_cast<UINT32>(codePoints.size()), glyphIndices);
 	if (FAILED(hr)) return;
 	ComPtr<ID2D1PathGeometry> pathGeometry = nullptr;
-	hr = d2dFactory->CreatePathGeometry(pathGeometry.ReleaseAndGetAddressOf());
+	hr = d2drender->GetD2DFactory()->CreatePathGeometry(pathGeometry.ReleaseAndGetAddressOf());
 	if (FAILED(hr)) return;
 	ComPtr<ID2D1GeometrySink> geometrySink = nullptr;
 	hr = pathGeometry->Open(geometrySink.ReleaseAndGetAddressOf());
@@ -419,10 +315,10 @@ void TextWriteManager::DrawOutline(const std::string& key) {
 	}
 
 	//描画
-	d2dDeviceContext->SetTransform(
+	d2drender->GetD2DDeviceContext()->SetTransform(
 		D2D1::Matrix3x2F::Translation(position.x, position.y)
 	);
-	d2dDeviceContext->DrawGeometry(
+	d2drender->GetD2DDeviceContext()->DrawGeometry(
 		textPathGeometry.Get(),
 		solidColorBrushOfEdge.Get(),
 		strokeWidth

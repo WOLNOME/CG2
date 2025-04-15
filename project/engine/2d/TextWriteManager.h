@@ -2,15 +2,17 @@
 #include "WinApp.h"
 #include "DirectXCommon.h"
 #include "MainRender.h"
+#include "D2DRender.h"
 #include <Vector4.h>
 #include <d2d1_3.h>
-#include <d3d11on12.h>
 #include <dwrite_3.h>
 #include <wrl.h>
 #include <string>
 #include <vector>
 #include <unordered_map>
 #include <memory>
+
+#pragma comment(lib, "dwrite.lib")
 
 template <typename T>
 using ComPtr = Microsoft::WRL::ComPtr<T>;
@@ -48,9 +50,6 @@ private:
 	///=======================
 
 	void CreateIDWriteFactory();
-	void CreateD3D11On12Device();
-	void CreateDirect2DDeviceContext();
-	void CreateD2DRenderTarget();
 	void CreateFontFile();
 
 public:
@@ -64,9 +63,7 @@ public:
 	/// 描画処理
 	///=======================
 
-	void BeginDrawWithD2D()const noexcept;
 	void WriteText(const std::string& key);
-	void EndDrawWithD2D() const noexcept;
 
 private:
 	//アウトライン描画
@@ -77,17 +74,12 @@ private:
 	WinApp* winapp = WinApp::GetInstance();
 	DirectXCommon* dxcommon = DirectXCommon::GetInstance();
 	MainRender* mainrender = MainRender::GetInstance();
+	D2DRender* d2drender = D2DRender::GetInstance();
 
 	//保存用変数
 	ComPtr<IDWriteFactory8> directWriteFactory = nullptr;
-	ComPtr<ID3D11On12Device> d3d11On12Device = nullptr;
-	ComPtr<ID3D11DeviceContext> d3d11On12DeviceContext = nullptr;
-	ComPtr<ID2D1Factory3> d2dFactory = nullptr;
-	ComPtr<ID2D1DeviceContext2> d2dDeviceContext = nullptr;
 	ComPtr<IDWriteFontCollection1> dwriteFontCollection = nullptr;
-
-	std::vector<ComPtr<ID3D11Resource>> wrappedBackBuffers;
-	std::vector<ComPtr<ID2D1Bitmap1>> d2dRenderTargets;
+	
 	//各フォントで保持しておく項目
 	std::unordered_map<std::string, ComPtr<IDWriteFontFace3>> fontFaceMap;
 

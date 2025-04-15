@@ -35,6 +35,10 @@ public:
 	/// </summary>
 	void TextDraw();
 	/// <summary>
+	/// 遷移幕描画
+	/// </summary>
+	void CurtainDraw();
+	/// <summary>
 	/// 終了
 	/// </summary>
 	void Finalize();

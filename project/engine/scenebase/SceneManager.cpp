@@ -36,13 +36,16 @@ void SceneManager::Update() {
 void SceneManager::Draw() {
 	//シーンの描画
 	scene_->Draw();
-	//シーン遷移アニメーションの描画
-	sceneTransitionAnimation_->Draw();
 }
 
 void SceneManager::TextDraw() {
 	//シーンの文字描画
 	scene_->TextDraw();
+}
+
+void SceneManager::CurtainDraw() {
+	//シーンの遷移幕描画
+	sceneTransitionAnimation_->Draw();
 }
 
 void SceneManager::Finalize() {

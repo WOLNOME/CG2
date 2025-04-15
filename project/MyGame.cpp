@@ -1,13 +1,13 @@
 #include "MyGame.h"
 #include "DirectXCommon.h"
 #include "MainRender.h"
+#include "D2DRender.h"
 #include "TextureManager.h"
 #include "SrvManager.h"
 #include "TextWriteManager.h"
 #include "ImGuiManager.h"
 #include "ModelManager.h"
 #include "ParticleManager.h"
-#include "Model.h"
 #include "SceneManager.h"
 
 void MyGame::Initialize()
@@ -50,7 +50,7 @@ void MyGame::Draw()
 
 	
 	///------------------------------///
-	///        メインレンダー
+	///        D3D12の描画処理
 	///------------------------------///
 
 	//描画前処理
@@ -70,15 +70,19 @@ void MyGame::Draw()
 	MainRender::GetInstance()->PostDraw();
 
 	///------------------------------///
-	///        テキスト描画処理
+	///        D2Dの描画処理
 	///------------------------------///
 
-	//テキスト描画前処理
-	TextWriteManager::GetInstance()->BeginDrawWithD2D();
+	//D2Dの描画前処理
+	D2DRender::GetInstance()->PreDraw();
+
 	//シーンの文字描画
 	SceneManager::GetInstance()->TextDraw();
-	//テキスト描画後処理
-	TextWriteManager::GetInstance()->EndDrawWithD2D();
+	//シーン遷移アニメーションの描画(一番上に描画)
+	SceneManager::GetInstance()->CurtainDraw();
+
+	//D2Dの描画後処理
+	D2DRender::GetInstance()->PostDraw();
 
 	///------------------------------///
 	///        全ての描画が終了

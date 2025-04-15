@@ -2,6 +2,7 @@
 #include "WinApp.h"
 #include "DirectXCommon.h"
 #include "MainRender.h"
+#include "D2DRender.h"
 #include "SrvManager.h"
 #include "TextWriteManager.h"
 #include "ImGuiManager.h"
@@ -28,6 +29,9 @@ void Framework::Initialize()
 
 	//メインレンダー
 	MainRender::GetInstance()->Initialize();
+
+	//D2Dレンダー
+	D2DRender::GetInstance()->Initialize();
 
 	//SRVマネージャー
 	SrvManager::GetInstance()->Initialize();
@@ -81,6 +85,7 @@ void Framework::Finalize()
 	ImGuiManager::GetInstance()->Finalize();
 	TextWriteManager::GetInstance()->Finalize();
 	SrvManager::GetInstance()->Finalize();
+	D2DRender::GetInstance()->Finalize();
 	MainRender::GetInstance()->Finalize();
 	DirectXCommon::GetInstance()->Finalize();
 	WinApp::GetInstance()->Finalize();

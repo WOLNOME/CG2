@@ -1,38 +1,35 @@
 #include "SceneTransitionAnimation.h"
-#include "SpriteCommon.h"
-#include "TextureManager.h"
+#include "WinApp.h"
 #include <cassert>
 
-SceneTransitionAnimation::SceneTransitionAnimation() {
+SceneTransitionAnimation::SceneTransitionAnimation()
+	: state_(TransitionState::NONE), type_(TransitionType::NONE), frame_(0), timer_(0), isTransitioning_(false), alpha_(1.0f) {
 }
 
 SceneTransitionAnimation::~SceneTransitionAnimation() {
 }
 
 void SceneTransitionAnimation::Initialize() {
+	//ブラシの色を決定
+	ColorDecide();
+
 	//変数の初期化
+	alpha_ = 1.0f;
 	state_ = TransitionState::NONE;
 	type_ = TransitionType::NONE;
 	frame_ = 0;
 	timer_ = 0;
 	isTransitioning_ = false;
-	//スプライトの初期化
-	sprite_ = std::make_unique<Sprite>();
-	textureHandle_ = TextureManager::GetInstance()->LoadTexture("black.png");
-	sprite_->Initialize(textureHandle_);
 }
 
 void SceneTransitionAnimation::Update() {
-	//スプライトの更新
-	sprite_->Update();
+	
 }
 
 void SceneTransitionAnimation::Draw() {
-	//共通部分の描画設定
-	SpriteCommon::GetInstance()->SettingCommonDrawing();
-	//スプライトの描画
+	//描画
 	if (isTransitioning_) {
-		sprite_->Draw();
+		DrawD2D();
 	}
 }
 
@@ -67,7 +64,7 @@ void SceneTransitionAnimation::UpdateIn() {
 				//透明度を計算
 				float alpha = 1.0f - MyMath::Lerp(0.0f, 1.0f, static_cast<float>(timer_) / static_cast<float>(frame_));
 				//スプライトの透明度を設定
-				sprite_->SetColor({ 1.0f,1.0f,1.0f,alpha });
+				alpha_ = alpha;
 			}
 		}
 		break;
@@ -87,7 +84,7 @@ void SceneTransitionAnimation::EndIn() {
 			//フレームをリセット
 			timer_ = frame_;
 			//スプライトの透明度を設定
-			sprite_->SetColor({ 1.0f,1.0f,1.0f,1.0f });
+			alpha_ = 1.0f;
 		}
 		break;
 	default:
@@ -111,7 +108,7 @@ void SceneTransitionAnimation::UpdateOut() {
 				//透明度を計算
 				float alpha = 1.0f - MyMath::Lerp(1.0f, 0.0f, static_cast<float>(timer_) / static_cast<float>(frame_));
 				//スプライトの透明度を設定
-				sprite_->SetColor({ 1.0f,1.0f,1.0f,alpha });
+				alpha_ = alpha;
 			}
 		}
 		break;
@@ -130,7 +127,7 @@ void SceneTransitionAnimation::EndOut() {
 			//遷移中フラグを下げる
 			isTransitioning_ = false;
 			//スプライトの透明度を設定
-			sprite_->SetColor({ 1.0f,1.0f,1.0f,0.0f });
+			alpha_ = 0.0f;
 		}
 		break;
 	default:
@@ -146,4 +143,23 @@ void SceneTransitionAnimation::EndAll() {
 	timer_ = 0;
 	//遷移中フラグを下げる
 	isTransitioning_ = false;
+}
+
+void SceneTransitionAnimation::ColorDecide() {
+	HRESULT hr;
+	// 黒色ブラシの作成
+	hr = d2drender->GetD2DDeviceContext()->CreateSolidColorBrush(
+		D2D1::ColorF(D2D1::ColorF::Black),
+		&blackBrush_
+	);
+	assert(SUCCEEDED(hr) && "カラーブラシの生成に失敗しました");
+}
+
+void SceneTransitionAnimation::DrawD2D() {
+	// 黒幕を描画
+	blackBrush_->SetOpacity(alpha_);
+	d2drender->GetD2DDeviceContext()->FillRectangle(
+		D2D1::RectF(0, 0, static_cast<float>(d2drender->GetD2DDeviceContext()->GetSize().width), static_cast<float>(d2drender->GetD2DDeviceContext()->GetSize().height)),
+		blackBrush_.Get()
+	);
 }
