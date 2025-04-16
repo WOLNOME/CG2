@@ -4,6 +4,7 @@
 #include "SrvManager.h"
 #include "TextureManager.h"
 #include "Logger.h"
+#include <numbers>
 #include <random>
 #undef min
 #undef max
@@ -87,7 +88,7 @@ void ParticleManager::Update() {
 			//各粒のサイズ更新
 			(*grainIterator).transform.scale = Vector3(MyMath::Lerp((*grainIterator).startSize, (*grainIterator).endSize, (*grainIterator).currentTime / (*grainIterator).lifeTime), MyMath::Lerp((*grainIterator).startSize, (*grainIterator).endSize, (*grainIterator).currentTime / (*grainIterator).lifeTime), MyMath::Lerp((*grainIterator).startSize, (*grainIterator).endSize, (*grainIterator).currentTime / (*grainIterator).lifeTime));
 			//座標情報からワールド行列を作成(ビルボード行列の計算もここで)
-			Matrix4x4 backToFrontMatrix = MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>);
+			Matrix4x4 backToFrontMatrix = MyMath::MakeRotateXMatrix(-std::numbers::pi_v<float> / 2.0f) * MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>) * MyMath::MakeRotateZMatrix(std::numbers::pi_v<float>);
 			Matrix4x4 billboardMatrix = MyMath::Multiply(backToFrontMatrix, camera_->GetWorldMatrix());
 			billboardMatrix.m[3][0] = 0.0f;
 			billboardMatrix.m[3][1] = 0.0f;
@@ -105,8 +106,8 @@ void ParticleManager::Update() {
 			//インスタンスの番号をインクリメント
 			++instanceNum;
 		}
-		//モデル更新
-		particle.second->model_->Update();
+		//形状更新
+		particle.second->shape_->Update();
 	}
 }
 
@@ -131,10 +132,10 @@ void ParticleManager::Draw() {
 		MainRender::GetInstance()->GetCommandList()->SetPipelineState(graphicsPipelineState[particle.second->GetParam()["BlendMode"]].Get());
 		//各パーティクルのインスタンシングデータをVSに送信
 		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, SrvManager::GetInstance()->GetGPUDescriptorHandle(particle.second->particleResource_.srvIndex));
-		//各パーティクルモデルの描画
+		//各パーティクル形状の描画
 		std::string textureName = particle.second->GetParam()["Texture"];
 		int textureHandle = TextureManager::GetInstance()->LoadTexture(textureName);
-		particle.second->model_->Draw(0, 3, (uint32_t)particle.second->grains_.size(), textureHandle);
+		particle.second->shape_->Draw(0, 3, (uint32_t)particle.second->grains_.size(), textureHandle);
 	}
 }
 

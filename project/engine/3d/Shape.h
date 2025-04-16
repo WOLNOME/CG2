@@ -37,7 +37,7 @@ private:
 public:
 	void Initialize(ShapeKind shapeKind);
 	void Update();
-	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, int32_t textureHandle = EOF);
+	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum = 1, int32_t textureHandle = EOF);
 
 private://非公開メンバ関数
 	//形状リソース作成関数

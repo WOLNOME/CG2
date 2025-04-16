@@ -94,7 +94,7 @@ void Object3d::Draw(WorldTransform& worldTransform, const  BaseCamera& camera, c
 		//Cameraからカメラ座標CBufferの場所を設定
 		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(4, camera.GetCameraPositionConstBuffer()->GetGPUVirtualAddress());
 		//形状を描画する
-		shape_->Draw(0, 3, textureHandle);
+		shape_->Draw(0, 3, 1, textureHandle);
 
 		break;
 	default:

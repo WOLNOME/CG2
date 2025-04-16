@@ -37,10 +37,10 @@ void Particle::Initialize(const std::string& name, const std::string& fileName) 
 	emitter_.isBound = false;
 	emitter_.isPlay = true;
 
-	//モデルマネージャーでモデル(見た目)を生成
-	ModelManager::GetInstance()->LoadModel("plane");
-	//モデルマネージャーから検索してセットする
-	model_ = ModelManager::GetInstance()->FindModel("plane");
+	//形状を生成
+	shape_ = std::make_unique<Shape>();
+	//形状の初期化
+	shape_->Initialize(Shape::ShapeKind::kPlane);
 
 	//パーティクルのリソースを作成
 	particleResource_ = MakeParticleResource();

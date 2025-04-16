@@ -6,13 +6,15 @@
 #include <list>
 #include <memory>
 #include "json.hpp"
-#include "Model.h"
+#include "Shape.h"
 #include "MyMath.h"
 
 using json = nlohmann::json;
 
 //パーティクル
 class Particle {
+	//パーティクルマネージャーに公開
+	friend class ParticleManager;
 public:
 	//座標変換行列データ
 	struct ParticleForGPU {
@@ -68,14 +70,15 @@ public: //getter
 public: //setter
 	//パラメーター
 	void SetParam(const json& param) { param_ = param; }
-public: //マネージャー共有用変数
-	//モデル(見た目)
-	Model* model_;
+private: //マネージャーにのみ公開するパラメーター
+	//形状(見た目)
+	std::unique_ptr<Shape> shape_;
 	//パーティクル用リソース
 	ParticleResource particleResource_;
 	//各インスタンシング（粒）用書き換え情報
 	std::list<GrainData> grains_;
-public://エミッター
+
+public://通常のクラスに見せて良いパラメーター
 	Emitter emitter_;
 private: //メンバ変数
 	//インスタンスの名前

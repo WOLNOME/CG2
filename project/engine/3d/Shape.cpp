@@ -15,7 +15,7 @@ void Shape::Initialize(ShapeKind shapeKind) {
 void Shape::Update() {
 }
 
-void Shape::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, int32_t textureHandle) {
+void Shape::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum, int32_t textureHandle) {
 	//頂点バッファビューを設定
 	MainRender::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &shapeResource_.vertexBufferView);
 	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(materialRootParameterIndex, shapeResource_.materialResource->GetGPUVirtualAddress());
@@ -25,7 +25,7 @@ void Shape::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParame
 		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(textureRootParameterIndex, TextureManager::GetInstance()->GetSrvHandleGPU(textureHandle));
 	}
 	//描画
-	MainRender::GetInstance()->GetCommandList()->DrawInstanced(shapeResource_.vertexNum, 1, 0, 0);
+	MainRender::GetInstance()->GetCommandList()->DrawInstanced(shapeResource_.vertexNum, instancingNum, 0, 0);
 }
 
 Shape::ShapeResource Shape::MakeShapeResource() {
@@ -151,8 +151,6 @@ Shape::ShapeResource Shape::MakeCubeResource() {
 
 Shape::ShapeResource Shape::MakePlaneResource() {
 	ShapeResource resource;
-	//ローカル変数
-	const float kHalfSize = 1.0f;
 	//頂点数を保持
 	resource.vertexNum = 6;
 	//リソースを作る
@@ -166,20 +164,20 @@ Shape::ShapeResource Shape::MakePlaneResource() {
 	resource.vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&resource.vertexData));
 	resource.materialResource->Map(0, nullptr, reinterpret_cast<void**>(&resource.materialData));
 	//データに書き込み
-	
+
 	//三角形一枚目
-	resource.vertexData[0].position = { -kHalfSize, 0.0f, -kHalfSize, 1.0f };
+	resource.vertexData[0].position = { -1.0f, 0.0f, -1.0f, 1.0f };
 	resource.vertexData[0].texcoord = { 0.0f, 0.0f };
-	resource.vertexData[1].position = { kHalfSize, 0.0f, -kHalfSize, 1.0f };
+	resource.vertexData[1].position = { 1.0f, 0.0f, -1.0f, 1.0f };
 	resource.vertexData[1].texcoord = { 1.0f, 0.0f };
-	resource.vertexData[2].position = { -kHalfSize, 0.0f, kHalfSize, 1.0f };
+	resource.vertexData[2].position = { -1.0f, 0.0f, 1.0f, 1.0f };
 	resource.vertexData[2].texcoord = { 0.0f, 1.0f };
 	//三角形二枚目
-	resource.vertexData[3].position = { kHalfSize, 0.0f, -kHalfSize, 1.0f };
+	resource.vertexData[3].position = { 1.0f, 0.0f, -1.0f, 1.0f };
 	resource.vertexData[3].texcoord = { 1.0f, 0.0f };
-	resource.vertexData[4].position = { kHalfSize, 0.0f, kHalfSize, 1.0f };
+	resource.vertexData[4].position = { 1.0f, 0.0f, 1.0f, 1.0f };
 	resource.vertexData[4].texcoord = { 1.0f, 1.0f };
-	resource.vertexData[5].position = { -kHalfSize, 0.0f, kHalfSize, 1.0f };
+	resource.vertexData[5].position = { -1.0f, 0.0f, 1.0f, 1.0f };
 	resource.vertexData[5].texcoord = { 0.0f, 1.0f };
 	//法線は全て同じ
 	for (uint32_t i = 0; i < 6; i++) {
