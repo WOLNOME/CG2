@@ -67,7 +67,7 @@ void ParticleManager::Update() {
 			}
 			if (particle.second->emitter_.isBound) {
 				//粒の足
-				float leg = (*grainIterator).transform.translate.y - MyMath::Lerp((*grainIterator).startSize, (*grainIterator).endSize, (*grainIterator).currentTime);
+				float leg = (*grainIterator).basicTransform.translate.y - MyMath::Lerp((*grainIterator).startSize, (*grainIterator).endSize, (*grainIterator).currentTime);
 				//床の反発処理
 				if (leg > particle.second->emitter_.floorHeight && leg + (kDeltaTime * (*grainIterator).velocity.y) < particle.second->emitter_.floorHeight) {
 					(*grainIterator).velocity.y *= (-1.0f) * particle.second->emitter_.repulsion;
@@ -76,19 +76,23 @@ void ParticleManager::Update() {
 			//各粒とフィールドとの処理
 			if (field_) {
 				if (field_->isActive && particle.second->emitter_.isAffectedField) {
-					if (MyMath::IsCollision(field_->area, (*grainIterator).transform.translate)) {
+					if (MyMath::IsCollision(field_->area, (*grainIterator).basicTransform.translate)) {
 						(*grainIterator).velocity = (*grainIterator).velocity + (kDeltaTime * field_->acceleration);
 					}
 				}
 			}
 			//各粒の速度加算
-			(*grainIterator).transform.translate = (*grainIterator).transform.translate + (kDeltaTime * (*grainIterator).velocity);
+			(*grainIterator).basicTransform.translate = (*grainIterator).basicTransform.translate + (kDeltaTime * (*grainIterator).velocity);
 			//各粒の色更新
 			Vector4 currentColor = MyMath::Lerp((*grainIterator).startColor, (*grainIterator).endColor, (*grainIterator).currentTime / (*grainIterator).lifeTime);
 			//各粒のサイズ更新
-			(*grainIterator).transform.scale = Vector3(MyMath::Lerp((*grainIterator).startSize, (*grainIterator).endSize, (*grainIterator).currentTime / (*grainIterator).lifeTime), MyMath::Lerp((*grainIterator).startSize, (*grainIterator).endSize, (*grainIterator).currentTime / (*grainIterator).lifeTime), MyMath::Lerp((*grainIterator).startSize, (*grainIterator).endSize, (*grainIterator).currentTime / (*grainIterator).lifeTime));
+			float currentSize = MyMath::Lerp((*grainIterator).startSize, (*grainIterator).endSize, (*grainIterator).currentTime / (*grainIterator).lifeTime);
+			//各粒のトランスフォーム更新
+			(*grainIterator).transform.translate = (*grainIterator).basicTransform.translate;
+			(*grainIterator).transform.rotate = (*grainIterator).basicTransform.rotate;
+			(*grainIterator).transform.scale = (*grainIterator).basicTransform.scale * currentSize;
 			//座標情報からワールド行列を作成(ビルボード行列の計算もここで)
-			Matrix4x4 backToFrontMatrix = MyMath::MakeRotateXMatrix(-std::numbers::pi_v<float> / 2.0f) * MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>) * MyMath::MakeRotateZMatrix(std::numbers::pi_v<float>);
+			Matrix4x4 backToFrontMatrix = MyMath::MakeRotateXMatrix(-std::numbers::pi_v<float> / 2.0f) * MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>) * MyMath::MakeRotateZMatrix(std::numbers::pi_v<float>+(*grainIterator).transform.rotate.z);
 			Matrix4x4 billboardMatrix = MyMath::Multiply(backToFrontMatrix, camera_->GetWorldMatrix());
 			billboardMatrix.m[3][0] = 0.0f;
 			billboardMatrix.m[3][1] = 0.0f;
@@ -367,6 +371,10 @@ std::list<Particle::GrainData> ParticleManager::GenerateGrain(Particle* particle
 		std::uniform_real_distribution<float> distTranslateX(particle->emitter_.transform.translate.x - particle->emitter_.transform.scale.x, particle->emitter_.transform.translate.x + particle->emitter_.transform.scale.x);
 		std::uniform_real_distribution<float> distTranslateY(particle->emitter_.transform.translate.y - particle->emitter_.transform.scale.y, particle->emitter_.transform.translate.y + particle->emitter_.transform.scale.y);
 		std::uniform_real_distribution<float> distTranslateZ(particle->emitter_.transform.translate.z - particle->emitter_.transform.scale.z, particle->emitter_.transform.translate.z + particle->emitter_.transform.scale.z);
+		std::uniform_real_distribution<float> distRotate(particle->GetParam()["GrainTransform"]["Rotate"]["Min"], particle->GetParam()["GrainTransform"]["Rotate"]["Max"]);
+		std::uniform_real_distribution<float> distScaleX(std::min(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["x"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["x"]), std::max(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["x"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["x"]));
+		std::uniform_real_distribution<float> distScaleY(std::min(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["y"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["y"]), std::max(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["y"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["y"]));
+		std::uniform_real_distribution<float> distScaleZ(std::min(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["z"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["z"]), std::max(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["z"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["z"]));
 		std::uniform_real_distribution<float> distStartSize(particle->GetParam()["StartSize"]["Min"], particle->GetParam()["StartSize"]["Max"]);
 		std::uniform_real_distribution<float> distEndSize(particle->GetParam()["EndSize"]["Min"], particle->GetParam()["EndSize"]["Max"]);
 		Vector4 startColorMin = {
@@ -415,19 +423,52 @@ std::list<Particle::GrainData> ParticleManager::GenerateGrain(Particle* particle
 		std::uniform_real_distribution<float> distVelocityY(std::min(velocityMin.y, velocityMax.y), std::max(velocityMin.y, velocityMax.y));
 		std::uniform_real_distribution<float> distVelocityZ(std::min(velocityMin.z, velocityMax.z), std::max(velocityMin.z, velocityMax.z));
 		std::uniform_real_distribution<float> distLifeTime(particle->GetParam()["LifeTime"]["Min"], particle->GetParam()["LifeTime"]["Max"]);
-		//パラメータの初期化
-		grain.transform.translate = Vector3(distTranslateX(gen), distTranslateY(gen), distTranslateZ(gen));
-		grain.transform.rotate = Vector3(0.0f, 0.0f, 0.0f);
-		grain.startSize = distStartSize(gen);
-		grain.endSize = distEndSize(gen);
-		grain.transform.scale = Vector3(grain.startSize, grain.startSize, grain.startSize);
-		grain.startColor = Vector4(distStartColorX(gen), distStartColorY(gen), distStartColorZ(gen), distStartColorW(gen));
-		grain.endColor = Vector4(distEndColorX(gen), distEndColorY(gen), distEndColorZ(gen), distEndColorW(gen));
-		grain.velocity = Vector3(distVelocityX(gen), distVelocityY(gen), distVelocityZ(gen));
-		grain.lifeTime = distLifeTime(gen);
-		grain.currentTime = 0.0f;
-		//プッシュバック
-		grains.push_back(grain);
+
+		//生成方法ごとにパラメータの初期化
+		switch (particle->emitter_.generateMethod) {
+		case Particle::GenerateMethod::kRandom:
+			//ランダム
+			grain.basicTransform.translate = Vector3(distTranslateX(gen), distTranslateY(gen), distTranslateZ(gen));
+			grain.basicTransform.rotate = Vector3(0.0f, 0.0f, distRotate(gen));
+			grain.basicTransform.scale = Vector3(distScaleX(gen), distScaleY(gen), distScaleZ(gen));
+			grain.startSize = distStartSize(gen);
+			grain.endSize = distEndSize(gen);
+			grain.transform.translate = grain.basicTransform.translate;
+			grain.transform.rotate = grain.basicTransform.rotate;
+			grain.transform.scale = grain.basicTransform.scale * grain.startSize;
+			grain.startColor = Vector4(distStartColorX(gen), distStartColorY(gen), distStartColorZ(gen), distStartColorW(gen));
+			grain.endColor = Vector4(distEndColorX(gen), distEndColorY(gen), distEndColorZ(gen), distEndColorW(gen));
+			grain.velocity = Vector3(distVelocityX(gen), distVelocityY(gen), distVelocityZ(gen));
+			grain.lifeTime = distLifeTime(gen);
+			grain.currentTime = 0.0f;
+			//プッシュバック
+			grains.push_back(grain);
+			break;
+		case Particle::GenerateMethod::kClump:
+			//塊(座標に関しての情報だけ同じ値にする)
+			grain.basicTransform.translate = Vector3(distTranslateX(gen), distTranslateY(gen), distTranslateZ(gen));
+			grain.transform.translate = grain.basicTransform.translate;
+			grain.velocity = Vector3(distVelocityX(gen), distVelocityY(gen), distVelocityZ(gen));
+			grain.lifeTime = distLifeTime(gen);
+			grain.currentTime = 0.0f;
+			//塊を構成する粒数の処理
+			for (int j = 0; j < particle->emitter_.clumpNum; j++) {
+				grain.basicTransform.rotate = Vector3(0.0f, 0.0f, distRotate(gen));
+				grain.basicTransform.scale = Vector3(distScaleX(gen), distScaleY(gen), distScaleZ(gen));
+				grain.startSize = distStartSize(gen);
+				grain.endSize = distEndSize(gen);
+				grain.transform.rotate = grain.basicTransform.rotate;
+				grain.transform.scale = grain.basicTransform.scale * grain.startSize;
+				grain.startColor = Vector4(distStartColorX(gen), distStartColorY(gen), distStartColorZ(gen), distStartColorW(gen));
+				grain.endColor = Vector4(distEndColorX(gen), distEndColorY(gen), distEndColorZ(gen), distEndColorW(gen));
+				
+				//プッシュバック
+				grains.push_back(grain);
+			}
+			break;
+		default:
+			break;
+		}
 	}
 	return grains;
 }
