@@ -17,13 +17,9 @@ void Particle::Initialize(const std::string& name, const std::string& fileName) 
 	name_ = name;
 	//パラメータをセット
 	auto data = JsonUtil::GetJsonData("Resources/particles/" + fileName);
-	if (data) {
-		param_ = data;
-	}
-	else {
-		//エラー
-		assert(0 && "JSONファイルが存在しません");
-	}
+	//JSONファイルの読み込み
+	if (data) param_ = data;
+	else assert(0 && "JSONファイルが存在しません");
 	//エミッターの初期化
 	emitter_.transform.translate = Vector3(0.0f, 0.0f, 0.0f);
 	emitter_.transform.rotate = Vector3(0.0f, 0.0f, 0.0f);
@@ -42,7 +38,8 @@ void Particle::Initialize(const std::string& name, const std::string& fileName) 
 	//形状を生成
 	shape_ = std::make_unique<Shape>();
 	//形状の初期化
-	shape_->Initialize(Shape::ShapeKind::kPlane);
+	Shape::ShapeKind shapeKind = (Shape::ShapeKind)param_["Primitive"];
+	shape_->Initialize(shapeKind);
 
 	//パーティクルのリソースを作成
 	particleResource_ = MakeParticleResource();
@@ -85,4 +82,12 @@ void Particle::SettingSRV() {
 	srvDesc.Buffer.NumElements = kNumMaxInstance;
 	srvDesc.Buffer.StructureByteStride = sizeof(ParticleForGPU);
 	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(particleResource_.instancingResource.Get(), &srvDesc, SrvManager::GetInstance()->GetCPUDescriptorHandle(particleResource_.srvIndex));
+}
+
+void Particle::ShapeChange() {
+	//JSONをもとにShapeを作り直す
+	shape_ = std::make_unique<Shape>();
+	//形状の初期化
+	Shape::ShapeKind shapeKind = (Shape::ShapeKind)param_["Primitive"];
+	shape_->Initialize(shapeKind);
 }

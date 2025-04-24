@@ -15,6 +15,8 @@ using json = nlohmann::json;
 class Particle {
 	//パーティクルマネージャーに公開
 	friend class ParticleManager;
+	//パーティクルクリエイターシーンに公開
+	friend class ParticleCreatorScene;
 public:
 	enum class GenerateMethod {
 		kRandom,		//ランダム
@@ -85,6 +87,9 @@ private: //マネージャーにのみ公開するパラメーター
 	ParticleResource particleResource_;
 	//各インスタンシング（粒）用書き換え情報
 	std::list<GrainData> grains_;
+private: //クリエイターシーンにのみ公開するパラメーター
+	//形状の変更
+	void ShapeChange();
 
 public://通常のクラスに見せて良いパラメーター
 	Emitter emitter_;

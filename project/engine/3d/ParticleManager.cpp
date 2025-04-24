@@ -92,7 +92,7 @@ void ParticleManager::Update() {
 			(*grainIterator).transform.rotate = (*grainIterator).basicTransform.rotate;
 			(*grainIterator).transform.scale = (*grainIterator).basicTransform.scale * currentSize;
 			//座標情報からワールド行列を作成(ビルボード行列の計算もここで)
-			Matrix4x4 backToFrontMatrix = MyMath::MakeRotateXMatrix(-std::numbers::pi_v<float> / 2.0f) * MyMath::MakeRotateYMatrix(std::numbers::pi_v<float>) * MyMath::MakeRotateZMatrix(std::numbers::pi_v<float>+(*grainIterator).transform.rotate.z);
+			Matrix4x4 backToFrontMatrix = MyMath::MakeRotateZMatrix(std::numbers::pi_v<float>+(*grainIterator).transform.rotate.z);
 			Matrix4x4 billboardMatrix = MyMath::Multiply(backToFrontMatrix, camera_->GetWorldMatrix());
 			billboardMatrix.m[3][0] = 0.0f;
 			billboardMatrix.m[3][1] = 0.0f;
@@ -110,6 +110,8 @@ void ParticleManager::Update() {
 			//インスタンスの番号をインクリメント
 			++instanceNum;
 		}
+		//形状の変更通知があった場合
+
 		//形状更新
 		particle.second->shape_->Update();
 	}
@@ -205,7 +207,7 @@ void ParticleManager::GenerateGraphicsPipeline() {
 	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
 	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 	staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
 	staticSamplers[0].AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	staticSamplers[0].ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 	staticSamplers[0].MaxLOD = D3D12_FLOAT32_MAX;
@@ -304,7 +306,6 @@ void ParticleManager::GenerateGraphicsPipeline() {
 		}
 	}
 
-
 	//RasterizerStateの設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
 	//裏面を表示しない
@@ -323,11 +324,8 @@ void ParticleManager::GenerateGraphicsPipeline() {
 
 	//DepthStencilStateの設定
 	D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
-	//Depthの機能を有効化する
 	depthStencilDesc.DepthEnable = true;
-	//書き込みします
 	depthStencilDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ZERO;
-	//比較関数はLessEqual。つまり、近ければ描画される
 	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
 	std::array<D3D12_GRAPHICS_PIPELINE_STATE_DESC, (int)BlendMode::kMaxBlendModeNum> graphicsPipelineStateDesc{};
@@ -371,7 +369,9 @@ std::list<Particle::GrainData> ParticleManager::GenerateGrain(Particle* particle
 		std::uniform_real_distribution<float> distTranslateX(particle->emitter_.transform.translate.x - particle->emitter_.transform.scale.x, particle->emitter_.transform.translate.x + particle->emitter_.transform.scale.x);
 		std::uniform_real_distribution<float> distTranslateY(particle->emitter_.transform.translate.y - particle->emitter_.transform.scale.y, particle->emitter_.transform.translate.y + particle->emitter_.transform.scale.y);
 		std::uniform_real_distribution<float> distTranslateZ(particle->emitter_.transform.translate.z - particle->emitter_.transform.scale.z, particle->emitter_.transform.translate.z + particle->emitter_.transform.scale.z);
-		std::uniform_real_distribution<float> distRotate(particle->GetParam()["GrainTransform"]["Rotate"]["Min"], particle->GetParam()["GrainTransform"]["Rotate"]["Max"]);
+		std::uniform_real_distribution<float> distRotateX(std::min(particle->GetParam()["GrainTransform"]["Rotate"]["Min"]["x"], particle->GetParam()["GrainTransform"]["Rotate"]["Max"]["x"]), std::max(particle->GetParam()["GrainTransform"]["Rotate"]["Min"]["x"], particle->GetParam()["GrainTransform"]["Rotate"]["Max"]["x"]));
+		std::uniform_real_distribution<float> distRotateY(std::min(particle->GetParam()["GrainTransform"]["Rotate"]["Min"]["y"], particle->GetParam()["GrainTransform"]["Rotate"]["Max"]["y"]), std::max(particle->GetParam()["GrainTransform"]["Rotate"]["Min"]["y"], particle->GetParam()["GrainTransform"]["Rotate"]["Max"]["y"]));
+		std::uniform_real_distribution<float> distRotateZ(std::min(particle->GetParam()["GrainTransform"]["Rotate"]["Min"]["z"], particle->GetParam()["GrainTransform"]["Rotate"]["Max"]["z"]), std::max(particle->GetParam()["GrainTransform"]["Rotate"]["Min"]["z"], particle->GetParam()["GrainTransform"]["Rotate"]["Max"]["z"]));
 		std::uniform_real_distribution<float> distScaleX(std::min(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["x"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["x"]), std::max(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["x"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["x"]));
 		std::uniform_real_distribution<float> distScaleY(std::min(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["y"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["y"]), std::max(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["y"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["y"]));
 		std::uniform_real_distribution<float> distScaleZ(std::min(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["z"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["z"]), std::max(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["z"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["z"]));
@@ -429,7 +429,7 @@ std::list<Particle::GrainData> ParticleManager::GenerateGrain(Particle* particle
 		case Particle::GenerateMethod::kRandom:
 			//ランダム
 			grain.basicTransform.translate = Vector3(distTranslateX(gen), distTranslateY(gen), distTranslateZ(gen));
-			grain.basicTransform.rotate = Vector3(0.0f, 0.0f, distRotate(gen));
+			grain.basicTransform.rotate = Vector3(distRotateX(gen), distRotateY(gen), distRotateZ(gen));
 			grain.basicTransform.scale = Vector3(distScaleX(gen), distScaleY(gen), distScaleZ(gen));
 			grain.startSize = distStartSize(gen);
 			grain.endSize = distEndSize(gen);
@@ -453,7 +453,7 @@ std::list<Particle::GrainData> ParticleManager::GenerateGrain(Particle* particle
 			grain.currentTime = 0.0f;
 			//塊を構成する粒数の処理
 			for (int j = 0; j < particle->emitter_.clumpNum; j++) {
-				grain.basicTransform.rotate = Vector3(0.0f, 0.0f, distRotate(gen));
+				grain.basicTransform.rotate = Vector3(distRotateX(gen), distRotateY(gen), distRotateZ(gen));
 				grain.basicTransform.scale = Vector3(distScaleX(gen), distScaleY(gen), distScaleZ(gen));
 				grain.startSize = distStartSize(gen);
 				grain.endSize = distEndSize(gen);
@@ -461,7 +461,7 @@ std::list<Particle::GrainData> ParticleManager::GenerateGrain(Particle* particle
 				grain.transform.scale = grain.basicTransform.scale * grain.startSize;
 				grain.startColor = Vector4(distStartColorX(gen), distStartColorY(gen), distStartColorZ(gen), distStartColorW(gen));
 				grain.endColor = Vector4(distEndColorX(gen), distEndColorY(gen), distEndColorZ(gen), distEndColorW(gen));
-				
+
 				//プッシュバック
 				grains.push_back(grain);
 			}

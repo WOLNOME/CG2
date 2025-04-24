@@ -66,7 +66,6 @@ private:
 	std::unique_ptr<Particle> particle_ = nullptr;
 	// 編集するパラメーター
 	json editParam_;
-	
 
 private://ImGui操作で必要な変数
 	std::vector<std::string> textureFiles_;

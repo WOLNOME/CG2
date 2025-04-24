@@ -9,7 +9,10 @@ public://列挙型
 		kSphere,		//球体
 		kCube,			//立方体	
 		kPlane,			//平面
-	};
+		kRing,			//リング
+
+		kMaxShapeKindNum//最大形状数
+	};//※ここに新しい形状を追加する場合、パーティクルクリエイターシーンの形状選択部分も変更すること
 private:
 	//頂点データ
 	struct VertexData {
@@ -49,6 +52,8 @@ private://非公開メンバ関数
 	ShapeResource MakeCubeResource();
 	//平面リソースの作成関数
 	ShapeResource MakePlaneResource();
+	//リングリソースの作成関数
+	ShapeResource MakeRingResource();
 
 private:
 	//形状の種類

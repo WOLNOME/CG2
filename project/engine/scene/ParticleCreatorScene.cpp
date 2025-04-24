@@ -401,14 +401,14 @@ void ParticleCreatorScene::Editor() {
 		ImGui::ColorEdit4("EndColorMin", &endColorMin.x);
 	}
 	//トランスフォームを写す
-	float rotateMax = editParam_["GrainTransform"]["Rotate"]["Max"];
-	float rotateMin = editParam_["GrainTransform"]["Rotate"]["Min"];
+	Vector3 rotateMax = { editParam_["GrainTransform"]["Rotate"]["Max"]["x"],editParam_["GrainTransform"]["Rotate"]["Max"]["y"] ,editParam_["GrainTransform"]["Rotate"]["Max"]["z"] };
+	Vector3 rotateMin = { editParam_["GrainTransform"]["Rotate"]["Min"]["x"],editParam_["GrainTransform"]["Rotate"]["Min"]["y"] ,editParam_["GrainTransform"]["Rotate"]["Min"]["z"] };
 	Vector3 scaleMax = { editParam_["GrainTransform"]["Scale"]["Max"]["x"],editParam_["GrainTransform"]["Scale"]["Max"]["y"],editParam_["GrainTransform"]["Scale"]["Max"]["z"] };
 	Vector3 scaleMin = { editParam_["GrainTransform"]["Scale"]["Min"]["x"],editParam_["GrainTransform"]["Scale"]["Min"]["y"],editParam_["GrainTransform"]["Scale"]["Min"]["z"] };
 	if (ImGui::CollapsingHeader("トランスフォームの設定")) {
 		if (ImGui::TreeNode("Rotate")) {
-			ImGui::DragFloat("RotateMax", &rotateMax, 0.1f, rotateMin, 2.0f * std::numbers::pi_v<float>);
-			ImGui::DragFloat("RotateMin", &rotateMin, 0.01f, 0.0f, rotateMax);
+			ImGui::DragFloat3("RotateMax", &rotateMax.x, 0.1f);
+			ImGui::DragFloat3("RotateMin", &rotateMin.x, 0.1f);
 			ImGui::TreePop();
 		}
 		if (ImGui::TreeNode("Scale")) {
@@ -472,8 +472,19 @@ void ParticleCreatorScene::Editor() {
 	int blendMode = editParam_["BlendMode"];
 	const char* blendModeList[] = { "None","Normal","Add","Subtract","Multiply","Screen","Exclusion" };
 	if (ImGui::CollapsingHeader("ブレンドモード")) {
-		ImGui::Combo("Blend Mode", &blendMode, blendModeList, (int)BlendMode::kMaxBlendModeNum);
+		ImGui::Combo("BlendMode", &blendMode, blendModeList, (int)BlendMode::kMaxBlendModeNum);
 	}
+	//プリミティブを写す
+	int primitive = editParam_["Primitive"];
+	bool isShapeChange = false;
+	const char* primitiveList[] = { "Shere","Cube","Plane","Ring" };
+	if (ImGui::CollapsingHeader("形状")) {
+		if (ImGui::Combo("Primitive", &primitive, primitiveList, (int)Shape::ShapeKind::kMaxShapeKindNum)) {
+			//形状の変更通知
+			isShapeChange = true;
+		}
+	}
+
 	//editParamに変更を反映
 	editParam_["Texture"] = selectedTexture;
 	editParam_["StartColor"]["Max"]["x"] = startColorMax.x;
@@ -492,8 +503,12 @@ void ParticleCreatorScene::Editor() {
 	editParam_["EndColor"]["Min"]["y"] = endColorMin.y;
 	editParam_["EndColor"]["Min"]["z"] = endColorMin.z;
 	editParam_["EndColor"]["Min"]["w"] = endColorMin.w;
-	editParam_["GrainTransform"]["Rotate"]["Max"] = rotateMax;
-	editParam_["GrainTransform"]["Rotate"]["Min"] = rotateMin;
+	editParam_["GrainTransform"]["Rotate"]["Max"]["x"] = rotateMax.x;
+	editParam_["GrainTransform"]["Rotate"]["Max"]["y"] = rotateMax.y;
+	editParam_["GrainTransform"]["Rotate"]["Max"]["z"] = rotateMax.z;
+	editParam_["GrainTransform"]["Rotate"]["Min"]["x"] = rotateMin.x;
+	editParam_["GrainTransform"]["Rotate"]["Min"]["y"] = rotateMin.y;
+	editParam_["GrainTransform"]["Rotate"]["Min"]["z"] = rotateMin.z;
 	editParam_["GrainTransform"]["Scale"]["Max"]["x"] = scaleMax.x;
 	editParam_["GrainTransform"]["Scale"]["Max"]["y"] = scaleMax.y;
 	editParam_["GrainTransform"]["Scale"]["Max"]["z"] = scaleMax.z;
@@ -515,8 +530,14 @@ void ParticleCreatorScene::Editor() {
 	editParam_["MaxGrains"] = maxGrains;
 	editParam_["EmitRate"] = emitRate;
 	editParam_["BlendMode"] = blendMode;
+	editParam_["Primitive"] = primitive;
 	//パーティクルに反映
 	particle_->SetParam(editParam_);
+	//形状の変更通知を受け取ったら
+	if (isShapeChange) {
+		//パーティクルの形状を変更
+		particle_->ShapeChange();
+	}
 
 	//セーブボタン
 	if (ImGui::Button("セーブ")) {
