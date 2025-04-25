@@ -46,6 +46,9 @@ Shape::ShapeResource Shape::MakeShapeResource() {
 	case ShapeKind::kRing:
 		resource = MakeRingResource();
 		break;
+	case ShapeKind::kTube:
+		resource = MakeTubeResource();
+		break;
 	default:
 		assert(0 && "未確認の形状が入力されています。");
 		break;
@@ -128,6 +131,11 @@ Shape::ShapeResource Shape::MakeSphereResource() {
 			resource.vertexData[start + 5].texcoord.x = float(lonIndex + 1) / float(kSubdivision);
 			resource.vertexData[start + 5].texcoord.y = 1.0f - float(latIndex) / float(kSubdivision);
 
+			//uvフリップ
+			for (uint32_t i = 0; i < 6; i++) {
+				resource.vertexData[start + i].texcoord.y = 1.0f - resource.vertexData[start + i].texcoord.y;
+			}
+
 			//法線情報の入力
 			for (uint32_t i = 0; i < 6; i++) {
 				resource.vertexData[start + i].normal.x = resource.vertexData[start + i].position.x;
@@ -184,6 +192,10 @@ Shape::ShapeResource Shape::MakePlaneResource() {
 	resource.vertexData[5].position = { 1.0f, -1.0f, 0.0f, 1.0f };
 	resource.vertexData[5].texcoord = { 1.0f, 0.0f };
 
+	//uvフリップ
+	for (uint32_t i = 0; i < 6; i++) {
+		resource.vertexData[i].texcoord.y = 1.0f - resource.vertexData[i].texcoord.y;
+	}
 
 	// 法線ベクトル
 	for (uint32_t i = 0; i < 6; i++) {
@@ -226,9 +238,9 @@ Shape::ShapeResource Shape::MakeRingResource() {
 		float u = float(index) / float(kRingDivide);
 		float uNext = float(index + 1) / float(kRingDivide);
 		//position(時計回り)とuvの書き込み
-		resource.vertexData[index * 6 + 0].position = { kOuterRadius * (- sin), kOuterRadius * cos, 0.0f, 1.0f};
+		resource.vertexData[index * 6 + 0].position = { kOuterRadius * (-sin), kOuterRadius * cos, 0.0f, 1.0f };
 		resource.vertexData[index * 6 + 0].texcoord = { u, 0.0f };
-		
+
 		resource.vertexData[index * 6 + 1].position = { kInnerRadius * (-sin), kInnerRadius * cos, 0.0f, 1.0f };
 		resource.vertexData[index * 6 + 1].texcoord = { u, 1.0f };
 
@@ -242,10 +254,78 @@ Shape::ShapeResource Shape::MakeRingResource() {
 		resource.vertexData[index * 6 + 5].position = { kInnerRadius * (-sinNext), kInnerRadius * cosNext, 0.0f, 1.0f };
 		resource.vertexData[index * 6 + 5].texcoord = { uNext, 1.0f };
 
+		//uvフリップ
+		for (uint32_t i = 0; i < 6; i++) {
+			resource.vertexData[index * 6 + i].texcoord.y = 1.0f - resource.vertexData[index * 6 + i].texcoord.y;
+		}
+
 		//法線ベクトルの書き込み
-		for (int j
-			= 0; j < 6; j++) {
+		for (int j = 0; j < 6; j++) {
 			resource.vertexData[index * 6 + j].normal = { 0.0f, 0.0f, 1.0f };
+		}
+	}
+	//マテリアルデータ
+	resource.materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	resource.materialData->isTexture = false;
+	resource.materialData->shininess = 20.0f;
+	resource.materialData->uvTransform = MyMath::MakeIdentity4x4();
+
+	return resource;
+}
+
+Shape::ShapeResource Shape::MakeTubeResource() {
+	ShapeResource resource;
+	//ローカル変数
+	const uint32_t kCylinderDivide = 32;
+	const float kTopRadius = 1.0f;
+	const float kBottomRadius = 1.0f;
+	const float kHeight = 3.0f;
+	const float radianPerDivide = 2.0f * std::numbers::pi_v<float> / float(kCylinderDivide);
+	//頂点数を保持
+	resource.vertexNum = kCylinderDivide * 6;
+	//リソースを作る
+	resource.vertexResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * resource.vertexNum);
+	resource.materialResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Material));
+	//頂点バッファビューを作成
+	resource.vertexBufferView.BufferLocation = resource.vertexResource->GetGPUVirtualAddress();
+	resource.vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * resource.vertexNum);
+	resource.vertexBufferView.StrideInBytes = sizeof(VertexData);
+	//リソースにデータをマッピング
+	resource.vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&resource.vertexData));
+	resource.materialResource->Map(0, nullptr, reinterpret_cast<void**>(&resource.materialData));
+	//データに書き込み
+	for (uint32_t index = 0; index < kCylinderDivide; index++) {
+		float sin = std::sin(index * radianPerDivide);
+		float cos = std::cos(index * radianPerDivide);
+		float sinNext = std::sin((index + 1) * radianPerDivide);
+		float cosNext = std::cos((index + 1) * radianPerDivide);
+		float u = float(index) / float(kCylinderDivide);
+		float uNext = float(index + 1) / float(kCylinderDivide);
+
+		//position,texcoord,normalの書き込み
+		resource.vertexData[index * 6 + 0].position = { kTopRadius * (-sin), kHeight,kTopRadius * cos, 1.0f };
+		resource.vertexData[index * 6 + 0].texcoord = { u, 0.0f };
+		resource.vertexData[index * 6 + 0].normal = { -sin, 0.0f, cos };
+
+		resource.vertexData[index * 6 + 1].position = { kTopRadius * (-sinNext), kHeight,kTopRadius * cosNext, 1.0f };
+		resource.vertexData[index * 6 + 1].texcoord = { uNext, 0.0f };
+		resource.vertexData[index * 6 + 1].normal = { -sinNext, 0.0f, cosNext };
+
+		resource.vertexData[index * 6 + 2].position = { kBottomRadius * (-sin), 0.0f,kBottomRadius * cos, 1.0f };
+		resource.vertexData[index * 6 + 2].texcoord = { u, 1.0f };
+		resource.vertexData[index * 6 + 2].normal = { -sin, 0.0f, cos };
+
+		resource.vertexData[index * 6 + 3] = resource.vertexData[index * 6 + 2];
+
+		resource.vertexData[index * 6 + 4] = resource.vertexData[index * 6 + 1];
+
+		resource.vertexData[index * 6 + 5].position = { kBottomRadius * (-sinNext), 0.0f,kBottomRadius * cosNext, 1.0f };
+		resource.vertexData[index * 6 + 5].texcoord = { uNext, 1.0f };
+		resource.vertexData[index * 6 + 5].normal = { -sinNext, 0.0f, cosNext };
+
+		//uvをフリップ
+		for (int j = 0; j < 6; j++) {
+			resource.vertexData[index * 6 + j].texcoord.y = 1.0f - resource.vertexData[index * 6 + j].texcoord.y;
 		}
 	}
 	//マテリアルデータ

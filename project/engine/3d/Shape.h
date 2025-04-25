@@ -10,6 +10,7 @@ public://列挙型
 		kCube,			//立方体	
 		kPlane,			//平面
 		kRing,			//リング
+		kTube,			//筒
 
 		kMaxShapeKindNum//最大形状数
 	};//※ここに新しい形状を追加する場合、パーティクルクリエイターシーンの形状選択部分も変更すること
@@ -54,6 +55,8 @@ private://非公開メンバ関数
 	ShapeResource MakePlaneResource();
 	//リングリソースの作成関数
 	ShapeResource MakeRingResource();
+	//筒リソースの作成関数
+	ShapeResource MakeTubeResource();
 
 private:
 	//形状の種類
