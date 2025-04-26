@@ -205,7 +205,6 @@ void DevelopScene::Update() {
 		plMarkSphere.center = pointLight->position_;
 		plMarkSphere.radius = 0.1f;
 		MyMath::DrawSphere(plMarkSphere, { 1.0f,0.5f,0.0f,1.0f }, plMark.get());
-
 	}
 	ImGui::End();
 
