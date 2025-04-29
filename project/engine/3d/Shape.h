@@ -7,7 +7,8 @@ class Shape {
 public://列挙型
 	enum ShapeKind {
 		kSphere,		//球体
-		kCube,			//立方体	
+		kCube,			//立方体
+		kSkyBox,		//スカイボックス
 		kPlane,			//平面
 		kRing,			//リング
 		kTube,			//筒
@@ -43,6 +44,10 @@ public:
 	void Update();
 	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum = 1, int32_t textureHandle = EOF);
 
+public://getter
+	//形状の種類を取得
+	ShapeKind GetShapeKind() const { return shapeKind_; }
+
 private://非公開メンバ関数
 	//形状リソース作成関数
 	ShapeResource MakeShapeResource();
@@ -51,6 +56,8 @@ private://非公開メンバ関数
 	ShapeResource MakeSphereResource();
 	//立方体リソースの作成関数
 	ShapeResource MakeCubeResource();
+	//スカイボックスリソースの作成関数
+	ShapeResource MakeSkyBoxResource();
 	//平面リソースの作成関数
 	ShapeResource MakePlaneResource();
 	//リングリソースの作成関数

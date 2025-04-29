@@ -40,6 +40,9 @@ Shape::ShapeResource Shape::MakeShapeResource() {
 	case ShapeKind::kCube:
 		resource = MakeCubeResource();
 		break;
+	case ShapeKind::kSkyBox:
+		resource = MakeSkyBoxResource();
+		break;
 	case ShapeKind::kPlane:
 		resource = MakePlaneResource();
 		break;
@@ -157,6 +160,79 @@ Shape::ShapeResource Shape::MakeSphereResource() {
 
 Shape::ShapeResource Shape::MakeCubeResource() {
 	ShapeResource resource;
+
+	return resource;
+}
+
+Shape::ShapeResource Shape::MakeSkyBoxResource() {
+	ShapeResource resource;
+	//頂点数を保持
+	resource.vertexNum = 36;
+	//リソースを作る
+	resource.vertexResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * resource.vertexNum);
+	resource.materialResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Material));
+	//頂点バッファビューを作成
+	resource.vertexBufferView.BufferLocation = resource.vertexResource->GetGPUVirtualAddress();
+	resource.vertexBufferView.SizeInBytes = UINT(sizeof(VertexData) * resource.vertexNum);
+	resource.vertexBufferView.StrideInBytes = sizeof(VertexData);
+	//リソースにデータをマッピング
+	resource.vertexResource->Map(0, nullptr, reinterpret_cast<void**>(&resource.vertexData));
+	resource.materialResource->Map(0, nullptr, reinterpret_cast<void**>(&resource.materialData));
+	//データに書き込み
+	//右面　
+	resource.vertexData[0].position = { 1.0f,1.0f,1.0f,1.0f };
+	resource.vertexData[1].position = { 1.0f,1.0f,-1.0f,1.0f };
+	resource.vertexData[2].position = { 1.0f,-1.0f,1.0f,1.0f };
+	resource.vertexData[3].position = resource.vertexData[2].position;
+	resource.vertexData[4].position = resource.vertexData[1].position;
+	resource.vertexData[5].position = { 1.0f,-1.0f,-1.0f,1.0f };
+	// 左面
+	resource.vertexData[6].position = { -1.0f, 1.0f, -1.0f, 1.0f };
+	resource.vertexData[7].position = { -1.0f, 1.0f,  1.0f, 1.0f };
+	resource.vertexData[8].position = { -1.0f,-1.0f, -1.0f, 1.0f };
+	resource.vertexData[9].position = resource.vertexData[8].position;
+	resource.vertexData[10].position = resource.vertexData[7].position;
+	resource.vertexData[11].position = { -1.0f,-1.0f, 1.0f, 1.0f };
+	// 前面　
+	resource.vertexData[12].position = { -1.0f, 1.0f, 1.0f, 1.0f };
+	resource.vertexData[13].position = { 1.0f, 1.0f, 1.0f, 1.0f };
+	resource.vertexData[14].position = { -1.0f,-1.0f, 1.0f, 1.0f };
+	resource.vertexData[15].position = resource.vertexData[14].position;
+	resource.vertexData[16].position = resource.vertexData[13].position;
+	resource.vertexData[17].position = { 1.0f,-1.0f, 1.0f, 1.0f };
+	// 後面　
+	resource.vertexData[18].position = { 1.0f, 1.0f,-1.0f, 1.0f };
+	resource.vertexData[19].position = { -1.0f, 1.0f,-1.0f, 1.0f };
+	resource.vertexData[20].position = { 1.0f,-1.0f,-1.0f, 1.0f };
+	resource.vertexData[21].position = resource.vertexData[20].position;
+	resource.vertexData[22].position = resource.vertexData[19].position;
+	resource.vertexData[23].position = { -1.0f,-1.0f,-1.0f, 1.0f };
+	// 上面　
+	resource.vertexData[24].position = { -1.0f, 1.0f,-1.0f, 1.0f };
+	resource.vertexData[25].position = { 1.0f, 1.0f,-1.0f, 1.0f };
+	resource.vertexData[26].position = { -1.0f, 1.0f, 1.0f, 1.0f };
+	resource.vertexData[27].position = resource.vertexData[26].position;
+	resource.vertexData[28].position = resource.vertexData[25].position;
+	resource.vertexData[29].position = { 1.0f, 1.0f, 1.0f, 1.0f };
+	// 下面
+	resource.vertexData[30].position = { -1.0f,-1.0f, 1.0f, 1.0f };
+	resource.vertexData[31].position = { 1.0f,-1.0f, 1.0f, 1.0f };
+	resource.vertexData[32].position = { -1.0f,-1.0f,-1.0f, 1.0f };
+	resource.vertexData[33].position = resource.vertexData[32].position;
+	resource.vertexData[34].position = resource.vertexData[31].position;
+	resource.vertexData[35].position = { 1.0f,-1.0f,-1.0f, 1.0f };
+
+	//uv座標と法線は使わない
+	for (int i = 0; i < resource.vertexNum; i++) {
+		resource.vertexData[i].texcoord = { 0,0 };
+		resource.vertexData[i].normal = { 0,0,0 };
+	}
+
+	//マテリアルデータ
+	resource.materialData->color = Vector4(1.0f, 1.0f, 1.0f, 1.0f);
+	resource.materialData->isTexture = false;
+	resource.materialData->shininess = 20.0f;
+	resource.materialData->uvTransform = MyMath::MakeIdentity4x4();
 
 	return resource;
 }

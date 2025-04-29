@@ -51,6 +51,14 @@ void DevelopScene::Initialize() {
 	sprite2_->SetPosition(sprite2Position);
 	sprite2_->SetSize({ 300.0f,300.0f });
 
+	//スカイボックスの生成と初期化
+	textureHandleSkyBox_ = TextureManager::GetInstance()->LoadTexture("earth-cubemap.dds");
+	wtSkyBox_.Initialize();
+	wtSkyBox_.scale_ = { 300.0f,300.0f,300.0f };
+	skyBox_ = std::make_unique<Object3d>();
+	skyBox_->InitializeShape(Shape::ShapeKind::kSkyBox);
+
+	//3Dオブジェクトの生成と初期化
 	wtAxis_.Initialize();
 	axis_ = std::make_unique<Object3d>();
 	axis_->InitializeModel("teapot");
@@ -82,7 +90,7 @@ void DevelopScene::Initialize() {
 
 	ParticleManager::GetInstance()->SetCamera(camera.get());
 	particle_ = std::make_unique<Particle>();
-	particle_->Initialize("develop", "heart");
+	particle_->Initialize("develop", "basic");
 
 	line_ = std::make_unique<LineDrawer>();
 	line_->Initialize();
@@ -94,6 +102,7 @@ void DevelopScene::Initialize() {
 	text_->Initialize("text");
 	text_->SetParam({ 0.0f,0.0f }, Font::UDDegitalN_R, 32.0f, { 1,1,0,1 });
 	text_->SetEdgeParam({ 1,0,0,1 }, 10.0f, 0.0f, true);
+
 }
 
 void DevelopScene::Finalize() {
@@ -105,6 +114,9 @@ void DevelopScene::Update() {
 
 	//カメラの更新
 	camera->Update();
+
+	//スカイボックスの更新
+	wtSkyBox_.UpdateMatrix();
 
 	//モデルの更新
 	wtAxis_.rotate_.y += 0.03f;
@@ -246,6 +258,8 @@ void DevelopScene::Draw() {
 	///↓↓↓↓モデル描画開始↓↓↓↓
 	///------------------------------///
 
+	//スカイボックス描画
+	skyBox_->Draw(wtSkyBox_, *camera.get(), nullptr, textureHandleSkyBox_);
 
 	terrain_->Draw(wtTerrain_, *camera.get(), sceneLight_.get());
 	axis_->Draw(wtAxis_, *camera.get(), sceneLight_.get());

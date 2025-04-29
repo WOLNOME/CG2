@@ -45,10 +45,10 @@ void Object3d::Draw(WorldTransform& worldTransform, const  BaseCamera& camera, c
 
 		//使用するGPSを選択
 		if (model_->IsAnimation()) {
-			Object3dCommon::GetInstance()->SettingCommonDrawing(Object3dCommon::Animation);
+			Object3dCommon::GetInstance()->SettingCommonDrawing(Object3dCommon::NameGPS::kAnimation);
 		}
 		else if (!model_->IsAnimation()) {
-			Object3dCommon::GetInstance()->SettingCommonDrawing(Object3dCommon::None);
+			Object3dCommon::GetInstance()->SettingCommonDrawing(Object3dCommon::NameGPS::kNone);
 		}
 
 		//シーンライト有無設定
@@ -78,7 +78,15 @@ void Object3d::Draw(WorldTransform& worldTransform, const  BaseCamera& camera, c
 		//形状の更新処理
 		shape_->Update();
 		//描画前設定
-		Object3dCommon::GetInstance()->SettingCommonDrawing(Object3dCommon::None);
+		if (shape_->GetShapeKind() == Shape::kSkyBox) {
+			//SkyBoxの描画設定
+			Object3dCommon::GetInstance()->SettingCommonDrawing(Object3dCommon::NameGPS::kSkyBox);
+		}
+		else {
+			//通常の描画設定
+			Object3dCommon::GetInstance()->SettingCommonDrawing(Object3dCommon::NameGPS::kNone);
+		}
+		
 		//シーンライト有無設定
 		lightFlagData_->isActiveLights = (sceneLight != nullptr) ? true : false;
 		//lightFlagCbufferの場所を設定

@@ -9,9 +9,12 @@ class Camera;
 class Object3dCommon
 {
 public:
-	enum NameGPS {
-		None,
-		Animation
+	enum class NameGPS {
+		kNone,			//通常
+		kAnimation,		//アニメーション
+		kSkyBox,		//スカイボックス
+
+		kMaxNumNameGPS,	//最大数
 	};
 
 private://シングルトン
@@ -29,10 +32,16 @@ public://メンバ関数
 	//終了
 	void Finalize();
 	//共通描画設定
-	void SettingCommonDrawing(NameGPS index = None);
+	void SettingCommonDrawing(NameGPS index = NameGPS::kNone);
 private://非公開メンバ関数
 	//グラフィックスパイプライン
 	void GenerateGraphicsPipeline();
+	//通常のPSO設定
+	void NormalPSOOption();
+	//アニメーション用のPSO設定
+	void AnimationPSOOption();
+	//スカイボックス用のPSO設定
+	void SkyBoxPSOOption();
 
 public://ゲッター
 public://セッター
@@ -40,12 +49,10 @@ public://セッター
 private://インスタンス
 	Camera* defaultCamera = nullptr;
 private://メンバ変数
-	static const int kNumGraphicsPipeline = 2;
-
 	//ルートシグネチャ
-	std::array<Microsoft::WRL::ComPtr<ID3D12RootSignature>, kNumGraphicsPipeline> rootSignature;
+	std::array<Microsoft::WRL::ComPtr<ID3D12RootSignature>, (int)NameGPS::kMaxNumNameGPS> rootSignature;
 	//グラフィックスパイプライン
-	std::array<Microsoft::WRL::ComPtr<ID3D12PipelineState>, kNumGraphicsPipeline> graphicsPipelineState;
+	std::array<Microsoft::WRL::ComPtr<ID3D12PipelineState>, (int)NameGPS::kMaxNumNameGPS> graphicsPipelineState;
 
 
 };

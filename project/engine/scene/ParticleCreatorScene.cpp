@@ -477,7 +477,7 @@ void ParticleCreatorScene::Editor() {
 	//プリミティブを写す
 	int primitive = editParam_["Primitive"];
 	bool isShapeChange = false;
-	const char* primitiveList[] = { "Shere","Cube","Plane","Ring","Tube"};
+	const char* primitiveList[] = { "Shere","Cube","SkyBox","Plane","Ring","Tube"};
 	if (ImGui::CollapsingHeader("形状")) {
 		if (ImGui::Combo("Primitive", &primitive, primitiveList, (int)Shape::ShapeKind::kMaxShapeKindNum)) {
 			//形状の変更通知
