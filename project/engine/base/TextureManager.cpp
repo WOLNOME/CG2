@@ -50,16 +50,12 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath) {
 	//DDSファイルを読み込む
 	if (filePathw.ends_with(L".dds")) {
 		hr = DirectX::LoadFromDDSFile(filePathw.c_str(), DirectX::DDS_FLAGS_NONE, nullptr, image);
+		assert(SUCCEEDED(hr));
 	}
 	//WICファイルを読み込む
 	else {
 		hr = DirectX::LoadFromWICFile(filePathw.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
-	}	
-	//エラー処理
-	if (FAILED(hr)) {
-		std::cerr << "Failed to load texture file: " << directoryPath_ + filePath
-			<< ", HRESULT: " << std::hex << hr << std::endl;
-		assert(false);
+		assert(SUCCEEDED(hr));
 	}
 
 	//ミップマップの生成

@@ -462,7 +462,7 @@ void Object3dCommon::SkyBoxPSOOption() {
 	//テクスチャ用DescriptorRange作成
 	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
 	//オブジェクトのテクスチャ用
-	numDescriptors = 1;
+	numDescriptors = 6;
 	descriptorRange[0].BaseShaderRegister = registerCount;
 	descriptorRange[0].NumDescriptors = numDescriptors;
 	descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
