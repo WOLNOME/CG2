@@ -5,8 +5,7 @@
 #include <cstdint>
 #include <queue>
 
-class SrvManager
-{
+class SrvManager {
 private:
 	static SrvManager* instance;
 

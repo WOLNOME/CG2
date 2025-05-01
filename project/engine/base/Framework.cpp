@@ -1,9 +1,9 @@
 #include "Framework.h"
 #include "WinApp.h"
 #include "DirectXCommon.h"
+#include "SrvManager.h"
 #include "MainRender.h"
 #include "D2DRender.h"
-#include "SrvManager.h"
 #include "TextWriteManager.h"
 #include "ImGuiManager.h"
 #include "TextureManager.h"
@@ -16,8 +16,7 @@
 #include "LineDrawerCommon.h"
 #include "SceneManager.h"
 
-void Framework::Initialize()
-{
+void Framework::Initialize() {
 	//解放処理確認用
 	leakChecker;
 
@@ -27,14 +26,14 @@ void Framework::Initialize()
 	//DirectX12
 	DirectXCommon::GetInstance()->Initialize();
 
+	//SRVマネージャー
+	SrvManager::GetInstance()->Initialize();
+
 	//メインレンダー
 	MainRender::GetInstance()->Initialize();
 
 	//D2Dレンダー
 	D2DRender::GetInstance()->Initialize();
-
-	//SRVマネージャー
-	SrvManager::GetInstance()->Initialize();
 
 	//テキストライトマネージャー
 	TextWriteManager::GetInstance()->Initialize();
@@ -71,8 +70,7 @@ void Framework::Initialize()
 
 }
 
-void Framework::Finalize()
-{
+void Framework::Finalize() {
 	SceneManager::GetInstance()->Finalize();
 	LineDrawerCommon::GetInstance()->Finalize();
 	Object3dCommon::GetInstance()->Finalize();
@@ -84,15 +82,14 @@ void Framework::Finalize()
 	TextureManager::GetInstance()->Finalize();
 	ImGuiManager::GetInstance()->Finalize();
 	TextWriteManager::GetInstance()->Finalize();
-	SrvManager::GetInstance()->Finalize();
 	D2DRender::GetInstance()->Finalize();
 	MainRender::GetInstance()->Finalize();
+	SrvManager::GetInstance()->Finalize();
 	DirectXCommon::GetInstance()->Finalize();
 	WinApp::GetInstance()->Finalize();
 }
 
-void Framework::Update()
-{
+void Framework::Update() {
 	//メッセージ処理
 	if (WinApp::GetInstance()->ProcessMessage()) {
 		isOver = true;
@@ -104,12 +101,10 @@ void Framework::Update()
 
 }
 
-void Framework::Run()
-{
+void Framework::Run() {
 	//ゲームの初期化
 	Initialize();
-	while (true)
-	{
+	while (true) {
 		//毎フレーム更新
 		Update();
 		//終了リクエストが来たら抜ける

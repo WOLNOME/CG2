@@ -42,6 +42,8 @@ private://生成系メンバ関数
 	void InitViewPort();
 	void InitScissorRect();
 
+	void InitOffScreenRenderingOption();
+
 public://公開メンバ関数
 	D3D12_CPU_DESCRIPTOR_HANDLE GetRTVCPUDescriptorHandle(uint32_t index);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetRTVGPUDescriptorHandle(uint32_t index);
@@ -90,5 +92,12 @@ private://メンバ変数
 	D3D12_RECT scissorRect{};
 	//TransitionBarrier
 	D3D12_RESOURCE_BARRIER barrier{};
+
+	///-----------------------------------------------------------
+	/// オフスク用変数
+	///-----------------------------------------------------------
+	
+
+
 };
 
