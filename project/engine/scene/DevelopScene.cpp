@@ -259,7 +259,7 @@ void DevelopScene::Draw() {
 	///------------------------------///
 
 	//スカイボックス描画
-	skyBox_->Draw(wtSkyBox_, *camera.get(), nullptr, textureHandleSkyBox_);
+	//skyBox_->Draw(wtSkyBox_, *camera.get(), nullptr, textureHandleSkyBox_);
 
 	terrain_->Draw(wtTerrain_, *camera.get(), sceneLight_.get());
 	axis_->Draw(wtAxis_, *camera.get(), sceneLight_.get());

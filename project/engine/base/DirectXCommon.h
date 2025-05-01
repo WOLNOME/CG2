@@ -1,4 +1,5 @@
 #pragma once
+#include "Vector4.h"
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <dxcapi.h>
@@ -63,6 +64,8 @@ public://公開メンバ関数
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateBufferResource(size_t sizeInBytes);
 	//テクスチャリソースの生成
 	Microsoft::WRL::ComPtr<ID3D12Resource> CreateTextureResource(const DirectX::TexMetadata& metadata);
+	//レンダーテクスチャリソースの生成
+	Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(uint32_t width,uint32_t height,DXGI_FORMAT format,const Vector4& clearColor);
 	
 	
 public://公開メンバ変数
