@@ -12,6 +12,8 @@
     <FxCompile Include="Resources\shaders\SkinningObject3d.VS.hlsl" />
     <FxCompile Include="Resources\shaders\Skybox.VS.hlsl" />
     <FxCompile Include="Resources\shaders\Skybox.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\CopyImage.VS.hlsl" />
+    <FxCompile Include="Resources\shaders\CopyImage.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\3d\DirectionalLight.cpp" />
@@ -151,6 +153,7 @@
     <None Include="Resources\shaders\Sprite.hlsli" />
     <None Include="Resources\shaders\SkinningObject3d.hlsli" />
     <None Include="Resources\shaders\Skybox.hlsli" />
+    <None Include="Resources\shaders\CopyImage.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

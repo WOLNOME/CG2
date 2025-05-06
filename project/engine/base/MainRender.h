@@ -44,7 +44,12 @@ private://生成系メンバ関数
 	void InitViewPort();
 	void InitScissorRect();
 
+	///------------------------------------------///
+	/// オフスク用関数
+	///------------------------------------------///
+
 	void InitOffScreenRenderingOption();
+	void GenerateRenderTextureGraphicsPipeline();
 
 public://公開メンバ関数
 	D3D12_CPU_DESCRIPTOR_HANDLE GetRTVCPUDescriptorHandle(uint32_t index);
@@ -95,12 +100,18 @@ private://メンバ変数
 	//TransitionBarrier
 	D3D12_RESOURCE_BARRIER barrier{};
 
-	///-----------------------------------------------------------
+	///------------------------------------------///
 	/// オフスク用変数
-	///-----------------------------------------------------------
+	///------------------------------------------///
 	
 	//レンダーテクスチャのリソース
 	Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource = nullptr;
+	//レンダーテクスチャのSRVインデックス
+	uint32_t rtIndex = 0;
+	//ルートシグネチャ
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
+	//グラフィックスパイプライン
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
 
 };
 

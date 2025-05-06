@@ -5,28 +5,24 @@
 
 SpriteCommon* SpriteCommon::instance = nullptr;
 
-SpriteCommon* SpriteCommon::GetInstance()
-{
+SpriteCommon* SpriteCommon::GetInstance() {
 	if (instance == nullptr) {
 		instance = new SpriteCommon;
 	}
 	return instance;
 }
 
-void SpriteCommon::Initialize()
-{
+void SpriteCommon::Initialize() {
 	//グラフィックスパイプライの生成(in CreateRootSignature)
 	GenerateGraphicsPipeline();
 }
 
-void SpriteCommon::Finalize()
-{
+void SpriteCommon::Finalize() {
 	delete instance;
 	instance = nullptr;
 }
 
-void SpriteCommon::SettingCommonDrawing()
-{
+void SpriteCommon::SettingCommonDrawing() {
 	//ルートシグネチャをセットするコマンド
 	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
 	//グラフィックスパイプラインステートをセットするコマンド
@@ -35,8 +31,7 @@ void SpriteCommon::SettingCommonDrawing()
 	MainRender::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
-void SpriteCommon::GenerateGraphicsPipeline()
-{
+void SpriteCommon::GenerateGraphicsPipeline() {
 	HRESULT hr;
 
 	//RootSignature作成
@@ -64,7 +59,7 @@ void SpriteCommon::GenerateGraphicsPipeline()
 	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
 	rootParameters[2].DescriptorTable.pDescriptorRanges = descriptorRange;//Tableの中身の配列を指定
 	rootParameters[2].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
-	
+
 	//Samplerの設定
 	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
 	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
