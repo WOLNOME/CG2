@@ -89,8 +89,8 @@ void DevelopScene::Initialize() {
 	simpleSkin_->InitializeModel("simpleSkin", GLTF);
 
 	ParticleManager::GetInstance()->SetCamera(camera.get());
-	particle_ = std::make_unique<Particle>();
-	particle_->Initialize("develop", "basic");
+	//particle_ = std::make_unique<Particle>();
+	//particle_->Initialize("develop", "basic");
 
 	line_ = std::make_unique<LineDrawer>();
 	line_->Initialize();

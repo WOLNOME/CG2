@@ -14,6 +14,7 @@
     <FxCompile Include="Resources\shaders\Skybox.PS.hlsl" />
     <FxCompile Include="Resources\shaders\CopyImage.VS.hlsl" />
     <FxCompile Include="Resources\shaders\CopyImage.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\Grayscale.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\3d\DirectionalLight.cpp" />
