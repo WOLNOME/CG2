@@ -78,6 +78,8 @@ public://ゲッター
 	//コマンドキュー
 	ID3D12CommandQueue* GetCommandQueue() const { return commandQueue.Get(); }
 	ID3D12CommandQueue** GetAddressOfCommandQueue() { return commandQueue.GetAddressOf(); }
+	//クリアバリュー
+	D3D12_CLEAR_VALUE GetClearValue() const { return clearValue; }
 
 private://インスタンス
 
@@ -100,6 +102,9 @@ private://メンバ変数
 	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler = nullptr;
 	//インクルードハンドラ
 	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
-	
+
+	//レンダーテクスチャ用クリアバリュー
+	D3D12_CLEAR_VALUE clearValue{};
+
 };
 

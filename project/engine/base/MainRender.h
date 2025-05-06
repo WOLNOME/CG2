@@ -23,8 +23,10 @@ public:
 	//終了
 	void Finalize();
 
-	//描画前処理
-	void PreDraw();
+	//オブジェクト描画前処理
+	void PreObjectDraw();
+	//ImGui描画前処理
+	void PreImGuiDraw();
 	//描画後処理
 	void PostDraw();
 	//画面切り替え処理
@@ -83,7 +85,7 @@ private://メンバ変数
 	//スワップチェーンから引っ張て来たリソース
 	std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources;
 	//RTVハンドル
-	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 2> rtvHandles;
+	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 3> rtvHandles;
 	//RTVデスク
 	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
 	//ビューポート
@@ -97,7 +99,8 @@ private://メンバ変数
 	/// オフスク用変数
 	///-----------------------------------------------------------
 	
-
+	//レンダーテクスチャのリソース
+	Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource = nullptr;
 
 };
 

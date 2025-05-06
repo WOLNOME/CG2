@@ -28,6 +28,8 @@ void MainRender::Initialize() {
 	InitRenderTargetView();
 	//深度ステンシルビューの初期化
 	InitDepthStencilView();
+	//オフスク用レンダーテクスチャの生成
+	InitOffScreenRenderingOption();
 	//ビューポート矩形の初期化
 	InitViewPort();
 	//シザー矩形の初期化
@@ -39,7 +41,35 @@ void MainRender::Finalize() {
 	instance = nullptr;
 }
 
-void MainRender::PreDraw() {
+void MainRender::PreObjectDraw() {
+	///--------------------------------------------///
+	/// RenderTextureに対する設定
+	///--------------------------------------------///
+
+	//描画先のRTVとDSVを設定するを設定する
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = DirectXCommon::GetCPUDescriptorHandle(dsvDescriptorHeap.Get(), descriptorSizeDSV, 0);
+	commandList->OMSetRenderTargets(1, &rtvHandles[2], false, &dsvHandle);
+	//クリアバリューの色で画面全体をクリアする
+	float clearColor[] = {
+		DirectXCommon::GetInstance()->GetClearValue().Color[0],
+		DirectXCommon::GetInstance()->GetClearValue().Color[1],
+		DirectXCommon::GetInstance()->GetClearValue().Color[2],
+		DirectXCommon::GetInstance()->GetClearValue().Color[3]
+	};
+	commandList->ClearRenderTargetView(rtvHandles[2], clearColor, 0, nullptr);
+	//指定した深度で画面全体をクリアする
+	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+
+	//コマンドを積む
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &scissorRect);
+}
+
+void MainRender::PreImGuiDraw() {
+	///--------------------------------------------///
+	/// SwapChainに対する設定
+	///--------------------------------------------///
+
 	//これから書き込むバックバッファのインデックスを取得
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
@@ -56,15 +86,12 @@ void MainRender::PreDraw() {
 	//TransitionBarrierを張る
 	commandList->ResourceBarrier(1, &barrier);
 
-
-	//描画先のRTVとDSVを設定する
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = DirectXCommon::GetCPUDescriptorHandle(dsvDescriptorHeap.Get(), descriptorSizeDSV, 0);
-	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, &dsvHandle);
+	//描画先のRTVを設定する(深度バッファは送らない)
+	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
 	//指定した色で画面全体をクリアする
 	float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };//青っぽい色。RGBAの順
 	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
-	//指定した深度で画面全体をクリアする
-	commandList->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+	//※深度バッファはクリアしない
 
 	//コマンドを積む
 	commandList->RSSetViewports(1, &viewport);
@@ -224,10 +251,13 @@ void MainRender::InitScissorRect() {
 }
 
 void MainRender::InitOffScreenRenderingOption() {
+	//RTVディスクリプタハンドルの取得
+	UINT rtvDescriptorSize = DirectXCommon::GetInstance()->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+	rtvHandles[2].ptr = rtvHandles[1].ptr + rtvDescriptorSize;
 	//RTVの作成
 	const Vector4 kRenderTragetClearValue = Vector4(1, 1, 0, 1);
-	auto renderTextureResource = DirectXCommon::GetInstance()->CreateRenderTextureResource(WinApp::kClientWidth, WinApp::kClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, kRenderTragetClearValue);
-	DirectXCommon::GetInstance()->GetDevice()->CreateRenderTargetView(renderTextureResource.Get(), &rtvDesc, DirectXCommon::GetCPUDescriptorHandle(rtvDescriptorHeap.Get(), descriptorSizeRTV, 2));
+	renderTextureResource = DirectXCommon::GetInstance()->CreateRenderTextureResource(WinApp::kClientWidth, WinApp::kClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, kRenderTragetClearValue);
+	DirectXCommon::GetInstance()->GetDevice()->CreateRenderTargetView(renderTextureResource.Get(), &rtvDesc, rtvHandles[2]);
 	//SRVの作成
 	D3D12_SHADER_RESOURCE_VIEW_DESC renderTextureSrvDesc{};
 	renderTextureSrvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
@@ -235,8 +265,7 @@ void MainRender::InitOffScreenRenderingOption() {
 	renderTextureSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	renderTextureSrvDesc.Texture2D.MipLevels = 1;
 	uint32_t index = SrvManager::GetInstance()->Allocate();
-	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(renderTextureResource.Get(), &renderTextureSrvDesc, DirectXCommon::GetCPUDescriptorHandle(rtvDescriptorHeap.Get(), descriptorSizeRTV, 3));
-
+	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(renderTextureResource.Get(), &renderTextureSrvDesc, SrvManager::GetInstance()->GetCPUDescriptorHandle(index));
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE MainRender::GetRTVCPUDescriptorHandle(uint32_t index) {

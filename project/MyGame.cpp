@@ -53,8 +53,8 @@ void MyGame::Draw()
 	///        D3D12の描画処理
 	///------------------------------///
 
-	//描画前処理
-	MainRender::GetInstance()->PreDraw();
+	//オブジェクト描画前処理
+	MainRender::GetInstance()->PreObjectDraw();
 	SrvManager::GetInstance()->PreDraw(MainRender::GetInstance()->GetCommandList());
 
 	//シーンの描画
@@ -62,6 +62,9 @@ void MyGame::Draw()
 
 	//シーンのパーティクル描画
 	ParticleManager::GetInstance()->Draw();
+
+	//ImGui描画前処理
+	MainRender::GetInstance()->PreImGuiDraw();
 
 	//ImGuiの描画
 	ImGuiManager::GetInstance()->Draw();
