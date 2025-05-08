@@ -68,6 +68,8 @@ struct PixelShaderOutput
 
 //通常テクスチャ
 Texture2D<float4> gTexture : register(t0);
+//環境マップテクスチャ
+TextureCube<float4> gEnvironmentTexture : register(t1);
 
 //通常サンプラー
 SamplerState gSampler : register(s0);

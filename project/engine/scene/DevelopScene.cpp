@@ -1,4 +1,5 @@
 #include "DevelopScene.h"
+#include "SceneManager.h"
 #include <numbers>
 
 void DevelopScene::Initialize() {
@@ -111,6 +112,11 @@ void DevelopScene::Finalize() {
 void DevelopScene::Update() {
 	//シーン共通の更新
 	BaseScene::Update();
+
+	//TABでシーン再読み込み
+	if (input_->TriggerKey(DIK_TAB)) {
+		sceneManager_->SetNextScene("DEVELOP");
+	}
 
 	//カメラの更新
 	camera->Update();

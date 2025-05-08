@@ -449,10 +449,10 @@ void ParticleCreatorScene::Editor() {
 		int RecommendValue;
 		switch (particle_->emitter_.generateMethod) {
 		case Particle::GenerateMethod::kRandom:
-			RecommendValue = lifeTimeMax * editParam_["EmitRate"];
+			RecommendValue = int(lifeTimeMax * editParam_["EmitRate"]);
 			break;
 		case Particle::GenerateMethod::kClump:
-			RecommendValue = lifeTimeMax * editParam_["EmitRate"] * particle_->emitter_.clumpNum;
+			RecommendValue = int(lifeTimeMax * editParam_["EmitRate"] * particle_->emitter_.clumpNum);
 			break;
 		default:
 			break;
@@ -477,7 +477,7 @@ void ParticleCreatorScene::Editor() {
 	//プリミティブを写す
 	int primitive = editParam_["Primitive"];
 	bool isShapeChange = false;
-	const char* primitiveList[] = { "Shere","Cube","SkyBox","Plane","Ring","Tube"};
+	const char* primitiveList[] = { "Shere","Cube","SkyBox","Plane","Ring","Tube" };
 	if (ImGui::CollapsingHeader("形状")) {
 		if (ImGui::Combo("Primitive", &primitive, primitiveList, (int)Shape::ShapeKind::kMaxShapeKindNum)) {
 			//形状の変更通知

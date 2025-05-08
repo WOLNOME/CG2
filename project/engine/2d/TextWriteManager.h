@@ -41,6 +41,9 @@ public:
 	//個別クラスの登録を解除
 	void CancelRegistration(const std::string& key);
 
+	//名前を決める関数
+	std::string GenerateName(const std::string& name);
+
 	//フォントキー作成用関数
 	std::string GenerateFontKey(const std::wstring& fontName, const FontStyle& style);
 

@@ -1,5 +1,6 @@
 #include "TextWriteManager.h"
 #include "TextWrite.h"
+#include "RandomStringUtil.h"
 #include <filesystem>
 #include <cassert>
 
@@ -71,6 +72,24 @@ void TextWriteManager::CancelRegistration(const std::string& key) {
 		return;
 	}
 
+}
+
+std::string TextWriteManager::GenerateName(const std::string& name) {
+	// 出力する名前
+	std::string outputName = name;
+	// 重複チェック用のラムダ式
+	std::function<void(const std::string&)> checkDuplicate = [&](const std::string& name) {
+		// 重複しているかチェック
+		if (textWriteMap.find(name) != textWriteMap.end()) {
+			// 重複しているので名前を変更
+			outputName = name + "_" + RandomStringUtil::GenerateRandomString(4);
+			checkDuplicate(outputName);
+		}
+		};
+	// 重複チェック
+	checkDuplicate(outputName);
+	// 最終的に出力
+	return outputName;
 }
 
 std::string TextWriteManager::GenerateFontKey(const std::wstring& fontName, const FontStyle& style) {

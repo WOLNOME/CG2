@@ -81,6 +81,7 @@ void MainRender::PreImGuiDraw() {
 	UINT backBufferIndex = swapChain->GetCurrentBackBufferIndex();
 
 	//バリアの設定
+	D3D12_RESOURCE_BARRIER barrier{};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	barrier.Transition.pResource = swapChainResources[backBufferIndex].Get();	//スワップチェインのバックバッファに対して行う
@@ -102,7 +103,7 @@ void MainRender::PreImGuiDraw() {
 	//バリアの設定
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = renderTextureResource.Get();		//スワップチェインのバックバッファに対して行う
+	barrier.Transition.pResource = renderTextureResource.Get();		//レンダーテクスチャに対して行う
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;			//遷移前の状態
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;		//遷移後の状態
 	commandList->ResourceBarrier(1, &barrier);
@@ -117,7 +118,7 @@ void MainRender::PreImGuiDraw() {
 	//バリアの設定
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = renderTextureResource.Get();		//スワップチェインのバックバッファに対して行う
+	barrier.Transition.pResource = renderTextureResource.Get();		//レンダーテクスチャに対して行う
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;	//遷移前の状態
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;				//遷移後の状態
 	commandList->ResourceBarrier(1, &barrier);
@@ -379,7 +380,7 @@ void MainRender::GenerateRenderTextureGraphicsPipeline() {
 		L"vs_6_0");
 	assert(vertexShaderBlob != nullptr);
 
-	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/Grayscale.PS.hlsl",
+	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/CopyImage.PS.hlsl",
 		L"ps_6_0");
 	assert(pixelShaderBlob != nullptr);
 

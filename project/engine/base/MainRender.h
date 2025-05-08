@@ -99,8 +99,6 @@ private://メンバ変数
 	D3D12_VIEWPORT viewport{};
 	//シザー矩形
 	D3D12_RECT scissorRect{};
-	//TransitionBarrier
-	D3D12_RESOURCE_BARRIER barrier{};
 
 	///------------------------------------------///
 	/// オフスク用変数
