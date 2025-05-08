@@ -98,5 +98,7 @@ private: //メンバ変数
 	std::string name_;
 	//各粒のパラメーター
 	json param_;
+	//テクスチャハンドル
+	int32_t textureHandle_;
 
 };

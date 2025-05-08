@@ -3,6 +3,7 @@
 #include "SrvManager.h"
 #include "ModelManager.h"
 #include "ParticleManager.h"
+#include "TextureManager.h"
 #include "JsonUtil.h"
 
 Particle::~Particle() {
@@ -34,6 +35,8 @@ void Particle::Initialize(const std::string& name, const std::string& fileName) 
 	emitter_.isGravity = false;
 	emitter_.isBound = false;
 	emitter_.isPlay = true;
+	//テクスチャハンドルの取得
+	textureHandle_ = TextureManager::GetInstance()->LoadTexture(param_["Texture"]);
 
 	//形状を生成
 	shape_ = std::make_unique<Shape>();

@@ -12,7 +12,7 @@ void DevelopScene::Initialize() {
 	camera->Initialize();
 	camera->SetRotate({ cameraRotate });
 	camera->SetTranslate(cameraTranslate);
-	camera->SetFarClip(100.0f);
+	camera->SetFarClip(500.0f);
 
 	//平行光源の生成と初期化
 	dirLight = std::make_unique<DirectionalLight>();
@@ -52,7 +52,7 @@ void DevelopScene::Initialize() {
 	sprite2_->SetSize({ 300.0f,300.0f });
 
 	//スカイボックスの生成と初期化
-	textureHandleSkyBox_ = TextureManager::GetInstance()->LoadTexture("earth-cubemap.dds");
+	textureHandleSkyBox_ = TextureManager::GetInstance()->LoadTexture("rostock_laage_airport_4k.dds");
 	wtSkyBox_.Initialize();
 	wtSkyBox_.scale_ = { 300.0f,300.0f,300.0f };
 	skyBox_ = std::make_unique<Object3d>();
