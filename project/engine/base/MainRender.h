@@ -50,6 +50,8 @@ public://公開メンバ関数
 public://公開メンバ変数
 
 public://ゲッター
+	//コマンドアロケーター
+	ID3D12CommandAllocator* GetCommandAllocator() const { return commandAllocator.Get(); }
 	//コマンドリスト
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
 	//バックバッファの数を取得
