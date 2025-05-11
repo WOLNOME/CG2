@@ -13,11 +13,12 @@
 
 Object3d::Object3d() {
 	//リソース作成
-	lightFlagResource_ = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(LightFlagForPS));
+	flagResource_ = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(FlagForPS));
 	//リソースにマッピング
-	lightFlagResource_->Map(0, nullptr, reinterpret_cast<void**>(&lightFlagData_));
+	flagResource_->Map(0, nullptr, reinterpret_cast<void**>(&flagData_));
 	//データに書き込み
-	lightFlagData_->isActiveLights = false;
+	flagData_->isActiveLights = false;
+	flagData_->isActiveEnvironment = false;
 }
 
 void Object3d::InitializeModel(const std::string& filePath, ModelFormat format) {
@@ -52,13 +53,13 @@ void Object3d::Draw(WorldTransform& worldTransform, const  BaseCamera& camera, c
 		}
 
 		//シーンライト有無設定
-		lightFlagData_->isActiveLights = (sceneLight != nullptr) ? true : false;
+		flagData_->isActiveLights = (sceneLight != nullptr) ? true : false;
 
 		//lightFlagCbufferの場所を設定
-		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(6, lightFlagResource_->GetGPUVirtualAddress());
+		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(6, flagResource_->GetGPUVirtualAddress());
 
 		//SceneLightCBufferの場所を設定
-		if (lightFlagData_->isActiveLights) {
+		if (flagData_->isActiveLights) {
 			MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(5, sceneLight->GetSceneLightConstBuffer()->GetGPUVirtualAddress());
 		}
 
@@ -70,6 +71,16 @@ void Object3d::Draw(WorldTransform& worldTransform, const  BaseCamera& camera, c
 
 		//Cameraからカメラ座標CBufferの場所を設定
 		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(4, camera.GetCameraPositionConstBuffer()->GetGPUVirtualAddress());
+
+		//環境光テクスチャの設定
+		if (environmentLightTextureHandle_ != EOF) {
+			flagData_->isActiveEnvironment = true;
+			//PSにテクスチャ情報を送る
+			MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::GetInstance()->GetSrvHandleGPU(environmentLightTextureHandle_));
+		}
+		else {
+			flagData_->isActiveEnvironment = false;
+		}
 
 		//モデルを描画する
 		model_->Draw(0, 3, 1, textureHandle);
@@ -86,13 +97,13 @@ void Object3d::Draw(WorldTransform& worldTransform, const  BaseCamera& camera, c
 			//通常の描画設定
 			Object3dCommon::GetInstance()->SettingCommonDrawing(Object3dCommon::NameGPS::kNone);
 		}
-		
+
 		//シーンライト有無設定
-		lightFlagData_->isActiveLights = (sceneLight != nullptr) ? true : false;
+		flagData_->isActiveLights = (sceneLight != nullptr) ? true : false;
 		//lightFlagCbufferの場所を設定
-		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(6, lightFlagResource_->GetGPUVirtualAddress());
+		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(6, flagResource_->GetGPUVirtualAddress());
 		//SceneLightCBufferの場所を設定
-		if (lightFlagData_->isActiveLights) {
+		if (flagData_->isActiveLights) {
 			MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(5, sceneLight->GetSceneLightConstBuffer()->GetGPUVirtualAddress());
 		}
 		//WorldTransformCBufferの場所を設定
@@ -101,6 +112,16 @@ void Object3d::Draw(WorldTransform& worldTransform, const  BaseCamera& camera, c
 		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera.GetViewProjectionConstBuffer()->GetGPUVirtualAddress());
 		//Cameraからカメラ座標CBufferの場所を設定
 		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(4, camera.GetCameraPositionConstBuffer()->GetGPUVirtualAddress());
+		//環境光テクスチャの設定
+		if (environmentLightTextureHandle_ != EOF) {
+			flagData_->isActiveEnvironment = true;
+			//PSにテクスチャ情報を送る
+			MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(7, TextureManager::GetInstance()->GetSrvHandleGPU(environmentLightTextureHandle_));
+		}
+		else {
+			flagData_->isActiveEnvironment = false;
+		}
+
 		//形状を描画する
 		shape_->Draw(0, 3, 1, textureHandle);
 

@@ -83,6 +83,8 @@ void DevelopScene::Initialize() {
 	wtWalk_.translate_ = { 4.0f,3.0f,0.0f };
 	walk_ = std::make_unique<Object3d>();
 	walk_->InitializeModel("walk", GLTF);
+	int32_t elthWalk = TextureManager::GetInstance()->LoadTexture("rostock_laage_airport_4k.dds");
+	walk_->SetEnvironmentLightTextureHandle(elthWalk);
 
 	wtSimpleSkin_.Initialize();
 	wtSimpleSkin_.translate_ = { 5.0f,3.0f,0.0f };
@@ -252,6 +254,8 @@ void DevelopScene::Update() {
 	ImGui::End();
 	//テキスト用ImGui
 	text_->DebugWithImGui();
+	//カメラ用ImGui
+	camera->DebugWithImGui();
 
 #endif // _DEBUG
 }
@@ -265,7 +269,7 @@ void DevelopScene::Draw() {
 	///------------------------------///
 
 	//スカイボックス描画
-	//skyBox_->Draw(wtSkyBox_, *camera.get(), nullptr, textureHandleSkyBox_);
+	skyBox_->Draw(wtSkyBox_, *camera.get(), nullptr, textureHandleSkyBox_);
 
 	terrain_->Draw(wtTerrain_, *camera.get(), sceneLight_.get());
 	axis_->Draw(wtAxis_, *camera.get(), sceneLight_.get());

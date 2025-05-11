@@ -22,8 +22,9 @@ private://非公開列挙型
 	};
 
 public://構造体
-	struct LightFlagForPS {
+	struct FlagForPS {
 		uint32_t isActiveLights;
+		uint32_t isActiveEnvironment;
 	};
 
 public://メンバ関数
@@ -45,7 +46,8 @@ public://メンバ関数
 		const SceneLight* sceneLight = nullptr,
 		int32_t textureHandle = EOF
 	);
-private://非公開メンバ関数
+
+	void SetEnvironmentLightTextureHandle(int32_t _textureHandle) { environmentLightTextureHandle_ = _textureHandle; }
 
 private://メンバ変数
 	//モデル
@@ -57,9 +59,12 @@ private://メンバ変数
 	ObjectKind objKind_;
 
 	//ライト有無用定数バッファ
-	Microsoft::WRL::ComPtr<ID3D12Resource> lightFlagResource_;
+	Microsoft::WRL::ComPtr<ID3D12Resource> flagResource_;
 	//ライト有無用データ
-	LightFlagForPS* lightFlagData_ = nullptr;
+	FlagForPS* flagData_ = nullptr;
+
+	//環境光用のテクスチャ
+	int32_t environmentLightTextureHandle_ = EOF;
 
 };
 

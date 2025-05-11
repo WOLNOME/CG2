@@ -3,8 +3,6 @@
 #include <d3d12.h>
 #include <array>
 
-class Camera;
-
 //モデル共通部
 class Object3dCommon
 {
@@ -43,11 +41,6 @@ private://非公開メンバ関数
 	//スカイボックス用のPSO設定
 	void SkyBoxPSOOption();
 
-public://ゲッター
-public://セッター
-
-private://インスタンス
-	Camera* defaultCamera = nullptr;
 private://メンバ変数
 	//ルートシグネチャ
 	std::array<Microsoft::WRL::ComPtr<ID3D12RootSignature>, (int)NameGPS::kMaxNumNameGPS> rootSignature;

@@ -54,6 +54,7 @@ void Object3dCommon::NormalPSOOption() {
 	int numDescriptors = 0;
 	//テクスチャ用DescriptorRange作成
 	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+	D3D12_DESCRIPTOR_RANGE eltDescriptorRange[1] = {};
 	//オブジェクトのテクスチャ用
 	numDescriptors = 1;
 	descriptorRange[0].BaseShaderRegister = registerCount;
@@ -61,30 +62,37 @@ void Object3dCommon::NormalPSOOption() {
 	descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 	registerCount += numDescriptors;
+	//環境光テクスチャ用
+	numDescriptors = 1;
+	eltDescriptorRange[0].BaseShaderRegister = registerCount;
+	eltDescriptorRange[0].NumDescriptors = numDescriptors;
+	eltDescriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	eltDescriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	registerCount += numDescriptors;
 
 	std::vector<D3D12_ROOT_PARAMETER> rootParameters;
-	// マテリアルの設定
+	// マテリアルの設定(0)
 	D3D12_ROOT_PARAMETER materialParam = {};
 	materialParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	materialParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	materialParam.Descriptor.ShaderRegister = 0;
 	rootParameters.push_back(materialParam);
 
-	// ワールドトランスフォーム関連の設定
+	// ワールドトランスフォーム関連の設定(1)
 	D3D12_ROOT_PARAMETER worldTransformParam = {};
 	worldTransformParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	worldTransformParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 	worldTransformParam.Descriptor.ShaderRegister = 0;
 	rootParameters.push_back(worldTransformParam);
 
-	// ビュープロジェクション関連の設定
+	// ビュープロジェクション関連の設定(2)
 	D3D12_ROOT_PARAMETER viewProjParam = {};
 	viewProjParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	viewProjParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 	viewProjParam.Descriptor.ShaderRegister = 1;
 	rootParameters.push_back(viewProjParam);
 
-	// テクスチャの設定
+	// テクスチャの設定(3)
 	D3D12_ROOT_PARAMETER textureParam = {};
 	textureParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	textureParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
@@ -92,26 +100,34 @@ void Object3dCommon::NormalPSOOption() {
 	textureParam.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
 	rootParameters.push_back(textureParam);
 
-	// カメラ座標用定数バッファの設定
+	// カメラ座標用定数バッファの設定(4)
 	D3D12_ROOT_PARAMETER cameraParam = {};
 	cameraParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	cameraParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	cameraParam.Descriptor.ShaderRegister = 1;
 	rootParameters.push_back(cameraParam);
 
-	// シーンライト用の設定
+	// シーンライト用の設定(5)
 	D3D12_ROOT_PARAMETER lightParam = {};
 	lightParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	lightParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	lightParam.Descriptor.ShaderRegister = 2;
 	rootParameters.push_back(lightParam);
 
-	// 光源有無用の設定
+	// 光源有無用の設定(6)
 	D3D12_ROOT_PARAMETER lightExistParam = {};
 	lightExistParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	lightExistParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	lightExistParam.Descriptor.ShaderRegister = 3;
 	rootParameters.push_back(lightExistParam);
+
+	// 環境マップテクスチャ用の設定(7)
+	D3D12_ROOT_PARAMETER elTextureParam = {};
+	elTextureParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	elTextureParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	elTextureParam.DescriptorTable.pDescriptorRanges = eltDescriptorRange;
+	elTextureParam.DescriptorTable.NumDescriptorRanges = _countof(eltDescriptorRange);
+	rootParameters.push_back(elTextureParam);
 
 	// ルートシグネチャの記述
 	descriptionRootSignature.pParameters = rootParameters.data(); // std::vectorのデータポインタを使用
@@ -245,6 +261,7 @@ void Object3dCommon::AnimationPSOOption() {
 	int numDescriptors = 0;
 	//テクスチャ用DescriptorRange作成
 	D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+	D3D12_DESCRIPTOR_RANGE eltDescriptorRange[1] = {};
 	//オブジェクトのテクスチャ用
 	numDescriptors = 1;
 	descriptorRange[0].BaseShaderRegister = registerCount;
@@ -252,31 +269,38 @@ void Object3dCommon::AnimationPSOOption() {
 	descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 	registerCount += numDescriptors;
+	//環境光テクスチャ用
+	numDescriptors = 1;
+	eltDescriptorRange[0].BaseShaderRegister = registerCount;
+	eltDescriptorRange[0].NumDescriptors = numDescriptors;
+	eltDescriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+	eltDescriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	registerCount += numDescriptors;
 
 	std::vector<D3D12_ROOT_PARAMETER> rootParameters;
 
-	// マテリアルの設定
+	// マテリアルの設定(0)
 	D3D12_ROOT_PARAMETER materialParam = {};
 	materialParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	materialParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	materialParam.Descriptor.ShaderRegister = 0;
 	rootParameters.push_back(materialParam);
 
-	// ワールドトランスフォーム関連の設定
+	// ワールドトランスフォーム関連の設定(1)
 	D3D12_ROOT_PARAMETER worldTransformParam = {};
 	worldTransformParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	worldTransformParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 	worldTransformParam.Descriptor.ShaderRegister = 0;
 	rootParameters.push_back(worldTransformParam);
 
-	// ビュープロジェクション関連の設定
+	// ビュープロジェクション関連の設定(2)
 	D3D12_ROOT_PARAMETER viewProjParam = {};
 	viewProjParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	viewProjParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
 	viewProjParam.Descriptor.ShaderRegister = 1;
 	rootParameters.push_back(viewProjParam);
 
-	// テクスチャの設定
+	// テクスチャの設定(3)
 	D3D12_ROOT_PARAMETER textureParam = {};
 	textureParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	textureParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
@@ -284,28 +308,36 @@ void Object3dCommon::AnimationPSOOption() {
 	textureParam.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
 	rootParameters.push_back(textureParam);
 
-	// カメラ座標用定数バッファの設定
+	// カメラ座標用定数バッファの設定(4)
 	D3D12_ROOT_PARAMETER cameraParam = {};
 	cameraParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	cameraParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	cameraParam.Descriptor.ShaderRegister = 1;
 	rootParameters.push_back(cameraParam);
 
-	// シーンライト用の設定
+	// シーンライト用の設定(5)
 	D3D12_ROOT_PARAMETER lightParam = {};
 	lightParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	lightParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	lightParam.Descriptor.ShaderRegister = 2;
 	rootParameters.push_back(lightParam);
 
-	// 光源有無用の設定
+	// 光源有無用の設定(6)
 	D3D12_ROOT_PARAMETER lightExistParam = {};
 	lightExistParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
 	lightExistParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 	lightExistParam.Descriptor.ShaderRegister = 3;
 	rootParameters.push_back(lightExistParam);
 
-	//MatrixPalette用の設定
+	// 環境光テクスチャ用の設定(7)
+	D3D12_ROOT_PARAMETER elTextureParam = {};
+	elTextureParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+	elTextureParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+	elTextureParam.DescriptorTable.pDescriptorRanges = eltDescriptorRange;
+	elTextureParam.DescriptorTable.NumDescriptorRanges = _countof(eltDescriptorRange);
+	rootParameters.push_back(elTextureParam);
+
+	//MatrixPalette用の設定(8)
 	D3D12_ROOT_PARAMETER matrixPaletteParam = {};
 	matrixPaletteParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	matrixPaletteParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;

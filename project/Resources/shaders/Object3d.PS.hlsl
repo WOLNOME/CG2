@@ -10,7 +10,7 @@ struct Material
     float isTexture;
     float shininess;
 };
-struct CameraWorldPosition
+struct Camera
 {
     float3 worldPosition;
 };
@@ -51,15 +51,16 @@ struct SceneLight
     uint numPointLights;
     uint numSpotLights;
 };
-struct LightFlag
+struct Flag
 {
     uint isActiveLights;
+    uint isActiveEnvironmentLightTexture;
 };
 
 ConstantBuffer<Material> gMaterial : register(b0);
-ConstantBuffer<CameraWorldPosition> gCameraWorldPosition : register(b1);
+ConstantBuffer<Camera> gCamera : register(b1);
 ConstantBuffer<SceneLight> gSceneLight : register(b2);
-ConstantBuffer<LightFlag> gLightFlag : register(b3);
+ConstantBuffer<Flag> gFlag : register(b3);
 
 struct PixelShaderOutput
 {
@@ -83,7 +84,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     float4 textureColor = (gMaterial.isTexture != 0) ? gTexture.Sample(gSampler, transformedUV.xy) : float4(1.0f, 1.0f, 1.0f, 1.0f);
    
     //ライト計算する場合の処理
-    if (gLightFlag.isActiveLights == 1)
+    if (gFlag.isActiveLights == 1)
     {
     //処理するライトの数
         int useLightCount = 0;
@@ -97,7 +98,7 @@ PixelShaderOutput main(VertexShaderOutput input)
             if (gSceneLight.directionalLights[i].isActive == 1)
             {
             //反射の計算
-                float3 toEye = normalize(gCameraWorldPosition.worldPosition - input.worldPosition);
+                float3 toEye = normalize(gCamera.worldPosition - input.worldPosition);
                 float3 reflectLight = reflect(gSceneLight.directionalLights[i].direction, normalize(input.normal));
                 float3 halfVector = normalize(-gSceneLight.directionalLights[i].direction + toEye);
                 float NdotH = dot(normalize(input.normal), halfVector);
@@ -129,7 +130,7 @@ PixelShaderOutput main(VertexShaderOutput input)
                 //光源から物体への方向
                 float3 pointLightDirection = normalize(input.worldPosition - gSceneLight.pointLights[j].position);
                 //反射の計算
-                float3 toEye = normalize(gCameraWorldPosition.worldPosition - input.worldPosition);
+                float3 toEye = normalize(gCamera.worldPosition - input.worldPosition);
                 float3 reflectLight = reflect(pointLightDirection, normalize(input.normal));
                 float3 halfVector = normalize(-pointLightDirection + toEye);
                 float NdotH = dot(normalize(input.normal), halfVector);
@@ -160,7 +161,7 @@ PixelShaderOutput main(VertexShaderOutput input)
                 //光源から物体表面への方向
                 float3 spotLightDirectionOnSurface = normalize(input.worldPosition - gSceneLight.spotLights[k].position);
                 //反射の計算
-                float3 toEye = normalize(gCameraWorldPosition.worldPosition - input.worldPosition);
+                float3 toEye = normalize(gCamera.worldPosition - input.worldPosition);
                 float3 reflectLight = reflect(spotLightDirectionOnSurface, normalize(input.normal));
                 float3 halfVector = normalize(-spotLightDirectionOnSurface + toEye);
                 float NdotH = dot(normalize(input.normal), halfVector);
@@ -182,9 +183,18 @@ PixelShaderOutput main(VertexShaderOutput input)
                 specularSpotLight += gSceneLight.spotLights[k].color.rgb * gSceneLight.spotLights[k].intensity * specularPow * specularColor * attenuationFactor * falloffFactor;
             }
         }
-    
-        //全ての拡散反射と鏡面反射の計算
-        output.color.rgb = diffuseDirectionalLight + specularDirectionalLight + diffusePointLight + specularPointLight + diffuseSpotLight + specularSpotLight;
+        
+        //環境光の計算
+        float4 environmentColor = { 0, 0, 0, 0 };
+        if (gFlag.isActiveEnvironmentLightTexture == 1)
+        {
+            float3 cameraToPosition = normalize(input.worldPosition - gCamera.worldPosition);
+            float3 reflectedVector = reflect(cameraToPosition, normalize(input.normal));
+            environmentColor = gEnvironmentTexture.Sample(gSampler, reflectedVector);
+        
+        }
+        //全ての拡散反射と鏡面反射&環境光の計算
+        output.color.rgb = diffuseDirectionalLight + specularDirectionalLight + diffusePointLight + specularPointLight + diffuseSpotLight + specularSpotLight + environmentColor.rgb;
    
         //全てのライトがオフならライトの計算はしない
         if (useLightCount == 0)
