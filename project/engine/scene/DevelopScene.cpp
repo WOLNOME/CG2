@@ -60,9 +60,11 @@ void DevelopScene::Initialize() {
 	skyBox_->InitializeShape(Shape::ShapeKind::kSkyBox);
 
 	//3Dオブジェクトの生成と初期化
-	wtAxis_.Initialize();
-	axis_ = std::make_unique<Object3d>();
-	axis_->InitializeModel("teapot");
+	wtTeapot_.Initialize();
+	teapot_ = std::make_unique<Object3d>();
+	teapot_->InitializeModel("teapot");
+	int32_t elthTeapot = TextureManager::GetInstance()->LoadTexture("rostock_laage_airport_4k.dds");
+	teapot_->SetEnvironmentLightTextureHandle(elthTeapot);
 
 	wtTerrain_.Initialize();
 	wtTerrain_.translate_ = { 0.0f,-1.2f,0.0f };
@@ -127,8 +129,8 @@ void DevelopScene::Update() {
 	wtSkyBox_.UpdateMatrix();
 
 	//モデルの更新
-	wtAxis_.rotate_.y += 0.03f;
-	wtAxis_.UpdateMatrix();
+	wtTeapot_.rotate_.y += 0.03f;
+	wtTeapot_.UpdateMatrix();
 	wtTerrain_.UpdateMatrix();
 	wtAnimatedCube_.UpdateMatrix();
 	wtSneakWalk_.UpdateMatrix();
@@ -177,8 +179,8 @@ void DevelopScene::Update() {
 	ImGui::End();
 
 	ImGui::Begin("teapot");
-	ImGui::DragFloat3("translate", &wtAxis_.translate_.x, 0.01f);
-	ImGui::DragFloat3("scale", &wtAxis_.scale_.x, 0.01f);
+	ImGui::DragFloat3("translate", &wtTeapot_.translate_.x, 0.01f);
+	ImGui::DragFloat3("scale", &wtTeapot_.scale_.x, 0.01f);
 	ImGui::End();
 
 	ImGui::Begin("terrain");
@@ -272,7 +274,7 @@ void DevelopScene::Draw() {
 	skyBox_->Draw(wtSkyBox_, *camera.get(), nullptr, textureHandleSkyBox_);
 
 	terrain_->Draw(wtTerrain_, *camera.get(), sceneLight_.get());
-	axis_->Draw(wtAxis_, *camera.get(), sceneLight_.get());
+	teapot_->Draw(wtTeapot_, *camera.get(), sceneLight_.get());
 
 	animatedCube_->Draw(wtAnimatedCube_, *camera.get(), sceneLight_.get());
 

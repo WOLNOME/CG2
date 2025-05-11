@@ -60,8 +60,8 @@ private://メンバ変数
 	std::unique_ptr<Object3d> skyBox_ = nullptr;
 
 	//3Dオブジェクト
-	WorldTransform wtAxis_;
-	std::unique_ptr<Object3d> axis_ = nullptr;
+	WorldTransform wtTeapot_;
+	std::unique_ptr<Object3d> teapot_ = nullptr;
 
 	WorldTransform wtTerrain_;
 	std::unique_ptr<Object3d> terrain_ = nullptr;
