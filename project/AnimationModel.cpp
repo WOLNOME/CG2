@@ -440,7 +440,7 @@ Vector3 AnimationModel::CalculateValue(const std::vector<Keyframe<Vector3>>& key
 	return (*keyframes.rbegin()).value;
 }
 
-Quaternion Model::CalculateValue(const std::vector<Keyframe<Quaternion>>& keyframes, float time) {
+Quaternion AnimationModel::CalculateValue(const std::vector<Keyframe<Quaternion>>& keyframes, float time) {
 	assert(!keyframes.empty());
 	if (keyframes.size() == 1 || time <= keyframes[0].time) {
 		return keyframes[0].value;
