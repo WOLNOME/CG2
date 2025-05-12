@@ -107,6 +107,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AnimationModel.cpp" />
     <ClCompile Include="engine\2d\TextWrite.cpp" />
     <ClCompile Include="engine\2d\TextWriteManager.cpp" />
     <ClCompile Include="engine\3d\ParticleManager.cpp" />
@@ -169,6 +170,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\util\RandomStringUtil.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AnimationModel.h" />
     <ClInclude Include="engine\2d\TextWrite.h" />
     <ClInclude Include="engine\2d\TextWriteManager.h" />
     <ClInclude Include="engine\3d\ParticleManager.h" />
