@@ -4,8 +4,7 @@
 #include <algorithm>
 #include <numbers>
 
-void DevelopCamera::Initialize()
-{
+void DevelopCamera::Initialize() {
 	//基盤の初期化
 	BaseCamera::Initialize();
 	//インプット
@@ -13,8 +12,7 @@ void DevelopCamera::Initialize()
 
 }
 
-void DevelopCamera::Update()
-{
+void DevelopCamera::Update() {
 	////開発用カメラのマウス操作処理
 	//スクロールで前進後退
 	standardPosition += GetForwardDirection() * (input_->GetMouseScrollCount() * 1.3f);
@@ -28,7 +26,7 @@ void DevelopCamera::Update()
 			transform.rotate.x += moveValue.y * 0.001f;
 			transform.rotate.y += moveValue.x * 0.001f;
 		}
-		
+
 		//WASDでカメラ移動
 		if (input_->PushKey(DIK_W)) {
 			standardPosition += GetForwardDirection() * 0.1f;
@@ -43,12 +41,10 @@ void DevelopCamera::Update()
 			standardPosition += GetRightDirection() * 0.1f;
 		}
 
-
 	}
 	//カメラの回転制限
 	const float maxPitch = (std::numbers::pi_v<float> / 2.0f) - 0.01f;
 	transform.rotate.x = std::clamp(transform.rotate.x, -maxPitch, maxPitch);
-
 
 	//行列の更新
 	BaseCamera::UpdateMatrix();

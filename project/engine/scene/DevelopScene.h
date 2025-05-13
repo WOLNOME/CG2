@@ -5,8 +5,7 @@
 #include "WorldTransform.h"
 #include "DevelopCamera.h"
 
-class DevelopScene : public BaseScene
-{
+class DevelopScene : public BaseScene {
 public:
 	/// <summary>
 	/// 初期化
@@ -80,7 +79,7 @@ private://メンバ変数
 
 	//パーティクル
 	std::unique_ptr<Particle> particle_ = nullptr;
-	
+
 	//線
 	std::unique_ptr<LineDrawer> line_ = nullptr;
 
