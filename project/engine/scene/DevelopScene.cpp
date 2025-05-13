@@ -37,7 +37,6 @@ void DevelopScene::Initialize() {
 	sceneLight_->SetLight(pointLight2.get());
 	sceneLight_->SetLight(spotLight.get());
 
-
 	//ゲームシーン変数の初期化
 	sprite_ = std::make_unique<Sprite>();
 	textureHandleSprite_ = TextureManager::GetInstance()->LoadTexture("monsterBall.png");
@@ -55,43 +54,37 @@ void DevelopScene::Initialize() {
 	//スカイボックスの生成と初期化
 	textureHandleSkyBox_ = TextureManager::GetInstance()->LoadTexture("rostock_laage_airport_4k.dds");
 	wtSkyBox_.Initialize();
-	wtSkyBox_.scale_ = { 300.0f,300.0f,300.0f };
+	wtSkyBox_.scale = { 300.0f,300.0f,300.0f };
 	skyBox_ = std::make_unique<Object3d>();
-	skyBox_->InitializeShape(Shape::ShapeKind::kSkyBox);
+	skyBox_->Initialize(ShapeTag{}, Shape::ShapeKind::kSkyBox);
 
 	//3Dオブジェクトの生成と初期化
-	wtTeapot_.Initialize();
 	teapot_ = std::make_unique<Object3d>();
-	teapot_->InitializeModel("teapot");
+	teapot_->Initialize(ModelTag{}, "teapot");
 	int32_t elthTeapot = TextureManager::GetInstance()->LoadTexture("rostock_laage_airport_4k.dds");
 	teapot_->SetEnvironmentLightTextureHandle(elthTeapot);
 
-	wtTerrain_.Initialize();
-	wtTerrain_.translate_ = { 0.0f,-1.2f,0.0f };
 	terrain_ = std::make_unique<Object3d>();
-	terrain_->InitializeModel("terrain");
+	terrain_->Initialize(ModelTag{}, "terrain");
+	terrain_->worldTransform.translate = { 0.0f,-1.2f,0.0f };
 
-	wtAnimatedCube_.Initialize();
-	wtAnimatedCube_.translate_ = { 0.0f,3.0f,0.0f };
 	animatedCube_ = std::make_unique<Object3d>();
-	animatedCube_->InitializeModel("AnimatedCube", GLTF);
+	animatedCube_->Initialize(AnimationModelTag{}, "AnimatedCube", GLTF);
+	animatedCube_->worldTransform.translate = { 0.0f,3.0f,0.0f };
 
-	wtSneakWalk_.Initialize();
-	wtSneakWalk_.translate_ = { 3.0f,3.0f,0.0f };
 	sneakWalk_ = std::make_unique<Object3d>();
-	sneakWalk_->InitializeModel("sneakWalk", GLTF);
+	sneakWalk_->Initialize(AnimationModelTag{}, "sneakWalk", GLTF);
+	sneakWalk_->worldTransform.translate = { 3.0f,3.0f,0.0f };
 
-	wtWalk_.Initialize();
-	wtWalk_.translate_ = { 4.0f,3.0f,0.0f };
 	walk_ = std::make_unique<Object3d>();
-	walk_->InitializeModel("walk", GLTF);
+	walk_->Initialize(AnimationModelTag{}, "walk", GLTF);
 	int32_t elthWalk = TextureManager::GetInstance()->LoadTexture("rostock_laage_airport_4k.dds");
 	walk_->SetEnvironmentLightTextureHandle(elthWalk);
+	walk_->worldTransform.translate = { 4.0f,3.0f,0.0f };
 
-	wtSimpleSkin_.Initialize();
-	wtSimpleSkin_.translate_ = { 5.0f,3.0f,0.0f };
 	simpleSkin_ = std::make_unique<Object3d>();
-	simpleSkin_->InitializeModel("simpleSkin", GLTF);
+	simpleSkin_->Initialize(AnimationModelTag{}, "simpleSkin", GLTF);
+	simpleSkin_->worldTransform.translate = { 5.0f,3.0f,0.0f };
 
 	ParticleManager::GetInstance()->SetCamera(camera.get());
 	//particle_ = std::make_unique<Particle>();
@@ -128,14 +121,16 @@ void DevelopScene::Update() {
 	//スカイボックスの更新
 	wtSkyBox_.UpdateMatrix();
 
-	//モデルの更新
-	wtTeapot_.rotate_.y += 0.03f;
-	wtTeapot_.UpdateMatrix();
-	wtTerrain_.UpdateMatrix();
-	wtAnimatedCube_.UpdateMatrix();
-	wtSneakWalk_.UpdateMatrix();
-	wtWalk_.UpdateMatrix();
-	wtSimpleSkin_.UpdateMatrix();
+	//ティーポットの回転
+	teapot_->worldTransform.rotate.y += 0.03f;
+	//オブジェクトの更新
+	teapot_->Update();
+	terrain_->Update();
+	animatedCube_->Update();
+	sneakWalk_->Update();
+	walk_->Update();
+	simpleSkin_->Update();
+
 
 	//スプライトの更新
 	sprite_->Update();
@@ -176,16 +171,6 @@ void DevelopScene::Update() {
 		MyMath::DrawSphere(sphere, { 1.0f,0.0f,0.0f,1.0f }, line_.get());
 	}
 
-	ImGui::End();
-
-	ImGui::Begin("teapot");
-	ImGui::DragFloat3("translate", &wtTeapot_.translate_.x, 0.01f);
-	ImGui::DragFloat3("scale", &wtTeapot_.scale_.x, 0.01f);
-	ImGui::End();
-
-	ImGui::Begin("terrain");
-	ImGui::DragFloat3("translate", &wtTerrain_.translate_.x, 0.01f);
-	ImGui::DragFloat3("scale", &wtTerrain_.scale_.x, 0.01f);
 	ImGui::End();
 
 	ImGui::Begin("DirectionalLight");
@@ -271,18 +256,18 @@ void DevelopScene::Draw() {
 	///------------------------------///
 
 	//スカイボックス描画
-	skyBox_->Draw(wtSkyBox_, *camera.get(), nullptr, textureHandleSkyBox_);
+	skyBox_->Draw(*camera.get(), nullptr, textureHandleSkyBox_);
 
-	terrain_->Draw(wtTerrain_, *camera.get(), sceneLight_.get());
-	teapot_->Draw(wtTeapot_, *camera.get(), sceneLight_.get());
+	terrain_->Draw(*camera.get(), sceneLight_.get());
+	teapot_->Draw(*camera.get(), sceneLight_.get());
 
-	animatedCube_->Draw(wtAnimatedCube_, *camera.get(), sceneLight_.get());
+	animatedCube_->Draw(*camera.get(), sceneLight_.get());
 
-	sneakWalk_->Draw(wtSneakWalk_, *camera.get(), sceneLight_.get());
+	sneakWalk_->Draw(*camera.get(), sceneLight_.get());
 
-	walk_->Draw(wtWalk_, *camera.get(), sceneLight_.get());
+	walk_->Draw(*camera.get(), sceneLight_.get());
 
-	simpleSkin_->Draw(wtSimpleSkin_, *camera.get(), sceneLight_.get());
+	simpleSkin_->Draw(*camera.get(), sceneLight_.get());
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
@@ -330,7 +315,7 @@ void DevelopScene::TextDraw() {
 
 	timer_++;
 	float time = timer_ / 60.0f;
-	text_->WriteText(L"フォント確認 0123 現在時刻 : {:.1f}",time);
+	text_->WriteText(L"フォント確認 0123 現在時刻 : {:.1f}", time);
 
 	///------------------------------///
 	///↑↑↑↑テキスト描画終了↑↑↑↑

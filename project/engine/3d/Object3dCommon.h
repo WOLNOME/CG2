@@ -8,9 +8,9 @@ class Object3dCommon
 {
 public:
 	enum class NameGPS {
-		kNone,			//通常
-		kAnimation,		//アニメーション
-		kSkyBox,		//スカイボックス
+		None,			//通常
+		Animation,		//アニメーション
+		SkyBox,			//スカイボックス
 
 		kMaxNumNameGPS,	//最大数
 	};
@@ -30,7 +30,7 @@ public://メンバ関数
 	//終了
 	void Finalize();
 	//共通描画設定
-	void SettingCommonDrawing(NameGPS index = NameGPS::kNone);
+	void SettingCommonDrawing(NameGPS index = NameGPS::None);
 private://非公開メンバ関数
 	//グラフィックスパイプライン
 	void GenerateGraphicsPipeline();

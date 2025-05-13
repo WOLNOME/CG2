@@ -2,24 +2,13 @@
 #include "BaseCamera.h"
 #include "Particle.h"
 #include "MyMath.h"
+#include "BlendMode.h"
 #include <d3d12.h>
 #include <string>
 #include <array>
 #include <list>
 #include <unordered_map>
 #include <wrl.h>
-
-enum class BlendMode {
-	None,				//ブレンドなし
-	Normal,				//通常
-	Add,				//加算
-	Subtract,			//減算
-	Multiply,			//乗算
-	Screen,				//スクリーン
-	Execlution,			//除外
-
-	kMaxBlendModeNum,	//ブレンドモードの最大数
-};
 
 class ParticleManager {
 public:

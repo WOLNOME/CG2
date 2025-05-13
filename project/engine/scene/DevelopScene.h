@@ -2,7 +2,6 @@
 #include "BaseScene.h"
 #include "Vector2.h"
 #include "MyMath.h"
-#include "WorldTransform.h"
 #include "DevelopCamera.h"
 
 class DevelopScene : public BaseScene {
@@ -59,22 +58,16 @@ private://メンバ変数
 	std::unique_ptr<Object3d> skyBox_ = nullptr;
 
 	//3Dオブジェクト
-	WorldTransform wtTeapot_;
 	std::unique_ptr<Object3d> teapot_ = nullptr;
 
-	WorldTransform wtTerrain_;
 	std::unique_ptr<Object3d> terrain_ = nullptr;
 
-	WorldTransform wtAnimatedCube_;
 	std::unique_ptr<Object3d> animatedCube_ = nullptr;
 
-	WorldTransform wtSneakWalk_;
 	std::unique_ptr<Object3d> sneakWalk_ = nullptr;
 
-	WorldTransform wtWalk_;
 	std::unique_ptr<Object3d> walk_ = nullptr;
 
-	WorldTransform wtSimpleSkin_;
 	std::unique_ptr<Object3d> simpleSkin_ = nullptr;
 
 	//パーティクル

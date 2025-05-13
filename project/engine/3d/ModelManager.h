@@ -3,11 +3,10 @@
 #include <string>
 #include <memory>
 #include "Model.h"
+#include "AnimationModel.h"
 #include "ModelFormat.h"
 
-
-class ModelManager
-{
+class ModelManager {
 private://コンストラクタ等の隠蔽
 	static ModelManager* instance;
 
@@ -23,15 +22,21 @@ public:
 	//終了
 	void Finalize();
 
-	//読み込み関数
-	void LoadModel(const std::string& filePath,ModelFormat format = OBJ);
-	//モデルデータ取得関数
+	//通常モデル読み込み関数
+	void LoadModel(const std::string& filePath, ModelFormat format = OBJ);
+	//通常モデルデータ取得関数
 	Model* FindModel(const std::string& filePath);
 
-private://インスタンス
+	//アニメーションモデル読み込み関数
+	void LoadAnimationModel(const std::string& filePath, ModelFormat format = GLTF);
+	//アニメーションモデルデータ取得関数
+	AnimationModel* FindAnimationModel(const std::string& filePath);
 
 private:
 	//モデルデータ
-	std::map<std::string, std::unique_ptr<Model>> models;
+	std::map<std::string, std::unique_ptr<Model>> models_;
+	//アニメーションモデルデータ
+	std::map<std::string, std::unique_ptr<AnimationModel>> animationModels_;
+
 };
 

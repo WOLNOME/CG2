@@ -77,7 +77,7 @@
     <ClCompile Include="engine\2d\TextWrite.cpp" />
     <ClCompile Include="engine\2d\TextWriteManager.cpp" />
     <ClCompile Include="engine\base\D2DRender.cpp" />
-    <ClCompile Include="AnimationModel.cpp" />
+    <ClCompile Include="engine\3d\AnimationModel.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\3d\DirectionalLight.h" />
@@ -147,7 +147,8 @@
     <ClInclude Include="engine\2d\TextWrite.h" />
     <ClInclude Include="engine\2d\TextWriteManager.h" />
     <ClInclude Include="engine\base\D2DRender.h" />
-    <ClInclude Include="AnimationModel.h" />
+    <ClInclude Include="engine\3d\AnimationModel.h" />
+    <ClInclude Include="engine\math\BlendMode.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\LineDrawer.hlsli" />

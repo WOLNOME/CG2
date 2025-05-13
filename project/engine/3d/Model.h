@@ -2,97 +2,16 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <vector>
-#include <optional>
-#include <map>
-#include <span>
-#include <array>
 #include <string>
-#include "WorldTransform.h"
-#include "BaseCamera.h"
 #include "MyMath.h"
 #include "ModelFormat.h"
-#include "LineDrawer.h"
 //assimp
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 
 class Model {
-private://アニメーション関連構造体
-	//キーフレーム
-	template <typename tValue>
-	struct Keyframe {
-		float time;
-		tValue value;
-	};
-	using keyframeVector3 = Keyframe<Vector3>;
-	using keyframeQuaternion = Keyframe<Quaternion>;
-	//ノードアニメーション
-	template <typename tValue>
-	struct AnimationCurve {
-		std::vector<Keyframe<tValue>> keyframes;
-	};
-
-	struct NodeAnimation {
-		AnimationCurve<Vector3> translate;
-		AnimationCurve<Quaternion> rotate;
-		AnimationCurve<Vector3> scale;
-	};
-	//アニメーション
-	struct Animation {
-		float duration;//アニメーション全体の尺(秒)
-		//NodeAnimationの集合、Node名で開けるようにしておく
-		std::map<std::string, NodeAnimation> nodeAnimations;
-	};
-	//joint
-	struct Joint {
-		TransformQuaternion transform;
-		Matrix4x4 localMatrix;
-		Matrix4x4 skeletonSpaceMatrix;
-		std::string name;
-		std::vector<int32_t> children;
-		int32_t index;
-		std::optional<int32_t> parent;
-	};
-	//skeleton
-	struct Skeleton {
-		int32_t root;
-		std::map<std::string, int32_t> jointMap;
-		std::vector<Joint> joints;
-	};
-	//頂点ウェイト
-	struct VertexWeightData {
-		float weight;
-		uint32_t vertexIndex;
-	};
-	//ジョイントウェイト
-	struct JointWeightData {
-		Matrix4x4 inverseBindPoseMatrix;
-		std::vector<VertexWeightData> vertexWeights;
-	};
-	//インフルエンス
-	static const uint32_t kNumMaxInfluence = 4;
-	struct VertexInfluence {
-		std::array<float, kNumMaxInfluence> weights;
-		std::array<int32_t, kNumMaxInfluence> jointIndices;
-	};
-	//VSに送る用ウェル
-	struct WellForGPU {
-		Matrix4x4 skeletonSpaceMatrix;			//位置用
-		Matrix4x4 skeletonSpaceInverseMatrix;	//法線用
-	};
-	//スキンクラスター
-	struct SkinCluster {
-		std::vector<Matrix4x4> inverseBindPoseMatrices;
-		Microsoft::WRL::ComPtr<ID3D12Resource> influnceResource;
-		D3D12_VERTEX_BUFFER_VIEW influenceBufferView;
-		std::span<VertexInfluence> mappedInfluence;
-		Microsoft::WRL::ComPtr<ID3D12Resource> paletteResource;
-		std::span<WellForGPU> mappedPalette;
-		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> paletteSrvHandle;
-	};
-
-private://メッシュ関連構造体
+private:
 	//頂点データ
 	struct VertexData {
 		Vector4 position;
@@ -108,7 +27,6 @@ private://メッシュ関連構造体
 	};
 	//ノード
 	struct Node {
-		TransformQuaternion transform;
 		Matrix4x4 localMatrix;
 		std::string name;
 		std::vector<Node> children;
@@ -122,7 +40,6 @@ private://メッシュ関連構造体
 	};
 	//モデルデータ
 	struct ModelData {
-		std::map<std::string, JointWeightData> skinClusterData;
 		std::vector<VertexData> vertices;
 		std::vector<uint32_t> indices;
 		MaterialData material;
@@ -145,51 +62,24 @@ private://メッシュ関連構造体
 		std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> textureSrvHandleGPU;
 	};
 
-
 public:
 	void Initialize(const std::string& filename, ModelFormat format = OBJ, std::string directorypath = "Resources/models/");
-	void Update();
-	/// <summary>
-	/// モデル描画
-	/// </summary>
-	/// <param name="materialRootParameterIndex">マテリアル設定用ルートパラメータの番号</param>
-	/// <param name="textureRootParameterIndex">テクスチャ設定用ルートパラメータの番号</param>
-	/// <param name="instancingNum">インスタンス数</param>
 	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum = 1, int32_t textureHandle = -1);
 
 public://ゲッター
 	const ModelResource& GetModelResource() { return modelResource_; }
-	bool IsAnimation() { return isAnimation_; }
 public://セッター
 	void SetColor(Vector4& color) { color_ = &color; }
+
 private:
 	//モデルファイルの読み取り
 	std::vector<ModelData> LoadModelFile();
-	//アニメーションの読み取り
-	Animation LoadAnimationFile();
 	//assimpのノード→構造体ノード変換関数
 	Node ReadNode(aiNode* node);
 	//モデルリソース作成関数
 	ModelResource MakeModelResource();
-	//スキンクラスター生成関数
-	SkinCluster CreateSkinCluster();
 	//テクスチャ読み込み
 	void SettingTexture();
-
-	//任意の時刻に対する値を取得する関数
-	Vector3 CalculateValue(const std::vector<Keyframe<Vector3>>& keyframes, float time);
-	Quaternion CalculateValue(const std::vector<Keyframe<Quaternion>>& keyframes, float time);
-	//NodeからJointを作り出す
-	int32_t CreateJoint(const Node& node, const std::optional<int32_t>& parent, std::vector<Joint>& joints);
-	//NodeからSkeletonを作り出す関数
-	Skeleton CreateSkeleton(const Node& rootNode);
-	//joint(骨)の更新
-	void UpdateJoints(Skeleton& skeleton);
-	//アニメーションを適用する関数
-	void ApplyAnimation(Skeleton& skeleton, const Animation& animation, float animationTime);
-	//SkinClusterの更新
-	void UpdateSkinCluster(SkinCluster& skinCluster, const Skeleton& skeleton);
-
 private:
 	//モデル用リソース
 	ModelResource modelResource_;
@@ -205,18 +95,4 @@ private:
 	//形式名
 	ModelFormat mf_;
 	std::string format_;
-
-	//アニメーション用変数
-	Animation animation_;
-	float animationTime_ = 0.0f;
-	bool isAnimation_ = false;
-
-	//スケルトン
-	Skeleton skeleton_;
-	bool isSkeleton_ = false;
-
-	//スキンクラスター
-	SkinCluster skinCluster_;
-
 };
-

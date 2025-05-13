@@ -7,18 +7,26 @@
 #include <memory>
 #include "MyMath.h"
 #include "Model.h"
+#include "AnimationModel.h"
 #include "Shape.h"
 #include "ModelFormat.h"
 #include "WorldTransform.h"
 #include "SceneLight.h"
 
 class BaseCamera;
+//初期化用のタグ
+struct ModelTag {};
+struct AnimationModelTag {};
+struct ShapeTag {};
 //モデル
 class Object3d {
-private://非公開列挙型
-	enum ObjectKind {
-		kModel,
-		kShape,
+public://列挙型
+	enum class ObjectKind {
+		Model,				//通常モデル
+		AnimationModel,		//アニメーションモデル
+		Shape,				//単純形状
+
+		kMaxNumObjectKind,
 	};
 
 public://構造体
@@ -30,31 +38,40 @@ public://構造体
 public://メンバ関数
 	Object3d();
 
-	//初期化
-	void InitializeModel(const std::string& filePath, ModelFormat format = OBJ);
+	//モデル初期化
+	void Initialize(ModelTag, const std::string& filePath, ModelFormat format = OBJ);
+	//アニメーションモデル初期化
+	void Initialize(AnimationModelTag, const std::string& filePath, ModelFormat format = GLTF);
 	//形状初期化
-	void InitializeShape(Shape::ShapeKind kind);
+	void Initialize(ShapeTag, Shape::ShapeKind kind);
+	//更新処理
+	void Update();
 	/// <summary>
 	/// 描画
 	/// </summary>
-	/// <param name="worldTransform">ワールドトランスフォーム</param>
 	/// <param name="camera">カメラ</param>
 	/// <param name="dirLight">シーン内光源</param>
+	/// <param name="textureHandle">テクスチャハンドル</param>
 	void Draw(
-		WorldTransform& worldTransform,
 		const BaseCamera& camera,
 		const SceneLight* sceneLight = nullptr,
 		int32_t textureHandle = EOF
 	);
 
+public://setter
 	void SetEnvironmentLightTextureHandle(int32_t _textureHandle) { environmentLightTextureHandle_ = _textureHandle; }
+
+public://外からいじれるメンバ変数
+	WorldTransform worldTransform;
 
 private://メンバ変数
 	//モデル
 	Model* model_ = nullptr;
-
+	//アニメーションモデル
+	AnimationModel* animationModel_ = nullptr;
 	//形状
 	std::unique_ptr<Shape> shape_ = nullptr;
+
 	//オブジェクトの種類
 	ObjectKind objKind_;
 

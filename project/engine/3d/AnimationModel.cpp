@@ -6,7 +6,6 @@
 #include "DirectXCommon.h"
 #include "SrvManager.h"
 #include "MainRender.h"
-#include "Object3d.h"
 #include "TextureManager.h"
 
 
@@ -316,13 +315,15 @@ AnimationModel::ModelResource AnimationModel::MakeModelResource() {
 	for (size_t index = 0; index < modelNum_; index++) {
 		//リソースを作る
 		modelResource_.vertexResource.at(index) = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * modelResource_.modelData.at(index).vertices.size());
+		//インデックス描画用のリソースを作る
 		modelResource_.indexResource.at(index) = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(uint32_t) * modelResource_.modelData.at(index).indices.size());
+		//マテリアル用のリソースを作る
 		modelResource_.materialResource.at(index) = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(Material));
-		//頂点バッファービューを作成
+		//頂点バッファビューを作成
 		modelResource_.vertexBufferView.at(index).BufferLocation = modelResource_.vertexResource.at(index)->GetGPUVirtualAddress();
 		modelResource_.vertexBufferView.at(index).SizeInBytes = UINT(sizeof(VertexData) * modelResource_.modelData.at(index).vertices.size());
 		modelResource_.vertexBufferView.at(index).StrideInBytes = sizeof(VertexData);
-		//インデックスバッファービューを作成
+		//インデックスバッファビューを作成
 		modelResource_.indexBufferView.at(index).BufferLocation = modelResource_.indexResource.at(index)->GetGPUVirtualAddress();
 		modelResource_.indexBufferView.at(index).SizeInBytes = UINT(sizeof(uint32_t) * modelResource_.modelData.at(index).indices.size());
 		modelResource_.indexBufferView.at(index).Format = DXGI_FORMAT_R32_UINT;

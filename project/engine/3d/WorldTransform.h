@@ -14,21 +14,20 @@ struct WorldTransformationMatrixForVS {
 /// <summary>
 /// ワールド変換データ
 /// </summary>
-class WorldTransform
-{
+class WorldTransform {
 public:
 	// ローカルのスケール
-	Vector3 scale_ = { 1, 1, 1 };
+	Vector3 scale = { 1, 1, 1 };
 	// ローカルの回転角
-	Vector3 rotate_ = { 0, 0, 0 };
+	Vector3 rotate = { 0, 0, 0 };
 	// ローカルの座標
-	Vector3 translate_ = { 0, 0, 0 };
+	Vector3 translate = { 0, 0, 0 };
 	//ワールド座標
-	Vector3 worldTranslate_ = { 0, 0, 0 };
+	Vector3 worldTranslate = { 0, 0, 0 };
 	// ローカル → ワールド変換行列
-	Matrix4x4 matWorld_;
+	Matrix4x4 matWorld;
 	// 親となるワールド変換へのポインタ
-	const WorldTransform* parent_ = nullptr;
+	const WorldTransform* parent = nullptr;
 
 	WorldTransform() = default;
 	~WorldTransform() = default;

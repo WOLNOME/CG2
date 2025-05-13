@@ -25,11 +25,11 @@ void ParticleCreatorScene::Initialize() {
 	//天球と地面の生成と初期化
 	wtSkydome_.Initialize();
 	skydome_ = std::make_unique<Object3d>();
-	skydome_->InitializeModel("skydome");
+	skydome_->Initialize(ModelTag{}, "skydome");
 	wtGround_.Initialize();
 	textureHandleGround_ = TextureManager::GetInstance()->LoadTexture("grid.png");
 	ground_ = std::make_unique<Object3d>();
-	ground_->InitializeModel("ground");
+	ground_->Initialize(ModelTag{}, "ground");
 
 	//エミッター可視化ラインの生成初期化
 	lineEmitter_ = std::make_unique<LineDrawer>();

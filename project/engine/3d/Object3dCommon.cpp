@@ -160,7 +160,7 @@ void Object3dCommon::NormalPSOOption() {
 	}
 	//バイナリをもとに生成
 	hr = DirectXCommon::GetInstance()->GetDevice()->CreateRootSignature(0, signatireBlob->GetBufferPointer(),
-		signatireBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature[(int)NameGPS::kNone]));
+		signatireBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature[(int)NameGPS::None]));
 	assert(SUCCEEDED(hr));
 
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
@@ -224,7 +224,7 @@ void Object3dCommon::NormalPSOOption() {
 
 	//PSO情報を書き込む
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
-	graphicsPipelineStateDesc.pRootSignature = rootSignature[(int)NameGPS::kNone].Get();
+	graphicsPipelineStateDesc.pRootSignature = rootSignature[(int)NameGPS::None].Get();
 	graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
 	graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),
 	vertexShaderBlob->GetBufferSize() };
@@ -245,7 +245,7 @@ void Object3dCommon::NormalPSOOption() {
 	graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	//実際に生成
 	hr = DirectXCommon::GetInstance()->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
-		IID_PPV_ARGS(&graphicsPipelineState[(int)NameGPS::kNone]));
+		IID_PPV_ARGS(&graphicsPipelineState[(int)NameGPS::None]));
 	assert(SUCCEEDED(hr));
 }
 
@@ -376,7 +376,7 @@ void Object3dCommon::AnimationPSOOption() {
 	}
 	//バイナリをもとに生成
 	hr = DirectXCommon::GetInstance()->GetDevice()->CreateRootSignature(0, signatireBlob->GetBufferPointer(),
-		signatireBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature[(int)NameGPS::kAnimation]));
+		signatireBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature[(int)NameGPS::Animation]));
 	assert(SUCCEEDED(hr));
 
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
@@ -456,7 +456,7 @@ void Object3dCommon::AnimationPSOOption() {
 	depthStencilDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
-	graphicsPipelineStateDesc.pRootSignature = rootSignature[(int)NameGPS::kAnimation].Get();
+	graphicsPipelineStateDesc.pRootSignature = rootSignature[(int)NameGPS::Animation].Get();
 	graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
 	graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),
 	vertexShaderBlob->GetBufferSize() };
@@ -477,7 +477,7 @@ void Object3dCommon::AnimationPSOOption() {
 	graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	//実際に生成
 	hr = DirectXCommon::GetInstance()->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
-		IID_PPV_ARGS(&graphicsPipelineState[(int)NameGPS::kAnimation]));
+		IID_PPV_ARGS(&graphicsPipelineState[(int)NameGPS::Animation]));
 	assert(SUCCEEDED(hr));
 }
 
@@ -583,7 +583,7 @@ void Object3dCommon::SkyBoxPSOOption() {
 	}
 	//バイナリをもとに生成
 	hr = DirectXCommon::GetInstance()->GetDevice()->CreateRootSignature(0, signatireBlob->GetBufferPointer(),
-		signatireBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature[(int)NameGPS::kSkyBox]));
+		signatireBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature[(int)NameGPS::SkyBox]));
 	assert(SUCCEEDED(hr));
 
 	D3D12_INPUT_LAYOUT_DESC inputLayoutDesc{};
@@ -647,7 +647,7 @@ void Object3dCommon::SkyBoxPSOOption() {
 
 	//PSO情報を書き込む
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC graphicsPipelineStateDesc{};
-	graphicsPipelineStateDesc.pRootSignature = rootSignature[(int)NameGPS::kSkyBox].Get();
+	graphicsPipelineStateDesc.pRootSignature = rootSignature[(int)NameGPS::SkyBox].Get();
 	graphicsPipelineStateDesc.InputLayout = inputLayoutDesc;
 	graphicsPipelineStateDesc.VS = { vertexShaderBlob->GetBufferPointer(),
 	vertexShaderBlob->GetBufferSize() };
@@ -668,7 +668,7 @@ void Object3dCommon::SkyBoxPSOOption() {
 	graphicsPipelineStateDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
 	//実際に生成
 	hr = DirectXCommon::GetInstance()->GetDevice()->CreateGraphicsPipelineState(&graphicsPipelineStateDesc,
-		IID_PPV_ARGS(&graphicsPipelineState[(int)NameGPS::kSkyBox]));
+		IID_PPV_ARGS(&graphicsPipelineState[(int)NameGPS::SkyBox]));
 	assert(SUCCEEDED(hr));
 }
 

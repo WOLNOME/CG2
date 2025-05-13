@@ -155,7 +155,7 @@ public:
 	/// <param name="materialRootParameterIndex">マテリアル設定用ルートパラメータの番号</param>
 	/// <param name="textureRootParameterIndex">テクスチャ設定用ルートパラメータの番号</param>
 	/// <param name="instancingNum">インスタンス数</param>
-	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum = 1, int32_t textureHandle = -1);
+	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum = 1, int32_t textureHandle = EOF);
 
 public://ゲッター
 	const ModelResource& GetModelResource() { return modelResource_; }
