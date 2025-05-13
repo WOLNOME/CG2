@@ -177,3 +177,23 @@ void Object3d::Draw(const BaseCamera* _camera, int32_t _textureHandle) {
 		break;
 	}
 }
+
+void Object3d::SetNewAnimation(const std::string& _name, const std::string& _filePath) {
+	//アニメーションモデル以外のオブジェクトで初期化していた場合警告
+	if (objKind_ != ObjectKind::AnimationModel) {
+		assert(0 && "アニメーションモデル以外の初期化を確認しました。");
+		return;
+	}
+	//AnimationModelに通達
+	animationModel_->SetNewAnimation(_name, _filePath);
+}
+
+void Object3d::SetCurrentAnimation(const std::string& _name) {
+	//アニメーションモデル以外のオブジェクトで初期化していた場合警告
+	if (objKind_ != ObjectKind::AnimationModel) {
+		assert(0 && "アニメーションモデル以外の初期化を確認しました。");
+		return;
+	}
+	//AnimationModelに通達
+	animationModel_->SetCurrentAnimation(_name);
+}

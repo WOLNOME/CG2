@@ -78,6 +78,17 @@ void DevelopScene::Initialize() {
 	sneakWalk_->Initialize(AnimationModelTag{}, "sneakWalk", GLTF);
 	sneakWalk_->worldTransform.translate = { 3.0f,3.0f,0.0f };
 	sneakWalk_->SetSceneLight(sceneLight_.get());
+	sneakWalk_->SetNewAnimation("sneakWalk", "sneakWalk");
+	sneakWalk_->SetCurrentAnimation("sneakWalk");
+
+	composite_ = std::make_unique<Object3d>();
+	composite_->Initialize(AnimationModelTag{}, "walk", GLTF);
+	composite_->worldTransform.translate = { 0.0f,1.0f,-3.0f };
+	composite_->worldTransform.rotate = { 0.0f,3.14f,0.0f };
+	composite_->SetSceneLight(sceneLight_.get());
+	composite_->SetNewAnimation("walk", "walk");
+	composite_->SetNewAnimation("sneakWalk", "sneakWalk");
+	composite_->SetCurrentAnimation("walk");
 
 	walk_ = std::make_unique<Object3d>();
 	walk_->Initialize(AnimationModelTag{}, "walk", GLTF);
@@ -85,6 +96,8 @@ void DevelopScene::Initialize() {
 	walk_->SetEnvironmentLightTextureHandle(elthWalk);
 	walk_->worldTransform.translate = { 4.0f,3.0f,0.0f };
 	walk_->SetSceneLight(sceneLight_.get());
+	walk_->SetNewAnimation("walk", "walk");
+	walk_->SetCurrentAnimation("walk");
 
 	simpleSkin_ = std::make_unique<Object3d>();
 	simpleSkin_->Initialize(AnimationModelTag{}, "simpleSkin", GLTF);
@@ -132,8 +145,9 @@ void DevelopScene::Update() {
 	teapot_->Update();
 	terrain_->Update();
 	animatedCube_->Update();
-	sneakWalk_->Update();
 	walk_->Update();
+	sneakWalk_->Update();
+	composite_->Update();
 	simpleSkin_->Update();
 
 	//スプライトの更新
@@ -242,6 +256,16 @@ void DevelopScene::Update() {
 		MyMath::DrawSphere(slMarkSphere, { 1.0f,0.25f,0.0f,1.0f }, slMark.get());
 		MyMath::DrawSphere(slMarkSphere2, { 0.0f,1.0f,0.0f,1.0f }, slMark.get());
 	}
+
+	ImGui::Begin("複合アニメーション");
+	//選択肢
+	const char* items[] = { "walk","sneakWalk" };
+	static int currentItem = 0;
+	if (ImGui::Combo("アニメーションのアイテム", &currentItem, items, IM_ARRAYSIZE(items))) {
+		composite_->SetCurrentAnimation(items[currentItem]);
+	}
+	ImGui::End();
+
 	ImGui::End();
 	//テキスト用ImGui
 	text_->DebugWithImGui();
@@ -267,9 +291,11 @@ void DevelopScene::Draw() {
 
 	animatedCube_->Draw(camera.get());
 
+	walk_->Draw(camera.get());
+
 	sneakWalk_->Draw(camera.get());
 
-	walk_->Draw(camera.get());
+	composite_->Draw(camera.get());
 
 	simpleSkin_->Draw(camera.get());
 

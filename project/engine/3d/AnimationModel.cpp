@@ -1,12 +1,13 @@
 #include "AnimationModel.h"
-#include <fstream>
-#include <sstream>
-#include <filesystem>
-#include <algorithm>
 #include "DirectXCommon.h"
 #include "SrvManager.h"
 #include "MainRender.h"
 #include "TextureManager.h"
+#include <fstream>
+#include <sstream>
+#include <filesystem>
+#include <algorithm>
+#include <cassert>
 
 
 void AnimationModel::Initialize(const std::string& filename, ModelFormat format, std::string directorypath) {
@@ -17,6 +18,7 @@ void AnimationModel::Initialize(const std::string& filename, ModelFormat format,
 	switch (mf_) {
 	case OBJ:
 		format_ = ".obj";
+		assert(0 && "objファイルはAnimationModelで取り扱っていません。");
 		break;
 	case GLTF:
 		format_ = ".gltf";
@@ -29,11 +31,8 @@ void AnimationModel::Initialize(const std::string& filename, ModelFormat format,
 
 	//モデルリソースの初期設定
 	modelResource_ = MakeModelResource();
-
 	//スキンクラスターの生成
-	if (isAnimation_) {
-		skinCluster_ = CreateSkinCluster();
-	}
+	skinCluster_ = CreateSkinCluster();
 
 	//テクスチャの設定
 	SettingTexture();
@@ -41,12 +40,12 @@ void AnimationModel::Initialize(const std::string& filename, ModelFormat format,
 
 void AnimationModel::Update() {
 	//アニメーションの更新と骨への適用
-	if (isAnimation_ && isSkeleton_) {
+	if (isSkeleton_) {
 		//アニメーションの時間を進める
 		animationTime_ += kDeltaTime;
-		animationTime_ = std::fmod(animationTime_, animation_.duration);
+		animationTime_ = std::fmod(animationTime_, animations_[currentAnimation_].duration);
 		//アニメーションの更新を行って、骨ごとのLocal情報を更新する
-		ApplyAnimation(skeleton_, animation_, animationTime_);
+		ApplyAnimation(skeleton_, animations_[currentAnimation_], animationTime_);
 		//現在の骨ごとのLocal情報を基にSkeletonSpaceの情報を更新する
 		UpdateJoints(skeleton_);
 		//SkeletonSpaceの情報を基に、SkinClusterのMatrixPaletteを更新する
@@ -56,24 +55,16 @@ void AnimationModel::Update() {
 
 void AnimationModel::Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum, int32_t textureHandle) {
 	for (size_t index = 0; index < modelResource_.modelData.size(); index++) {
-		//アニメーションがある場合
-		if (isAnimation_) {
-			//VertexBufferViewをつなげる
-			D3D12_VERTEX_BUFFER_VIEW vbvs[2] = {
-				modelResource_.vertexBufferView[index],
-				skinCluster_.influenceBufferView
-			};
-			//配列を渡す(開始slot番号、使用slot数、VBV配列へのポインタ)
-			MainRender::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 2, vbvs);
+		//VertexBufferViewをつなげる
+		D3D12_VERTEX_BUFFER_VIEW vbvs[2] = {
+			modelResource_.vertexBufferView[index],
+			skinCluster_.influenceBufferView
+		};
+		//配列を渡す(開始slot番号、使用slot数、VBV配列へのポインタ)
+		MainRender::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 2, vbvs);
 
-			//paletteMatrixを送る
-			MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(8, skinCluster_.paletteSrvHandle.second);
-		}
-		else if (!isAnimation_) {
-
-			//頂点バッファービューを設定
-			MainRender::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &modelResource_.vertexBufferView.at(index));
-		}
+		//paletteMatrixを送る
+		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(8, skinCluster_.paletteSrvHandle.second);
 
 		//インデックスバッファビューを設定
 		MainRender::GetInstance()->GetCommandList()->IASetIndexBuffer(&modelResource_.indexBufferView.at(index));
@@ -98,6 +89,30 @@ void AnimationModel::Draw(uint32_t materialRootParameterIndex, uint32_t textureR
 		//描画
 		MainRender::GetInstance()->GetCommandList()->DrawIndexedInstanced(UINT(modelResource_.modelData.at(index).indices.size()), instancingNum, 0, 0, 0);
 	}
+}
+
+void AnimationModel::SetNewAnimation(const std::string& _name, const std::string& _fileName) {
+	//重複チェック(LoadAnimationFileは重いため)
+	if (animations_.find(_name) != animations_.end()) {
+		return;
+	}
+	//セットするアニメーションの用意
+	Animation animation;
+	animation = LoadAnimationFile(_fileName);
+	//コンテナに登録
+	animations_[_name] = animation;
+}
+
+void AnimationModel::SetCurrentAnimation(const std::string& _name) {
+	//名前が存在するかチェック
+	if (animations_.find(_name) == animations_.end()) {
+		assert(0 && std::string("'" + _name + "'" + "というアニメーションデータは存在しません。").c_str());
+		return;
+	}
+	//アニメーションの変更
+	currentAnimation_ = _name;
+	//タイムのリセット
+	animationTime_ = 0.0f;
 }
 
 std::vector<AnimationModel::ModelData> AnimationModel::LoadModelFile() {
@@ -219,16 +234,13 @@ std::vector<AnimationModel::ModelData> AnimationModel::LoadModelFile() {
 	return modelData;
 }
 
-AnimationModel::Animation AnimationModel::LoadAnimationFile() {
+AnimationModel::Animation AnimationModel::LoadAnimationFile(const std::string& fileName) {
 	Animation animation;
 	Assimp::Importer importer;
-	std::string filePath = directoryPath_ + fileName_ + "/" + fileName_ + format_;
+	std::string filePath = directoryPath_ + fileName + "/" + fileName + format_;
 	const aiScene* scene = importer.ReadFile(filePath.c_str(), 0);
-	if (scene->mNumAnimations != 0) {
-		isAnimation_ = true;
-	}
-	else {
-		isAnimation_ = false;
+	if (scene->mNumAnimations == 0) {
+		assert(0 && "このファイルにアニメーションデータが確認できませんでした。");
 		return animation;
 	}
 	aiAnimation* animationAssimp = scene->mAnimations[0];
@@ -297,7 +309,6 @@ AnimationModel::ModelResource AnimationModel::MakeModelResource() {
 	ModelResource modelResource_;
 
 	modelResource_.modelData = LoadModelFile();
-	animation_ = LoadAnimationFile();
 	modelNum_ = modelResource_.modelData.size();
 	//std::vector型の要素数を確定
 	modelResource_.vertexResource.resize(modelNum_);

@@ -53,13 +53,18 @@ public://メンバ関数
 	/// </summary>
 	/// <param name="_camera">カメラ</param>
 	/// <param name="textureHandle">テクスチャハンドル</param>
-	void Draw(const BaseCamera* _camera,int32_t _textureHandle = EOF);
+	void Draw(const BaseCamera* _camera, int32_t _textureHandle = EOF);
 
 public://setter
 	//シーンライト
 	void SetSceneLight(SceneLight* _light) { light = _light; }
 	//環境光テクスチャ
 	void SetEnvironmentLightTextureHandle(int32_t _textureHandle) { environmentLightTextureHandle_ = _textureHandle; }
+public: //アニメーション専用の関数
+	//新しいアニメーションをセット
+	void SetNewAnimation(const std::string& _name, const std::string& _filePath);
+	//現在のアニメーションを変更
+	void SetCurrentAnimation(const std::string& _name);
 
 private://描画に利用する追加ソース
 	//シーンライト

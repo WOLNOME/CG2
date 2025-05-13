@@ -67,6 +67,8 @@ private://メンバ変数
 
 	std::unique_ptr<Object3d> walk_ = nullptr;
 
+	std::unique_ptr<Object3d> composite_ = nullptr;
+
 	std::unique_ptr<Object3d> simpleSkin_ = nullptr;
 
 	//パーティクル

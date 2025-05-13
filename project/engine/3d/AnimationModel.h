@@ -159,14 +159,20 @@ public:
 
 public://ゲッター
 	const ModelResource& GetModelResource() { return modelResource_; }
-	bool IsAnimation() { return isAnimation_; }
 public://セッター
+	//色のセット
 	void SetColor(Vector4& color) { color_ = &color; }
+public://アニメーション関連セッター
+	//新しいアニメーションのセット
+	void SetNewAnimation(const std::string& _name, const std::string& _fileName);
+	//現在のアニメーションのセット
+	void SetCurrentAnimation(const std::string& _name);
+
 private:
 	//モデルファイルの読み取り
 	std::vector<ModelData> LoadModelFile();
 	//アニメーションの読み取り
-	Animation LoadAnimationFile();
+	Animation LoadAnimationFile(const std::string& fileName);
 	//assimpのノード→構造体ノード変換関数
 	Node ReadNode(aiNode* node);
 	//モデルリソース作成関数
@@ -207,9 +213,9 @@ private:
 	std::string format_;
 
 	//アニメーション用変数
-	Animation animation_;
+	std::map<std::string, Animation> animations_;
+	std::string currentAnimation_;
 	float animationTime_ = 0.0f;
-	bool isAnimation_ = false;
 
 	//スケルトン
 	Skeleton skeleton_;
