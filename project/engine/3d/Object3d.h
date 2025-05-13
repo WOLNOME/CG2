@@ -5,15 +5,17 @@
 #include <vector>
 #include <cstdint>
 #include <memory>
+#include "BaseCamera.h"
 #include "MyMath.h"
 #include "Model.h"
 #include "AnimationModel.h"
 #include "Shape.h"
 #include "ModelFormat.h"
 #include "WorldTransform.h"
-#include "SceneLight.h"
 
-class BaseCamera;
+//前方宣言
+class SceneLight;
+
 //初期化用のタグ
 struct ModelTag {};
 struct AnimationModelTag {};
@@ -49,18 +51,21 @@ public://メンバ関数
 	/// <summary>
 	/// 描画
 	/// </summary>
-	/// <param name="camera">カメラ</param>
-	/// <param name="dirLight">シーン内光源</param>
+	/// <param name="_camera">カメラ</param>
 	/// <param name="textureHandle">テクスチャハンドル</param>
-	void Draw(
-		const BaseCamera& camera,
-		const SceneLight* sceneLight = nullptr,
-		int32_t textureHandle = EOF
-	);
+	void Draw(const BaseCamera* _camera,int32_t _textureHandle = EOF);
 
 public://setter
+	//シーンライト
+	void SetSceneLight(SceneLight* _light) { light = _light; }
+	//環境光テクスチャ
 	void SetEnvironmentLightTextureHandle(int32_t _textureHandle) { environmentLightTextureHandle_ = _textureHandle; }
 
+private://描画に利用する追加ソース
+	//シーンライト
+	SceneLight* light;
+	//環境光用のテクスチャ
+	int32_t environmentLightTextureHandle_ = EOF;
 public://外からいじれるメンバ変数
 	WorldTransform worldTransform;
 
@@ -79,9 +84,6 @@ private://メンバ変数
 	Microsoft::WRL::ComPtr<ID3D12Resource> flagResource_;
 	//ライト有無用データ
 	FlagForPS* flagData_ = nullptr;
-
-	//環境光用のテクスチャ
-	int32_t environmentLightTextureHandle_ = EOF;
 
 };
 

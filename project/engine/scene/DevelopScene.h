@@ -54,7 +54,6 @@ private://メンバ変数
 	Vector2 sprite2Position;
 	//スカイボックス
 	uint32_t textureHandleSkyBox_ = 0u;
-	WorldTransform wtSkyBox_;
 	std::unique_ptr<Object3d> skyBox_ = nullptr;
 
 	//3Dオブジェクト

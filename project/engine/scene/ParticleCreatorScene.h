@@ -52,9 +52,7 @@ private://必要なオブジェクト
 	std::unique_ptr<DevelopCamera> camera_ = nullptr;
 
 	//天球と地面
-	WorldTransform wtSkydome_;
 	std::unique_ptr<Object3d> skydome_ = nullptr;
-	WorldTransform wtGround_;
 	uint32_t textureHandleGround_ = EOF;
 	std::unique_ptr<Object3d> ground_ = nullptr;
 

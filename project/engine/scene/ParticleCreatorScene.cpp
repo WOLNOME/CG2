@@ -23,10 +23,8 @@ void ParticleCreatorScene::Initialize() {
 	ParticleManager::GetInstance()->SetCamera(camera_.get());
 
 	//天球と地面の生成と初期化
-	wtSkydome_.Initialize();
 	skydome_ = std::make_unique<Object3d>();
 	skydome_->Initialize(ModelTag{}, "skydome");
-	wtGround_.Initialize();
 	textureHandleGround_ = TextureManager::GetInstance()->LoadTexture("grid.png");
 	ground_ = std::make_unique<Object3d>();
 	ground_->Initialize(ModelTag{}, "ground");
@@ -45,9 +43,9 @@ void ParticleCreatorScene::Update() {
 	BaseScene::Update();
 	//カメラの更新
 	camera_->Update();
-	//モデルの更新
-	wtSkydome_.UpdateMatrix();
-	wtGround_.UpdateMatrix();
+	//オブジェクトの更新
+	skydome_->Update();
+	ground_->Update();
 
 	//リセットコマンド
 	if (!checkContinue_ && !checkSameName_ && !checkEditName_) {
@@ -83,9 +81,9 @@ void ParticleCreatorScene::Draw() {
 	///------------------------------///
 
 	//天球の描画
-	skydome_->Draw(wtSkydome_, *camera_.get(), nullptr);
+	skydome_->Draw(camera_.get());
 	//地面の描画
-	ground_->Draw(wtGround_, *camera_.get(), nullptr, textureHandleGround_);
+	ground_->Draw(camera_.get(), textureHandleGround_);
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑

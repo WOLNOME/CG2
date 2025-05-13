@@ -53,38 +53,43 @@ void DevelopScene::Initialize() {
 
 	//スカイボックスの生成と初期化
 	textureHandleSkyBox_ = TextureManager::GetInstance()->LoadTexture("rostock_laage_airport_4k.dds");
-	wtSkyBox_.Initialize();
-	wtSkyBox_.scale = { 300.0f,300.0f,300.0f };
 	skyBox_ = std::make_unique<Object3d>();
 	skyBox_->Initialize(ShapeTag{}, Shape::ShapeKind::kSkyBox);
+	skyBox_->worldTransform.scale = { 300.0f,300.0f,300.0f };
 
 	//3Dオブジェクトの生成と初期化
 	teapot_ = std::make_unique<Object3d>();
 	teapot_->Initialize(ModelTag{}, "teapot");
 	int32_t elthTeapot = TextureManager::GetInstance()->LoadTexture("rostock_laage_airport_4k.dds");
 	teapot_->SetEnvironmentLightTextureHandle(elthTeapot);
+	teapot_->SetSceneLight(sceneLight_.get());
 
 	terrain_ = std::make_unique<Object3d>();
 	terrain_->Initialize(ModelTag{}, "terrain");
 	terrain_->worldTransform.translate = { 0.0f,-1.2f,0.0f };
+	terrain_->SetSceneLight(sceneLight_.get());
 
 	animatedCube_ = std::make_unique<Object3d>();
 	animatedCube_->Initialize(AnimationModelTag{}, "AnimatedCube", GLTF);
 	animatedCube_->worldTransform.translate = { 0.0f,3.0f,0.0f };
+	animatedCube_->SetSceneLight(sceneLight_.get());
 
 	sneakWalk_ = std::make_unique<Object3d>();
 	sneakWalk_->Initialize(AnimationModelTag{}, "sneakWalk", GLTF);
 	sneakWalk_->worldTransform.translate = { 3.0f,3.0f,0.0f };
+	sneakWalk_->SetSceneLight(sceneLight_.get());
 
 	walk_ = std::make_unique<Object3d>();
 	walk_->Initialize(AnimationModelTag{}, "walk", GLTF);
 	int32_t elthWalk = TextureManager::GetInstance()->LoadTexture("rostock_laage_airport_4k.dds");
 	walk_->SetEnvironmentLightTextureHandle(elthWalk);
 	walk_->worldTransform.translate = { 4.0f,3.0f,0.0f };
+	walk_->SetSceneLight(sceneLight_.get());
 
 	simpleSkin_ = std::make_unique<Object3d>();
 	simpleSkin_->Initialize(AnimationModelTag{}, "simpleSkin", GLTF);
 	simpleSkin_->worldTransform.translate = { 5.0f,3.0f,0.0f };
+	simpleSkin_->SetSceneLight(sceneLight_.get());
 
 	ParticleManager::GetInstance()->SetCamera(camera.get());
 	//particle_ = std::make_unique<Particle>();
@@ -119,7 +124,7 @@ void DevelopScene::Update() {
 	camera->Update();
 
 	//スカイボックスの更新
-	wtSkyBox_.UpdateMatrix();
+	skyBox_->Update();
 
 	//ティーポットの回転
 	teapot_->worldTransform.rotate.y += 0.03f;
@@ -130,7 +135,6 @@ void DevelopScene::Update() {
 	sneakWalk_->Update();
 	walk_->Update();
 	simpleSkin_->Update();
-
 
 	//スプライトの更新
 	sprite_->Update();
@@ -256,18 +260,18 @@ void DevelopScene::Draw() {
 	///------------------------------///
 
 	//スカイボックス描画
-	skyBox_->Draw(*camera.get(), nullptr, textureHandleSkyBox_);
+	skyBox_->Draw(camera.get(), textureHandleSkyBox_);
 
-	terrain_->Draw(*camera.get(), sceneLight_.get());
-	teapot_->Draw(*camera.get(), sceneLight_.get());
+	terrain_->Draw(camera.get());
+	teapot_->Draw(camera.get());
 
-	animatedCube_->Draw(*camera.get(), sceneLight_.get());
+	animatedCube_->Draw(camera.get());
 
-	sneakWalk_->Draw(*camera.get(), sceneLight_.get());
+	sneakWalk_->Draw(camera.get());
 
-	walk_->Draw(*camera.get(), sceneLight_.get());
+	walk_->Draw(camera.get());
 
-	simpleSkin_->Draw(*camera.get(), sceneLight_.get());
+	simpleSkin_->Draw(camera.get());
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
