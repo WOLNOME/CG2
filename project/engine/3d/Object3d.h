@@ -78,7 +78,7 @@ private://メンバ変数
 	//モデル
 	Model* model_ = nullptr;
 	//アニメーションモデル
-	AnimationModel* animationModel_ = nullptr;
+	std::unique_ptr<AnimationModel> animationModel_ = nullptr;
 	//形状
 	std::unique_ptr<Shape> shape_ = nullptr;
 

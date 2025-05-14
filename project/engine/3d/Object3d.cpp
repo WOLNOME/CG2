@@ -33,10 +33,9 @@ void Object3d::Initialize(ModelTag, const std::string& filePath, ModelFormat for
 }
 
 void Object3d::Initialize(AnimationModelTag, const std::string& filePath, ModelFormat format) {
-	//モデルマネージャーでアニメーションモデルを生成
-	ModelManager::GetInstance()->LoadAnimationModel(filePath, format);
-	//モデルマネージャーから検索してセットする
-	animationModel_ = ModelManager::GetInstance()->FindAnimationModel(filePath);
+	//アニメーションモデルの生成と初期化
+	animationModel_ = std::make_unique<AnimationModel>();
+	animationModel_->Initialize(filePath, format);
 
 	objKind_ = ObjectKind::AnimationModel;
 }

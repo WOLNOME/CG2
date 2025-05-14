@@ -41,26 +41,3 @@ Model* ModelManager::FindModel(const std::string& filePath) {
 	//ファイル名一致なし
 	return nullptr;
 }
-
-void ModelManager::LoadAnimationModel(const std::string& filePath, ModelFormat format) {
-	//重複防止処理！
-	if (animationModels_.contains(filePath)) {
-		//読み込み済みなら早期return
-		return;
-	}
-	//モデルの生成トファイル読み込み、初期化
-	std::unique_ptr<AnimationModel> animationModel = std::make_unique<AnimationModel>();
-	animationModel->Initialize(filePath, format);
-	//モデルをmapコンテナに格納する
-	animationModels_.insert(std::make_pair(filePath, std::move(animationModel)));
-}
-
-AnimationModel* ModelManager::FindAnimationModel(const std::string& filePath) {
-	//読み込み済みモデルを検索
-	if (animationModels_.contains(filePath)) {
-		//読み込みモデルを戻り値としてreturn
-		return animationModels_.at(filePath).get();
-	}
-	//ファイル名一致なし
-	return nullptr;
-}
