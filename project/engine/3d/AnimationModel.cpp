@@ -2,6 +2,7 @@
 #include "DirectXCommon.h"
 #include "SrvManager.h"
 #include "MainRender.h"
+#include "Object3dCommon.h"
 #include "TextureManager.h"
 #include <fstream>
 #include <sstream>
@@ -85,9 +86,13 @@ void AnimationModel::Draw(uint32_t materialRootParameterIndex, uint32_t textureR
 				MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(textureRootParameterIndex, TextureManager::GetInstance()->GetSrvHandleGPU(modelResource_.modelData.at(index).material.textureHandle));
 			}
 		}
+		//コンピュートシェーダーへの転送
+		Object3dCommon::GetInstance()->SettingAnimationCS();
+		MainRender::
 
-		//描画
-		MainRender::GetInstance()->GetCommandList()->DrawIndexedInstanced(UINT(modelResource_.modelData.at(index).indices.size()), instancingNum, 0, 0, 0);
+
+			//描画
+			MainRender::GetInstance()->GetCommandList()->DrawIndexedInstanced(UINT(modelResource_.modelData.at(index).indices.size()), instancingNum, 0, 0, 0);
 	}
 }
 
@@ -369,24 +374,30 @@ AnimationModel::ModelResource AnimationModel::MakeModelResource() {
 
 AnimationModel::SkinCluster AnimationModel::CreateSkinCluster() {
 	SkinCluster skinCluster;
-	//palette用のResourceを確保
-	skinCluster.paletteResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(WellForGPU) * skeleton_.joints.size());
-	WellForGPU* mappedPalette = nullptr;
-	skinCluster.paletteResource->Map(0, nullptr, reinterpret_cast<void**>(&mappedPalette));
-	skinCluster.mappedPalette = { mappedPalette,skeleton_.joints.size() };//spanを使ってアクセスするようにする
-	uint32_t srvIndex = SrvManager::GetInstance()->Allocate();
-	skinCluster.paletteSrvHandle.first = SrvManager::GetInstance()->GetCPUDescriptorHandle(srvIndex);
-	skinCluster.paletteSrvHandle.second = SrvManager::GetInstance()->GetGPUDescriptorHandle(srvIndex);
-	//palette用のsrvを作成。StructuredBufferでアクセスできるようにする
-	D3D12_SHADER_RESOURCE_VIEW_DESC paletteSrvDesc{};
-	paletteSrvDesc.Format = DXGI_FORMAT_UNKNOWN;
-	paletteSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	paletteSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-	paletteSrvDesc.Buffer.FirstElement = 0;
-	paletteSrvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
-	paletteSrvDesc.Buffer.NumElements = UINT(skeleton_.joints.size());
-	paletteSrvDesc.Buffer.StructureByteStride = sizeof(WellForGPU);
-	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(skinCluster.paletteResource.Get(), &paletteSrvDesc, skinCluster.paletteSrvHandle.first);
+
+	{
+		//palette用のResourceを確保
+		skinCluster.paletteResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(WellForGPU) * skeleton_.joints.size());
+		WellForGPU* mappedPalette = nullptr;
+		skinCluster.paletteResource->Map(0, nullptr, reinterpret_cast<void**>(&mappedPalette));
+		skinCluster.mappedPalette = { mappedPalette,skeleton_.joints.size() };//spanを使ってアクセスするようにする
+		uint32_t srvIndex = SrvManager::GetInstance()->Allocate();
+		skinCluster.paletteSrvHandle.first = SrvManager::GetInstance()->GetCPUDescriptorHandle(srvIndex);
+		skinCluster.paletteSrvHandle.second = SrvManager::GetInstance()->GetGPUDescriptorHandle(srvIndex);
+		//palette用のsrvを作成。StructuredBufferでアクセスできるようにする
+		SrvManager::GetInstance()->CreateSRVforStructuredBufferCS(srvIndex, skinCluster_.inputVertexResource.Get(), UINT(skeleton_.joints.size()), sizeof(WellForGPU));
+	}
+	{
+		//入力頂点用のResourceを確保
+		skinCluster.inputVertexResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * skeleton_.joints.size());
+		VertexData* mappedInputVertex = nullptr;
+		skinCluster.inputVertexResource->Map(0, nullptr, reinterpret_cast<void**>(&mappedInputVertex));
+		skinCluster.mappedInputVertex = { mappedInputVertex,skeleton_.joints.size() };//spanを使ってアクセスするようにする
+		uint32_t srvIndex = SrvManager::GetInstance()->Allocate();
+		skinCluster.inputVertexSrvHandle.first = SrvManager::GetInstance()->GetCPUDescriptorHandle(srvIndex);
+		skinCluster.inputVertexSrvHandle.second = SrvManager::GetInstance()->GetGPUDescriptorHandle(srvIndex);
+	}
+
 	//influence用のResourceを確保。頂点ごとにinfluence情報を追加できるようにする
 	skinCluster.influnceResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(VertexInfluence) * modelResource_.modelData[0].vertices.size());
 	VertexInfluence* mappedInfluence = nullptr;

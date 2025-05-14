@@ -31,6 +31,9 @@ public://メンバ関数
 	void Finalize();
 	//共通描画設定
 	void SettingCommonDrawing(NameGPS index = NameGPS::None);
+	//アニメーション専用コンピュートシェーダー前設定
+	void SettingAnimationCS();
+
 private://非公開メンバ関数
 	//グラフィックスパイプライン
 	void GenerateGraphicsPipeline();
@@ -47,6 +50,10 @@ private://メンバ変数
 	//グラフィックスパイプライン
 	std::array<Microsoft::WRL::ComPtr<ID3D12PipelineState>, (int)NameGPS::kMaxNumNameGPS> graphicsPipelineState;
 
+	//コンピュートルートシグネチャ
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> computeRootSignature = nullptr;
+	//コンピュートパイプライン
+	Microsoft::WRL::ComPtr<ID3D12PipelineState> computePipelineState = nullptr;
 
 };
 

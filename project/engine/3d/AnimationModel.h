@@ -19,6 +19,12 @@
 
 class AnimationModel {
 private://アニメーション関連構造体
+	//頂点データ
+	struct VertexData {
+		Vector4 position;
+		Vector2 texcoord;
+		Vector3 normal;
+	};
 	//キーフレーム
 	template <typename tValue>
 	struct Keyframe {
@@ -76,29 +82,42 @@ private://アニメーション関連構造体
 		std::array<float, kNumMaxInfluence> weights;
 		std::array<int32_t, kNumMaxInfluence> jointIndices;
 	};
-	//VSに送る用ウェル
+	//CSに送る用MatrixPalette
 	struct WellForGPU {
 		Matrix4x4 skeletonSpaceMatrix;			//位置用
 		Matrix4x4 skeletonSpaceInverseMatrix;	//法線用
 	};
+	//CSに送る用SkinningInformation
+	struct SkinningInformationForGPU {
+		uint32_t numVertices;
+	};
+
 	//スキンクラスター
 	struct SkinCluster {
 		std::vector<Matrix4x4> inverseBindPoseMatrices;
-		Microsoft::WRL::ComPtr<ID3D12Resource> influnceResource;
-		D3D12_VERTEX_BUFFER_VIEW influenceBufferView;
-		std::span<VertexInfluence> mappedInfluence;
+		//MatrixPalette
 		Microsoft::WRL::ComPtr<ID3D12Resource> paletteResource;
 		std::span<WellForGPU> mappedPalette;
 		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> paletteSrvHandle;
+		//入力頂点
+		Microsoft::WRL::ComPtr<ID3D12Resource> inputVertexResource;
+		std::span<VertexData> mappedInputVertex;
+		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> inputVertexSrvHandle;
+		//インフルエンス
+		Microsoft::WRL::ComPtr<ID3D12Resource> influnceResource;
+		D3D12_VERTEX_BUFFER_VIEW influenceBufferView;
+		std::span<VertexInfluence> mappedInfluence;
+		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> influenceSrvHandle;
+		//出力頂点
+		Microsoft::WRL::ComPtr<ID3D12Resource> outputVertexResource;
+		std::span<VertexData> mappedOutputVertex;
+		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> outputVertexSrvHandle;
+		//スキニング情報
+		Microsoft::WRL::ComPtr<ID3D12Resource> skinningInfoResource;
+		std::span<SkinningInformationForGPU> mappedSkinningInfo;
 	};
 
 private://メッシュ関連構造体
-	//頂点データ
-	struct VertexData {
-		Vector4 position;
-		Vector2 texcoord;
-		Vector3 normal;
-	};
 	//マテリアル
 	struct Material {
 		Vector4 color;
