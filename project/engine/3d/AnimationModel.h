@@ -104,7 +104,7 @@ private://アニメーション関連構造体
 		std::span<VertexData> mappedInputVertex;
 		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> inputVertexSrvHandle;
 		//インフルエンス
-		Microsoft::WRL::ComPtr<ID3D12Resource> influnceResource;
+		Microsoft::WRL::ComPtr<ID3D12Resource> influenceResource;
 		D3D12_VERTEX_BUFFER_VIEW influenceBufferView;
 		std::span<VertexInfluence> mappedInfluence;
 		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> influenceSrvHandle;
@@ -163,7 +163,6 @@ private://メッシュ関連構造体
 		std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> textureSrvHandleCPU;
 		std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> textureSrvHandleGPU;
 	};
-
 
 public:
 	void Initialize(const std::string& filename, ModelFormat format = OBJ, std::string directorypath = "Resources/models/");

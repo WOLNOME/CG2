@@ -1,6 +1,6 @@
 #include "SceneLight.h"
 #include "DirectXCommon.h"
-#include "SrvManager.h"
+#include "GPUDescriptorManager.h"
 #include <cassert>
 #include <algorithm>
 

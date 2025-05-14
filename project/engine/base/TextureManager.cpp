@@ -1,6 +1,6 @@
 #include "TextureManager.h"
 #include "DirectXCommon.h"
-#include "SrvManager.h"
+#include "GPUDescriptorManager.h"
 #include "MainRender.h"
 #include "StringUtility.h"
 #include <iostream>
@@ -43,7 +43,7 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath) {
 	}
 
 	//テクスチャ枚数上限チェック
-	assert(SrvManager::GetInstance()->CheckCanSecured());
+	assert(GPUDescriptorManager::GetInstance()->CheckCanSecured());
 
 	//テクスチャファイルを読んでプログラムで扱えるようにする
 	DirectX::ScratchImage image{};
@@ -119,7 +119,7 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath) {
 	}
 
 	//テクスチャデータの要素数番号からSRVのインデックスを計算する
-	textureData.srvIndex = SrvManager::GetInstance()->Allocate();
+	textureData.srvIndex = GPUDescriptorManager::GetInstance()->Allocate();
 
 	//テクスチャの名前(例:ＯＯ.png)を登録
 	textureData.textureName = textureName;
@@ -148,7 +148,7 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath) {
 			}
 			//SRVの生成
 			if (textureDatas[i].has_value()) {
-				DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(textureData.resource.Get(), &srvDesc, SrvManager::GetInstance()->GetCPUDescriptorHandle(textureDatas[i]->srvIndex));
+				DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(textureData.resource.Get(), &srvDesc, GPUDescriptorManager::GetInstance()->GetCPUDescriptorHandle(textureDatas[i]->srvIndex));
 			}
 			return (uint32_t)i;
 		}
@@ -182,15 +182,12 @@ ID3D12Resource* TextureManager::UploadTextureData(ID3D12Resource* texture, const
 	commandList->ResourceBarrier(1, &barrier);
 	return intermediateResource;
 
-
-
-
 }
 
 const DirectX::TexMetadata& TextureManager::GetMetaData(uint32_t textureHandle) {
 	//範囲外指定違反チェック
 	assert(textureHandle < textureDatas.size() && textureDatas[textureHandle].has_value());
-	assert(textureDatas[textureHandle]->srvIndex < SrvManager::GetInstance()->kMaxSRVCount);
+	assert(textureDatas[textureHandle]->srvIndex < GPUDescriptorManager::GetInstance()->kMaxHeapSize);
 
 	TextureData& textureData = *textureDatas[textureHandle];
 	return textureData.metadata;
@@ -210,9 +207,9 @@ uint32_t TextureManager::GetSrvIndex(uint32_t textureHandle) {
 
 D3D12_GPU_DESCRIPTOR_HANDLE TextureManager::GetSrvHandleGPU(uint32_t textureHandle) {
 	//範囲外指定違反チェック
-	assert(textureDatas[textureHandle]->srvIndex < SrvManager::GetInstance()->kMaxSRVCount);
+	assert(textureDatas[textureHandle]->srvIndex < GPUDescriptorManager::GetInstance()->kMaxHeapSize);
 
 	TextureData& textureData = *textureDatas[textureHandle];
-	return SrvManager::GetInstance()->GetGPUDescriptorHandle(textureData.srvIndex);
+	return GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(textureData.srvIndex);
 }
 

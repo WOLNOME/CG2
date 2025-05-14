@@ -4,7 +4,7 @@
 #include "MainRender.h"
 #include "Object3dCommon.h"
 #include "TextureManager.h"
-#include "SrvManager.h"
+#include "GPUDescriptorManager.h"
 #include "ModelManager.h"
 #include "SceneLight.h"
 #include <fstream>

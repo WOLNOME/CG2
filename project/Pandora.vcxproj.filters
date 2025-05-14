@@ -9,13 +9,12 @@
     <FxCompile Include="Resources\shaders\Object3d.VS.hlsl" />
     <FxCompile Include="Resources\shaders\Sprite.PS.hlsl" />
     <FxCompile Include="Resources\shaders\Sprite.VS.hlsl" />
-    <FxCompile Include="Resources\shaders\SkinningObject3d.VS.hlsl" />
     <FxCompile Include="Resources\shaders\Skybox.VS.hlsl" />
     <FxCompile Include="Resources\shaders\Skybox.PS.hlsl" />
     <FxCompile Include="Resources\shaders\CopyImage.VS.hlsl" />
     <FxCompile Include="Resources\shaders\CopyImage.PS.hlsl" />
     <FxCompile Include="Resources\shaders\Grayscale.PS.hlsl" />
-    <FxCompile Include="Skinning.CS.hlsl" />
+    <FxCompile Include="Resources\shaders\Skinning.CS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\3d\DirectionalLight.cpp" />
@@ -50,7 +49,7 @@
     <ClCompile Include="engine\util\StringUtility.cpp" />
     <ClCompile Include="engine\base\TextureManager.cpp" />
     <ClCompile Include="engine\base\WinApp.cpp" />
-    <ClCompile Include="engine\base\SrvManager.cpp" />
+    <ClCompile Include="engine\base\GPUDescriptorManager.cpp" />
     <ClCompile Include="engine\math\MyMath.cpp" />
     <ClCompile Include="engine\base\MainRender.cpp" />
     <ClCompile Include="MyGame.cpp" />
@@ -116,7 +115,7 @@
     <ClInclude Include="engine\math\Vector4.h" />
     <ClInclude Include="engine\base\WinApp.h" />
     <ClInclude Include="engine\2d\ImGuiManager.h" />
-    <ClInclude Include="engine\base\SrvManager.h" />
+    <ClInclude Include="engine\base\GPUDescriptorManager.h" />
     <ClInclude Include="engine\math\MyMath.h" />
     <ClInclude Include="engine\3d\LineDrawer.h" />
     <ClInclude Include="engine\3d\LineDrawerCommon.h" />
@@ -156,7 +155,6 @@
     <None Include="Resources\shaders\Particle.hlsli" />
     <None Include="Resources\shaders\Object3d.hlsli" />
     <None Include="Resources\shaders\Sprite.hlsli" />
-    <None Include="Resources\shaders\SkinningObject3d.hlsli" />
     <None Include="Resources\shaders\Skybox.hlsli" />
     <None Include="Resources\shaders\CopyImage.hlsli" />
   </ItemGroup>

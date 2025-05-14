@@ -328,6 +328,37 @@ ID3D12Resource* DirectXCommon::CreateBufferResource(size_t sizeInBytes) {
 	return resource;
 }
 
+ID3D12Resource* DirectXCommon::CreateUAVBufferResource(size_t sizeInBytes) {
+	// UAV用リソースは DEFAULT ヒープ上に作成する
+	D3D12_HEAP_PROPERTIES defaultHeapProps = {};
+	defaultHeapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+	D3D12_RESOURCE_DESC bufferDesc = {};
+	bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+	bufferDesc.Width = sizeInBytes;
+	bufferDesc.Height = 1;
+	bufferDesc.DepthOrArraySize = 1;
+	bufferDesc.MipLevels = 1;
+	bufferDesc.SampleDesc.Count = 1;
+	bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+	// UAVとして使用するためのフラグを指定
+	bufferDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+	ID3D12Resource* resource = nullptr;
+	HRESULT hr = device->CreateCommittedResource(
+		&defaultHeapProps,
+		D3D12_HEAP_FLAG_NONE,
+		&bufferDesc,
+		D3D12_RESOURCE_STATE_COMMON, // 初期状態はCommon
+		nullptr,
+		IID_PPV_ARGS(&resource)
+	);
+	assert(SUCCEEDED(hr));
+
+	return resource;
+}
+
 ID3D12Resource* DirectXCommon::CreateTextureResource(const DirectX::TexMetadata& metadata) {
 	//metadataをもとにResourceの設定
 	D3D12_RESOURCE_DESC resourceDesc{};

@@ -223,7 +223,7 @@ Shape::ShapeResource Shape::MakeSkyBoxResource() {
 	resource.vertexData[35].position = { 1.0f,-1.0f,-1.0f, 1.0f };
 
 	//uv座標と法線は使わない
-	for (int i = 0; i < resource.vertexNum; i++) {
+	for (int i = 0; i < (int)resource.vertexNum; i++) {
 		resource.vertexData[i].texcoord = { 0,0 };
 		resource.vertexData[i].normal = { 0,0,0 };
 	}

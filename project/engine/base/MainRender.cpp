@@ -1,7 +1,7 @@
 #include "MainRender.h"
 #include "WinApp.h"
 #include "DirectXCommon.h"
-#include "SrvManager.h"
+#include "GPUDescriptorManager.h"
 #include "Logger.h"
 #include <cassert>
 
@@ -111,7 +111,7 @@ void MainRender::PreImGuiDraw() {
 	//描画情報コピー
 	commandList->SetGraphicsRootSignature(rootSignature.Get());
 	commandList->SetPipelineState(graphicsPipelineState.Get());
-	commandList->SetGraphicsRootDescriptorTable(0, SrvManager::GetInstance()->GetGPUDescriptorHandle(rtIndex));
+	commandList->SetGraphicsRootDescriptorTable(0, GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(rtIndex));
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	commandList->DrawInstanced(3, 1, 0, 0);
 
@@ -291,8 +291,8 @@ void MainRender::InitOffScreenRenderingOption() {
 	renderTextureSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	renderTextureSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	renderTextureSrvDesc.Texture2D.MipLevels = 1;
-	rtIndex = SrvManager::GetInstance()->Allocate();
-	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(renderTextureResource.Get(), &renderTextureSrvDesc, SrvManager::GetInstance()->GetCPUDescriptorHandle(rtIndex));
+	rtIndex = GPUDescriptorManager::GetInstance()->Allocate();
+	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(renderTextureResource.Get(), &renderTextureSrvDesc, GPUDescriptorManager::GetInstance()->GetCPUDescriptorHandle(rtIndex));
 }
 
 void MainRender::GenerateRenderTextureGraphicsPipeline() {

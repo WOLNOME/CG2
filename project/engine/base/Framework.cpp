@@ -1,7 +1,7 @@
 #include "Framework.h"
 #include "WinApp.h"
 #include "DirectXCommon.h"
-#include "SrvManager.h"
+#include "GPUDescriptorManager.h"
 #include "MainRender.h"
 #include "D2DRender.h"
 #include "TextWriteManager.h"
@@ -26,8 +26,8 @@ void Framework::Initialize() {
 	//DirectX12
 	DirectXCommon::GetInstance()->Initialize();
 
-	//SRVマネージャー
-	SrvManager::GetInstance()->Initialize();
+	//GPUDescriptorマネージャー
+	GPUDescriptorManager::GetInstance()->Initialize();
 
 	//メインレンダー
 	MainRender::GetInstance()->Initialize();
@@ -84,7 +84,7 @@ void Framework::Finalize() {
 	TextWriteManager::GetInstance()->Finalize();
 	D2DRender::GetInstance()->Finalize();
 	MainRender::GetInstance()->Finalize();
-	SrvManager::GetInstance()->Finalize();
+	GPUDescriptorManager::GetInstance()->Finalize();
 	DirectXCommon::GetInstance()->Finalize();
 	WinApp::GetInstance()->Finalize();
 }

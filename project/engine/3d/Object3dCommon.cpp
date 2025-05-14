@@ -349,14 +349,6 @@ void Object3dCommon::AnimationPSOOption() {
 		elTextureParam.DescriptorTable.NumDescriptorRanges = _countof(eltDescriptorRange);
 		rootParameters.push_back(elTextureParam);
 
-		//MatrixPalette用の設定(8)
-		D3D12_ROOT_PARAMETER matrixPaletteParam = {};
-		matrixPaletteParam.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
-		matrixPaletteParam.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
-		matrixPaletteParam.DescriptorTable.pDescriptorRanges = descriptorRange;
-		matrixPaletteParam.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
-		rootParameters.push_back(matrixPaletteParam);
-
 		// ルートシグネチャの記述
 		descriptionRootSignature.pParameters = rootParameters.data(); // std::vectorのデータポインタを使用
 		descriptionRootSignature.NumParameters = static_cast<UINT>(rootParameters.size()); // 要素数を取得
@@ -398,8 +390,6 @@ void Object3dCommon::AnimationPSOOption() {
 		D3D12_INPUT_ELEMENT_DESC ied0 = {};
 		D3D12_INPUT_ELEMENT_DESC ied1 = {};
 		D3D12_INPUT_ELEMENT_DESC ied2 = {};
-		D3D12_INPUT_ELEMENT_DESC ied3 = {};
-		D3D12_INPUT_ELEMENT_DESC ied4 = {};
 		//定義
 		ied0.SemanticName = "POSITION";
 		ied0.SemanticIndex = 0;
@@ -413,22 +403,10 @@ void Object3dCommon::AnimationPSOOption() {
 		ied2.SemanticIndex = 0;
 		ied2.Format = DXGI_FORMAT_R32G32B32_FLOAT;
 		ied2.AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-		ied3.SemanticName = "WEIGHT";
-		ied3.SemanticIndex = 0;
-		ied3.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-		ied3.InputSlot = 1;//1番目のslotのVBVの事だと伝える
-		ied3.AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
-		ied4.SemanticName = "INDEX";
-		ied4.SemanticIndex = 0;
-		ied4.Format = DXGI_FORMAT_R32G32B32A32_SINT;
-		ied4.InputSlot = 1;//1番目のslotのVBVの事だと伝える
-		ied4.AlignedByteOffset = D3D12_APPEND_ALIGNED_ELEMENT;
 		//登録
 		inputElementDesc.push_back(ied0);
 		inputElementDesc.push_back(ied1);
 		inputElementDesc.push_back(ied2);
-		inputElementDesc.push_back(ied3);
-		inputElementDesc.push_back(ied4);
 
 		//インプットレイアウトディスクに登録
 		inputLayoutDesc.pInputElementDescs = inputElementDesc.data();
@@ -450,7 +428,7 @@ void Object3dCommon::AnimationPSOOption() {
 		//Shaderをコンパイルする
 		Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob;
 
-		vertexShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/SkinningObject3d.VS.hlsl",
+		vertexShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/Object3d.VS.hlsl",
 			L"vs_6_0");
 		assert(vertexShaderBlob != nullptr);
 

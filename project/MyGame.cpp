@@ -3,7 +3,7 @@
 #include "MainRender.h"
 #include "D2DRender.h"
 #include "TextureManager.h"
-#include "SrvManager.h"
+#include "GPUDescriptorManager.h"
 #include "TextWriteManager.h"
 #include "ImGuiManager.h"
 #include "ModelManager.h"
@@ -51,7 +51,7 @@ void MyGame::Draw() {
 
 	//オブジェクト描画前処理
 	MainRender::GetInstance()->PreObjectDraw();
-	SrvManager::GetInstance()->PreDraw(MainRender::GetInstance()->GetCommandList());
+	GPUDescriptorManager::GetInstance()->PreDraw(MainRender::GetInstance()->GetCommandList());
 
 	//シーンの描画
 	SceneManager::GetInstance()->Draw();

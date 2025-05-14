@@ -1,6 +1,6 @@
 #include "Particle.h"
 #include "DirectXCommon.h"
-#include "SrvManager.h"
+#include "GPUDescriptorManager.h"
 #include "ModelManager.h"
 #include "ParticleManager.h"
 #include "TextureManager.h"
@@ -8,7 +8,7 @@
 
 Particle::~Particle() {
 	//確保したSRVデスクリプタヒープの解放
-	SrvManager::GetInstance()->Free(particleResource_.srvIndex);
+	GPUDescriptorManager::GetInstance()->Free(particleResource_.srvIndex);
 	//マネージャーから削除
 	ParticleManager::GetInstance()->DeleteParticle(name_);
 }
@@ -72,7 +72,7 @@ Particle::ParticleResource Particle::MakeParticleResource() {
 
 void Particle::SettingSRV() {
 	//SRVマネージャーからデスクリプタヒープの空き番号を取得
-	particleResource_.srvIndex = SrvManager::GetInstance()->Allocate();
+	particleResource_.srvIndex = GPUDescriptorManager::GetInstance()->Allocate();
 
 	//srv設定
 	uint32_t kNumMaxInstance = param_["MaxGrains"];
@@ -84,7 +84,7 @@ void Particle::SettingSRV() {
 	srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 	srvDesc.Buffer.NumElements = kNumMaxInstance;
 	srvDesc.Buffer.StructureByteStride = sizeof(ParticleForGPU);
-	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(particleResource_.instancingResource.Get(), &srvDesc, SrvManager::GetInstance()->GetCPUDescriptorHandle(particleResource_.srvIndex));
+	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(particleResource_.instancingResource.Get(), &srvDesc, GPUDescriptorManager::GetInstance()->GetCPUDescriptorHandle(particleResource_.srvIndex));
 }
 
 void Particle::ShapeChange() {

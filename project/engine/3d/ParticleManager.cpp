@@ -1,7 +1,7 @@
 #include "ParticleManager.h"
 #include "DirectXCommon.h"
 #include "MainRender.h"
-#include "SrvManager.h"
+#include "GPUDescriptorManager.h"
 #include "Logger.h"
 #include <numbers>
 #include <random>
@@ -136,7 +136,7 @@ void ParticleManager::Draw() {
 		//各パーティクルのブレンドモード情報からパイプラインステートを選択
 		MainRender::GetInstance()->GetCommandList()->SetPipelineState(graphicsPipelineState[particle.second->GetParam()["BlendMode"]].Get());
 		//各パーティクルのインスタンシングデータをVSに送信
-		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, SrvManager::GetInstance()->GetGPUDescriptorHandle(particle.second->particleResource_.srvIndex));
+		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(particle.second->particleResource_.srvIndex));
 		//各パーティクル形状の描画
 		particle.second->shape_->Draw(0, 3, (uint32_t)particle.second->grains_.size(), particle.second->textureHandle_);
 	}
