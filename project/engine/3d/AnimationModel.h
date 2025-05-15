@@ -110,7 +110,6 @@ private://アニメーション関連構造体
 		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> influenceSrvHandle;
 		//出力頂点
 		Microsoft::WRL::ComPtr<ID3D12Resource> outputVertexResource;
-		std::span<VertexData> mappedOutputVertex;
 		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> outputVertexSrvHandle;
 		//スキニング情報
 		Microsoft::WRL::ComPtr<ID3D12Resource> skinningInfoResource;
@@ -150,9 +149,6 @@ private://メッシュ関連構造体
 	//モデルリソース作成用データ型
 	struct ModelResource {
 		std::vector<ModelData> modelData;
-		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> vertexResource;
-		std::vector<D3D12_VERTEX_BUFFER_VIEW> vertexBufferView;
-		std::vector<VertexData*> vertexData;
 		std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>> indexResource;
 		std::vector<D3D12_INDEX_BUFFER_VIEW> indexBufferView;
 		std::vector<uint32_t*> indexData;
@@ -174,6 +170,10 @@ public:
 	/// <param name="textureRootParameterIndex">テクスチャ設定用ルートパラメータの番号</param>
 	/// <param name="instancingNum">インスタンス数</param>
 	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum = 1, int32_t textureHandle = EOF);
+	/// <summary>
+	/// CSでのスキニング命令
+	/// </summary>
+	void SkinningWithCS();
 
 public://ゲッター
 	const ModelResource& GetModelResource() { return modelResource_; }

@@ -95,6 +95,9 @@ void Object3d::Draw(const BaseCamera* _camera, int32_t _textureHandle) {
 		//アニメーション反映処理
 		animationModel_->Update();
 
+		//スキニング処理
+		animationModel_->SkinningWithCS();
+
 		//アニメーションモデル用共通描画の設定
 		Object3dCommon::GetInstance()->SettingCommonDrawing(Object3dCommon::NameGPS::Animation);
 
