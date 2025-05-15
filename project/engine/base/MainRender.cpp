@@ -92,7 +92,7 @@ void MainRender::PreImGuiDraw() {
 	//描画先のRTVを設定する(深度バッファは送らない)
 	commandList->OMSetRenderTargets(1, &rtvHandles[backBufferIndex], false, nullptr);
 	//指定した色で画面全体をクリアする
-	float clearColor[] = { 0.1f,0.25f,0.5f,1.0f };//青っぽい色。RGBAの順
+	float clearColor[] = { 0,1,0,0 };//青っぽい色。RGBAの順
 	commandList->ClearRenderTargetView(rtvHandles[backBufferIndex], clearColor, 0, nullptr);
 	//※深度バッファはクリアしない
 
@@ -282,7 +282,7 @@ void MainRender::InitOffScreenRenderingOption() {
 	UINT rtvDescriptorSize = DirectXCommon::GetInstance()->GetDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	rtvHandles[2].ptr = rtvHandles[1].ptr + rtvDescriptorSize;
 	//RTVの作成
-	const Vector4 kRenderTragetClearValue = Vector4(1, 1, 0, 1);
+	const Vector4 kRenderTragetClearValue = Vector4(1, 1, 0, 0);
 	renderTextureResource = DirectXCommon::GetInstance()->CreateRenderTextureResource(WinApp::kClientWidth, WinApp::kClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, kRenderTragetClearValue);
 	DirectXCommon::GetInstance()->GetDevice()->CreateRenderTargetView(renderTextureResource.Get(), &rtvDesc, rtvHandles[2]);
 	//SRVの作成

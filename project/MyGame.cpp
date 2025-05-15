@@ -15,9 +15,10 @@ void MyGame::Initialize() {
 	Framework::Initialize();
 
 	//シーンマネージャーに最初のシーンをセット
-	SceneManager::GetInstance()->SetNextScene("DEVELOP");
+	SceneManager::GetInstance()->SetNextScene("PARTICLECREATOR");
 
 	//パーティクルエディター→PARTICLECREATOR
+	//開発用シーン→DEVELOP
 }
 
 void MyGame::Finalize() {
