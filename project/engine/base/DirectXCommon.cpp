@@ -350,7 +350,7 @@ ID3D12Resource* DirectXCommon::CreateUAVBufferResource(size_t sizeInBytes) {
 		&defaultHeapProps,
 		D3D12_HEAP_FLAG_NONE,
 		&bufferDesc,
-		D3D12_RESOURCE_STATE_COMMON, // 初期状態はCommon
+		D3D12_RESOURCE_STATE_UNORDERED_ACCESS, // 初期状態はUNORDERD_ACCESS
 		nullptr,
 		IID_PPV_ARGS(&resource)
 	);

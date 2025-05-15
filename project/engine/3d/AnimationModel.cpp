@@ -59,8 +59,8 @@ void AnimationModel::Draw(uint32_t materialRootParameterIndex, uint32_t textureR
 		//頂点情報を送る
 		D3D12_VERTEX_BUFFER_VIEW vbView = {};
 		vbView.BufferLocation = skinCluster_.outputVertexResource->GetGPUVirtualAddress();
-		vbView.SizeInBytes = sizeof(VertexData) * modelResource_.modelData[0].vertices.size();
-		vbView.StrideInBytes = sizeof(VertexData);
+		vbView.SizeInBytes = UINT(sizeof(VertexData) * modelResource_.modelData[0].vertices.size());
+		vbView.StrideInBytes = UINT(sizeof(VertexData));
 
 		MainRender::GetInstance()->GetCommandList()->IASetVertexBuffers(0, 1, &vbView);
 
@@ -89,7 +89,7 @@ void AnimationModel::Draw(uint32_t materialRootParameterIndex, uint32_t textureR
 	}
 }
 
-void AnimationModel::SkinningWithCS() {
+void AnimationModel::SettingCSPreDraw() {
 	//コンピュートシェーダーへの転送
 	Object3dCommon::GetInstance()->SettingAnimationCS();
 	MainRender::GetInstance()->GetCommandList()->SetComputeRootDescriptorTable(0, skinCluster_.paletteSrvHandle.second);
@@ -99,6 +99,30 @@ void AnimationModel::SkinningWithCS() {
 	MainRender::GetInstance()->GetCommandList()->SetComputeRootConstantBufferView(4, skinCluster_.skinningInfoResource->GetGPUVirtualAddress());
 	//Dispatch(命令)
 	MainRender::GetInstance()->GetCommandList()->Dispatch(UINT(modelResource_.modelData[0].vertices.size() + 1023) / 1024, 1, 1);
+	//リソースの状態遷移
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = skinCluster_.outputVertexResource.Get();
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+	MainRender::GetInstance()->GetCommandList()->ResourceBarrier(1, &barrier);
+
+}
+
+void AnimationModel::SettingCSPostDraw() {
+	//outputリソースの状態の遷移
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = skinCluster_.outputVertexResource.Get();
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+	MainRender::GetInstance()->GetCommandList()->ResourceBarrier(1, &barrier);
 }
 
 void AnimationModel::SetNewAnimation(const std::string& _name, const std::string& _fileName) {
@@ -382,30 +406,49 @@ AnimationModel::SkinCluster AnimationModel::CreateSkinCluster() {
 		GPUDescriptorManager::GetInstance()->CreateSRVforStructuredBufferCS(index, skinCluster.paletteResource.Get(), UINT(skeleton_.joints.size()), sizeof(WellForGPU));
 	}
 	{
-		//入力頂点用のResourceを確保
-		skinCluster.inputVertexResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(VertexData) * modelResource_.modelData[0].vertices.size());
+		// 入力頂点用のResourceを確保
+		skinCluster.inputVertexResource = DirectXCommon::GetInstance()->CreateBufferResource(
+			sizeof(VertexData) * modelResource_.modelData[0].vertices.size()
+		);
 		VertexData* mappedInputVertex = nullptr;
 		skinCluster.inputVertexResource->Map(0, nullptr, reinterpret_cast<void**>(&mappedInputVertex));
-		skinCluster.mappedInputVertex = { mappedInputVertex,modelResource_.modelData[0].vertices.size() };//spanを使ってアクセスするようにする
-		//入力頂点にデータを入力
-		std::memcpy(skinCluster_.)
+		// 入力頂点用のデータを入力
+		std::memcpy(
+			mappedInputVertex,
+			modelResource_.modelData[0].vertices.data(),
+			sizeof(VertexData) * modelResource_.modelData[0].vertices.size()
+		);
+		skinCluster.mappedInputVertex = { mappedInputVertex, modelResource_.modelData[0].vertices.size() };
 
+		// SRV登録処理
 		uint32_t index = GPUDescriptorManager::GetInstance()->Allocate();
 		skinCluster.inputVertexSrvHandle.first = GPUDescriptorManager::GetInstance()->GetCPUDescriptorHandle(index);
 		skinCluster.inputVertexSrvHandle.second = GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(index);
-		//入力頂点用のsrvを作成。StructuredBufferでアクセスできるようにする
-		GPUDescriptorManager::GetInstance()->CreateSRVforStructuredBufferCS(index, skinCluster.inputVertexResource.Get(), UINT(modelResource_.modelData[0].vertices.size()), sizeof(VertexData));
+		GPUDescriptorManager::GetInstance()->CreateSRVforStructuredBufferCS(
+			index,
+			skinCluster.inputVertexResource.Get(),
+			static_cast<UINT>(modelResource_.modelData[0].vertices.size()),
+			sizeof(VertexData)
+		);
 	}
 	{
 		//influence用のResourceを確保。頂点ごとにinfluence情報を追加できるようにする
 		skinCluster.influenceResource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(VertexInfluence) * modelResource_.modelData[0].vertices.size());
+		//インフルエンスにデータを入力
 		VertexInfluence* mappedInfluence = nullptr;
 		skinCluster.influenceResource->Map(0, nullptr, reinterpret_cast<void**>(&mappedInfluence));
 		std::memset(mappedInfluence, 0, sizeof(VertexInfluence) * modelResource_.modelData[0].vertices.size());
 		skinCluster.mappedInfluence = { mappedInfluence,modelResource_.modelData[0].vertices.size() };
+		// SRV登録処理
 		uint32_t index = GPUDescriptorManager::GetInstance()->Allocate();
 		skinCluster.influenceSrvHandle.first = GPUDescriptorManager::GetInstance()->GetCPUDescriptorHandle(index);
 		skinCluster.influenceSrvHandle.second = GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(index);
+		GPUDescriptorManager::GetInstance()->CreateSRVforStructuredBufferCS(
+			index,
+			skinCluster.influenceResource.Get(),
+			static_cast<UINT>(modelResource_.modelData[0].vertices.size()),
+			sizeof(VertexInfluence)
+		);
 	}
 	{
 		//出力頂点用のResourceを確保

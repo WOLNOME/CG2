@@ -171,9 +171,13 @@ public:
 	/// <param name="instancingNum">インスタンス数</param>
 	void Draw(uint32_t materialRootParameterIndex, uint32_t textureRootParameterIndex, uint32_t instancingNum = 1, int32_t textureHandle = EOF);
 	/// <summary>
-	/// CSでのスキニング命令
+	/// 描画前処理
 	/// </summary>
-	void SkinningWithCS();
+	void SettingCSPreDraw();
+	/// <summary>
+	/// 描画後処理
+	/// </summary>
+	void SettingCSPostDraw();
 
 public://ゲッター
 	const ModelResource& GetModelResource() { return modelResource_; }
