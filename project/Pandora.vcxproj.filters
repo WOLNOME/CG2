@@ -15,6 +15,7 @@
     <FxCompile Include="Resources\shaders\CopyImage.PS.hlsl" />
     <FxCompile Include="Resources\shaders\Grayscale.PS.hlsl" />
     <FxCompile Include="Resources\shaders\Skinning.CS.hlsl" />
+    <FxCompile Include="Resources\shaders\Vignette.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\3d\DirectionalLight.cpp" />
