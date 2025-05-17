@@ -12,5 +12,7 @@ PixelShaderOutput main(VertexShaderOutput input)
 {
     PixelShaderOutput output;
     output.color = gTexture.Sample(gSampler, input.texcoord);
+    //アルファ値を1(不透明)にすることで、スワップチェーンのクリアカラーと競合しないようにする
+    output.color.a = 1.0f;
     return output;
 }

@@ -22,5 +22,7 @@ PixelShaderOutput main(VertexShaderOutput input)
     //係数として乗算
     output.color.rgb *= vignette;
     
+     //アルファ値を1(不透明)にすることで、スワップチェーンのクリアカラーと競合しないようにする
+    output.color.a = 1.0f;
     return output;
 }
