@@ -44,16 +44,11 @@ private://生成系メンバ関数
 	void InitViewPort();
 	void InitScissorRect();
 
-	///------------------------------------------///
-	/// オフスク用関数
-	///------------------------------------------///
-
-	void InitOffScreenRenderingOption();
-	void GenerateRenderTextureGraphicsPipeline();
-
 public://公開メンバ関数
-	D3D12_CPU_DESCRIPTOR_HANDLE GetRTVCPUDescriptorHandle(uint32_t index);
-	D3D12_GPU_DESCRIPTOR_HANDLE GetRTVGPUDescriptorHandle(uint32_t index);
+	//DSVデスクリプタヒープの取得
+	ID3D12DescriptorHeap* GetDSVDescriptorHeap()const { return dsvDescriptorHeap.Get(); }
+	//DSVデスクリプタのサイズ取得
+	uint32_t GetDSVDescriptorSize()const { return descriptorSizeDSV; }
 	D3D12_CPU_DESCRIPTOR_HANDLE GetDSVCPUDescriptorHandle(uint32_t index);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetDSVGPUDescriptorHandle(uint32_t index);
 public://公開メンバ変数
@@ -69,8 +64,7 @@ public://ゲッター
 	IDXGISwapChain4* GetSwapChain()const { return swapChain.Get(); }
 	//スワップチェーンのリソース
 	ID3D12Resource* GetSwapChainResource(uint32_t index)const { return swapChainResources[index].Get(); }
-
-private://インスタンス
+	//RTV
 
 private://メンバ変数
 	//コマンドアロケーター
@@ -84,34 +78,17 @@ private://メンバ変数
 	//DepthStencilResource
 	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = nullptr;
 	//デスクリプターヒープ
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> rtvDescriptorHeap = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> dsvDescriptorHeap = nullptr;
 	//デスクリプターサイズ
-	uint32_t descriptorSizeRTV = 0;
 	uint32_t descriptorSizeDSV = 0;
 	//スワップチェーンから引っ張て来たリソース
 	std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources;
-	//RTVハンドル
-	std::array<D3D12_CPU_DESCRIPTOR_HANDLE, 3> rtvHandles;
-	//RTVデスク
-	D3D12_RENDER_TARGET_VIEW_DESC rtvDesc{};
+	//RTVインデックス
+	std::array<uint32_t, 2> rtvHandles;
 	//ビューポート
 	D3D12_VIEWPORT viewport{};
 	//シザー矩形
 	D3D12_RECT scissorRect{};
-
-	///------------------------------------------///
-	/// オフスク用変数
-	///------------------------------------------///
-	
-	//レンダーテクスチャのリソース
-	Microsoft::WRL::ComPtr<ID3D12Resource> renderTextureResource = nullptr;
-	//レンダーテクスチャのSRVインデックス
-	uint32_t rtIndex = 0;
-	//ルートシグネチャ
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
-	//グラフィックスパイプライン
-	Microsoft::WRL::ComPtr<ID3D12PipelineState> graphicsPipelineState = nullptr;
 
 };
 

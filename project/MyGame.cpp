@@ -2,6 +2,7 @@
 #include "DirectXCommon.h"
 #include "MainRender.h"
 #include "D2DRender.h"
+#include "PostEffectManager.h"
 #include "TextureManager.h"
 #include "GPUDescriptorManager.h"
 #include "TextWriteManager.h"
@@ -51,6 +52,7 @@ void MyGame::Draw() {
 	///------------------------------///
 
 	//オブジェクト描画前処理
+	PostEffectManager::GetInstance()->PreObjectDraw();
 	MainRender::GetInstance()->PreObjectDraw();
 	GPUDescriptorManager::GetInstance()->PreDraw(MainRender::GetInstance()->GetCommandList());
 
@@ -62,6 +64,7 @@ void MyGame::Draw() {
 
 	//ImGui描画前処理
 	MainRender::GetInstance()->PreImGuiDraw();
+	PostEffectManager::GetInstance()->CopySceneToRenderTexture();
 
 	//ImGuiの描画
 	ImGuiManager::GetInstance()->Draw();

@@ -271,6 +271,8 @@ void DevelopScene::Update() {
 	text_->DebugWithImGui();
 	//カメラ用ImGui
 	camera->DebugWithImGui();
+	//ポストエフェクト用ImGui
+	PostEffectManager::GetInstance()->DebugWithImGui();
 
 #endif // _DEBUG
 }

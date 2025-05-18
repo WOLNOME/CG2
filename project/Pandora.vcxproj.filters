@@ -11,15 +11,15 @@
     <FxCompile Include="Resources\shaders\Sprite.VS.hlsl" />
     <FxCompile Include="Resources\shaders\Skybox.VS.hlsl" />
     <FxCompile Include="Resources\shaders\Skybox.PS.hlsl" />
-    <FxCompile Include="Resources\shaders\CopyImage.VS.hlsl" />
-    <FxCompile Include="Resources\shaders\CopyImage.PS.hlsl" />
-    <FxCompile Include="Resources\shaders\Grayscale.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\postEffects\CopyImage.VS.hlsl" />
+    <FxCompile Include="Resources\shaders\postEffects\CopyImage.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\postEffects\Grayscale.PS.hlsl" />
     <FxCompile Include="Resources\shaders\Skinning.CS.hlsl" />
-    <FxCompile Include="Resources\shaders\Vignette.PS.hlsl" />
-    <FxCompile Include="Resources\shaders\BoxFilter.PS.hlsl" />
-    <FxCompile Include="Resources\shaders\GaussianFilter.PS.hlsl" />
-    <FxCompile Include="Resources\shaders\LuminanceBasedOutline.PS.hlsl" />
-    <FxCompile Include="Resources\shaders\RadialBlur.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\postEffects\Vignette.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\postEffects\BoxFilter.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\postEffects\GaussianFilter.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\postEffects\LuminanceBasedOutline.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\postEffects\RadialBlur.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\3d\DirectionalLight.cpp" />
@@ -83,6 +83,8 @@
     <ClCompile Include="engine\2d\TextWriteManager.cpp" />
     <ClCompile Include="engine\base\D2DRender.cpp" />
     <ClCompile Include="engine\3d\AnimationModel.cpp" />
+    <ClCompile Include="engine\base\PostEffectManager.cpp" />
+    <ClCompile Include="engine\base\RTVManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\3d\DirectionalLight.h" />
@@ -154,6 +156,8 @@
     <ClInclude Include="engine\base\D2DRender.h" />
     <ClInclude Include="engine\3d\AnimationModel.h" />
     <ClInclude Include="engine\math\BlendMode.h" />
+    <ClInclude Include="engine\base\PostEffectManager.h" />
+    <ClInclude Include="engine\base\RTVManager.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\LineDrawer.hlsli" />
@@ -161,7 +165,7 @@
     <None Include="Resources\shaders\Object3d.hlsli" />
     <None Include="Resources\shaders\Sprite.hlsli" />
     <None Include="Resources\shaders\Skybox.hlsli" />
-    <None Include="Resources\shaders\CopyImage.hlsli" />
+    <None Include="Resources\shaders\postEffects\CopyImage.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

@@ -2,8 +2,10 @@
 #include "WinApp.h"
 #include "DirectXCommon.h"
 #include "GPUDescriptorManager.h"
+#include "RTVManager.h"
 #include "MainRender.h"
 #include "D2DRender.h"
+#include "PostEffectManager.h"
 #include "TextWriteManager.h"
 #include "ImGuiManager.h"
 #include "TextureManager.h"
@@ -29,11 +31,17 @@ void Framework::Initialize() {
 	//GPUDescriptorマネージャー
 	GPUDescriptorManager::GetInstance()->Initialize();
 
+	//RTVマネージャー
+	RTVManager::GetInstance()->Initialize();
+
 	//メインレンダー
 	MainRender::GetInstance()->Initialize();
 
 	//D2Dレンダー
 	D2DRender::GetInstance()->Initialize();
+
+	//ポストエフェクトマネージャー
+	PostEffectManager::GetInstance()->Initialize();
 
 	//テキストライトマネージャー
 	TextWriteManager::GetInstance()->Initialize();
@@ -82,8 +90,10 @@ void Framework::Finalize() {
 	TextureManager::GetInstance()->Finalize();
 	ImGuiManager::GetInstance()->Finalize();
 	TextWriteManager::GetInstance()->Finalize();
+	PostEffectManager::GetInstance()->Finalize();
 	D2DRender::GetInstance()->Finalize();
 	MainRender::GetInstance()->Finalize();
+	RTVManager::GetInstance()->Finalize();
 	GPUDescriptorManager::GetInstance()->Finalize();
 	DirectXCommon::GetInstance()->Finalize();
 	WinApp::GetInstance()->Finalize();

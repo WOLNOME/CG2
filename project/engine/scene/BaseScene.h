@@ -15,6 +15,7 @@
 #include "TextWrite.h"
 #include "TextureManager.h"
 //シーン共通クラス
+#include "PostEffectManager.h"
 #include "ImGuiManager.h"
 #include "Object3dCommon.h"
 #include "LineDrawerCommon.h"
