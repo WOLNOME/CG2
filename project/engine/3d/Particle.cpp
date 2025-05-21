@@ -25,7 +25,8 @@ void Particle::Initialize(const std::string& name, const std::string& fileName) 
 	emitter_.transform.translate = Vector3(0.0f, 0.0f, 0.0f);
 	emitter_.transform.rotate = Vector3(0.0f, 0.0f, 0.0f);
 	emitter_.transform.scale = Vector3(1.0f, 1.0f, 1.0f);
-	emitter_.generateMethod = GenerateMethod::kRandom;
+	emitter_.generateMethod = GenerateMethod::Random;
+	emitter_.effectStyle = EffectStyle::Loop;
 	emitter_.gravity = -1.0f;
 	emitter_.repulsion = 0.5f;
 	emitter_.floorHeight = 0.0f;

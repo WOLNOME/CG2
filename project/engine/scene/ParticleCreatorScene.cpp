@@ -446,10 +446,10 @@ void ParticleCreatorScene::Editor() {
 		//推奨値の計算
 		int RecommendValue;
 		switch (particle_->emitter_.generateMethod) {
-		case Particle::GenerateMethod::kRandom:
+		case Particle::GenerateMethod::Random:
 			RecommendValue = int(lifeTimeMax * editParam_["EmitRate"]);
 			break;
-		case Particle::GenerateMethod::kClump:
+		case Particle::GenerateMethod::Clump:
 			RecommendValue = int(lifeTimeMax * editParam_["EmitRate"] * particle_->emitter_.clumpNum);
 			break;
 		default:
@@ -627,10 +627,10 @@ void ParticleCreatorScene::Editor() {
 			const char* methods[] = { "Random","Clump" };
 			const char* currentMethod = "";
 			switch (particle_->emitter_.generateMethod) {
-			case Particle::GenerateMethod::kRandom:
+			case Particle::GenerateMethod::Random:
 				currentMethod = methods[0];
 				break;
-			case Particle::GenerateMethod::kClump:
+			case Particle::GenerateMethod::Clump:
 				currentMethod = methods[1];
 				break;
 			default:
@@ -641,19 +641,37 @@ void ParticleCreatorScene::Editor() {
 			ImGui::Combo("生成方法(generateMethod)", (int*)&particle_->emitter_.generateMethod, methods, IM_ARRAYSIZE(methods));
 			//生成方法ごとの設定
 			switch (particle_->emitter_.generateMethod) {
-			case Particle::GenerateMethod::kRandom:
+			case Particle::GenerateMethod::Random:
 				break;
-			case Particle::GenerateMethod::kClump:
+			case Particle::GenerateMethod::Clump:
 				ImGui::DragInt("一塊の粒の数(clumpNum)", &particle_->emitter_.clumpNum, 1, 1, 20);
-
 				break;
 			default:
 				break;
 			}
-
 			ImGui::TreePop();
 		}
+		//エフェクトの発生スタイル
+		if (ImGui::TreeNode("スタイル")) {
+			const char* styles[] = { "Loop","OneShot" };
+			const char* currentStyle = "";
+			switch (particle_->emitter_.effectStyle) {
+			case Particle::EffectStyle::Loop:
+				currentStyle = styles[0];
+				break;
+			case Particle::EffectStyle::OneShot:
+				currentStyle = styles[1];
+				break;
+			default:
+				break;
+			}
+			ImGui::Text("現在のスタイル : %s", currentStyle);
+			ImGui::Combo("スタイル(effectStyle)", (int*)&particle_->emitter_.effectStyle, styles, IM_ARRAYSIZE(styles));
+			ImGui::TreePop();
+		}
+
 	}
+
 	//重力関係
 	if (ImGui::CollapsingHeader("重力")) {
 		ImGui::Checkbox("重力の処理をするか(isGravity)", &particle_->emitter_.isGravity);

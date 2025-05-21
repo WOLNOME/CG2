@@ -28,19 +28,33 @@ void ParticleManager::Update() {
 	for (const auto& particle : particles) {
 		//空いている粒の中から確率で生成
 		if (particle.second->emitter_.isPlay) {
+			//生成に必要なローカル変数
 			int max = particle.second->GetParam()["MaxGrains"];
 			int rate = particle.second->GetParam()["EmitRate"];
 			float ratePerFrame = rate * kDeltaTime;
 			int genNum = 0;
-			for (int i = 0; i < 60; i++) {
-				//ランダム
-				std::random_device rd;
-				std::mt19937 gen(rd());
-				std::uniform_real_distribution<float> dist(0.0f, 100.0f);
-				//確率でこのフレームの生成数をインクリメント
-				if (dist(gen) < ratePerFrame) {
-					genNum++;
+			//ランダムエンジンの初期化
+			std::random_device rd;
+			std::mt19937 gen(rd());
+			std::uniform_real_distribution<float> dist(0.0f, 100.0f);
+			//エフェクトの生成スタイルによって分ける
+			switch (particle.second->emitter_.effectStyle) {
+			case Particle::EffectStyle::Loop:
+				for (int i = 0; i < 60; i++) {
+					//確率でこのフレームの生成数をインクリメント
+					if (dist(gen) < ratePerFrame) {
+						genNum++;
+					}
 				}
+				break;
+			case Particle::EffectStyle::OneShot:
+				//生成数は一つだけ
+				genNum = 1;
+				//生成許可フラグをオフ
+				particle.second->emitter_.isPlay = false;
+				break;
+			default:
+				break;
 			}
 			//粒の生成
 			if (genNum > 0 && particle.second->grains_.size() + genNum < max) {
@@ -423,7 +437,7 @@ std::list<Particle::GrainData> ParticleManager::GenerateGrain(Particle* particle
 
 		//生成方法ごとにパラメータの初期化
 		switch (particle->emitter_.generateMethod) {
-		case Particle::GenerateMethod::kRandom:
+		case Particle::GenerateMethod::Random:
 			//ランダム
 			grain.basicTransform.translate = Vector3(distTranslateX(gen), distTranslateY(gen), distTranslateZ(gen));
 			grain.basicTransform.rotate = Vector3(distRotateX(gen), distRotateY(gen), distRotateZ(gen));
@@ -441,7 +455,7 @@ std::list<Particle::GrainData> ParticleManager::GenerateGrain(Particle* particle
 			//プッシュバック
 			grains.push_back(grain);
 			break;
-		case Particle::GenerateMethod::kClump:
+		case Particle::GenerateMethod::Clump:
 			//塊(座標に関しての情報だけ同じ値にする)
 			grain.basicTransform.translate = Vector3(distTranslateX(gen), distTranslateY(gen), distTranslateZ(gen));
 			grain.transform.translate = grain.basicTransform.translate;

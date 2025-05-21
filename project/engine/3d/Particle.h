@@ -18,10 +18,17 @@ class Particle {
 	//パーティクルクリエイターシーンに公開
 	friend class ParticleCreatorScene;
 public:
+	//生成方法
 	enum class GenerateMethod {
-		kRandom,		//ランダム
-		kClump,			//塊	
+		Random,		//ランダム
+		Clump,		//塊	
 	};
+	//エフェクトスタイル
+	enum class EffectStyle {
+		Loop,		//ループ(永続)
+		OneShot,	//一度きり
+	};
+
 public:
 	//座標変換行列データ
 	struct ParticleForGPU {
@@ -50,6 +57,7 @@ public:
 	struct Emitter {
 		TransformEuler transform;			//エミッターのトランスフォーム
 		GenerateMethod generateMethod;		//生成方法
+		EffectStyle effectStyle;			//エフェクトスタイル
 		float gravity;						//重力値
 		float repulsion;					//床の反発値
 		float floorHeight;					//床の高さ
