@@ -118,6 +118,8 @@ void MainRender::InitCommand() {
 
 void MainRender::GenerateSwapChain() {
 	HRESULT hr;
+	//デスク
+	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
 	//スワップチェーンを生成設定
 	swapChainDesc.Width = WinApp::kClientWidth;	//画面の幅。ウィンドウのクライアント領域を同じものにしておく
 	swapChainDesc.Height = WinApp::kClientHeight; //画面の高さ。ウィンドウのクライアント領域を同じものにしておく

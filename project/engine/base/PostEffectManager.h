@@ -3,6 +3,7 @@
 #include <wrl.h>
 #include <cstdint>
 #include <array>
+#include "Vector4.h"
 
 //ポストエフェクトの種類
 enum class PostEffectKind {
@@ -65,6 +66,8 @@ private:
 	std::array<Microsoft::WRL::ComPtr<ID3D12PipelineState>, (int)PostEffectKind::kMaxNumPostEffectKind> graphicsPipelineState;
 	//RTVのディスクリプタハンドル
 	uint32_t rtvIndex = 0;
+	//レンダーテクスチャのクリアカラー
+	const Vector4 kRenderTragetClearValue = Vector4(0, 0, 1, 1);
 
 	//現在適用しているポストエフェクトの種類
 	PostEffectKind currentPostEffectKind = PostEffectKind::None;

@@ -42,10 +42,10 @@ void PostEffectManager::PreObjectDraw() {
 	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 	//クリアバリューの色で画面全体をクリアする
 	float clearColor[] = {
-		DirectXCommon::GetInstance()->GetClearValue().Color[0],
-		DirectXCommon::GetInstance()->GetClearValue().Color[1],
-		DirectXCommon::GetInstance()->GetClearValue().Color[2],
-		DirectXCommon::GetInstance()->GetClearValue().Color[3]
+		kRenderTragetClearValue.x,
+		kRenderTragetClearValue.y,
+		kRenderTragetClearValue.z,
+		kRenderTragetClearValue.w
 	};
 	commandList->ClearRenderTargetView(RTVManager::GetInstance()->GetCPUDescriptorHandle(rtvIndex), clearColor, 0, nullptr);
 	//指定した深度で画面全体をクリアする
@@ -76,7 +76,7 @@ void PostEffectManager::CopySceneToRenderTexture() {
 	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
 	barrier.Transition.pResource = renderTextureResource.Get();		//レンダーテクスチャに対して行う
 	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;	//遷移前の状態
-	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;				//遷移後の状態
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;			//遷移後の状態
 	commandList->ResourceBarrier(1, &barrier);
 }
 
@@ -92,20 +92,15 @@ void PostEffectManager::DebugWithImGui() {
 }
 
 void PostEffectManager::InitOffScreenRenderingOption() {
-	//RTVディスクリプタハンドルの取得
+	//RTVデスクリプタハンドルの取得
 	rtvIndex = RTVManager::GetInstance()->Allocate();
 	//RTVの作成
-	const Vector4 kRenderTragetClearValue = Vector4(1, 1, 0, 0);
 	renderTextureResource = DirectXCommon::GetInstance()->CreateRenderTextureResource(WinApp::kClientWidth, WinApp::kClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, kRenderTragetClearValue);
 	RTVManager::GetInstance()->CreateRTVDescriptor(rtvIndex, renderTextureResource.Get());
-	//SRVの作成
-	D3D12_SHADER_RESOURCE_VIEW_DESC renderTextureSrvDesc{};
-	renderTextureSrvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-	renderTextureSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-	renderTextureSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	renderTextureSrvDesc.Texture2D.MipLevels = 1;
+	//SRVデスクリプタハンドルの取得
 	srvIndex = GPUDescriptorManager::GetInstance()->Allocate();
-	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(renderTextureResource.Get(), &renderTextureSrvDesc, GPUDescriptorManager::GetInstance()->GetCPUDescriptorHandle(srvIndex));
+	//SRVの作成
+	GPUDescriptorManager::GetInstance()->CreateSRVforRenderTexture(srvIndex, renderTextureResource.Get());
 }
 
 void PostEffectManager::GenerateRenderTextureGraphicsPipeline() {

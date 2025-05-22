@@ -32,7 +32,7 @@ public:
 	bool CheckCanSecured();
 
 	// SRV生成関数
-	void CreateSRVforTexture2D(uint32_t index, ID3D12Resource* pResource, DXGI_FORMAT Format, UINT MipLevels);
+	void CreateSRVforRenderTexture(uint32_t index, ID3D12Resource* pResource);
 	void CreateSRVforStructuredBufferCS(uint32_t index, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);
 	// UAV生成関数
 	void CreateUAVforStructuredBufferCS(uint32_t index, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);

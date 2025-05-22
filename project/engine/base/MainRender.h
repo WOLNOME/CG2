@@ -51,7 +51,7 @@ public://ゲッター
 	//コマンドリスト
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
 	//バックバッファの数を取得
-	size_t GetBackBufferCount()const { return swapChainDesc.BufferCount; }
+	size_t GetBackBufferCount()const { DXGI_SWAP_CHAIN_DESC1 desc{}; swapChain->GetDesc1(&desc); return desc.BufferCount; }
 	//スワップチェーン
 	IDXGISwapChain4* GetSwapChain()const { return swapChain.Get(); }
 	//スワップチェーンのリソース
@@ -66,12 +66,10 @@ private://メンバ変数
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> commandList = nullptr;
 	//スワップチェーン
 	Microsoft::WRL::ComPtr<IDXGISwapChain4> swapChain = nullptr;
-	//スワップチェーンデスク
-	DXGI_SWAP_CHAIN_DESC1 swapChainDesc{};
-	//深度描画用のリソース
-	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = nullptr;
 	//スワップチェーンから引っ張て来たリソース
 	std::array<Microsoft::WRL::ComPtr<ID3D12Resource>, 2> swapChainResources;
+	//深度描画用のリソース
+	Microsoft::WRL::ComPtr<ID3D12Resource> depthStencilResource = nullptr;
 	//RTVインデックス
 	std::array<uint32_t, 2> rtvIndices;
 	//DSVインデックス

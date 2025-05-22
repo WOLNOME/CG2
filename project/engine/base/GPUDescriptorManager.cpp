@@ -56,13 +56,12 @@ bool GPUDescriptorManager::CheckCanSecured() {
 	return (useIndex < kMaxHeapSize || !freeIndices.empty());
 }
 
-void GPUDescriptorManager::CreateSRVforTexture2D(uint32_t index, ID3D12Resource* pResource, DXGI_FORMAT Format, UINT MipLevels) {
+void GPUDescriptorManager::CreateSRVforRenderTexture(uint32_t index, ID3D12Resource* pResource) {
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-	srvDesc.Format = Format;
+	srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-	srvDesc.Texture2D.MipLevels = MipLevels;
-
+	srvDesc.Texture2D.MipLevels = 1;
 	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(pResource, &srvDesc, GetCPUDescriptorHandle(index));
 }
 

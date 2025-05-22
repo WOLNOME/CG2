@@ -11,8 +11,7 @@
 
 #pragma comment(lib,"dxcompiler.lib")
 
-class DirectXCommon
-{
+class DirectXCommon {
 private://コンストラクタ等の隠蔽
 	static DirectXCommon* instance;
 
@@ -39,7 +38,7 @@ private://生成系メンバ関数
 	void InitCommand();//コマンドキューのみ共通
 	void GenerateFence();//共通
 	void GenerateDXCCompiler();//共通
-	
+
 private:
 	//FPS固定初期化
 	void InitializeFixFPS();
@@ -47,7 +46,7 @@ private:
 	void UpdateFixFPS();
 	//記録時間(FPS固定用)
 	std::chrono::steady_clock::time_point reference_;
-	
+
 public://公開メンバ関数
 	static D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
 	static D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index);
@@ -67,12 +66,9 @@ public://公開メンバ関数
 	//テクスチャリソースの生成
 	ID3D12Resource* CreateTextureResource(const DirectX::TexMetadata& metadata);
 	//レンダーテクスチャリソースの生成
-	Microsoft::WRL::ComPtr<ID3D12Resource> CreateRenderTextureResource(uint32_t width,uint32_t height,DXGI_FORMAT format,const Vector4& clearColor);
-	
-	
-public://公開メンバ変数
-	
-public://ゲッター
+	ID3D12Resource* CreateRenderTextureResource(uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor);
+
+public://getter
 	//デバイス
 	ID3D12Device* GetDevice() const { return device.Get(); }
 	//DXGIファクトリ
@@ -80,10 +76,6 @@ public://ゲッター
 	//コマンドキュー
 	ID3D12CommandQueue* GetCommandQueue() const { return commandQueue.Get(); }
 	ID3D12CommandQueue** GetAddressOfCommandQueue() { return commandQueue.GetAddressOf(); }
-	//クリアバリュー
-	D3D12_CLEAR_VALUE GetClearValue() const { return clearValue; }
-
-private://インスタンス
 
 private://メンバ変数
 	//DirectX12デバイス
@@ -104,9 +96,6 @@ private://メンバ変数
 	Microsoft::WRL::ComPtr<IDxcCompiler3> dxcCompiler = nullptr;
 	//インクルードハンドラ
 	Microsoft::WRL::ComPtr<IDxcIncludeHandler> includeHandler = nullptr;
-
-	//レンダーテクスチャ用クリアバリュー
-	D3D12_CLEAR_VALUE clearValue{};
 
 };
 
