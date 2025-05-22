@@ -49,8 +49,6 @@ public:
 	//テクスチャデータの確保数
 	static const uint32_t kNumTextureData = 512;
 
-private://インスタンス
-
 private://メンバ変数
 	//テクスチャデータコンテナ(要素数がテクスチャハンドル)
 	std::array<std::optional<TextureData>, kNumTextureData> textureDatas;

@@ -80,6 +80,7 @@ public://セッター
 	void SetFontStyle(const FontStyle& fontStyle);
 	void SetSize(float size);
 	void SetColor(const Vector4& color);
+	void SetIsDraw(bool isDraw) { isDraw_ = isDraw; }
 
 	/// <summary>
 	/// アウトラインのパラメーター設定
@@ -106,6 +107,8 @@ public://ゲッター
 	const std::string& GetFontFaceKey() { return fontFaceKey_; }
 	float GetSize() { return size_; }
 	const Vector4& GetColor() { return color_; }
+	bool GetIsDraw() { return isDraw_; }
+
 	const std::string& GetEdgeName() { return edgeName_; }
 	const Vector4& GetEdgeColor() { return edgeColor_; }
 	float GetEdgeStrokeWidth() { return edgeStrokeWidth_; }
@@ -161,6 +164,8 @@ private:
 	float size_;
 	//色
 	Vector4 color_;
+	//描画するか
+	bool isDraw_ = true;
 
 	///============================
 	/// アウトラインのパラメーター

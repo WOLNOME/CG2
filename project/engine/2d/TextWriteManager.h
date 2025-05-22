@@ -18,9 +18,68 @@ template <typename T>
 using ComPtr = Microsoft::WRL::ComPtr<T>;
 
 class TextWrite;
-enum class FontStyle;
+
+
+///=======================///
+///		　　列挙型
+///=======================///
+
+//フォント
+enum class Font {
+	Meiryo,
+	YuGothic,
+	YuMincho,
+	UDDegitalN_B,
+	UDDegitalN_R,
+	UDDegitalNK_B,
+	UDDegitalNK_R,
+	UDDegitalNP_B,
+	UDDegitalNP_R,
+	OnionScript,
+};
+//フォントスタイル
+enum class FontStyle {
+	Normal,		//通常
+	Oblique,	//斜体(通常フォントをプログラムで斜体にする)
+	Italic,		//斜体(フォントファイルベース)
+};
+
+///=======================///
+///		　　構造体
+///=======================///
+
+//テキストのパラメータ
+struct TextParam {
+	std::wstring text;		//書き込むテキスト
+	Font font;				//フォント
+	FontStyle fontStyle;	//フォントスタイル
+	float size;				//文字のサイズ
+	Vector4 color;			//文字の色
+};
+//アウトラインのパラメータ
+struct EdgeParam {
+	uint32_t isEdgeDisplay;	//アウトライン表示フラグ
+	float width;			//アウトラインの幅
+	Vector2 slideRate;		//アウトラインのスライド量
+	Vector4 color;			//アウトラインの色
+};
 
 class TextWriteManager {
+private://構造体
+
+	//各テキストテクスチャの必須項目
+	struct TextTextureItem {
+		ComPtr<ID3D12Resource> resource;				//テクスチャリソース
+		ComPtr<ID3D11Resource> wrappedResource;			//D2D用のラップリソース
+		ComPtr<ID2D1Bitmap1> d2dRenderTarget;			//D2D用のレンダーターゲット
+		ComPtr<ID2D1SolidColorBrush> solidColorBrush;	//D2D用のブラシ
+		ComPtr<IDWriteTextFormat> textFormat;			//DWrite用のテキストフォーマット
+		TextParam textParam;							//テキストのパラメータ
+		EdgeParam edgeParam;							//アウトラインのパラメータ
+		uint32_t rtvIndex;								//RTVインデックス
+		uint32_t srvIndex;								//SRVインデックス
+	};
+
 private://コンストラクタ等の隠蔽
 	static TextWriteManager* instance;
 
@@ -36,16 +95,22 @@ public:
 	void Initialize();
 	void Finalize();
 
-	//個別クラスを登録
-	void Registration(TextWrite* piece);
-	//個別クラスの登録を解除
-	void CancelRegistration(const std::string& key);
+public:
+	///=======================
+	/// 外部とのやり取り
+	///=======================
 
-	//名前を決める関数
-	std::string GenerateName(const std::string& name);
+	//テクスチャの読み込み
+	uint32_t LoadTextTexture(const TextParam& _textParam);
 
-	//フォントキー作成用関数
-	std::string GenerateFontKey(const std::wstring& fontName, const FontStyle& style);
+	//参照登録(更新処理で必ず行う)
+	void RegistReference(uint32_t index);
+
+	//各種パラメータの編集
+	void EditTextParam(uint32_t index, const TextParam& textParam);
+	void EditEdgeParam(uint32_t index, const EdgeParam& edgeParam);
+
+
 
 private:
 	///=======================
@@ -54,14 +119,21 @@ private:
 
 	void CreateIDWriteFactory();
 	void CreateFontFile();
+	std::string GenerateFontKey(const std::wstring& fontName, const FontStyle& style);
 
-public:
+private:
 	///=======================
 	/// 描画前準備
 	///=======================
-	
+
+	//描画前参照チェック関数
+	void CheckAllReference();
+
 	void EditSolidColorBrash(const std::string& key, const Vector4& color) noexcept;
 	void EditTextFormat(const std::string& key, const std::wstring& fontName, const float fontSize) noexcept;
+
+
+public:
 	///=======================
 	/// 描画処理
 	///=======================
@@ -71,6 +143,10 @@ public:
 	//D3D12でのデコレーション描画
 	void DrawDecorationOnD3D12(const std::string& key);
 
+	///=======================
+	/// 描画後処理
+	///=======================
+
 
 private:
 	//省略変数
@@ -79,20 +155,19 @@ private:
 	MainRender* mainrender = MainRender::GetInstance();
 	D2DRender* d2drender = D2DRender::GetInstance();
 
-	//保存用変数
+	//マネージャ全体での保存用変数
 	ComPtr<IDWriteFactory8> directWriteFactory = nullptr;
 	ComPtr<IDWriteFontCollection1> dwriteFontCollection = nullptr;
-	
-	//各フォントで保持しておく項目
-	std::unordered_map<std::string, ComPtr<IDWriteFontFace3>> fontFaceMap;
+	std::unordered_map<std::string, ComPtr<IDWriteFontFace3>> fontFaceMap;	//各フォントで保持しておく項目
 
-	//各テキストで保持しておく項目(作成及び編集にデバイス等の情報が必要なため、Managerで保持)
-	std::unordered_map<std::string, ComPtr<ID2D1SolidColorBrush>> solidColorBrushMap;
-	std::unordered_map<std::string, ComPtr<IDWriteTextFormat>> textFormatMap;
-	std::unordered_map<std::string, std::pair<ComPtr<ID2D1PathGeometry>, ComPtr<ID2D1GeometrySink>>> pathGeometryMap;
-
-	//テキストライトコンテナ
-	std::unordered_map<std::string, TextWrite*> textWriteMap;
+	//テキストテクスチャのコンテナ
+	std::unordered_map<uint32_t, TextTextureItem> textTextureMap;	//各テキストで保持しておく項目(作成及び
+	//最新の空きインデックス
+	uint32_t useIndex = 0;
+	//解放済みインデックスを管理するリスト(描画前参照チェック関数によって割り当てられる)
+	std::list<uint32_t> freeIndices;
+	//参照カウンタ
+	std::list<uint32_t> referenceCounter;
 
 };
 
