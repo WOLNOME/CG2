@@ -3,6 +3,7 @@
 #include "DirectXCommon.h"
 #include "GPUDescriptorManager.h"
 #include "RTVManager.h"
+#include "DSVManager.h"
 #include "MainRender.h"
 #include "D2DRender.h"
 #include "PostEffectManager.h"
@@ -33,6 +34,9 @@ void Framework::Initialize() {
 
 	//RTVマネージャー
 	RTVManager::GetInstance()->Initialize();
+
+	//DSVマネージャー
+	DSVManager::GetInstance()->Initialize();
 
 	//メインレンダー
 	MainRender::GetInstance()->Initialize();
@@ -93,6 +97,7 @@ void Framework::Finalize() {
 	PostEffectManager::GetInstance()->Finalize();
 	D2DRender::GetInstance()->Finalize();
 	MainRender::GetInstance()->Finalize();
+	DSVManager::GetInstance()->Finalize();
 	RTVManager::GetInstance()->Finalize();
 	GPUDescriptorManager::GetInstance()->Finalize();
 	DirectXCommon::GetInstance()->Finalize();

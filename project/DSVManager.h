@@ -5,17 +5,17 @@
 #include <cstdint>
 #include <queue>
 
-class RTVManager {
+class DSVManager {
 private:
-	static RTVManager* instance;
+	static DSVManager* instance;
 
-	RTVManager() = default;
-	~RTVManager() = default;
-	RTVManager(RTVManager&) = delete;
-	RTVManager& operator=(RTVManager&) = delete;
+	DSVManager() = default;
+	~DSVManager() = default;
+	DSVManager(DSVManager&) = delete;
+	DSVManager& operator=(DSVManager&) = delete;
 
 public:
-	static RTVManager* GetInstance();
+	static DSVManager* GetInstance();
 
 	// 初期化
 	void Initialize();
@@ -29,14 +29,14 @@ public:
 	// 空きインデックスの存在確認用関数
 	bool CheckCanSecured();
 
-	// RTVDescriptor生成関数
-	void CreateRTVDescriptor(uint32_t index, ID3D12Resource* pResource);
-	
+	// DSVDescriptor生成関数
+	void CreateDSVDescriptor(uint32_t index, ID3D12Resource* pResource);
+
 	// ゲッター
 	ID3D12DescriptorHeap* GetDescriptorHeap() const { return descriptorHeap.Get(); }
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(uint32_t index);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(uint32_t index);
-	
+
 	static const uint32_t kMaxHeapSize;
 
 private:

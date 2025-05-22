@@ -3,6 +3,7 @@
 #include "DirectXCommon.h"
 #include "GPUDescriptorManager.h"
 #include "RTVManager.h"
+#include "DSVManager.h"
 #include "MainRender.h"
 #include "ImGuiManager.h"
 #include "Logger.h"
@@ -37,7 +38,7 @@ void PostEffectManager::PreObjectDraw() {
 	ID3D12GraphicsCommandList* commandList = mainRender->GetCommandList();
 	//描画先のRTVとDSVを設定するを設定する
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = RTVManager::GetInstance()->GetCPUDescriptorHandle(rtvIndex);
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = DirectXCommon::GetCPUDescriptorHandle(mainRender->GetDSVDescriptorHeap(), mainRender->GetDSVDescriptorSize(), 0);
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = DSVManager::GetInstance()->GetCPUDescriptorHandle(mainRender->GetDSVIndex());
 	commandList->OMSetRenderTargets(1, &rtvHandle, false, &dsvHandle);
 	//クリアバリューの色で画面全体をクリアする
 	float clearColor[] = {

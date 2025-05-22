@@ -107,6 +107,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="DSVManager.cpp" />
     <ClCompile Include="engine\3d\AnimationModel.cpp" />
     <ClCompile Include="engine\2d\TextWrite.cpp" />
     <ClCompile Include="engine\2d\TextWriteManager.cpp" />
@@ -172,6 +173,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\base\RTVManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="DSVManager.h" />
     <ClInclude Include="engine\3d\AnimationModel.h" />
     <ClInclude Include="engine\math\BlendMode.h" />
     <ClInclude Include="engine\2d\TextWrite.h" />
