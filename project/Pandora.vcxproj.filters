@@ -85,7 +85,8 @@
     <ClCompile Include="engine\3d\AnimationModel.cpp" />
     <ClCompile Include="engine\base\PostEffectManager.cpp" />
     <ClCompile Include="engine\base\RTVManager.cpp" />
-    <ClCompile Include="DSVManager.cpp" />
+    <ClCompile Include="engine\base\DSVManager.cpp" />
+    <ClCompile Include="engine\base\TextTextureRender.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\3d\DirectionalLight.h" />
@@ -159,7 +160,8 @@
     <ClInclude Include="engine\math\BlendMode.h" />
     <ClInclude Include="engine\base\PostEffectManager.h" />
     <ClInclude Include="engine\base\RTVManager.h" />
-    <ClInclude Include="DSVManager.h" />
+    <ClInclude Include="engine\base\DSVManager.h" />
+    <ClInclude Include="engine\base\TextTextureRender.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\LineDrawer.hlsli" />

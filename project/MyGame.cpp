@@ -46,6 +46,13 @@ void MyGame::Draw() {
 	///          描画処理
 	///==============================///
 
+	///------------------------------///
+	///   テキストテクスチャの生成処理
+	///------------------------------///
+
+	
+
+
 
 	///------------------------------///
 	///        D3D12の描画処理
@@ -70,7 +77,9 @@ void MyGame::Draw() {
 	ImGuiManager::GetInstance()->Draw();
 
 	//描画後処理
-	MainRender::GetInstance()->PostDraw();
+	MainRender::GetInstance()->PostDraw();		//GPUにMainRenderの描画処理を投げる
+	DirectXCommon::GetInstance()->PostEachRender();		//GPUの実行を待つ
+	MainRender::GetInstance()->ReadyNextCommand();		//MainRenderで使用したコマンドをリセット
 
 	///------------------------------///
 	///        D2Dの描画処理
@@ -93,10 +102,8 @@ void MyGame::Draw() {
 
 	//画面切り替え
 	MainRender::GetInstance()->ExchangeScreen();
-	//単レンダー終了時の共通処理
-	DirectXCommon::GetInstance()->PostEachRender();
 	//コマンドのリセット
-	MainRender::GetInstance()->ReadyNextCommand();
+	
 
 	///------------------------------///
 	///      レンダーの最終処理

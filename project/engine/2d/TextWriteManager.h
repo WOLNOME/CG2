@@ -66,11 +66,11 @@ public:
 	/// 描画処理
 	///=======================
 
-	void WriteText(const std::string& key);
+	//D2Dでの文字列描画
+	void WriteTextOnD2D(const std::string& key);
+	//D3D12でのデコレーション描画
+	void DrawDecorationOnD3D12(const std::string& key);
 
-private:
-	//アウトライン描画
-	void DrawOutline(const std::string& key);
 
 private:
 	//省略変数

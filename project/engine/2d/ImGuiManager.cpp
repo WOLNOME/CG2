@@ -30,7 +30,7 @@ void ImGuiManager::Initialize() {
 	//dx12用初期化関数
 	ImGui_ImplDX12_Init(
 		DirectXCommon::GetInstance()->GetDevice(),
-		static_cast<int>(MainRender::GetInstance()->GetBackBufferCount()),
+		static_cast<int>(MainRender::GetInstance()->GetSwapChainBufferCount()),
 		DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
 		GPUDescriptorManager::GetInstance()->GetDescriptorHeap(),
 		GPUDescriptorManager::GetInstance()->GetCPUDescriptorHandle(index),

@@ -3,7 +3,7 @@
 #include <cassert>
 
 RTVManager* RTVManager::instance = nullptr;
-const uint32_t RTVManager::kMaxHeapSize = 3;		//必要に応じて増やす
+const uint32_t RTVManager::kMaxHeapSize = 128;		//必要に応じて増やす
 
 RTVManager* RTVManager::GetInstance() {
     if (instance == nullptr) {

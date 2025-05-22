@@ -1,10 +1,13 @@
 #pragma once
-#include "d2d1_3.h"
-#include "dwrite_3.h"
+#include <wrl.h>
+#include <d3d12.h>
+#include <d2d1_3.h>
+#include <dwrite_3.h>
 #include <Vector2.h>
 #include <Vector4.h>
 #include <format>
 #include <string>
+
 
 //フォント
 enum class Font {
@@ -53,6 +56,12 @@ public:
 	//ImGuiを使ったデバッグ
 	void DebugWithImGui();
 
+private://生成系メンバ関数
+	//テクスチャの生成
+	void CreateTextureResource();
+	//D2D用のテクスチャリソースの生成
+	void CreateWrappedTextureResource();
+
 
 public://セッター
 	/// <summary>
@@ -84,7 +93,7 @@ public://セッター
 	void SetEdgeStrokeWidth(float width) { edgeStrokeWidth_ = width; }
 	void SetEdgeSlideRate(const Vector2& slideRate) { edgeSlideRate_ = slideRate; }
 	void SetIsEdgeDisplay(bool isDisplay) { isEdgeDisplay_ = isDisplay; }
-	
+
 public://ゲッター
 	const std::string& GetName() { return name_; }
 	const std::wstring& GetText() { return text_; }
@@ -109,10 +118,25 @@ private:
 	//マネージャーに描画
 	void WriteOnManager();
 
-
 private:
 	///============================
-	/// テキスト
+	/// システム用変数
+	///============================
+
+	//テクスチャを書き込むためのリソース
+	Microsoft::WRL::ComPtr<ID3D12Resource> textureResource_ = nullptr;
+	//D2D描画用のリソース
+	Microsoft::WRL::ComPtr<ID3D11Resource> wrappedTextureResource_ = nullptr;
+	//D2D描画用のレンダーターゲット
+	Microsoft::WRL::ComPtr<ID2D1Bitmap1> d2dRenderTarget_ = nullptr;
+
+	//RTVインデックス
+	uint32_t rtvIndex_ = 0;
+	//SRVインデックス
+	uint32_t srvIndex_ = 0;
+
+	///============================
+	/// テキストのパラメーター
 	///============================
 
 	//識別名
@@ -139,7 +163,7 @@ private:
 	Vector4 color_;
 
 	///============================
-	/// アウトライン
+	/// アウトラインのパラメーター
 	///============================
 
 	//識別名

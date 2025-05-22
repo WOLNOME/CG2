@@ -86,7 +86,7 @@ void D2DRender::CreateD2DResources() {
 	D3D11_RESOURCE_FLAGS resourceFlags = { D3D11_BIND_RENDER_TARGET };
 	const UINT dpi = GetDpiForWindow(winapp->GetHwnd());
 	D2D1_BITMAP_PROPERTIES1 bitmapProperties = D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW, D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED), static_cast<float>(dpi), static_cast<float>(dpi));
-	for (UINT i = 0U; i < mainrender->GetBackBufferCount(); ++i) {
+	for (UINT i = 0U; i < mainrender->GetSwapChainBufferCount(); ++i) {
 		ComPtr<ID3D11Resource> wrappedBackBuffer = nullptr;
 		//ID3D11Resourceの生成
 		hr = d3d11On12Device->CreateWrappedResource(mainrender->GetSwapChainResource(i), &resourceFlags, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT, IID_PPV_ARGS(wrappedBackBuffer.ReleaseAndGetAddressOf()));

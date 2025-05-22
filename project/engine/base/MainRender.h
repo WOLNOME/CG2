@@ -5,8 +5,7 @@
 #include <cstdint>
 #include <array>
 
-class MainRender
-{
+class MainRender {
 private://コンストラクタ等の隠蔽
 	static MainRender* instance;
 
@@ -34,6 +33,7 @@ public:
 
 	//コマンドの準備
 	void ReadyNextCommand();
+
 private://生成系メンバ関数
 	void InitCommand();
 	void GenerateSwapChain();
@@ -42,16 +42,14 @@ private://生成系メンバ関数
 	void InitDepthStencilView();
 	void InitViewPort();
 	void InitScissorRect();
-
-public://公開メンバ変数
-
-public://ゲッター
+	
+public://getter
 	//コマンドアロケーター
 	ID3D12CommandAllocator* GetCommandAllocator() const { return commandAllocator.Get(); }
 	//コマンドリスト
 	ID3D12GraphicsCommandList* GetCommandList() const { return commandList.Get(); }
-	//バックバッファの数を取得
-	size_t GetBackBufferCount()const { DXGI_SWAP_CHAIN_DESC1 desc{}; swapChain->GetDesc1(&desc); return desc.BufferCount; }
+	//スワップチェーンのバッファ数を取得
+	size_t GetSwapChainBufferCount()const { DXGI_SWAP_CHAIN_DESC1 desc{}; swapChain->GetDesc1(&desc); return desc.BufferCount; }
 	//スワップチェーン
 	IDXGISwapChain4* GetSwapChain()const { return swapChain.Get(); }
 	//スワップチェーンのリソース

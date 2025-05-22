@@ -4,6 +4,7 @@
 #include "GPUDescriptorManager.h"
 #include "RTVManager.h"
 #include "DSVManager.h"
+#include "TextTextureRender.h"
 #include "MainRender.h"
 #include "D2DRender.h"
 #include "PostEffectManager.h"
@@ -37,6 +38,9 @@ void Framework::Initialize() {
 
 	//DSVマネージャー
 	DSVManager::GetInstance()->Initialize();
+
+	//テキストテクスチャレンダー
+	TextTextureRender::GetInstance()->Initialize();
 
 	//メインレンダー
 	MainRender::GetInstance()->Initialize();
@@ -97,6 +101,7 @@ void Framework::Finalize() {
 	PostEffectManager::GetInstance()->Finalize();
 	D2DRender::GetInstance()->Finalize();
 	MainRender::GetInstance()->Finalize();
+	TextTextureRender::GetInstance()->Finalize();
 	DSVManager::GetInstance()->Finalize();
 	RTVManager::GetInstance()->Finalize();
 	GPUDescriptorManager::GetInstance()->Finalize();

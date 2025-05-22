@@ -1,6 +1,11 @@
 #include "TextWrite.h"
-#include "TextWriteManager.h"
 #include "WinApp.h"
+#include "DirectXCommon.h"
+#include "GPUDescriptorManager.h"
+#include "RTVManager.h"
+#include "MainRender.h"
+#include "D2DRender.h"
+#include "TextWriteManager.h"
 #include "ImGuiManager.h"
 
 TextWrite::~TextWrite() {
@@ -10,6 +15,11 @@ TextWrite::~TextWrite() {
 
 void TextWrite::Initialize(const std::string& name) {
 	name_ = name;
+
+	//システムの初期化
+	CreateTextureResource();
+	CreateWrappedTextureResource();
+
 
 	//変数の初期化
 	text_ = L"";
@@ -92,6 +102,58 @@ void TextWrite::DebugWithImGui() {
 
 	ImGui::End();
 #endif // _DEBUG
+}
+
+void TextWrite::CreateTextureResource() {
+	const auto directXCommon = DirectXCommon::GetInstance();
+	const auto rtvManager = RTVManager::GetInstance();
+	const auto gpuDescriptorManager = GPUDescriptorManager::GetInstance();
+	const auto mainrender = MainRender::GetInstance();
+	//<!> RTV,SRVともにRenderTexture用の設定を利用する。
+
+	//RTVのインデックスを取得
+	rtvIndex_ = rtvManager->Allocate();
+	//テクスチャリソース用のRTVを作成
+	textureResource_ = directXCommon->CreateRenderTextureResource(WinApp::kClientWidth, WinApp::kClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, Vector4(0, 0, 0, 0));
+	rtvManager->CreateRTVDescriptor(rtvIndex_, textureResource_.Get());
+
+	//SRVのインデックスを取得
+	srvIndex_ = gpuDescriptorManager->Allocate();
+	//テクスチャリソース用のSRVを作成
+	gpuDescriptorManager->CreateSRVforRenderTexture(srvIndex_, textureResource_.Get());
+}
+
+void TextWrite::CreateWrappedTextureResource() {
+	HRESULT hr;
+	const auto winapp = WinApp::GetInstance();
+	const auto directXCommon = DirectXCommon::GetInstance();
+	const auto rtvManager = RTVManager::GetInstance();
+	const auto gpuDescriptorManager = GPUDescriptorManager::GetInstance();
+	const auto mainrender = MainRender::GetInstance();
+	const auto d2dRender = D2DRender::GetInstance();
+
+	//DirectWriteの描画先の生成
+	D3D11_RESOURCE_FLAGS resourceFlags = { D3D11_BIND_RENDER_TARGET };
+	const UINT dpi = GetDpiForWindow(winapp->GetHwnd());
+	D2D1_BITMAP_PROPERTIES1 bitmapProperties = D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW, D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED), static_cast<float>(dpi), static_cast<float>(dpi));
+
+	//D2Dで使える用のリソースを生成
+	ComPtr < ID3D11Resource> wrappedTextureResource = nullptr;
+	//ID3D11Resourceの生成
+	hr = d2dRender->GetD3D11On12Device()->CreateWrappedResource(textureResource_.Get(), &resourceFlags, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT, IID_PPV_ARGS(&wrappedTextureResource));
+	assert(SUCCEEDED(hr));
+	//IDXGISurfaceの生成
+	ComPtr<IDXGISurface> dxgiSurface = nullptr;
+	hr = wrappedTextureResource.As(&dxgiSurface);
+	assert(SUCCEEDED(hr));
+	//ID2D1Bitmap1の生成
+	ComPtr<ID2D1Bitmap1> d2dRenderTarget = nullptr;
+	hr = d2dRender->GetD2DDeviceContext()->CreateBitmapFromDxgiSurface(dxgiSurface.Get(), &bitmapProperties, &d2dRenderTarget);
+	assert(SUCCEEDED(hr));
+
+	//作成した変数をメンバ変数に格納
+	wrappedTextureResource_ = wrappedTextureResource;
+	d2dRenderTarget_ = d2dRenderTarget;
 }
 
 void TextWrite::SetParam(const Vector2& position, const Font& font, float size, const Vector4& color) {
@@ -193,5 +255,5 @@ const std::wstring& TextWrite::ReturnFontName(const Font& font) {
 
 void TextWrite::WriteOnManager() {
 	//描画処理
-	TextWriteManager::GetInstance()->WriteText(name_);
+	TextWriteManager::GetInstance()->WriteTextOnD2D(name_);
 }
