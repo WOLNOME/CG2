@@ -3,6 +3,7 @@
 #include "MainRender.h"
 #include "GPUDescriptorManager.h"
 #include "Logger.h"
+#include "RandomStringUtil.h"
 #include <numbers>
 #include <random>
 #undef min
@@ -48,8 +49,11 @@ void ParticleManager::Update() {
 				}
 				break;
 			case Particle::EffectStyle::OneShot:
-				//生成数は一つだけ
-				genNum = 1;
+				//現在の粒の数が0なら生成
+				if (particle.second->grains_.size() == 0) {
+					//生成数は一つだけ
+					genNum = 1;
+				}
 				//生成許可フラグをオフ
 				particle.second->emitter_.isPlay = false;
 				break;
@@ -176,6 +180,27 @@ void ParticleManager::DeleteParticle(const std::string& name) {
 	if (it != particles.end()) {
 		particles.erase(it);  // コンテナから削除
 	}
+}
+
+std::string ParticleManager::GenerateName(const std::string& name) {
+	// 出力する名前
+	std::string outputName = name + "_" + RandomStringUtil::GenerateRandomString(4);
+
+	// 重複チェック用のラムダ式
+	std::function<void(const std::string&)> checkDuplicate = [&](const std::string& name) {
+		// 重複しているかチェック
+		if (particles.find(name) != particles.end()) {
+			// 重複しているので名前を変更
+			outputName = name + "_" + RandomStringUtil::GenerateRandomString(4);
+			checkDuplicate(outputName);
+		}
+		};
+
+	// 重複チェック
+	checkDuplicate(outputName);
+
+	// 最終的に出力
+	return outputName;
 }
 
 void ParticleManager::GenerateGraphicsPipeline() {
