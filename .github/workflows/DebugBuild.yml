@@ -5,7 +5,7 @@ on:
             - master
 env:
     # リポジトリのルートディレクトリを基点としたソリューションファイルパス
-    SOLUTION_FILE_PATH: CG2.sln
+    SOLUTION_FILE_PATH: project/CG2.sln
     #Visual Studio　の構成(Debug / Release)
     CONFIGURATION: Debug
 jobs:
