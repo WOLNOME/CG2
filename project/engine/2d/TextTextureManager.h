@@ -3,11 +3,14 @@
 #include "DirectXCommon.h"
 #include "MainRender.h"
 #include "D2DRender.h"
-#include <Vector4.h>
+#include "Handle.h"
+#include "Vector2.h"
+#include "Vector4.h"
 #include <d2d1_3.h>
 #include <dwrite_3.h>
 #include <wrl.h>
 #include <string>
+#include <list>
 #include <vector>
 #include <unordered_map>
 #include <memory>
@@ -16,9 +19,6 @@
 
 template <typename T>
 using ComPtr = Microsoft::WRL::ComPtr<T>;
-
-class TextWrite;
-
 
 ///=======================///
 ///		　　列挙型
@@ -64,7 +64,7 @@ struct EdgeParam {
 	Vector4 color;			//アウトラインの色
 };
 
-class TextWriteManager {
+class TextTextureManager {
 private://構造体
 
 	//各テキストテクスチャの必須項目
@@ -81,15 +81,15 @@ private://構造体
 	};
 
 private://コンストラクタ等の隠蔽
-	static TextWriteManager* instance;
+	static TextTextureManager* instance;
 
-	TextWriteManager() = default;//コンストラクタ隠蔽
-	~TextWriteManager() = default;//デストラクタ隠蔽
-	TextWriteManager(TextWriteManager&) = delete;//コピーコンストラクタ封印
-	TextWriteManager& operator=(TextWriteManager&) = delete;//コピー代入演算子封印
+	TextTextureManager() = default;//コンストラクタ隠蔽
+	~TextTextureManager() = default;//デストラクタ隠蔽
+	TextTextureManager(TextTextureManager&) = delete;//コピーコンストラクタ封印
+	TextTextureManager& operator=(TextTextureManager&) = delete;//コピー代入演算子封印
 public:
 	//シングルトンインスタンスの取得
-	static TextWriteManager* GetInstance();
+	static TextTextureManager* GetInstance();
 public:
 
 	void Initialize();
@@ -101,16 +101,17 @@ public:
 	///=======================
 
 	//テクスチャの読み込み
-	uint32_t LoadTextTexture(const TextParam& _textParam);
-
-	//参照登録(更新処理で必ず行う)
-	void RegistReference(uint32_t index);
+	Handle LoadTextTexture(const TextParam& _textParam);
+	Handle LoadTextTexture(uint32_t _id);
 
 	//各種パラメータの編集
-	void EditTextParam(uint32_t index, const TextParam& textParam);
-	void EditEdgeParam(uint32_t index, const EdgeParam& edgeParam);
+	void EditTextParam(Handle _handle, const TextParam& _textParam);
+	void EditEdgeParam(Handle _handle, const EdgeParam& _edgeParam);
 
-
+private:
+	TextTextureItem CreateTextTextureItem(const TextParam& _textParam);
+	ComPtr<ID2D1SolidColorBrush> CreateSolidColorBrush(const Vector4& color);
+	ComPtr<IDWriteTextFormat> CreateTextFormat(const Font& _font, const FontStyle& _fontStyle, const float fontSize) noexcept;
 
 private:
 	///=======================
@@ -129,19 +130,15 @@ private:
 	//描画前参照チェック関数
 	void CheckAllReference();
 
-	void EditSolidColorBrash(const std::string& key, const Vector4& color) noexcept;
-	void EditTextFormat(const std::string& key, const std::wstring& fontName, const float fontSize) noexcept;
-
-
 public:
 	///=======================
 	/// 描画処理
 	///=======================
 
 	//D2Dでの文字列描画
-	void WriteTextOnD2D(const std::string& key);
+	void WriteTextOnD2D();
 	//D3D12でのデコレーション描画
-	void DrawDecorationOnD3D12(const std::string& key);
+	void DrawDecorationOnD3D12();
 
 	///=======================
 	/// 描画後処理
@@ -167,13 +164,13 @@ private:
 	//解放済みインデックスを管理するリスト(描画前参照チェック関数によって割り当てられる)
 	std::list<uint32_t> freeIndices;
 	//参照カウンタ
-	std::list<uint32_t> referenceCounter;
+	std::list<Handle> referenceCounter;
 
 };
 
 ///フォントを追加する時の注意点
 //1. ttfもしくはttcファイルをResourcesフォルダ内のfontsフォルダに入れる
-//2. TextWrite.hのFont列挙型に新たに追加する。
+//2. このファイルのFont列挙型に新たに追加する。
 //3. TextWrite.cppのReturnFontName関数にfontファイル名を新たに追加する(wstringを使っているが、あとでstringに直す処理を挟むので日本語禁止)
 //4. TextWrite.cppのDebugWithImGui関数のフォント欄に新たに追加する
 //5. TextWriteManager.cppのDrawOutline関数内のアウトラインの位置計算に新たに追加する。

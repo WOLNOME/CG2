@@ -109,8 +109,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
   <ItemGroup>
     <ClCompile Include="engine\base\DSVManager.cpp" />
     <ClCompile Include="engine\3d\AnimationModel.cpp" />
-    <ClCompile Include="engine\2d\TextWrite.cpp" />
-    <ClCompile Include="engine\2d\TextWriteManager.cpp" />
+    <ClCompile Include="engine\2d\TextTextureManager.cpp" />
     <ClCompile Include="engine\3d\ParticleManager.cpp" />
     <ClCompile Include="engine\base\D2DRender.cpp" />
     <ClCompile Include="engine\base\Framework.cpp" />
@@ -177,8 +176,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\base\DSVManager.h" />
     <ClInclude Include="engine\3d\AnimationModel.h" />
     <ClInclude Include="engine\math\BlendMode.h" />
-    <ClInclude Include="engine\2d\TextWrite.h" />
-    <ClInclude Include="engine\2d\TextWriteManager.h" />
+    <ClInclude Include="engine\2d\TextTextureManager.h" />
     <ClInclude Include="engine\3d\ParticleManager.h" />
     <ClInclude Include="engine\base\D2DRender.h" />
     <ClInclude Include="engine\base\Framework.h" />
@@ -230,6 +228,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\3d\LineDrawerCommon.h" />
     <ClInclude Include="engine\base\MainRender.h" />
     <ClInclude Include="engine\3d\ModelFormat.h" />
+    <ClInclude Include="engine\util\Handle.h" />
     <ClInclude Include="MyGame.h" />
     <ClInclude Include="engine\scenebase\SceneFactory.h" />
     <ClInclude Include="engine\scenebase\SceneManager.h" />

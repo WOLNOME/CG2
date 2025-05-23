@@ -79,8 +79,7 @@
     <ClCompile Include="engine\scene\ParticleCreatorScene.cpp" />
     <ClCompile Include="engine\scenebase\SceneTransitionAnimation.cpp" />
     <ClCompile Include="engine\util\JsonUtil.cpp" />
-    <ClCompile Include="engine\2d\TextWrite.cpp" />
-    <ClCompile Include="engine\2d\TextWriteManager.cpp" />
+    <ClCompile Include="engine\2d\TextTextureManager.cpp" />
     <ClCompile Include="engine\base\D2DRender.cpp" />
     <ClCompile Include="engine\3d\AnimationModel.cpp" />
     <ClCompile Include="engine\base\PostEffectManager.cpp" />
@@ -153,8 +152,7 @@
     <ClInclude Include="engine\scene\ParticleCreatorScene.h" />
     <ClInclude Include="engine\scenebase\SceneTransitionAnimation.h" />
     <ClInclude Include="engine\util\JsonUtil.h" />
-    <ClInclude Include="engine\2d\TextWrite.h" />
-    <ClInclude Include="engine\2d\TextWriteManager.h" />
+    <ClInclude Include="engine\2d\TextTextureManager.h" />
     <ClInclude Include="engine\base\D2DRender.h" />
     <ClInclude Include="engine\3d\AnimationModel.h" />
     <ClInclude Include="engine\math\BlendMode.h" />
@@ -162,6 +160,7 @@
     <ClInclude Include="engine\base\RTVManager.h" />
     <ClInclude Include="engine\base\DSVManager.h" />
     <ClInclude Include="engine\base\TextTextureRender.h" />
+    <ClInclude Include="engine\util\Handle.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\LineDrawer.hlsli" />

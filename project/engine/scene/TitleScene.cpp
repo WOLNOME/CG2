@@ -20,11 +20,6 @@ void TitleScene::Initialize() {
 	//パーティクルマネージャーにカメラをセット
 	ParticleManager::GetInstance()->SetCamera(camera.get());
 
-	title_ = std::make_unique<TextWrite>();
-	title_->Initialize("TITLE");
-	title_->SetParam({ 320.0f,300.0f }, Font::OnionScript, 80.0f, { 1,1,0,1 });
-	title_->SetEdgeParam({ 1,0,0,1 }, 5.0f, 0.0f, true);
-	
 }
 
 void TitleScene::Finalize() {
@@ -43,7 +38,6 @@ void TitleScene::Update() {
 	ImGui::Text("%s", "TITLE");
 	ImGui::End();
 	//タイトルテキスト用のImGui
-	title_->DebugWithImGui();
 
 #endif // _DEBUG
 
@@ -93,18 +87,3 @@ void TitleScene::Draw() {
 	///------------------------------///
 
 }
-
-void TitleScene::TextDraw() {
-	///------------------------------///
-	///↑↑↑↑テキスト描画終了↑↑↑↑
-	///------------------------------///
-
-	//タイトルテキスト
-	title_->WriteText(L"ふえるぶつかり屋");
-
-
-	///------------------------------///
-	///↑↑↑↑テキスト描画終了↑↑↑↑
-	///------------------------------///
-}
-

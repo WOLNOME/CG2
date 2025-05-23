@@ -5,7 +5,7 @@
 #include "PostEffectManager.h"
 #include "TextureManager.h"
 #include "GPUDescriptorManager.h"
-#include "TextWriteManager.h"
+#include "TextTextureManager.h"
 #include "ImGuiManager.h"
 #include "ModelManager.h"
 #include "ParticleManager.h"
@@ -50,9 +50,10 @@ void MyGame::Draw() {
 	///   テキストテクスチャの生成処理
 	///------------------------------///
 
-	
-
-
+	//文字をD2D描画でテクスチャに書き込む
+	TextTextureManager::GetInstance()->WriteTextOnD2D();
+	//文字の装飾をD3D12で行う
+	TextTextureManager::GetInstance()->DrawDecorationOnD3D12();
 
 	///------------------------------///
 	///        D3D12の描画処理
@@ -88,8 +89,6 @@ void MyGame::Draw() {
 	//D2Dの描画前処理
 	D2DRender::GetInstance()->PreDraw();
 
-	//シーンの文字描画
-	SceneManager::GetInstance()->TextDraw();
 	//シーン遷移アニメーションの描画(一番上に描画)
 	SceneManager::GetInstance()->CurtainDraw();
 

@@ -105,9 +105,6 @@ void ParticleCreatorScene::Draw() {
 
 }
 
-void ParticleCreatorScene::TextDraw() {
-}
-
 void ParticleCreatorScene::StartWithImGui() {
 #ifdef _DEBUG
 	//最初の操作

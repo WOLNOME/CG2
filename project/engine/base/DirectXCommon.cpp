@@ -136,7 +136,9 @@ void DirectXCommon::GenerateDevice() {
 			//https://stackoverflow.com/questions/69805245/directx-12-application-is-crashing-in-windows-11
 			D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE,
 			D3D12_MESSAGE_ID_CREATERESOURCE_STATE_IGNORED,						//d2dDevice作成時に邪魔
-			D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE		//テキストアウトラインのα値操作に邪魔
+			D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,		//テキストアウトラインのα値操作に邪魔
+			D3D12_MESSAGE_ID_REFLECTSHAREDPROPERTIES_INVALIDOBJECT,
+			D3D12_MESSAGE_ID_CREATEGRAPHICSPIPELINESTATE_DEPTHSTENCILVIEW_NOT_SET
 		};
 		//抑制するレベル
 		D3D12_MESSAGE_SEVERITY severities[] = { D3D12_MESSAGE_SEVERITY_INFO };
@@ -388,7 +390,7 @@ ID3D12Resource* DirectXCommon::CreateTextureResource(const DirectX::TexMetadata&
 	return resource;
 }
 
-ID3D12Resource* DirectXCommon::CreateRenderTextureResource(uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor) {
+ID3D12Resource* DirectXCommon::CreateRenderTextureResource(uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor, bool isSharedD2D) {
 	//リソースデスクの設定
 	D3D12_RESOURCE_DESC resourceDesc{};
 	resourceDesc.Width = UINT(width);
@@ -412,11 +414,14 @@ ID3D12Resource* DirectXCommon::CreateRenderTextureResource(uint32_t width, uint3
 	clearValue.Color[2] = clearColor.z;
 	clearValue.Color[3] = clearColor.w;
 
+	//ヒープフラッグの設定(D2Dでも共有するか)
+	D3D12_HEAP_FLAGS heapFlags = D3D12_HEAP_FLAG_NONE;
+
 	//リソースの生成
 	ID3D12Resource* resource = nullptr;
 	HRESULT hr = device->CreateCommittedResource(
 		&heapProperties,
-		D3D12_HEAP_FLAG_NONE,
+		heapFlags,
 		&resourceDesc,
 		D3D12_RESOURCE_STATE_RENDER_TARGET,	//RenderTargetとして利用する
 		&clearValue,
