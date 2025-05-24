@@ -26,6 +26,32 @@ void TextTextureRender::Finalize() {
 	instance = nullptr;
 }
 
+void TextTextureRender::PreDraw() {
+	//ビューポートとシザー矩形を設定する
+	commandList->RSSetViewports(1, &viewport);
+	commandList->RSSetScissorRects(1, &scissorRect);
+}
+
+void TextTextureRender::PostDraw() {
+	HRESULT hr;
+	//コマンドリストの内容を確定させる。全てのコマンドを積んでからCloseすること
+	hr = commandList->Close();
+	assert(SUCCEEDED(hr));
+
+	//GPUにコマンドリストの実行を行わせる
+	Microsoft::WRL::ComPtr<ID3D12CommandList> commandLists[] = { commandList.Get() };
+	DirectXCommon::GetInstance()->GetCommandQueue()->ExecuteCommandLists(1, commandLists->GetAddressOf());
+}
+
+void TextTextureRender::ReadyNextCommand() {
+	HRESULT hr;
+	//次のフレーム用のコマンドリストを準備
+	hr = commandAllocator->Reset();
+	assert(SUCCEEDED(hr));
+	hr = commandList->Reset(commandAllocator.Get(), nullptr);
+	assert(SUCCEEDED(hr));
+}
+
 void TextTextureRender::InitCommand() {
 	HRESULT hr;
 	//コマンドアロケーターを生成する

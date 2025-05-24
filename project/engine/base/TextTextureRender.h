@@ -21,6 +21,15 @@ public:
 	//終了
 	void Finalize();
 
+	//描画前処理
+	void PreDraw();
+	//描画後処理
+	void PostDraw();
+
+	//コマンドの準備
+	void ReadyNextCommand();
+
+
 private://生成系メンバ関数
 	void InitCommand();
 	void InitViewPort();

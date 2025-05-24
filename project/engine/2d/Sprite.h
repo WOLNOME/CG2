@@ -3,6 +3,7 @@
 #include <d3d12.h>
 #include <string>
 #include "MyMath.h"
+#include "Handle.h"
 
 class Sprite
 {
@@ -31,12 +32,13 @@ public://メンバ関数
 	/// 初期化
 	/// </summary>
 	/// <param name="textureFilePath">テクスチャハンドル</param>
-	void Initialize(uint32_t textureHandle);
-	void Update();
-	void Draw();
-private://メンバ関数
+	void Initialize();
+	void Draw(uint32_t _textureHandle);
+	void Draw(Handle _textTextureHandle);
+
 	//テクスチャサイズをイメージに合わせる
-	void AdjustTextureSize();
+	void AdjustTextureSize(uint32_t _textureHandle);
+	void AdjustTextureSize(Handle _textTextureHandle);
 
 public://ゲッター
 	const Vector2& GetPosition()const { return position; }
@@ -60,9 +62,7 @@ public://セッター
 	void SetFlipY(bool isFlipY) { isFlipY_ = isFlipY; }
 	void SetTextureLeftTop(const Vector2& leftTop) { textureLeftTop = leftTop; }
 	void SetTextureSize(const Vector2& size) { textureSize = size; }
-	void SetTextureHandle(uint32_t textureHandle) { textureHandle_ = textureHandle; }
-
-private://インスタンス
+	
 private://メンバ変数
 	//バッファリソース
 	Microsoft::WRL::ComPtr<ID3D12Resource> vertexResource = nullptr;
@@ -100,7 +100,5 @@ private://メンバ変数値書き換え用
 	Vector2 textureLeftTop = { 0.0f,0.0f };
 	//テクスチャ切り出しサイズ
 	Vector2 textureSize = { 100.0f,100.0f };
-	//登録中のテクスチャハンドル
-	uint32_t textureHandle_;
 };
 

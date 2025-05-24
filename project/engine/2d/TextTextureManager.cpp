@@ -1,6 +1,7 @@
 #include "TextTextureManager.h"
 #include "GPUDescriptorManager.h"
 #include "RTVManager.h"
+#include "MainRender.h"
 #include <filesystem>
 #include <cassert>
 
@@ -102,6 +103,32 @@ void TextTextureManager::EditEdgeParam(Handle _handle, const EdgeParam& _edgePar
 	textTextureMap[_handle.id].edgeParam = _edgeParam;
 }
 
+uint32_t TextTextureManager::GetSrvIndex(Handle _handle) {
+	//参照カウンタから使用可能なハンドルかチェック
+	bool isValid = std::any_of(referenceCounter.begin(), referenceCounter.end(),
+		[&_handle](const Handle& handle) {
+			return _handle.ref == handle.ref;
+		});
+	if (!isValid) {
+		assert(0 && "無効なハンドルです");
+	}
+	//該当コンテナからsrvIndexを出力
+	return textTextureMap[_handle.id].srvIndex;
+}
+
+D3D12_GPU_DESCRIPTOR_HANDLE TextTextureManager::GetSrvHandleGPU(Handle _handle) {
+	//参照カウンタから使用可能なハンドルかチェック
+	bool isValid = std::any_of(referenceCounter.begin(), referenceCounter.end(),
+		[&_handle](const Handle& handle) {
+			return _handle.ref == handle.ref;
+		});
+	if (!isValid) {
+		assert(0 && "無効なハンドルです");
+	}
+	//該当コンテナからsrvIndexをもとにSRVDescriptorHandleを出力
+	return GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(textTextureMap[_handle.id].srvIndex);
+}
+
 TextTextureManager::TextTextureItem TextTextureManager::CreateTextTextureItem(const TextParam& _textParam) {
 	TextTextureItem textTextureItem;
 	//ローカル変数
@@ -132,7 +159,7 @@ TextTextureManager::TextTextureItem TextTextureManager::CreateTextTextureItem(co
 	//D2Dで使える用のリソースを生成
 	ComPtr<ID3D11Resource> wrappedTextureResource = nullptr;
 	//ID3D11Resourceの生成
-	hr = d2drender->GetD3D11On12Device()->CreateWrappedResource(textTextureItem.resource.Get(), &resourceFlags, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_RENDER_TARGET, IID_PPV_ARGS(&wrappedTextureResource));
+	hr = d2drender->GetD3D11On12Device()->CreateWrappedResource(textTextureItem.resource.Get(), &resourceFlags, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, IID_PPV_ARGS(&wrappedTextureResource));
 	assert(SUCCEEDED(hr));
 	//IDXGISurfaceの生成
 	ComPtr<IDXGISurface> dxgiSurface = nullptr;
@@ -379,11 +406,12 @@ void TextTextureManager::WriteTextOnD2D() {
 	};
 
 	//各コンテナの処理
-	for (const auto textTexture : textTextureMap) {
+	for (auto& [id, item] : textTextureMap) {
+
 		//リソースの設定
-		d2drender->GetD3D11On12Device()->AcquireWrappedResources(textTexture.second.wrappedResource.GetAddressOf(), 1);
+		d2drender->GetD3D11On12Device()->AcquireWrappedResources(item.wrappedResource.GetAddressOf(), 1);
 		//描画ターゲットの設定
-		d2drender->GetD2DDeviceContext()->SetTarget(textTexture.second.d2dRenderTarget.Get());
+		d2drender->GetD2DDeviceContext()->SetTarget(item.d2dRenderTarget.Get());
 		//描画前処理
 		d2drender->GetD2DDeviceContext()->BeginDraw();
 		//テキストテクスチャ描画処理
@@ -391,20 +419,37 @@ void TextTextureManager::WriteTextOnD2D() {
 			D2D1::Matrix3x2F::Identity()
 		);
 		d2drender->GetD2DDeviceContext()->DrawTextW(
-			textTexture.second.textParam.text.c_str(),
-			static_cast<UINT32>(textTexture.second.textParam.text.length()),
-			textTexture.second.textFormat.Get(),
+			item.textParam.text.c_str(),
+			static_cast<UINT32>(item.textParam.text.length()),
+			item.textFormat.Get(),
 			&rect,
-			textTexture.second.solidColorBrush.Get()
+			item.solidColorBrush.Get()
 		);
 		//描画後処理
 		d2drender->GetD2DDeviceContext()->EndDraw();
 		//リソースを取り外す
-		d2drender->GetD3D11On12Device()->ReleaseWrappedResources(textTexture.second.wrappedResource.GetAddressOf(), 1);
+		d2drender->GetD3D11On12Device()->ReleaseWrappedResources(item.wrappedResource.GetAddressOf(), 1);
 	}
+
 	//描画内容の確定（ExecuteCommandListみたいなやつ→1回呼び出せば十分）
 	d2drender->GetD3D11On12DeviceContext()->Flush();
 }
 
 void TextTextureManager::DrawDecorationOnD3D12() {
+}
+
+void TextTextureManager::ReadyNextResourceState() {
+	const auto mainrender = MainRender::GetInstance();
+	//リソースはMainRenderで使うため、MainRenderのcommandListで最後の遷移を行う
+	for (auto& [id, item] : textTextureMap) {
+		D3D12_RESOURCE_BARRIER barrier{};
+		barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		barrier.Transition.pResource = item.resource.Get();
+		barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+		barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+		mainrender->GetCommandList()->ResourceBarrier(1, &barrier);
+	}
 }

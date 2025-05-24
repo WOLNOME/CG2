@@ -80,5 +80,6 @@ private://メンバ変数
 
 	//テキスト
 	Handle textHandle_;
+	std::unique_ptr<Sprite> text_ = nullptr;
 };
 

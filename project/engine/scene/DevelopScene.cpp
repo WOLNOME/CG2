@@ -40,13 +40,15 @@ void DevelopScene::Initialize() {
 	//ゲームシーン変数の初期化
 	sprite_ = std::make_unique<Sprite>();
 	textureHandleSprite_ = TextureManager::GetInstance()->LoadTexture("monsterBall.png");
-	sprite_->Initialize(textureHandleSprite_);
+	sprite_->Initialize();
+	sprite_->AdjustTextureSize(textureHandleSprite_);
 	sprite_->SetAnchorPoint({ 0.5f,0.5f });
 	sprite_->SetFlipX(true);
 
 	sprite2_ = std::make_unique<Sprite>();
 	textureHandleSprite2_ = TextureManager::GetInstance()->LoadTexture("monsterBall.png");
-	sprite2_->Initialize(textureHandleSprite2_);
+	sprite2_->Initialize();
+	sprite_->AdjustTextureSize(textureHandleSprite2_);
 	sprite2Position = { 100.0f,100.0f };
 	sprite2_->SetPosition(sprite2Position);
 	sprite2_->SetSize({ 300.0f,300.0f });
@@ -122,7 +124,9 @@ void DevelopScene::Initialize() {
 	param.size = 32.0f;
 	param.color = { 1,1,1,1 };
 	textHandle_ = TextTextureManager::GetInstance()->LoadTextTexture(param);
-
+	text_ = std::make_unique<Sprite>();
+	text_->Initialize();
+	text_->AdjustTextureSize(textHandle_);
 
 }
 
@@ -156,9 +160,7 @@ void DevelopScene::Update() {
 	simpleSkin_->Update();
 
 	//スプライトの更新
-	sprite_->Update();
 	sprite_->SetRotation(sprite_->GetRotation() + 0.03f);
-	sprite2_->Update();
 
 #ifdef _DEBUG
 	ImGui::SetNextWindowSize(ImVec2(500, 100));
@@ -339,8 +341,14 @@ void DevelopScene::Draw() {
 	//sprite_->Draw();
 	//sprite2_->Draw();
 
+	//テキスト
+	text_->Draw(textHandle_);
+
 
 	///------------------------------///
 	///↑↑↑↑スプライト描画終了↑↑↑↑
 	///------------------------------///
+	
+
+
 }

@@ -79,7 +79,6 @@ void MainRender::PreImGuiDraw() {
 
 void MainRender::PostDraw() {
 	HRESULT hr;
-	//!>本来ここにスワップチェーンリソースバリア遷移があるけど、D2Dの描画終了時に同じことをしているので省略
 
 	//コマンドリストの内容を確定させる。全てのコマンドを積んでからCloseすること
 	hr = commandList->Close();

@@ -36,6 +36,7 @@ void PostEffectManager::PreObjectDraw() {
 	MainRender* mainRender = MainRender::GetInstance();
 	//コマンドリストの取得
 	ID3D12GraphicsCommandList* commandList = mainRender->GetCommandList();
+
 	//描画先のRTVとDSVを設定するを設定する
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = RTVManager::GetInstance()->GetCPUDescriptorHandle(rtvIndex);
 	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = DSVManager::GetInstance()->GetCPUDescriptorHandle(mainRender->GetDSVIndex());

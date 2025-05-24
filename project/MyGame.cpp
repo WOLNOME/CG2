@@ -50,10 +50,19 @@ void MyGame::Draw() {
 	///   テキストテクスチャの生成処理
 	///------------------------------///
 
+	//テキストテクスチャ描画前処理
+	TextTextureRender::GetInstance()->PreDraw();
+
 	//文字をD2D描画でテクスチャに書き込む
 	TextTextureManager::GetInstance()->WriteTextOnD2D();
 	//文字の装飾をD3D12で行う
 	TextTextureManager::GetInstance()->DrawDecorationOnD3D12();
+
+	//テキストテクスチャ描画後処理
+	TextTextureRender::GetInstance()->PostDraw();
+	DirectXCommon::GetInstance()->PostEachRender();			//GPUの実行を待つ
+	TextTextureRender::GetInstance()->ReadyNextCommand();	//TextTextureRenderで使用したコマンドをリセット
+
 
 	///------------------------------///
 	///        D3D12の描画処理
@@ -78,6 +87,7 @@ void MyGame::Draw() {
 	ImGuiManager::GetInstance()->Draw();
 
 	//描画後処理
+	TextTextureManager::GetInstance()->ReadyNextResourceState();		//MainRenderの描画が終了した時点でtextTextureResourceのステートを遷移
 	MainRender::GetInstance()->PostDraw();		//GPUにMainRenderの描画処理を投げる
 	DirectXCommon::GetInstance()->PostEachRender();		//GPUの実行を待つ
 	MainRender::GetInstance()->ReadyNextCommand();		//MainRenderで使用したコマンドをリセット
@@ -101,9 +111,7 @@ void MyGame::Draw() {
 
 	//画面切り替え
 	MainRender::GetInstance()->ExchangeScreen();
-	//コマンドのリセット
 	
-
 	///------------------------------///
 	///      レンダーの最終処理
 	///------------------------------///

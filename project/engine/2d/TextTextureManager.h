@@ -1,7 +1,7 @@
 #pragma once
 #include "WinApp.h"
 #include "DirectXCommon.h"
-#include "MainRender.h"
+#include "TextTextureRender.h"
 #include "D2DRender.h"
 #include "Handle.h"
 #include "Vector2.h"
@@ -108,6 +108,10 @@ public:
 	void EditTextParam(Handle _handle, const TextParam& _textParam);
 	void EditEdgeParam(Handle _handle, const EdgeParam& _edgeParam);
 
+	//SRV関係のgetter
+	uint32_t GetSrvIndex(Handle _handle);
+	D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(Handle _handle);
+
 private:
 	TextTextureItem CreateTextTextureItem(const TextParam& _textParam);
 	ComPtr<ID2D1SolidColorBrush> CreateSolidColorBrush(const Vector4& color);
@@ -144,12 +148,14 @@ public:
 	/// 描画後処理
 	///=======================
 
+	//次のフレームで使える状態に遷移
+	void ReadyNextResourceState();
 
 private:
 	//省略変数
 	WinApp* winapp = WinApp::GetInstance();
 	DirectXCommon* dxcommon = DirectXCommon::GetInstance();
-	MainRender* mainrender = MainRender::GetInstance();
+	TextTextureRender* ttrender = TextTextureRender::GetInstance();
 	D2DRender* d2drender = D2DRender::GetInstance();
 
 	//マネージャ全体での保存用変数

@@ -115,7 +115,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\base\Framework.cpp" />
     <ClCompile Include="engine\math\Vector3.cpp" />
     <ClCompile Include="engine\scenebase\SceneTransitionAnimation.cpp" />
-    <ClCompile Include="engine\scene\ClearScene.cpp" />
     <ClCompile Include="engine\collision\Collider.cpp" />
     <ClCompile Include="engine\collision\CollisionManager.cpp" />
     <ClCompile Include="engine\3d\DirectionalLight.cpp" />
@@ -158,7 +157,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="MyGame.cpp" />
     <ClCompile Include="engine\scenebase\SceneFactory.cpp" />
     <ClCompile Include="engine\scenebase\SceneManager.cpp" />
-    <ClCompile Include="engine\scene\TitleScene.cpp" />
     <ClCompile Include="engine\3d\Particle.cpp" />
     <ClCompile Include="engine\3d\WorldTransform.cpp" />
     <ClCompile Include="engine\3d\PointLight.cpp" />
@@ -181,7 +179,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\base\D2DRender.h" />
     <ClInclude Include="engine\base\Framework.h" />
     <ClInclude Include="engine\scenebase\SceneTransitionAnimation.h" />
-    <ClInclude Include="engine\scene\ClearScene.h" />
     <ClInclude Include="engine\collision\Collider.h" />
     <ClInclude Include="engine\collision\CollisionConfig.h" />
     <ClInclude Include="engine\collision\CollisionManager.h" />
@@ -232,7 +229,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="MyGame.h" />
     <ClInclude Include="engine\scenebase\SceneFactory.h" />
     <ClInclude Include="engine\scenebase\SceneManager.h" />
-    <ClInclude Include="engine\scene\TitleScene.h" />
     <ClInclude Include="engine\3d\Particle.h" />
     <ClInclude Include="engine\3d\WorldTransform.h" />
     <ClInclude Include="engine\3d\PointLight.h" />
