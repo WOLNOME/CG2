@@ -52,6 +52,7 @@ void MyGame::Draw() {
 
 	//テキストテクスチャ描画前処理
 	TextTextureRender::GetInstance()->PreDraw();
+	GPUDescriptorManager::GetInstance()->PreDraw(TextTextureRender::GetInstance()->GetCommandList());
 
 	//文字をD2D描画でテクスチャに書き込む
 	TextTextureManager::GetInstance()->WriteTextOnD2D();

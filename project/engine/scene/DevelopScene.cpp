@@ -107,8 +107,8 @@ void DevelopScene::Initialize() {
 	simpleSkin_->SetSceneLight(sceneLight_.get());
 
 	ParticleManager::GetInstance()->SetCamera(camera.get());
-	particle_ = std::make_unique<Particle>();
-	particle_->Initialize("develop", "basic");
+	//particle_ = std::make_unique<Particle>();
+	//particle_->Initialize("develop", "basic");
 
 	line_ = std::make_unique<LineDrawer>();
 	line_->Initialize();
@@ -118,7 +118,7 @@ void DevelopScene::Initialize() {
 
 	//テキストテクスチャの作成
 	TextParam param;
-	param.text = L"実験だよ（）";
+	param.text = L"";
 	param.font = Font::UDDegitalNP_B;
 	param.fontStyle = FontStyle::Normal;
 	param.size = 32.0f;
@@ -127,7 +127,12 @@ void DevelopScene::Initialize() {
 	text_ = std::make_unique<Sprite>();
 	text_->Initialize();
 	text_->AdjustTextureSize(textHandle_);
-
+	EdgeParam edgeParam;
+	edgeParam.width = 100;
+	edgeParam.isEdgeDisplay = 1;
+	edgeParam.slideRate = { 0.0f,0.0f };
+	edgeParam.color = { 1,1,0,1 };
+	TextTextureManager::GetInstance()->EditEdgeParam(textHandle_, edgeParam);
 }
 
 void DevelopScene::Finalize() {
@@ -161,6 +166,9 @@ void DevelopScene::Update() {
 
 	//スプライトの更新
 	sprite_->SetRotation(sprite_->GetRotation() + 0.03f);
+
+	time_ += kDeltaTime;
+	TextTextureManager::GetInstance()->EditTextString(textHandle_, L"フォント確認 0123 abcDEF 現在時刻 : {:.1f}", time_);
 
 #ifdef _DEBUG
 	ImGui::SetNextWindowSize(ImVec2(500, 100));
@@ -263,6 +271,7 @@ void DevelopScene::Update() {
 		MyMath::DrawSphere(slMarkSphere, { 1.0f,0.25f,0.0f,1.0f }, slMark.get());
 		MyMath::DrawSphere(slMarkSphere2, { 0.0f,1.0f,0.0f,1.0f }, slMark.get());
 	}
+	ImGui::End();
 
 	ImGui::Begin("複合アニメーション");
 	//選択肢
@@ -273,9 +282,8 @@ void DevelopScene::Update() {
 	}
 	ImGui::End();
 
-	ImGui::End();
 	//テキスト用ImGui
-
+	TextTextureManager::GetInstance()->DebugWithImGui(textHandle_);
 	//カメラ用ImGui
 	camera->DebugWithImGui();
 	//ポストエフェクト用ImGui

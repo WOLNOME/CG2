@@ -79,6 +79,7 @@ private://メンバ変数
 	float volume = 0.5f;
 
 	//テキスト
+	float time_ = 0.0f;
 	Handle textHandle_;
 	std::unique_ptr<Sprite> text_ = nullptr;
 };

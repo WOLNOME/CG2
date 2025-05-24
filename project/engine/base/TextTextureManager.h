@@ -59,25 +59,32 @@ struct TextParam {
 //アウトラインのパラメータ
 struct EdgeParam {
 	uint32_t isEdgeDisplay;	//アウトライン表示フラグ
-	float width;			//アウトラインの幅
+	uint32_t width;			//アウトラインの幅
 	Vector2 slideRate;		//アウトラインのスライド量
 	Vector4 color;			//アウトラインの色
 };
 
 class TextTextureManager {
 private://構造体
+	//アウトラインのリソース
+	struct EdgeResource {
+		ComPtr<ID3D12Resource> resource;
+		EdgeParam* param;
+	};
 
 	//各テキストテクスチャの必須項目
 	struct TextTextureItem {
 		ComPtr<ID3D12Resource> resource;				//テクスチャリソース
+		ComPtr<ID3D12Resource> copyResource;			//コピー用テクスチャリソース
 		ComPtr<ID3D11Resource> wrappedResource;			//D2D用のラップリソース
 		ComPtr<ID2D1Bitmap1> d2dRenderTarget;			//D2D用のレンダーターゲット
 		ComPtr<ID2D1SolidColorBrush> solidColorBrush;	//D2D用のブラシ
 		ComPtr<IDWriteTextFormat> textFormat;			//DWrite用のテキストフォーマット
 		TextParam textParam;							//テキストのパラメータ
-		EdgeParam edgeParam;							//アウトラインのパラメータ
+		EdgeResource edgeResource;						//アウトラインのリソース
 		uint32_t rtvIndex;								//RTVインデックス
 		uint32_t srvIndex;								//SRVインデックス
+		uint32_t srvCopyIndex;							//コピーリソース用SRVインデックス
 	};
 
 private://コンストラクタ等の隠蔽
@@ -95,6 +102,9 @@ public:
 	void Initialize();
 	void Finalize();
 
+	//ImGuiでテキストデバッグ
+	void DebugWithImGui(Handle _handle);
+
 public:
 	///=======================
 	/// 外部とのやり取り
@@ -108,23 +118,49 @@ public:
 	void EditTextParam(Handle _handle, const TextParam& _textParam);
 	void EditEdgeParam(Handle _handle, const EdgeParam& _edgeParam);
 
+	//各パラメータの個別編集
+	template <typename... Args>
+	void EditTextString(Handle _handle, const std::wstring& text, Args&&... args) {
+		//使用可能なハンドルかチェック
+		CheckHandle(_handle);
+
+		//テキストを生成
+		textTextureMap[_handle.id].textParam.text = std::vformat(text, std::make_wformat_args(args...));
+	}
+	void EditTextFont(Handle _handle, const Font& _font);
+	void EditTextFontStyle(Handle _handle, const FontStyle& _fontStyle);
+	void EditTextSize(Handle _handle, const float _size);
+	void EditTextColor(Handle _handle, const Vector4& _color);
+
+
+	//各パラメータのgetter
+	const std::wstring& GetTextString(Handle _handle);
+	const Font& GetTextFont(Handle _handle);
+	const FontStyle& GetTextFontStyle(Handle _handle);
+	const float GetTextSize(Handle _handle);
+	const Vector4& GetTextColor(Handle _handle);
+
+
 	//SRV関係のgetter
 	uint32_t GetSrvIndex(Handle _handle);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(Handle _handle);
 
 private:
+	void CheckHandle(Handle _handle);
 	TextTextureItem CreateTextTextureItem(const TextParam& _textParam);
 	ComPtr<ID2D1SolidColorBrush> CreateSolidColorBrush(const Vector4& color);
 	ComPtr<IDWriteTextFormat> CreateTextFormat(const Font& _font, const FontStyle& _fontStyle, const float fontSize) noexcept;
+	void TransitionState(ID3D12Resource* pResource, D3D12_RESOURCE_STATES before, D3D12_RESOURCE_STATES after);
 
 private:
 	///=======================
 	/// 初期化時処理
 	///=======================
 
-	void CreateIDWriteFactory();
-	void CreateFontFile();
+	void GenerateIDWriteFactory();
+	void GenerateFontFile();
 	std::string GenerateFontKey(const std::wstring& fontName, const FontStyle& style);
+	void GenerateGraphicsPipeline();
 
 private:
 	///=======================
@@ -159,6 +195,9 @@ private:
 	D2DRender* d2drender = D2DRender::GetInstance();
 
 	//マネージャ全体での保存用変数
+	ComPtr<ID3D12RootSignature> rootSignature_ = nullptr;			//ルートシグネチャ
+	ComPtr<ID3D12PipelineState> graphicsPipelineState_ = nullptr;	//グラフィックスパイプライン
+
 	ComPtr<IDWriteFactory8> directWriteFactory = nullptr;
 	ComPtr<IDWriteFontCollection1> dwriteFontCollection = nullptr;
 	std::unordered_map<std::string, ComPtr<IDWriteFontFace3>> fontFaceMap;	//各フォントで保持しておく項目

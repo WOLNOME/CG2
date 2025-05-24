@@ -43,9 +43,6 @@ public://メンバ関数
 	//登録されたパーティクルを削除
 	void DeleteParticle(const std::string& name);
 
-public://パーティクルコンテナの操作
-
-
 private://パーティクル全体の操作
 	//グラフィックスパイプライン
 	void GenerateGraphicsPipeline();
@@ -53,7 +50,6 @@ private://粒の操作
 	//粒の生成
 	std::list<Particle::GrainData> GenerateGrain(Particle* particle, int genNum);
 
-public://ゲッター
 public://セッター
 	void SetCamera(BaseCamera* camera) { camera_ = camera; }
 private://インスタンス

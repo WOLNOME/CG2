@@ -20,6 +20,8 @@
     <FxCompile Include="Resources\shaders\postEffects\GaussianFilter.PS.hlsl" />
     <FxCompile Include="Resources\shaders\postEffects\LuminanceBasedOutline.PS.hlsl" />
     <FxCompile Include="Resources\shaders\postEffects\RadialBlur.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\TextTexture.VS.hlsl" />
+    <FxCompile Include="Resources\shaders\TextTexture.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\3d\DirectionalLight.cpp" />
@@ -77,7 +79,7 @@
     <ClCompile Include="engine\scene\ParticleCreatorScene.cpp" />
     <ClCompile Include="engine\scenebase\SceneTransitionAnimation.cpp" />
     <ClCompile Include="engine\util\JsonUtil.cpp" />
-    <ClCompile Include="engine\2d\TextTextureManager.cpp" />
+    <ClCompile Include="engine\base\TextTextureManager.cpp" />
     <ClCompile Include="engine\base\D2DRender.cpp" />
     <ClCompile Include="engine\3d\AnimationModel.cpp" />
     <ClCompile Include="engine\base\PostEffectManager.cpp" />
@@ -148,7 +150,7 @@
     <ClInclude Include="engine\scene\ParticleCreatorScene.h" />
     <ClInclude Include="engine\scenebase\SceneTransitionAnimation.h" />
     <ClInclude Include="engine\util\JsonUtil.h" />
-    <ClInclude Include="engine\2d\TextTextureManager.h" />
+    <ClInclude Include="engine\base\TextTextureManager.h" />
     <ClInclude Include="engine\base\D2DRender.h" />
     <ClInclude Include="engine\3d\AnimationModel.h" />
     <ClInclude Include="engine\math\BlendMode.h" />
@@ -165,6 +167,7 @@
     <None Include="Resources\shaders\Sprite.hlsli" />
     <None Include="Resources\shaders\Skybox.hlsli" />
     <None Include="Resources\shaders\postEffects\CopyImage.hlsli" />
+    <None Include="Resources\shaders\TextTexture.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />
