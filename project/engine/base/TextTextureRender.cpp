@@ -19,6 +19,10 @@ TextTextureRender* TextTextureRender::GetInstance() {
 void TextTextureRender::Initialize() {
 	//コマンドリストの生成
 	InitCommand();
+	//ビューポートの初期化
+	InitViewPort();
+	//シザーの初期化
+	InitScissorRect();
 }
 
 void TextTextureRender::Finalize() {

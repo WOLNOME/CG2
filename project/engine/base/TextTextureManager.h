@@ -59,13 +59,20 @@ struct TextParam {
 //アウトラインのパラメータ
 struct EdgeParam {
 	uint32_t isEdgeDisplay;	//アウトライン表示フラグ
-	uint32_t width;			//アウトラインの幅
+	float width;			//アウトラインの幅
 	Vector2 slideRate;		//アウトラインのスライド量
 	Vector4 color;			//アウトラインの色
 };
 
 class TextTextureManager {
 private://構造体
+	//テキストのリソース
+	struct TextResource {
+		ComPtr<ID3D12Resource> resource;
+		Vector4* color;		//テキストの色
+		TextParam param;
+	};
+
 	//アウトラインのリソース
 	struct EdgeResource {
 		ComPtr<ID3D12Resource> resource;
@@ -80,7 +87,7 @@ private://構造体
 		ComPtr<ID2D1Bitmap1> d2dRenderTarget;			//D2D用のレンダーターゲット
 		ComPtr<ID2D1SolidColorBrush> solidColorBrush;	//D2D用のブラシ
 		ComPtr<IDWriteTextFormat> textFormat;			//DWrite用のテキストフォーマット
-		TextParam textParam;							//テキストのパラメータ
+		TextResource textResource;						//テキストのリソース
 		EdgeResource edgeResource;						//アウトラインのリソース
 		uint32_t rtvIndex;								//RTVインデックス
 		uint32_t srvIndex;								//SRVインデックス
@@ -125,12 +132,17 @@ public:
 		CheckHandle(_handle);
 
 		//テキストを生成
-		textTextureMap[_handle.id].textParam.text = std::vformat(text, std::make_wformat_args(args...));
+		textTextureMap[_handle.id].textResource.param.text = std::vformat(text, std::make_wformat_args(args...));
 	}
 	void EditTextFont(Handle _handle, const Font& _font);
 	void EditTextFontStyle(Handle _handle, const FontStyle& _fontStyle);
 	void EditTextSize(Handle _handle, const float _size);
 	void EditTextColor(Handle _handle, const Vector4& _color);
+
+	void EditIsEdgeDisplay(Handle _handle, const bool _isDisplay);
+	void EditEdgeWidth(Handle _handle, const float _width);
+	void EditEdgeSlideRate(Handle _handle, const Vector2& _slideRate);
+	void EditEdgeColor(Handle _handle, const Vector4& _color);
 
 
 	//各パラメータのgetter
@@ -139,6 +151,11 @@ public:
 	const FontStyle& GetTextFontStyle(Handle _handle);
 	const float GetTextSize(Handle _handle);
 	const Vector4& GetTextColor(Handle _handle);
+
+	const bool GetIsEdgeDisplay(Handle _handle);
+	const float GetEdgeWidth(Handle _handle);
+	const Vector2& GetEdgeSlideRate(Handle _handle);
+	const Vector4& GetEdgeColor(Handle _handle);
 
 
 	//SRV関係のgetter

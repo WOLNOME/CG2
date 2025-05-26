@@ -2,6 +2,7 @@
 #include "SceneManager.h"
 #include <numbers>
 
+
 void DevelopScene::Initialize() {
 	//シーン共通の初期化
 	BaseScene::Initialize();
@@ -117,22 +118,44 @@ void DevelopScene::Initialize() {
 	audio_->Initialize("demo2.wav");
 
 	//テキストテクスチャの作成
-	TextParam param;
-	param.text = L"";
-	param.font = Font::UDDegitalNP_B;
-	param.fontStyle = FontStyle::Normal;
-	param.size = 32.0f;
-	param.color = { 1,1,1,1 };
-	textHandle_ = TextTextureManager::GetInstance()->LoadTextTexture(param);
-	text_ = std::make_unique<Sprite>();
-	text_->Initialize();
-	text_->AdjustTextureSize(textHandle_);
-	EdgeParam edgeParam;
-	edgeParam.width = 100;
-	edgeParam.isEdgeDisplay = 1;
-	edgeParam.slideRate = { 0.0f,0.0f };
-	edgeParam.color = { 1,1,0,1 };
-	TextTextureManager::GetInstance()->EditEdgeParam(textHandle_, edgeParam);
+	{
+		TextParam param;
+		param.text = L"";
+		param.font = Font::UDDegitalNP_B;
+		param.fontStyle = FontStyle::Normal;
+		param.size = 32.0f;
+		param.color = { 1,1,1,1 };
+		textHandle_ = TextTextureManager::GetInstance()->LoadTextTexture(param);
+		text_ = std::make_unique<Sprite>();
+		text_->Initialize();
+		text_->AdjustTextureSize(textHandle_);
+		EdgeParam edgeParam;
+		edgeParam.width = 5;
+		edgeParam.isEdgeDisplay = 1;
+		edgeParam.slideRate = { 0.0f,0.0f };
+		edgeParam.color = { 1,1,0,1 };
+		TextTextureManager::GetInstance()->EditEdgeParam(textHandle_, edgeParam);
+	}
+
+	//テクスチャ
+	for (int i = 0; i < 16; ++i) {
+		TextParam param;
+		param.text = L"今日は楽しい一日だったな。\nまた、遊びに行きたいな。";
+		param.font = Font::UDDegitalNP_B;
+		param.fontStyle = FontStyle::Normal;
+		param.size = 90.0f;
+		param.color = { 1,1,1,1 };
+		handles_[i] = TextTextureManager::GetInstance()->LoadTextTexture(param);
+		text_ = std::make_unique<Sprite>();
+		text_->Initialize();
+		text_->AdjustTextureSize(handles_[i]);
+		EdgeParam edgeParam;
+		edgeParam.width = 0;
+		edgeParam.isEdgeDisplay = 1;
+		edgeParam.slideRate = { 0.0f,0.0f };
+		edgeParam.color = { 1,1,0,1 };
+		TextTextureManager::GetInstance()->EditEdgeParam(handles_[i], edgeParam);
+	}
 }
 
 void DevelopScene::Finalize() {

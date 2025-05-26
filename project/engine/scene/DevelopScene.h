@@ -82,5 +82,7 @@ private://メンバ変数
 	float time_ = 0.0f;
 	Handle textHandle_;
 	std::unique_ptr<Sprite> text_ = nullptr;
+
+	Handle handles_[16];
 };
 

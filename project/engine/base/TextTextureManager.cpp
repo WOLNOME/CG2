@@ -87,7 +87,30 @@ void TextTextureManager::DebugWithImGui(Handle _handle) {
 	}
 	//アウトラインの編集
 	if (ImGui::CollapsingHeader("アウトラインの編集")) {
-
+		//表示・非表示の編集
+		{
+			static bool currentIsDisplay = GetIsEdgeDisplay(_handle);
+			ImGui::Checkbox("表示・非表示設定", &currentIsDisplay);
+			EditIsEdgeDisplay(_handle, currentIsDisplay);
+		}
+		//幅の編集
+		{
+			static float currentWidth = GetEdgeWidth(_handle);
+			ImGui::DragFloat("幅を変更", &currentWidth, 0.1f, 0.0f, 10.0f);
+			EditEdgeWidth(_handle, currentWidth);
+		}
+		//スライド量の編集
+		{
+			static Vector2 currentSlideRate = GetEdgeSlideRate(_handle);
+			ImGui::DragFloat2("スライド量を変更", &currentSlideRate.x, 0.1f, -5.0f, 5.0f);
+			EditEdgeSlideRate(_handle, currentSlideRate);
+		}
+		//カラーの編集
+		{
+			static Vector4 currentColor = GetEdgeColor(_handle);
+			ImGui::ColorEdit4("エッジカラーを変更", &currentColor.x);
+			EditEdgeColor(_handle, currentColor);
+		}
 	}
 	ImGui::End();
 #endif // _DEBUG
@@ -142,7 +165,8 @@ void TextTextureManager::EditTextParam(Handle _handle, const TextParam& _textPar
 	CheckHandle(_handle);
 
 	//該当のコンテナに値を代入する
-	textTextureMap[_handle.id].textParam = _textParam;
+	textTextureMap[_handle.id].textResource.param = _textParam;
+	*textTextureMap[_handle.id].textResource.color = _textParam.color;
 	//ブラシとテキストフォーマットの更新
 	textTextureMap[_handle.id].solidColorBrush = CreateSolidColorBrush(_textParam.color);
 	textTextureMap[_handle.id].textFormat = CreateTextFormat(_textParam.font, _textParam.fontStyle, _textParam.size);
@@ -162,9 +186,9 @@ void TextTextureManager::EditTextFont(Handle _handle, const Font& _font) {
 	CheckHandle(_handle);
 
 	//フォントの編集
-	textTextureMap[_handle.id].textParam.font = _font;
+	textTextureMap[_handle.id].textResource.param.font = _font;
 	//フォントを反映
-	textTextureMap[_handle.id].textFormat = CreateTextFormat(textTextureMap[_handle.id].textParam.font, textTextureMap[_handle.id].textParam.fontStyle, textTextureMap[_handle.id].textParam.size);
+	textTextureMap[_handle.id].textFormat = CreateTextFormat(textTextureMap[_handle.id].textResource.param.font, textTextureMap[_handle.id].textResource.param.fontStyle, textTextureMap[_handle.id].textResource.param.size);
 }
 
 void TextTextureManager::EditTextFontStyle(Handle _handle, const FontStyle& _fontStyle) {
@@ -172,9 +196,9 @@ void TextTextureManager::EditTextFontStyle(Handle _handle, const FontStyle& _fon
 	CheckHandle(_handle);
 
 	//フォントスタイルの編集
-	textTextureMap[_handle.id].textParam.fontStyle = _fontStyle;
+	textTextureMap[_handle.id].textResource.param.fontStyle = _fontStyle;
 	//フォントスタイルを反映
-	textTextureMap[_handle.id].textFormat = CreateTextFormat(textTextureMap[_handle.id].textParam.font, textTextureMap[_handle.id].textParam.fontStyle, textTextureMap[_handle.id].textParam.size);
+	textTextureMap[_handle.id].textFormat = CreateTextFormat(textTextureMap[_handle.id].textResource.param.font, textTextureMap[_handle.id].textResource.param.fontStyle, textTextureMap[_handle.id].textResource.param.size);
 }
 
 void TextTextureManager::EditTextSize(Handle _handle, const float _size) {
@@ -182,9 +206,9 @@ void TextTextureManager::EditTextSize(Handle _handle, const float _size) {
 	CheckHandle(_handle);
 
 	//サイズの編集
-	textTextureMap[_handle.id].textParam.size = _size;
+	textTextureMap[_handle.id].textResource.param.size = _size;
 	//サイズを反映
-	textTextureMap[_handle.id].textFormat = CreateTextFormat(textTextureMap[_handle.id].textParam.font, textTextureMap[_handle.id].textParam.fontStyle, textTextureMap[_handle.id].textParam.size);
+	textTextureMap[_handle.id].textFormat = CreateTextFormat(textTextureMap[_handle.id].textResource.param.font, textTextureMap[_handle.id].textResource.param.fontStyle, textTextureMap[_handle.id].textResource.param.size);
 }
 
 void TextTextureManager::EditTextColor(Handle _handle, const Vector4& _color) {
@@ -192,44 +216,105 @@ void TextTextureManager::EditTextColor(Handle _handle, const Vector4& _color) {
 	CheckHandle(_handle);
 
 	//カラーの編集
-	textTextureMap[_handle.id].textParam.color = _color;
+	textTextureMap[_handle.id].textResource.param.color = _color;
+	*textTextureMap[_handle.id].textResource.color = _color;
 	//カラーを反映
-	textTextureMap[_handle.id].solidColorBrush = CreateSolidColorBrush(textTextureMap[_handle.id].textParam.color);
+	textTextureMap[_handle.id].solidColorBrush = CreateSolidColorBrush(textTextureMap[_handle.id].textResource.param.color);
+}
+
+void TextTextureManager::EditIsEdgeDisplay(Handle _handle, const bool _isDisplay) {
+	//使用可能なハンドルかチェック
+	CheckHandle(_handle);
+
+	//ディスプレイの編集
+	textTextureMap[_handle.id].edgeResource.param->isEdgeDisplay = _isDisplay;
+}
+
+void TextTextureManager::EditEdgeWidth(Handle _handle, const float _width) {
+	//使用可能なハンドルかチェック
+	CheckHandle(_handle);
+
+	//幅の編集
+	textTextureMap[_handle.id].edgeResource.param->width = _width;
+}
+
+void TextTextureManager::EditEdgeSlideRate(Handle _handle, const Vector2& _slideRate) {
+	//使用可能なハンドルかチェック
+	CheckHandle(_handle);
+
+	//スライド量の編集
+	textTextureMap[_handle.id].edgeResource.param->slideRate = _slideRate;
+}
+
+void TextTextureManager::EditEdgeColor(Handle _handle, const Vector4& _color) {
+	//使用可能なハンドルかチェック
+	CheckHandle(_handle);
+
+	//カラーの編集
+	textTextureMap[_handle.id].edgeResource.param->color = _color;
 }
 
 const std::wstring& TextTextureManager::GetTextString(Handle _handle) {
 	//使用可能なハンドルかチェック
 	CheckHandle(_handle);
 
-	return textTextureMap[_handle.id].textParam.text;
+	return textTextureMap[_handle.id].textResource.param.text;
 }
 
 const Font& TextTextureManager::GetTextFont(Handle _handle) {
 	//使用可能なハンドルかチェック
 	CheckHandle(_handle);
 
-	return textTextureMap[_handle.id].textParam.font;
+	return textTextureMap[_handle.id].textResource.param.font;
 }
 
 const FontStyle& TextTextureManager::GetTextFontStyle(Handle _handle) {
 	//使用可能なハンドルかチェック
 	CheckHandle(_handle);
 
-	return textTextureMap[_handle.id].textParam.fontStyle;
+	return textTextureMap[_handle.id].textResource.param.fontStyle;
 }
 
 const float TextTextureManager::GetTextSize(Handle _handle) {
 	//使用可能なハンドルかチェック
 	CheckHandle(_handle);
 
-	return textTextureMap[_handle.id].textParam.size;
+	return textTextureMap[_handle.id].textResource.param.size;
 }
 
 const Vector4& TextTextureManager::GetTextColor(Handle _handle) {
 	//使用可能なハンドルかチェック
 	CheckHandle(_handle);
 
-	return textTextureMap[_handle.id].textParam.color;
+	return textTextureMap[_handle.id].textResource.param.color;
+}
+
+const bool TextTextureManager::GetIsEdgeDisplay(Handle _handle) {
+	//使用可能なハンドルかチェック
+	CheckHandle(_handle);
+
+	return textTextureMap[_handle.id].edgeResource.param->isEdgeDisplay;
+}
+
+const float TextTextureManager::GetEdgeWidth(Handle _handle) {
+	//使用可能なハンドルかチェック
+	CheckHandle(_handle);
+
+	return textTextureMap[_handle.id].edgeResource.param->width;
+}
+
+const Vector2& TextTextureManager::GetEdgeSlideRate(Handle _handle) {
+	//使用可能なハンドルかチェック
+	CheckHandle(_handle);
+
+	return textTextureMap[_handle.id].edgeResource.param->slideRate;
+}
+
+const Vector4& TextTextureManager::GetEdgeColor(Handle _handle) {
+	//使用可能なハンドルかチェック
+	CheckHandle(_handle);
+
+	return textTextureMap[_handle.id].edgeResource.param->color;
 }
 
 uint32_t TextTextureManager::GetSrvIndex(Handle _handle) {
@@ -320,9 +405,13 @@ TextTextureManager::TextTextureItem TextTextureManager::CreateTextTextureItem(co
 
 	textTextureItem.textFormat = CreateTextFormat(_textParam.font, _textParam.fontStyle, _textParam.size);
 
-	////////////////////テキストパラメータのセット////////////////////
+	////////////////////テキストリソースの作成////////////////////
 
-	textTextureItem.textParam = _textParam;
+	textTextureItem.textResource.resource = dxcommon->CreateBufferResource(sizeof(Vector4));
+	textTextureItem.textResource.resource->Map(0, nullptr, reinterpret_cast<void**>(&textTextureItem.textResource.color));
+	*textTextureItem.textResource.color = _textParam.color;
+
+	textTextureItem.textResource.param = _textParam;
 
 	////////////////////アウトラインリソースの作成(初期化と非表示設定)////////////////////
 
@@ -531,16 +620,20 @@ void TextTextureManager::GenerateGraphicsPipeline() {
 	descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
 	//RootParameter作成
-	D3D12_ROOT_PARAMETER rootParameters[2] = {};
+	D3D12_ROOT_PARAMETER rootParameters[3] = {};
 	//テクスチャの設定
 	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;		//Tableを使う
 	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;					//PixelShaderで使う
 	rootParameters[0].DescriptorTable.pDescriptorRanges = descriptorRange;				//Tableの中身の配列を指定
 	rootParameters[0].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);	//Rangeのサイズ
-	//アウトラインの情報の設定
+	//テキストの情報の設定
 	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;		//CBVを使う
 	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;		//PSで使う
 	rootParameters[1].Descriptor.ShaderRegister = 0;						//Register番号は0
+	//アウトラインの情報の設定
+	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;		//CBVを使う
+	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;		//PSで使う
+	rootParameters[2].Descriptor.ShaderRegister = 1;						//Register番号は1
 
 
 	//Samplerの設定
@@ -607,7 +700,7 @@ void TextTextureManager::GenerateGraphicsPipeline() {
 		L"vs_6_0");
 	assert(vertexShaderBlob != nullptr);
 
-	 Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/TextTexture.PS.hlsl",
+	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/TextTexture.PS.hlsl",
 		L"ps_6_0");
 	assert(pixelShaderBlob != nullptr);
 
@@ -695,8 +788,8 @@ void TextTextureManager::WriteTextOnD2D() {
 		);
 		d2drender->GetD2DDeviceContext()->Clear({ 0.0f,0.0f,0.0f,0.0f });
 		d2drender->GetD2DDeviceContext()->DrawTextW(
-			item.textParam.text.c_str(),
-			static_cast<UINT32>(item.textParam.text.length()),
+			item.textResource.param.text.c_str(),
+			static_cast<UINT32>(item.textResource.param.text.length()),
 			item.textFormat.Get(),
 			&rect,
 			item.solidColorBrush.Get()
@@ -746,15 +839,17 @@ void TextTextureManager::DrawDecorationOnD3D12() {
 
 		//テクスチャの送信
 		ttrender->GetCommandList()->SetGraphicsRootDescriptorTable(0, GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(item.srvCopyIndex));
+		//テキスト情報の送信
+		ttrender->GetCommandList()->SetGraphicsRootConstantBufferView(1, item.textResource.resource->GetGPUVirtualAddress());
 		//アウトライン情報の送信
-		ttrender->GetCommandList()->SetGraphicsRootConstantBufferView(1, item.edgeResource.resource->GetGPUVirtualAddress());
+		ttrender->GetCommandList()->SetGraphicsRootConstantBufferView(2, item.edgeResource.resource->GetGPUVirtualAddress());
 
 		//ドローコール
 		ttrender->GetCommandList()->DrawInstanced(6, 1, 0, 0);
 
 		//リソースのステートをPixel_Shader_Rsourceに変更
 		TransitionState(item.resource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-		
+
 		//コピーリソースのSRVインデックスを破棄
 		GPUDescriptorManager::GetInstance()->Free(item.srvCopyIndex);
 	}
