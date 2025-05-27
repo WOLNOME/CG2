@@ -400,12 +400,12 @@ void ParticleCreatorScene::Editor() {
 		ImGui::ColorEdit4("EndColorMax", &endColorMax.x);
 		ImGui::ColorEdit4("EndColorMin", &endColorMin.x);
 	}
-	//トランスフォームを写す
+	//初期トランスフォームを写す
 	Vector3 rotateMax = { editParam_["GrainTransform"]["Rotate"]["Max"]["x"],editParam_["GrainTransform"]["Rotate"]["Max"]["y"] ,editParam_["GrainTransform"]["Rotate"]["Max"]["z"] };
 	Vector3 rotateMin = { editParam_["GrainTransform"]["Rotate"]["Min"]["x"],editParam_["GrainTransform"]["Rotate"]["Min"]["y"] ,editParam_["GrainTransform"]["Rotate"]["Min"]["z"] };
 	Vector3 scaleMax = { editParam_["GrainTransform"]["Scale"]["Max"]["x"],editParam_["GrainTransform"]["Scale"]["Max"]["y"],editParam_["GrainTransform"]["Scale"]["Max"]["z"] };
 	Vector3 scaleMin = { editParam_["GrainTransform"]["Scale"]["Min"]["x"],editParam_["GrainTransform"]["Scale"]["Min"]["y"],editParam_["GrainTransform"]["Scale"]["Min"]["z"] };
-	if (ImGui::CollapsingHeader("トランスフォームの設定")) {
+	if (ImGui::CollapsingHeader("初期トランスフォームの設定")) {
 		if (ImGui::TreeNode("Rotate")) {
 			ImGui::DragFloat3("RotateMax", &rotateMax.x, 0.1f);
 			ImGui::DragFloat3("RotateMin", &rotateMin.x, 0.1f);
@@ -417,12 +417,23 @@ void ParticleCreatorScene::Editor() {
 			ImGui::TreePop();
 		}
 	}
+	//回転を写す
+	Vector3 startRotateMax = { editParam_["StartRotate"]["Max"]["x"],editParam_["StartRotate"]["Max"]["y"],editParam_["StartRotate"]["Max"]["z"] };
+	Vector3 startRotateMin = { editParam_["StartRotate"]["Min"]["x"],editParam_["StartRotate"]["Min"]["y"],editParam_["StartRotate"]["Min"]["z"] };
+	Vector3 endRotateMax = { editParam_["EndRotate"]["Max"]["x"],editParam_["EndRotate"]["Max"]["y"],editParam_["EndRotate"]["Max"]["z"] };
+	Vector3 endRotateMin = { editParam_["EndRotate"]["Min"]["x"],editParam_["EndRotate"]["Min"]["y"],editParam_["EndRotate"]["Min"]["z"] };
+	if (ImGui::CollapsingHeader("更新回転の設定")) {
+		ImGui::DragFloat3("StartRotateMax", &startRotateMax.x, 0.1f);
+		ImGui::DragFloat3("StartRotateMin", &startRotateMin.x, 0.1f);
+		ImGui::DragFloat3("EndRotateMax", &endRotateMax.x, 0.1f);
+		ImGui::DragFloat3("EndRotateMin", &endRotateMin.x, 0.1f);
+	}
 	//サイズを写す
 	float startSizeMax = editParam_["StartSize"]["Max"];
 	float startSizeMin = editParam_["StartSize"]["Min"];
 	float endSizeMax = editParam_["EndSize"]["Max"];
 	float endSizeMin = editParam_["EndSize"]["Min"];
-	if (ImGui::CollapsingHeader("サイズの設定")) {
+	if (ImGui::CollapsingHeader("更新サイズの設定")) {
 		ImGui::DragFloat("StartSizeMax", &startSizeMax, 0.1f, startSizeMin, 10.0f);
 		ImGui::DragFloat("StartSizeMin", &startSizeMin, 0.1f, 0.0f, startSizeMax);
 		ImGui::DragFloat("EndSizeMax", &endSizeMax, 0.1f, endSizeMin, 10.0f);
@@ -515,6 +526,18 @@ void ParticleCreatorScene::Editor() {
 	editParam_["GrainTransform"]["Scale"]["Min"]["x"] = scaleMin.x;
 	editParam_["GrainTransform"]["Scale"]["Min"]["y"] = scaleMin.y;
 	editParam_["GrainTransform"]["Scale"]["Min"]["z"] = scaleMin.z;
+	editParam_["StartRotate"]["Max"]["x"] = startRotateMax.x;
+	editParam_["StartRotate"]["Max"]["y"] = startRotateMax.y;
+	editParam_["StartRotate"]["Max"]["z"] = startRotateMax.z;
+	editParam_["StartRotate"]["Min"]["x"] = startRotateMin.x;
+	editParam_["StartRotate"]["Min"]["y"] = startRotateMin.y;
+	editParam_["StartRotate"]["Min"]["z"] = startRotateMin.z;
+	editParam_["EndRotate"]["Max"]["x"] = endRotateMax.x;
+	editParam_["EndRotate"]["Max"]["y"] = endRotateMax.y;
+	editParam_["EndRotate"]["Max"]["z"] = endRotateMax.z;
+	editParam_["EndRotate"]["Min"]["x"] = endRotateMin.x;
+	editParam_["EndRotate"]["Min"]["y"] = endRotateMin.y;
+	editParam_["EndRotate"]["Min"]["z"] = endRotateMin.z;
 	editParam_["StartSize"]["Max"] = startSizeMax;
 	editParam_["StartSize"]["Min"] = startSizeMin;
 	editParam_["EndSize"]["Max"] = endSizeMax;
@@ -624,7 +647,7 @@ void ParticleCreatorScene::Editor() {
 	//エミッターのトランスフォーム
 	if (ImGui::CollapsingHeader("エミッターのトランスフォーム")) {
 		ImGui::DragFloat3("平行移動", &particle_->emitter_.transform.translate.x, 0.1f);
-		ImGui::DragFloat3("拡縮", &particle_->emitter_.transform.scale.x, 0.1f);
+		ImGui::DragFloat3("拡縮", &particle_->emitter_.transform.scale.x, 0.1f,0.0f);
 	}
 	//生成アルゴリズム
 	if (ImGui::CollapsingHeader("生成アルゴリズム")) {

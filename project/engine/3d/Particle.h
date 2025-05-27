@@ -48,6 +48,8 @@ public:
 		Vector4 startColor;				//最初の色
 		Vector4 endColor;				//最後の色
 		Vector3 velocity;				//速度
+		Vector3 startRotate;			//最初の回転
+		Vector3 endRotate;				//最後の回転
 		float startSize;				//最初のサイズ
 		float endSize;					//最後のサイズ
 		float lifeTime;					//寿命

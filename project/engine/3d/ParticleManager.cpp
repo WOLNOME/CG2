@@ -102,12 +102,15 @@ void ParticleManager::Update() {
 			(*grainIterator).basicTransform.translate = (*grainIterator).basicTransform.translate + (kDeltaTime * (*grainIterator).velocity);
 			//各粒の色更新
 			Vector4 currentColor = MyMath::Lerp((*grainIterator).startColor, (*grainIterator).endColor, (*grainIterator).currentTime / (*grainIterator).lifeTime);
+			//各粒の回転更新
+			Vector3 currentRotate = MyMath::Lerp((*grainIterator).startRotate, (*grainIterator).endRotate, (*grainIterator).currentTime / (*grainIterator).lifeTime);
 			//各粒のサイズ更新
 			float currentSize = MyMath::Lerp((*grainIterator).startSize, (*grainIterator).endSize, (*grainIterator).currentTime / (*grainIterator).lifeTime);
 			//各粒のトランスフォーム更新
 			(*grainIterator).transform.translate = (*grainIterator).basicTransform.translate;
-			(*grainIterator).transform.rotate = (*grainIterator).basicTransform.rotate;
+			(*grainIterator).transform.rotate = (*grainIterator).basicTransform.rotate + currentRotate;
 			(*grainIterator).transform.scale = (*grainIterator).basicTransform.scale * currentSize;
+
 			//座標情報からワールド行列を作成(ビルボード行列の計算もここで)
 			Matrix4x4 backToFrontMatrix = MyMath::MakeRotateZMatrix((*grainIterator).transform.rotate.z);
 			Matrix4x4 billboardMatrix = MyMath::Multiply(backToFrontMatrix, camera_->GetWorldMatrix());
@@ -344,7 +347,7 @@ void ParticleManager::GenerateGraphicsPipeline() {
 
 	//RasterizerStateの設定
 	D3D12_RASTERIZER_DESC rasterizerDesc{};
-	//裏面を表示しない
+	//裏面も表示する
 	rasterizerDesc.CullMode = D3D12_CULL_MODE_NONE;
 	//三角形の中を塗りつぶす
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
@@ -411,8 +414,14 @@ std::list<Particle::GrainData> ParticleManager::GenerateGrain(Particle* particle
 		std::uniform_real_distribution<float> distScaleX(std::min(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["x"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["x"]), std::max(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["x"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["x"]));
 		std::uniform_real_distribution<float> distScaleY(std::min(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["y"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["y"]), std::max(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["y"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["y"]));
 		std::uniform_real_distribution<float> distScaleZ(std::min(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["z"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["z"]), std::max(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["z"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["z"]));
-		std::uniform_real_distribution<float> distStartSize(particle->GetParam()["StartSize"]["Min"], particle->GetParam()["StartSize"]["Max"]);
-		std::uniform_real_distribution<float> distEndSize(particle->GetParam()["EndSize"]["Min"], particle->GetParam()["EndSize"]["Max"]);
+		std::uniform_real_distribution<float> distStartRotateX(std::min(particle->GetParam()["StartRotate"]["Min"]["x"], particle->GetParam()["StartRotate"]["Max"]["x"]), std::max(particle->GetParam()["StartRotate"]["Min"]["x"], particle->GetParam()["StartRotate"]["Max"]["x"]));
+		std::uniform_real_distribution<float> distStartRotateY(std::min(particle->GetParam()["StartRotate"]["Min"]["y"], particle->GetParam()["StartRotate"]["Max"]["y"]), std::max(particle->GetParam()["StartRotate"]["Min"]["y"], particle->GetParam()["StartRotate"]["Max"]["y"]));
+		std::uniform_real_distribution<float> distStartRotateZ(std::min(particle->GetParam()["StartRotate"]["Min"]["z"], particle->GetParam()["StartRotate"]["Max"]["z"]), std::max(particle->GetParam()["StartRotate"]["Min"]["z"], particle->GetParam()["StartRotate"]["Max"]["z"]));
+		std::uniform_real_distribution<float> distEndRotateX(std::min(particle->GetParam()["EndRotate"]["Min"]["x"], particle->GetParam()["EndRotate"]["Max"]["x"]), std::max(particle->GetParam()["EndRotate"]["Min"]["x"], particle->GetParam()["EndRotate"]["Max"]["x"]));
+		std::uniform_real_distribution<float> distEndRotateY(std::min(particle->GetParam()["EndRotate"]["Min"]["y"], particle->GetParam()["EndRotate"]["Max"]["y"]), std::max(particle->GetParam()["EndRotate"]["Min"]["y"], particle->GetParam()["EndRotate"]["Max"]["y"]));
+		std::uniform_real_distribution<float> distEndRotateZ(std::min(particle->GetParam()["EndRotate"]["Min"]["z"], particle->GetParam()["EndRotate"]["Max"]["z"]), std::max(particle->GetParam()["EndRotate"]["Min"]["z"], particle->GetParam()["EndRotate"]["Max"]["z"]));
+		std::uniform_real_distribution<float> distStartSize(std::min(particle->GetParam()["StartSize"]["Min"], particle->GetParam()["StartSize"]["Max"]), std::max(particle->GetParam()["StartSize"]["Min"], particle->GetParam()["StartSize"]["Max"]));
+		std::uniform_real_distribution<float> distEndSize(std::min(particle->GetParam()["EndSize"]["Min"], particle->GetParam()["EndSize"]["Max"]), std::max(particle->GetParam()["EndSize"]["Min"], particle->GetParam()["EndSize"]["Max"]));
 		Vector4 startColorMin = {
 			particle->GetParam()["StartColor"]["Min"]["x"],
 			particle->GetParam()["StartColor"]["Min"]["y"],
@@ -458,7 +467,7 @@ std::list<Particle::GrainData> ParticleManager::GenerateGrain(Particle* particle
 		std::uniform_real_distribution<float> distVelocityX(std::min(velocityMin.x, velocityMax.x), std::max(velocityMin.x, velocityMax.x));
 		std::uniform_real_distribution<float> distVelocityY(std::min(velocityMin.y, velocityMax.y), std::max(velocityMin.y, velocityMax.y));
 		std::uniform_real_distribution<float> distVelocityZ(std::min(velocityMin.z, velocityMax.z), std::max(velocityMin.z, velocityMax.z));
-		std::uniform_real_distribution<float> distLifeTime(particle->GetParam()["LifeTime"]["Min"], particle->GetParam()["LifeTime"]["Max"]);
+		std::uniform_real_distribution<float> distLifeTime(std::min(particle->GetParam()["LifeTime"]["Min"], particle->GetParam()["LifeTime"]["Max"]), std::max(particle->GetParam()["LifeTime"]["Min"], particle->GetParam()["LifeTime"]["Max"]));
 
 		//生成方法ごとにパラメータの初期化
 		switch (particle->emitter_.generateMethod) {
@@ -467,6 +476,8 @@ std::list<Particle::GrainData> ParticleManager::GenerateGrain(Particle* particle
 			grain.basicTransform.translate = Vector3(distTranslateX(gen), distTranslateY(gen), distTranslateZ(gen));
 			grain.basicTransform.rotate = Vector3(distRotateX(gen), distRotateY(gen), distRotateZ(gen));
 			grain.basicTransform.scale = Vector3(distScaleX(gen), distScaleY(gen), distScaleZ(gen));
+			grain.startRotate = Vector3(distStartRotateX(gen), distStartRotateY(gen), distStartRotateZ(gen));
+			grain.endRotate = Vector3(distEndRotateX(gen), distEndRotateY(gen), distEndRotateZ(gen));
 			grain.startSize = distStartSize(gen);
 			grain.endSize = distEndSize(gen);
 			grain.transform.translate = grain.basicTransform.translate;
@@ -491,6 +502,8 @@ std::list<Particle::GrainData> ParticleManager::GenerateGrain(Particle* particle
 			for (int j = 0; j < particle->emitter_.clumpNum; j++) {
 				grain.basicTransform.rotate = Vector3(distRotateX(gen), distRotateY(gen), distRotateZ(gen));
 				grain.basicTransform.scale = Vector3(distScaleX(gen), distScaleY(gen), distScaleZ(gen));
+				grain.startRotate = Vector3(distStartRotateX(gen), distStartRotateY(gen), distStartRotateZ(gen));
+				grain.endRotate = Vector3(distEndRotateX(gen), distEndRotateY(gen), distEndRotateZ(gen));
 				grain.startSize = distStartSize(gen);
 				grain.endSize = distEndSize(gen);
 				grain.transform.rotate = grain.basicTransform.rotate;

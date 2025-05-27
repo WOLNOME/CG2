@@ -3,6 +3,7 @@
 #include "Vector2.h"
 #include "MyMath.h"
 #include "DevelopCamera.h"
+#include "MyMath.h"
 #include <vector>
 
 class EvaluationTaskScene : public BaseScene {
@@ -19,7 +20,7 @@ private://列挙体
 	};
 private://構造体
 	//単体パーティクルのデータ
-	struct SingleParticleData {
+	struct SingleEffectData {
 		std::unique_ptr<Particle> particle;	//パーティクル
 		float startTime;				//開始時間
 		float endTime;					//終了時間
@@ -47,6 +48,10 @@ public:
 	/// </summary>
 	void TextDraw() override;
 
+private:
+	//パーティクルの更新
+	void EffectUpdate();
+
 private://メンバ変数
 	Input* input_ = nullptr;
 	//開発用カメラ
@@ -58,8 +63,9 @@ private://メンバ変数
 	std::unique_ptr<Object3d> skyBox_ = nullptr;
 
 	//パーティクル
-	std::vector<SingleParticleData> particles_;
-	bool isPlay_ = false;	//再生フラグ
+	std::vector<SingleEffectData> explosionEffects_;
+	bool isExplosionPlay_ = false;	//再生フラグ
+	float currentTime_ = 0.0f;
 
 };
 
