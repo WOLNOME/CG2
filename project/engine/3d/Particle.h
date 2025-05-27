@@ -98,6 +98,8 @@ private: //マネージャーにのみ公開するパラメーター
 private: //クリエイターシーンにのみ公開するパラメーター
 	//形状の変更
 	void ShapeChange();
+	//テクスチャの変更
+	void TextureChange();
 
 public://通常のクラスに見せて良いパラメーター
 	Emitter emitter_;

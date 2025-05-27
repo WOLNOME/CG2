@@ -22,6 +22,7 @@ void EvaluationTaskScene::Initialize() {
 	skyBox_->worldTransform.scale = { 300.0f,300.0f,300.0f };
 
 	ParticleManager::GetInstance()->SetCamera(camera.get());
+	//各パーティクルの生成
 
 }
 
@@ -34,7 +35,7 @@ void EvaluationTaskScene::Update() {
 
 	//TABでシーン再読み込み
 	if (input_->TriggerKey(DIK_TAB)) {
-		sceneManager_->SetNextScene("DEVELOP");
+		sceneManager_->SetNextScene("EVALUATIONTASK");
 	}
 
 	//カメラの更新

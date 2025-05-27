@@ -359,6 +359,7 @@ void ParticleCreatorScene::Editor() {
 	ImGui::SetNextWindowPos(ImVec2(10, 80), ImGuiCond_FirstUseEver);
 	ImGui::Begin("パーティクルのパラメーター");
 	//テクスチャを写す
+	bool isChangeTexture = false;
 	std::string selectedTexture = particle_->GetParam()["Texture"];
 	if (ImGui::CollapsingHeader("テクスチャの設定")) {
 		ImGui::Text("選択中のテクスチャ : %s", selectedTexture.c_str());
@@ -380,6 +381,7 @@ void ParticleCreatorScene::Editor() {
 				if (ImGui::Selectable(file.c_str())) {
 					selectedTexture = file;  // 選択したファイル名を保存
 					showFileDialog_ = false;  // ウィンドウを閉じる
+					isChangeTexture = true;  // テクスチャが変更された
 				}
 			}
 			ImGui::End();
@@ -535,6 +537,11 @@ void ParticleCreatorScene::Editor() {
 	if (isShapeChange) {
 		//パーティクルの形状を変更
 		particle_->ShapeChange();
+	}
+	//テクスチャの変更通知を受け取ったら
+	if (isChangeTexture) {
+		//パーティクルのテクスチャを変更
+		particle_->TextureChange();
 	}
 
 	//セーブボタン

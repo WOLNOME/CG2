@@ -95,3 +95,8 @@ void Particle::ShapeChange() {
 	Shape::ShapeKind shapeKind = (Shape::ShapeKind)param_["Primitive"];
 	shape_->Initialize(shapeKind);
 }
+
+void Particle::TextureChange() {
+	//テクスチャハンドルの取得
+	textureHandle_ = TextureManager::GetInstance()->LoadTexture(param_["Texture"]);
+}

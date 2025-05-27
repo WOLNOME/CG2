@@ -6,6 +6,25 @@
 #include <vector>
 
 class EvaluationTaskScene : public BaseScene {
+private://列挙体
+	//爆発パーティクル
+	enum class ExplosionParticleName{
+		Convergence,	//収束
+		Flash,			//閃光
+		ShockWave,		//衝撃波
+		Fire,			//炎
+		Smoke,			//煙
+
+		kMaxNumExplosionParticleName,	//最大数
+	};
+private://構造体
+	//単体パーティクルのデータ
+	struct SingleParticleData {
+		std::unique_ptr<Particle> particle;	//パーティクル
+		float startTime;				//開始時間
+		float endTime;					//終了時間
+	};
+
 public:
 	/// <summary>
 	/// 初期化
@@ -39,7 +58,8 @@ private://メンバ変数
 	std::unique_ptr<Object3d> skyBox_ = nullptr;
 
 	//パーティクル
-	std::vector<std::unique_ptr<Particle>> particles_;
+	std::vector<SingleParticleData> particles_;
+	bool isPlay_ = false;	//再生フラグ
 
 };
 
