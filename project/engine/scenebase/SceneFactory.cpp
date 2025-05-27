@@ -1,5 +1,6 @@
 #include "SceneFactory.h"
 #include "DevelopScene.h"
+#include "EvaluationTaskScene.h"
 #include "TitleScene.h"
 #include "ClearScene.h"
 
@@ -13,6 +14,9 @@ BaseScene* SceneFactory::CreateScene(const std::string& sceneName)
 
 	if (sceneName == "DEVELOP") {
 		newScene = new DevelopScene();
+	}
+	else if (sceneName == "EVALUATIONTASK") {
+		newScene = new EvaluationTaskScene();
 	}
 	else if (sceneName == "TITLE") {
 		newScene = new TitleScene();

@@ -19,7 +19,7 @@ void CombinedParticle::Initialize(const std::string& _name, const std::string& _
 uint32_t CombinedParticle::AddParticle(const std::string& _fileName, float _startTime, float _endTime) {
 	//コンテナのサイズが最大数を超えていたらreturn
 	if (particles_.size() >= kMaxCombinedParticles) {
-		return;
+		return 0;
 	}
 	//新しいパーティクルを作成
 	ComParticleInfo newParticle;

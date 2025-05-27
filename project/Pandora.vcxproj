@@ -107,7 +107,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="CombinedParticle.cpp" />
+    <ClCompile Include="engine\3d\CombinedParticle.cpp" />
     <ClCompile Include="engine\3d\AnimationModel.cpp" />
     <ClCompile Include="engine\2d\TextWrite.cpp" />
     <ClCompile Include="engine\2d\TextWriteManager.cpp" />
@@ -131,6 +131,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\base\DirectXCommon.cpp" />
     <ClCompile Include="engine\scene\ParticleCreatorScene.cpp" />
     <ClCompile Include="engine\util\JsonUtil.cpp" />
+    <ClCompile Include="engine\scene\EvaluationTaskScene.cpp" />
     <ClCompile Include="externals\imgui\imgui.cpp" />
     <ClCompile Include="externals\imgui\imgui_demo.cpp" />
     <ClCompile Include="externals\imgui\imgui_draw.cpp" />
@@ -173,7 +174,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\base\RTVManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CombinedParticle.h" />
+    <ClInclude Include="engine\3d\CombinedParticle.h" />
     <ClInclude Include="engine\3d\AnimationModel.h" />
     <ClInclude Include="engine\math\BlendMode.h" />
     <ClInclude Include="engine\2d\TextWrite.h" />
@@ -198,6 +199,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\base\DirectXCommon.h" />
     <ClInclude Include="engine\scene\ParticleCreatorScene.h" />
     <ClInclude Include="engine\util\JsonUtil.h" />
+    <ClInclude Include="engine\scene\EvaluationTaskScene.h" />
     <ClInclude Include="externals\imgui\imconfig.h" />
     <ClInclude Include="externals\imgui\imgui.h" />
     <ClInclude Include="externals\imgui\imgui_impl_dx12.h" />
