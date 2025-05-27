@@ -85,6 +85,7 @@
     <ClCompile Include="engine\3d\AnimationModel.cpp" />
     <ClCompile Include="engine\base\PostEffectManager.cpp" />
     <ClCompile Include="engine\base\RTVManager.cpp" />
+    <ClCompile Include="CombinedParticle.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\3d\DirectionalLight.h" />
@@ -158,6 +159,7 @@
     <ClInclude Include="engine\math\BlendMode.h" />
     <ClInclude Include="engine\base\PostEffectManager.h" />
     <ClInclude Include="engine\base\RTVManager.h" />
+    <ClInclude Include="CombinedParticle.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\LineDrawer.hlsli" />

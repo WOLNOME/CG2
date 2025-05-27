@@ -8,6 +8,7 @@
 #include "Sprite.h"
 #include "Object3d.h"
 #include "Particle.h"
+#include "CombinedParticle.h"
 #include "ParticleManager.h"
 #include "Audio.h"
 #include "Input.h"
