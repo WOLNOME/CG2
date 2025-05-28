@@ -66,7 +66,7 @@ public://公開メンバ関数
 	//テクスチャリソースの生成
 	ID3D12Resource* CreateTextureResource(const DirectX::TexMetadata& metadata);
 	//レンダーテクスチャリソースの生成
-	ID3D12Resource* CreateRenderTextureResource(uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor, bool isSharedD2D = false);
+	ID3D12Resource* CreateRenderTextureResource(uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor);
 
 public://getter
 	//デバイス

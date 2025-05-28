@@ -48,12 +48,22 @@ uint32_t GPUDescriptorManager::Allocate() {
 void GPUDescriptorManager::Free(uint32_t index) {
 	// インデックスが範囲内であることを確認
 	if (index < kMaxHeapSize) {
-		freeIndices.push(index);
+		freeInFrameIndices.push(index);
 	}
 }
 
 bool GPUDescriptorManager::CheckCanSecured() {
 	return (useIndex < kMaxHeapSize || !freeIndices.empty());
+}
+
+void GPUDescriptorManager::TransferFrameFreeIndices() {
+	while (!freeInFrameIndices.empty()) {
+		// フレームフリーキューの先頭から1つ取り出して
+		uint32_t index = freeInFrameIndices.front();
+		freeInFrameIndices.pop();
+		// フリーキューに追加
+		freeIndices.push(index);
+	}
 }
 
 void GPUDescriptorManager::CreateSRVforRenderTexture(uint32_t index, ID3D12Resource* pResource) {

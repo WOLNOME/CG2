@@ -119,6 +119,7 @@ void MyGame::Draw() {
 
 	//全レンダー終了時の共通処理
 	DirectXCommon::GetInstance()->PostAllRenders();
+	GPUDescriptorManager::GetInstance()->TransferFrameFreeIndices();		//フレーム内で解放されたインデックスを次のフレームで使えるようにする
 
 }
 

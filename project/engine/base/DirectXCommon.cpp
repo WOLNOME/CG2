@@ -392,7 +392,7 @@ ID3D12Resource* DirectXCommon::CreateTextureResource(const DirectX::TexMetadata&
 	return resource;
 }
 
-ID3D12Resource* DirectXCommon::CreateRenderTextureResource(uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor, bool isSharedD2D) {
+ID3D12Resource* DirectXCommon::CreateRenderTextureResource(uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor) {
 	//リソースデスクの設定
 	D3D12_RESOURCE_DESC resourceDesc{};
 	resourceDesc.Width = UINT(width);

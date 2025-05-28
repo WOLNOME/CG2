@@ -353,7 +353,7 @@ TextTextureManager::TextTextureItem TextTextureManager::CreateTextTextureItem(co
 	////////////////////D3D12用リソースの作成////////////////////
 
 	//リソースの作成
-	textTextureItem.resource = dxcommon->CreateRenderTextureResource(WinApp::kClientWidth, WinApp::kClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, Vector4(0.0f, 0.0f, 0.0f, 0.0f), true);
+	textTextureItem.resource = dxcommon->CreateRenderTextureResource(WinApp::kClientWidth, WinApp::kClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, Vector4(0.0f, 0.0f, 0.0f, 0.0f));
 	//rtvIndexの割り当て
 	textTextureItem.rtvIndex = rtvManager->Allocate();
 	//RTVを作成
@@ -366,7 +366,7 @@ TextTextureManager::TextTextureItem TextTextureManager::CreateTextTextureItem(co
 	////////////////////D3D12用コピーリソースの作成////////////////////
 
 	//リソースの作成
-	textTextureItem.copyResource = dxcommon->CreateRenderTextureResource(WinApp::kClientWidth, WinApp::kClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, Vector4(0.0f, 0.0f, 0.0f, 0.0f), true);
+	textTextureItem.copyResource = dxcommon->CreateRenderTextureResource(WinApp::kClientWidth, WinApp::kClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, Vector4(0.0f, 0.0f, 0.0f, 0.0f));
 	TransitionState(textTextureItem.copyResource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	////////////////////D3D11用リソースの作成////////////////////
@@ -786,6 +786,7 @@ void TextTextureManager::WriteTextOnD2D() {
 		d2drender->GetD2DDeviceContext()->SetTransform(
 			D2D1::Matrix3x2F::Identity()
 		);
+		//描画対象のクリア
 		d2drender->GetD2DDeviceContext()->Clear({ 0.0f,0.0f,0.0f,0.0f });
 		d2drender->GetD2DDeviceContext()->DrawTextW(
 			item.textResource.param.text.c_str(),
@@ -799,9 +800,9 @@ void TextTextureManager::WriteTextOnD2D() {
 		//リソースを取り外す
 		d2drender->GetD3D11On12Device()->ReleaseWrappedResources(item.wrappedResource.GetAddressOf(), 1);
 	}
-
 	//描画内容の確定（ExecuteCommandListみたいなやつ→処理がまとまったら1回呼び出せば十分）
 	d2drender->GetD3D11On12DeviceContext()->Flush();
+
 }
 
 void TextTextureManager::DrawDecorationOnD3D12() {
@@ -814,9 +815,6 @@ void TextTextureManager::DrawDecorationOnD3D12() {
 
 	//各コンテナの処理
 	for (auto& [id, item] : textTextureMap) {
-		//コピーリソースにSRVの設定
-		item.srvCopyIndex = GPUDescriptorManager::GetInstance()->Allocate();
-		GPUDescriptorManager::GetInstance()->CreateSRVforRenderTexture(item.srvCopyIndex, item.copyResource.Get());
 		//コピーするためにコピー元をSourceコピー先をDestにする
 		TransitionState(item.resource.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_SOURCE);
 		TransitionState(item.copyResource.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
@@ -824,6 +822,10 @@ void TextTextureManager::DrawDecorationOnD3D12() {
 		ttrender->GetCommandList()->CopyResource(item.copyResource.Get(), item.resource.Get());
 		//コピー済みのリソースをPixel_Shader_Resourceにする
 		TransitionState(item.copyResource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+		//コピーリソースにSRVの設定
+		item.srvCopyIndex = GPUDescriptorManager::GetInstance()->Allocate();
+		GPUDescriptorManager::GetInstance()->CreateSRVforRenderTexture(item.srvCopyIndex, item.copyResource.Get());
 
 		//リソースのステートをRender_Targetに変更
 		TransitionState(item.resource.Get(), D3D12_RESOURCE_STATE_COPY_SOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET);
