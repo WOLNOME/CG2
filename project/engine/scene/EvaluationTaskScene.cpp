@@ -33,10 +33,10 @@ void EvaluationTaskScene::Initialize() {
 			particle->emitter_.isPlay = false;
 			particle->emitter_.transform.scale = { 0.1f,0.1f,0.1f };
 			particle->emitter_.generateMethod = Particle::GenerateMethod::Clump;
-			particle->emitter_.clumpNum = 4;
+			particle->emitter_.clumpNum = 3;
 			particle->emitter_.effectStyle = Particle::EffectStyle::OneShot;
 			particle->emitter_.isBillboard = false;
-			float startTime = 0.0f;
+			float startTime = 1.0f / 60.0f;
 			float endTime = 0.0f;
 			//該当のインデックスに追加
 			explosionEffects_[(int)ExplosionParticleName::Convergence] = { std::move(particle), startTime, endTime };
@@ -51,7 +51,7 @@ void EvaluationTaskScene::Initialize() {
 			particle->emitter_.generateMethod = Particle::GenerateMethod::Clump;
 			particle->emitter_.clumpNum = 3;
 			particle->emitter_.effectStyle = Particle::EffectStyle::OneShot;
-			float startTime = 0.3f;
+			float startTime = 6.0f/60.0f;
 			float endTime = 0.0f;
 			//該当のインデックスに追加
 			explosionEffects_[(int)ExplosionParticleName::Flash] = { std::move(particle), startTime, endTime };
@@ -63,12 +63,11 @@ void EvaluationTaskScene::Initialize() {
 			particle->Initialize(ParticleManager::GetInstance()->GenerateName("Explosion_ShockWave"), "shockwave");
 			particle->emitter_.isPlay = false;
 			particle->emitter_.transform.scale = { 0.1f,0.1f,0.1f };
-			particle->emitter_.generateMethod = Particle::GenerateMethod::Clump;
-			particle->emitter_.clumpNum = 8;
-			particle->emitter_.effectStyle = Particle::EffectStyle::OneShot;
+			particle->emitter_.generateMethod = Particle::GenerateMethod::Random;
+			particle->emitter_.effectStyle = Particle::EffectStyle::Loop;
 			particle->emitter_.isBillboard = false;
-			float startTime = 0.3f;
-			float endTime = 0.0f;
+			float startTime = 12.0f/60.0f;
+			float endTime = 40.0f/60.0f;
 			//該当のインデックスに追加
 			explosionEffects_[(int)ExplosionParticleName::ShockWave] = { std::move(particle), startTime, endTime };
 		}
@@ -84,8 +83,8 @@ void EvaluationTaskScene::Initialize() {
 			particle->emitter_.effectStyle = Particle::EffectStyle::Loop;
 			particle->emitter_.isGravity = true;
 			particle->emitter_.gravity = 2.0f;
-			float startTime = 0.3f;
-			float endTime = 1.0f;
+			float startTime = 12.0f/60.0f;
+			float endTime = 60.0f/60.0f;
 			//該当のインデックスに追加
 			explosionEffects_[(int)ExplosionParticleName::Fire] = { std::move(particle), startTime, endTime };
 		}
@@ -95,14 +94,14 @@ void EvaluationTaskScene::Initialize() {
 			std::unique_ptr<Particle> particle = std::make_unique<Particle>();
 			particle->Initialize(ParticleManager::GetInstance()->GenerateName("Explosion_ShockWave"), "smoke");
 			particle->emitter_.isPlay = false;
-			particle->emitter_.transform.scale = { 2.0f,2.0f,2.0f };
+			particle->emitter_.transform.scale = { 3.5f,3.5f,3.5f };
 			particle->emitter_.generateMethod = Particle::GenerateMethod::Clump;
-			particle->emitter_.clumpNum = 2;
+			particle->emitter_.clumpNum = 3;
 			particle->emitter_.effectStyle = Particle::EffectStyle::Loop;
 			particle->emitter_.isGravity = true;
 			particle->emitter_.gravity = 6.0f;
-			float startTime = 0.5f;
-			float endTime = 1.0f;
+			float startTime = 50.0f/60.0f;
+			float endTime = 110.0f/60.0f;
 			//該当のインデックスに追加
 			explosionEffects_[(int)ExplosionParticleName::Smoke] = { std::move(particle), startTime, endTime };
 		}
@@ -210,18 +209,18 @@ void EvaluationTaskScene::EffectUpdate() {
 			//もしスタイルがOneShotなら
 			if (effect.particle->emitter_.effectStyle == Particle::EffectStyle::OneShot) {
 				//開始時間に達したら
-				if (currentTime_ > effect.startTime && currentTime_ - kDeltaTime < effect.startTime) {
+				if (currentTime_ > effect.startTime && currentTime_ - kDeltaTime <= effect.startTime) {
 					effect.particle->emitter_.isPlay = true;
 				}
 			}
 			//もしスタイルがLoopなら
 			else if (effect.particle->emitter_.effectStyle == Particle::EffectStyle::Loop) {
 				//開始時間に達したら
-				if (currentTime_ > effect.startTime && currentTime_ - kDeltaTime < effect.startTime) {
+				if (currentTime_ > effect.startTime && currentTime_ - kDeltaTime <= effect.startTime) {
 					effect.particle->emitter_.isPlay = true;
 				}
 				//終了時間に達したら
-				if (currentTime_ > effect.endTime && currentTime_ - kDeltaTime < effect.endTime) {
+				if (currentTime_ > effect.endTime && currentTime_ - kDeltaTime <= effect.endTime) {
 					effect.particle->emitter_.isPlay = false;
 				}
 			}

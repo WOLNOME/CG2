@@ -58,8 +58,8 @@
         }
     },
     "LifeTime": {
-        "Max": 1.5,
-        "Min": 0.5
+        "Max": 1.0,
+        "Min": 0.8
     },
     "MaxGrains": 1800,
     "Primitive": 3,

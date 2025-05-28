@@ -434,9 +434,9 @@ void ParticleCreatorScene::Editor() {
 	float endSizeMax = editParam_["EndSize"]["Max"];
 	float endSizeMin = editParam_["EndSize"]["Min"];
 	if (ImGui::CollapsingHeader("更新サイズの設定")) {
-		ImGui::DragFloat("StartSizeMax", &startSizeMax, 0.1f, startSizeMin, 10.0f);
+		ImGui::DragFloat("StartSizeMax", &startSizeMax, 0.1f, startSizeMin);
 		ImGui::DragFloat("StartSizeMin", &startSizeMin, 0.1f, 0.0f, startSizeMax);
-		ImGui::DragFloat("EndSizeMax", &endSizeMax, 0.1f, endSizeMin, 10.0f);
+		ImGui::DragFloat("EndSizeMax", &endSizeMax, 0.1f, endSizeMin);
 		ImGui::DragFloat("EndSizeMin", &endSizeMin, 0.1f, 0.0f, endSizeMax);
 	}
 	//速度を写す
@@ -450,7 +450,7 @@ void ParticleCreatorScene::Editor() {
 	float lifeTimeMax = editParam_["LifeTime"]["Max"];
 	float lifeTimeMin = editParam_["LifeTime"]["Min"];
 	if (ImGui::CollapsingHeader("寿命の設定")) {
-		ImGui::DragFloat("LifeTimeMax", &lifeTimeMax, 0.1f, lifeTimeMin, 30.0f);
+		ImGui::DragFloat("LifeTimeMax", &lifeTimeMax, 0.1f, lifeTimeMin);
 		ImGui::DragFloat("LifeTimeMin", &lifeTimeMin, 0.1f, 0.0f, lifeTimeMax);
 	}
 	//粒の最大数を写す
@@ -472,12 +472,12 @@ void ParticleCreatorScene::Editor() {
 		if (ImGui::Button("推奨値を適用")) {
 			maxGrains = RecommendValue;
 		}
-		ImGui::SliderInt("MaxGrains", &maxGrains, 1, 1000);
+		ImGui::DragInt("MaxGrains", &maxGrains, 1);
 	}
 	//1秒あたりの粒の生成量を写す
 	int emitRate = editParam_["EmitRate"];
 	if (ImGui::CollapsingHeader("1秒あたりの粒の生成量")) {
-		ImGui::SliderInt("EmitRate", &emitRate, 1, 100);
+		ImGui::DragInt("EmitRate", &emitRate, 1);
 	}
 	//ブレンドモードを写す
 	int blendMode = editParam_["BlendMode"];
