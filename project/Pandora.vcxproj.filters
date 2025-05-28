@@ -85,7 +85,6 @@
     <ClCompile Include="engine\base\PostEffectManager.cpp" />
     <ClCompile Include="engine\base\RTVManager.cpp" />
     <ClCompile Include="engine\3d\CombinedParticle.cpp" />
-    <ClCompile Include="engine\scene\EvaluationTaskScene.cpp" />
     <ClCompile Include="engine\base\DSVManager.cpp" />
     <ClCompile Include="engine\base\TextTextureRender.cpp" />
   </ItemGroup>
@@ -159,7 +158,6 @@
     <ClInclude Include="engine\base\PostEffectManager.h" />
     <ClInclude Include="engine\base\RTVManager.h" />
     <ClInclude Include="engine\3d\CombinedParticle.h" />
-    <ClInclude Include="engine\scene\EvaluationTaskScene.h" />
     <ClInclude Include="engine\base\DSVManager.h" />
     <ClInclude Include="engine\base\TextTextureRender.h" />
     <ClInclude Include="engine\util\Handle.h" />
