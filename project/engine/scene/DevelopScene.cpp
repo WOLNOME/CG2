@@ -140,7 +140,7 @@ void DevelopScene::Initialize() {
 	//テクスチャ
 	for (int i = 0; i < 16; ++i) {
 		TextParam param;
-		param.text = L"今日は楽しい一日だったな。\nまた、遊びに行きたいな。";
+		param.text = L"テキストテクスチャ。\nTextTexture0123";
 		param.font = Font::UDDegitalNP_B;
 		param.fontStyle = FontStyle::Normal;
 		param.size = 90.0f;
