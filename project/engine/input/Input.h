@@ -30,8 +30,7 @@ enum GamepadButton {
 };
 
 //入力
-class Input
-{
+class Input {
 private://コンストラクタ等の隠蔽
 	static Input* instance;
 
@@ -63,7 +62,7 @@ private://非公開メンバ関数
 	void GenerateKeyboard();
 	//ゲームパッドデバイスの生成
 	void GenerateGamepad();
-	
+
 public://固有の処理
 	bool PushMouseButton(MouseButton button);
 	bool TriggerMouseButton(MouseButton button);

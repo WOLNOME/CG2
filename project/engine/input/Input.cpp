@@ -9,16 +9,14 @@
 
 Input* Input::instance = nullptr;
 
-Input* Input::GetInstance()
-{
+Input* Input::GetInstance() {
 	if (instance == nullptr) {
 		instance = new Input;
 	}
 	return instance;
 }
 
-void Input::Initialize()
-{
+void Input::Initialize() {
 	//ダイレクトインプットの初期化
 	InitDirectInput();
 	//マウスの生成
@@ -31,8 +29,7 @@ void Input::Initialize()
 	padData;
 }
 
-void Input::Update()
-{
+void Input::Update() {
 	HRESULT hr;
 
 	// マウスの状態取得
@@ -113,14 +110,12 @@ void Input::Update()
 	}
 }
 
-void Input::Finalize()
-{
+void Input::Finalize() {
 	delete instance;
 	instance = nullptr;
 }
 
-void Input::InitDirectInput()
-{
+void Input::InitDirectInput() {
 	HRESULT hr;
 	//DirectInputの初期化
 	hr = DirectInput8Create(
@@ -129,8 +124,7 @@ void Input::InitDirectInput()
 	assert(SUCCEEDED(hr));
 }
 
-void Input::GenerateKeyboard()
-{
+void Input::GenerateKeyboard() {
 	HRESULT hr;
 
 	//キーボードデバイスの生成
@@ -151,8 +145,7 @@ void Input::GenerateKeyboard()
 	assert(SUCCEEDED(hr));
 }
 
-void Input::GenerateMouse()
-{
+void Input::GenerateMouse() {
 	HRESULT hr;
 
 	// マウスデバイスの生成
@@ -173,8 +166,7 @@ void Input::GenerateMouse()
 	}
 }
 
-void Input::GenerateGamepad()
-{
+void Input::GenerateGamepad() {
 	HRESULT hr;
 
 	//ゲームパッドデバイスの生成
@@ -245,8 +237,7 @@ void Input::GenerateGamepad()
 	}
 }
 
-bool Input::PushMouseButton(MouseButton button)
-{
+bool Input::PushMouseButton(MouseButton button) {
 	// マウスボタンが押されているか確認
 	switch (button) {
 	case LeftButton:
@@ -260,8 +251,7 @@ bool Input::PushMouseButton(MouseButton button)
 	}
 }
 
-bool Input::TriggerMouseButton(MouseButton button)
-{
+bool Input::TriggerMouseButton(MouseButton button) {
 	// マウスボタンが押された瞬間か確認
 	switch (button) {
 	case LeftButton:
@@ -275,8 +265,7 @@ bool Input::TriggerMouseButton(MouseButton button)
 	}
 }
 
-bool Input::PushKey(BYTE keyNumber)
-{
+bool Input::PushKey(BYTE keyNumber) {
 	//指定キーを押していればtrueを返す
 	if (key[keyNumber]) {
 		return true;
@@ -285,8 +274,7 @@ bool Input::PushKey(BYTE keyNumber)
 	return false;
 }
 
-bool Input::TriggerKey(BYTE keyNumber)
-{
+bool Input::TriggerKey(BYTE keyNumber) {
 	//指定キーを押しているかつ前回指定キーが押されていなかったらtrueを返す
 	if (key[keyNumber] && !preKey[keyNumber]) {
 		return true;
@@ -295,8 +283,7 @@ bool Input::TriggerKey(BYTE keyNumber)
 	return false;
 }
 
-bool Input::PushPadButton(GamepadButton button)
-{
+bool Input::PushPadButton(GamepadButton button) {
 	// 十字キーの処理
 	switch (button) {
 	case DPadUp:
@@ -319,8 +306,7 @@ bool Input::PushPadButton(GamepadButton button)
 	return false;
 }
 
-bool Input::TriggerPadButton(GamepadButton button)
-{
+bool Input::TriggerPadButton(GamepadButton button) {
 	// 十字キーの処理
 	switch (button) {
 	case DPadUp:
@@ -343,18 +329,15 @@ bool Input::TriggerPadButton(GamepadButton button)
 	return false;
 }
 
-Vector2 Input::GetMousePosition()
-{
+Vector2 Input::GetMousePosition() {
 	return Vector2(static_cast<float>(mouseData.lX), static_cast<float>(mouseData.lY));
 }
 
-Vector2 Input::GetMouseDelta()
-{
+Vector2 Input::GetMouseDelta() {
 	return Vector2(static_cast<float>(mouseData.lX - preMouseData.lX), static_cast<float>(mouseData.lY - preMouseData.lY));
 }
 
-float Input::GetMouseScrollCount()
-{
+float Input::GetMouseScrollCount() {
 	// 1回のスクロールは120単位
 	const float scrollPerUnit = 120.0f;
 
@@ -362,8 +345,7 @@ float Input::GetMouseScrollCount()
 	return static_cast<float>(mouseData.lZ) / scrollPerUnit;
 }
 
-Vector2 Input::GetLeftStickDir()
-{
+Vector2 Input::GetLeftStickDir() {
 	const int deadZone = 200; // デッドゾーンの設定
 	int x = padData.lX;
 	int y = padData.lY;
@@ -377,8 +359,7 @@ Vector2 Input::GetLeftStickDir()
 	return dir.Normalize();
 }
 
-Vector2 Input::GetRightStickDir()
-{
+Vector2 Input::GetRightStickDir() {
 	const int deadZone = 200; // デッドゾーンの設定
 	int x = padData.lRx;
 	int y = padData.lRy;

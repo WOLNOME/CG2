@@ -43,6 +43,12 @@ public://メンバ関数
 	//登録されたパーティクルを削除
 	void DeleteParticle(const std::string& name);
 
+	//名前を決める関数
+	std::string GenerateName(const std::string& name);
+
+public://パーティクルコンテナの操作
+
+
 private://パーティクル全体の操作
 	//グラフィックスパイプライン
 	void GenerateGraphicsPipeline();
