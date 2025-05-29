@@ -30,8 +30,8 @@ public:
 	void Free(uint32_t index);
 	// 空きインデックスの存在確認用関数
 	bool CheckCanSecured();
-	// 全描画が終わった後にフレーム内空きインデックスキューを譲渡用空きインデックスキューに写す処理
-	void TransferFrameFreeIndices();
+	// 使用不可能インデックスを使用可能インデックスに遷移させる関数
+	void TransferEnable();
 
 	// SRV生成関数
 	void CreateSRVforRenderTexture(uint32_t index, ID3D12Resource* pResource);
@@ -55,9 +55,9 @@ private:
 	//最新の空きインデックス
 	uint32_t useIndex = 0;
 
-	// 空きインデックスを管理するキュー(Free関数によって割り当てられる)
-	std::queue<uint32_t> freeIndices;
-	// フレーム内で解放された空きインデックスを管理するキュー
-	std::queue<uint32_t> freeInFrameIndices;
+	// 使用可能空きインデックスを管理するキュー
+	std::queue<uint32_t> enableIndices;
+	// 使用不可能空きインデックスを管理するキュー
+	std::queue<uint32_t> unenableIndices;
 
 };

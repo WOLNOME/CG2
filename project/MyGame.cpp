@@ -5,6 +5,8 @@
 #include "PostEffectManager.h"
 #include "TextureManager.h"
 #include "GPUDescriptorManager.h"
+#include "RTVManager.h"
+#include "DSVManager.h"
 #include "TextTextureManager.h"
 #include "ImGuiManager.h"
 #include "ModelManager.h"
@@ -119,7 +121,11 @@ void MyGame::Draw() {
 
 	//全レンダー終了時の共通処理
 	DirectXCommon::GetInstance()->PostAllRenders();
-	GPUDescriptorManager::GetInstance()->TransferFrameFreeIndices();		//フレーム内で解放されたインデックスを次のフレームで使えるようにする
+
+	//デスクリプタヒープ解放済みインデックスを使用可能状態にする
+	GPUDescriptorManager::GetInstance()->TransferEnable();
+	RTVManager::GetInstance()->TransferEnable();
+	DSVManager::GetInstance()->TransferEnable();
 
 }
 

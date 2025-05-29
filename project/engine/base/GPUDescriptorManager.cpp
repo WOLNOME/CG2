@@ -29,9 +29,9 @@ void GPUDescriptorManager::PreDraw(ID3D12GraphicsCommandList* pCommandList) {
 
 uint32_t GPUDescriptorManager::Allocate() {
 	// 空きインデックスがあれば再利用
-	if (!freeIndices.empty()) {
-		uint32_t index = freeIndices.front();
-		freeIndices.pop();
+	if (!enableIndices.empty()) {
+		uint32_t index = enableIndices.front();
+		enableIndices.pop();
 		return index;
 	}
 
@@ -48,21 +48,21 @@ uint32_t GPUDescriptorManager::Allocate() {
 void GPUDescriptorManager::Free(uint32_t index) {
 	// インデックスが範囲内であることを確認
 	if (index < kMaxHeapSize) {
-		freeInFrameIndices.push(index);
+		unenableIndices.push(index);
 	}
 }
 
 bool GPUDescriptorManager::CheckCanSecured() {
-	return (useIndex < kMaxHeapSize || !freeIndices.empty());
+	return (useIndex < kMaxHeapSize || !enableIndices.empty());
 }
 
-void GPUDescriptorManager::TransferFrameFreeIndices() {
-	while (!freeInFrameIndices.empty()) {
+void GPUDescriptorManager::TransferEnable() {
+	while (!unenableIndices.empty()) {
 		// フレームフリーキューの先頭から1つ取り出して
-		uint32_t index = freeInFrameIndices.front();
-		freeInFrameIndices.pop();
+		uint32_t index = unenableIndices.front();
+		unenableIndices.pop();
 		// フリーキューに追加
-		freeIndices.push(index);
+		enableIndices.push(index);
 	}
 }
 

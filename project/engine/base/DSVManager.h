@@ -28,6 +28,8 @@ public:
 	void Free(uint32_t index);
 	// 空きインデックスの存在確認用関数
 	bool CheckCanSecured();
+	// 使用不可能インデックスを使用可能インデックスに遷移させる関数
+	void TransferEnable();
 
 	// DSVDescriptor生成関数
 	void CreateDSVDescriptor(uint32_t index, ID3D12Resource* pResource);
@@ -47,7 +49,10 @@ private:
 	//最新の空きインデックス
 	uint32_t useIndex = 0;
 
-	// 空きインデックスを管理するキュー(Free関数によって割り当てられる)
-	std::queue<uint32_t> freeIndices;
+	// 使用可能空きインデックスを管理するキュー
+	std::queue<uint32_t> enableIndices;
+	// 使用不可能空きインデックスを管理するキュー
+	std::queue<uint32_t> unenableIndices;
+
 };
 
