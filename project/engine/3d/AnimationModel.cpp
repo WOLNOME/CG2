@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <cassert>
 
-
 void AnimationModel::Initialize(const std::string& filename, ModelFormat format, std::string directorypath) {
 	//ディレクトリパス
 	directoryPath_ = directorypath;

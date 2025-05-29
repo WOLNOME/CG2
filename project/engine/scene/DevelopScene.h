@@ -83,9 +83,5 @@ private://メンバ変数
 	Handle textHandle_;
 	std::unique_ptr<Sprite> text_ = nullptr;
 
-	Handle handle2_;
-	std::unique_ptr<Sprite> text2_ = nullptr;
-
-	Handle handles_[6];
 };
 

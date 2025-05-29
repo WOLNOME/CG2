@@ -137,43 +137,6 @@ void DevelopScene::Initialize() {
 		edgeParam.color = { 1,1,0,1 };
 		TextTextureManager::GetInstance()->EditEdgeParam(textHandle_, edgeParam);
 	}
-
-	//テクスチャ
-	{
-		TextParam param;
-		param.text = L"大量のテキストを投下。";
-		param.font = Font::UDDegitalNP_B;
-		param.fontStyle = FontStyle::Normal;
-		param.size = 90.0f;
-		param.color = { 1,1,1,1 };
-		handle2_ = TextTextureManager::GetInstance()->LoadTextTexture(param);
-		text2_ = std::make_unique<Sprite>();
-		text2_->Initialize();
-		text2_->AdjustTextureSize(handle2_);
-		text2_->SetPosition({ text2_->GetPosition().x,text2_->GetPosition().y + 100.0f });
-		EdgeParam edgeParam;
-		edgeParam.width = 5;
-		edgeParam.isEdgeDisplay = 1;
-		edgeParam.slideRate = { 0.0f,0.0f };
-		edgeParam.color = { 0,0,1,1 };
-		TextTextureManager::GetInstance()->EditEdgeParam(handle2_, edgeParam);
-	}
-	//テクスチャ複数作成
-	for (int i = 0; i < 6; i++) {
-		TextParam param;
-		param.text = L"テクスチャ複数作成実験";
-		param.font = Font::UDDegitalNP_B;
-		param.fontStyle = FontStyle::Normal;
-		param.size = 90.0f;
-		param.color = { 1,1,1,1 };
-		handles_[i] = TextTextureManager::GetInstance()->LoadTextTexture(param);
-		EdgeParam edgeParam;
-		edgeParam.width = 5;
-		edgeParam.isEdgeDisplay = 0;
-		edgeParam.slideRate = { 0.0f,0.0f };
-		edgeParam.color = { 0,0,1,1 };
-		TextTextureManager::GetInstance()->EditEdgeParam(handles_[i], edgeParam);
-	}
 }
 
 void DevelopScene::Finalize() {
@@ -344,7 +307,7 @@ void DevelopScene::Draw() {
 	//スカイボックス描画
 	skyBox_->Draw(camera.get(), textureHandleSkyBox_);
 
-	/*terrain_->Draw(camera.get());
+	terrain_->Draw(camera.get());
 	teapot_->Draw(camera.get());
 
 	animatedCube_->Draw(camera.get());
@@ -355,7 +318,7 @@ void DevelopScene::Draw() {
 
 	composite_->Draw(camera.get());
 
-	simpleSkin_->Draw(camera.get());*/
+	simpleSkin_->Draw(camera.get());
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
@@ -393,9 +356,6 @@ void DevelopScene::Draw() {
 	//テキスト
 	text_->AdjustTextureSize(textHandle_);
 	text_->Draw(textHandle_);
-	text2_->AdjustTextureSize(handle2_);
-	text2_->Draw(handle2_);
-
 
 	///------------------------------///
 	///↑↑↑↑スプライト描画終了↑↑↑↑
