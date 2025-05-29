@@ -8,12 +8,13 @@
 #include "Sprite.h"
 #include "Object3d.h"
 #include "Particle.h"
+#include "CombinedParticle.h"
 #include "ParticleManager.h"
 #include "Audio.h"
 #include "Input.h"
 #include "LineDrawer.h"
-#include "TextWrite.h"
 #include "TextureManager.h"
+#include "TextTextureManager.h"
 //シーン共通クラス
 #include "PostEffectManager.h"
 #include "ImGuiManager.h"
@@ -49,10 +50,6 @@ public:
 	/// 描画
 	/// </summary>
 	virtual void Draw();
-	/// <summary>
-	/// 文字描画
-	/// </summary>
-	virtual void TextDraw();
 	
 
 	//FPS表示

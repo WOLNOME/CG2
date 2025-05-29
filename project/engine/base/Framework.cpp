@@ -3,12 +3,14 @@
 #include "DirectXCommon.h"
 #include "GPUDescriptorManager.h"
 #include "RTVManager.h"
+#include "DSVManager.h"
+#include "TextTextureRender.h"
 #include "MainRender.h"
 #include "D2DRender.h"
 #include "PostEffectManager.h"
-#include "TextWriteManager.h"
 #include "ImGuiManager.h"
 #include "TextureManager.h"
+#include "TextTextureManager.h"
 #include "ModelManager.h"
 #include "ParticleManager.h"
 #include "Input.h"
@@ -34,6 +36,12 @@ void Framework::Initialize() {
 	//RTVマネージャー
 	RTVManager::GetInstance()->Initialize();
 
+	//DSVマネージャー
+	DSVManager::GetInstance()->Initialize();
+
+	//テキストテクスチャレンダー
+	TextTextureRender::GetInstance()->Initialize();
+
 	//メインレンダー
 	MainRender::GetInstance()->Initialize();
 
@@ -43,14 +51,14 @@ void Framework::Initialize() {
 	//ポストエフェクトマネージャー
 	PostEffectManager::GetInstance()->Initialize();
 
-	//テキストライトマネージャー
-	TextWriteManager::GetInstance()->Initialize();
-
 	//ImGuiマネージャー
 	ImGuiManager::GetInstance()->Initialize();
 
 	//テクスチャマネージャー
 	TextureManager::GetInstance()->Initialize();
+
+	//テキストテクスチャマネージャー
+	TextTextureManager::GetInstance()->Initialize();
 
 	//モデルマネージャー
 	ModelManager::GetInstance()->Initialize();
@@ -87,12 +95,14 @@ void Framework::Finalize() {
 	Input::GetInstance()->Finalize();
 	ParticleManager::GetInstance()->Finalize();
 	ModelManager::GetInstance()->Finalize();
+	TextTextureManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
 	ImGuiManager::GetInstance()->Finalize();
-	TextWriteManager::GetInstance()->Finalize();
 	PostEffectManager::GetInstance()->Finalize();
 	D2DRender::GetInstance()->Finalize();
 	MainRender::GetInstance()->Finalize();
+	TextTextureRender::GetInstance()->Finalize();
+	DSVManager::GetInstance()->Finalize();
 	RTVManager::GetInstance()->Finalize();
 	GPUDescriptorManager::GetInstance()->Finalize();
 	DirectXCommon::GetInstance()->Finalize();

@@ -1,8 +1,5 @@
 #include "SceneFactory.h"
 #include "DevelopScene.h"
-#include "TitleScene.h"
-#include "ClearScene.h"
-
 // パーティクルクリエイター
 #include "ParticleCreatorScene.h"
 
@@ -13,12 +10,6 @@ BaseScene* SceneFactory::CreateScene(const std::string& sceneName)
 
 	if (sceneName == "DEVELOP") {
 		newScene = new DevelopScene();
-	}
-	else if (sceneName == "TITLE") {
-		newScene = new TitleScene();
-	}
-	else if (sceneName == "CLEAR") {
-		newScene = new ClearScene();
 	}
 	//パーティクルクリエイター
 	else if (sceneName == "PARTICLECREATOR") {

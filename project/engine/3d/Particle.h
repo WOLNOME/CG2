@@ -18,10 +18,17 @@ class Particle {
 	//パーティクルクリエイターシーンに公開
 	friend class ParticleCreatorScene;
 public:
+	//生成方法
 	enum class GenerateMethod {
-		kRandom,		//ランダム
-		kClump,			//塊	
+		Random,		//ランダム
+		Clump,		//塊	
 	};
+	//エフェクトスタイル
+	enum class EffectStyle {
+		Loop,		//ループ(永続)
+		OneShot,	//一度きり
+	};
+
 public:
 	//座標変換行列データ
 	struct ParticleForGPU {
@@ -41,6 +48,8 @@ public:
 		Vector4 startColor;				//最初の色
 		Vector4 endColor;				//最後の色
 		Vector3 velocity;				//速度
+		Vector3 startRotate;			//最初の回転
+		Vector3 endRotate;				//最後の回転
 		float startSize;				//最初のサイズ
 		float endSize;					//最後のサイズ
 		float lifeTime;					//寿命
@@ -50,6 +59,7 @@ public:
 	struct Emitter {
 		TransformEuler transform;			//エミッターのトランスフォーム
 		GenerateMethod generateMethod;		//生成方法
+		EffectStyle effectStyle;			//エフェクトスタイル
 		float gravity;						//重力値
 		float repulsion;					//床の反発値
 		float floorHeight;					//床の高さ
@@ -90,6 +100,8 @@ private: //マネージャーにのみ公開するパラメーター
 private: //クリエイターシーンにのみ公開するパラメーター
 	//形状の変更
 	void ShapeChange();
+	//テクスチャの変更
+	void TextureChange();
 
 public://通常のクラスに見せて良いパラメーター
 	Emitter emitter_;

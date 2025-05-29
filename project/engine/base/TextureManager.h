@@ -9,8 +9,7 @@
 #include "DirectXTex.h"
 #include "externals/DirectXTex/d3dx12.h"
 
-class TextureManager
-{
+class TextureManager {
 private://コンストラクタ等の隠蔽
 	static TextureManager* instance;
 
@@ -40,8 +39,7 @@ public://ゲッター
 	D3D12_GPU_DESCRIPTOR_HANDLE GetSrvHandleGPU(uint32_t textureHandle);
 private:
 	//テクスチャデータ
-	struct TextureData
-	{
+	struct TextureData {
 		DirectX::TexMetadata metadata;
 		Microsoft::WRL::ComPtr<ID3D12Resource> resource;
 		uint32_t srvIndex;
@@ -50,8 +48,6 @@ private:
 public:
 	//テクスチャデータの確保数
 	static const uint32_t kNumTextureData = 512;
-
-private://インスタンス
 
 private://メンバ変数
 	//テクスチャデータコンテナ(要素数がテクスチャハンドル)

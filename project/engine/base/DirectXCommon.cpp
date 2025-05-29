@@ -135,8 +135,13 @@ void DirectXCommon::GenerateDevice() {
 			//Windows11でのDXGIデバッグレイヤーとDX12デバッグレイヤーの相互作用バグによるエラーメッセージ
 			//https://stackoverflow.com/questions/69805245/directx-12-application-is-crashing-in-windows-11
 			D3D12_MESSAGE_ID_RESOURCE_BARRIER_MISMATCHING_COMMAND_LIST_TYPE,
-			D3D12_MESSAGE_ID_CREATERESOURCE_STATE_IGNORED,						//d2dDevice作成時に邪魔
-			D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE		//テキストアウトラインのα値操作に邪魔
+			D3D12_MESSAGE_ID_CREATERESOURCE_STATE_IGNORED,							//d2dDevice作成時に邪魔
+			D3D12_MESSAGE_ID_REFLECTSHAREDPROPERTIES_INVALIDOBJECT,					//テキストテクスチャのD3D11Resource作成時に起きるエラー
+			D3D12_MESSAGE_ID_CREATEGRAPHICSPIPELINESTATE_DEPTHSTENCILVIEW_NOT_SET,	//テキストテクスチャ作成時にDepthStencilViewがResourceにセットされていないことから起きるエラー
+			D3D12_MESSAGE_ID_GPU_BASED_VALIDATION_RESOURCE_ACCESS_OUT_OF_BOUNDS,	//テキストテクスチャのサイズを変えるとたまに起きる
+			D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,			//テキストテクスチャのサイズを大きくすると確実に起きる
+			D3D12_MESSAGE_ID_DESCRIPTOR_HANDLE_WITH_INVALID_RESOURCE,				//テキストテクスチャのサイズをクライアントサイズ以上の状態から小さくすると起きる
+
 		};
 		//抑制するレベル
 		D3D12_MESSAGE_SEVERITY severities[] = { D3D12_MESSAGE_SEVERITY_INFO };
@@ -388,7 +393,7 @@ ID3D12Resource* DirectXCommon::CreateTextureResource(const DirectX::TexMetadata&
 	return resource;
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateRenderTextureResource(uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor) {
+ID3D12Resource* DirectXCommon::CreateRenderTextureResource(uint32_t width, uint32_t height, DXGI_FORMAT format, const Vector4& clearColor) {
 	//リソースデスクの設定
 	D3D12_RESOURCE_DESC resourceDesc{};
 	resourceDesc.Width = UINT(width);
@@ -405,17 +410,21 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateRenderTextureResourc
 	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;	//VRAM上に作る
 
 	//クリアバリューの設定(RenderTexture限定処理)
+	D3D12_CLEAR_VALUE clearValue{};
 	clearValue.Format = format;
 	clearValue.Color[0] = clearColor.x;
 	clearValue.Color[1] = clearColor.y;
 	clearValue.Color[2] = clearColor.z;
 	clearValue.Color[3] = clearColor.w;
 
+	//ヒープフラッグの設定
+	D3D12_HEAP_FLAGS heapFlags = D3D12_HEAP_FLAG_NONE;
+
 	//リソースの生成
-	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
+	ID3D12Resource* resource = nullptr;
 	HRESULT hr = device->CreateCommittedResource(
 		&heapProperties,
-		D3D12_HEAP_FLAG_NONE,
+		heapFlags,
 		&resourceDesc,
 		D3D12_RESOURCE_STATE_RENDER_TARGET,	//RenderTargetとして利用する
 		&clearValue,

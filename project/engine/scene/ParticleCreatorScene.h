@@ -26,10 +26,6 @@ public:
 	/// 描画
 	/// </summary>
 	void Draw() override;
-	/// <summary>
-	/// テキスト描画
-	/// </summary>
-	void TextDraw() override;
 
 private://ImGui操作
 	//最初の画面

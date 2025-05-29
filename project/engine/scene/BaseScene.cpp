@@ -25,9 +25,6 @@ void BaseScene::Update() {
 void BaseScene::Draw() {
 }
 
-void BaseScene::TextDraw() {
-}
-
 void BaseScene::ShowFPS() {
 	//現在時間の取得
 	auto now = std::chrono::steady_clock::now();

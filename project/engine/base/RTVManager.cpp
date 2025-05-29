@@ -3,7 +3,7 @@
 #include <cassert>
 
 RTVManager* RTVManager::instance = nullptr;
-const uint32_t RTVManager::kMaxHeapSize = 3;		//必要に応じて増やす
+const uint32_t RTVManager::kMaxHeapSize = 256;		//必要に応じて増やす
 
 RTVManager* RTVManager::GetInstance() {
     if (instance == nullptr) {
@@ -26,9 +26,9 @@ void RTVManager::Finalize() {
 
 uint32_t RTVManager::Allocate() {
 	// 空きインデックスがあれば再利用
-	if (!freeIndices.empty()) {
-		uint32_t index = freeIndices.front();
-		freeIndices.pop();
+	if (!enableIndices.empty()) {
+		uint32_t index = enableIndices.front();
+		enableIndices.pop();
 		return index;
 	}
 
@@ -45,12 +45,22 @@ uint32_t RTVManager::Allocate() {
 void RTVManager::Free(uint32_t index) {
 	// インデックスが範囲内であることを確認
 	if (index < kMaxHeapSize) {
-		freeIndices.push(index);
+		unenableIndices.push(index);
 	}
 }
 
 bool RTVManager::CheckCanSecured() {
-	return (useIndex < kMaxHeapSize || !freeIndices.empty());
+	return (useIndex < kMaxHeapSize || !enableIndices.empty());
+}
+
+void RTVManager::TransferEnable() {
+	while (!unenableIndices.empty()) {
+		// フレームフリーキューの先頭から1つ取り出して
+		uint32_t index = unenableIndices.front();
+		unenableIndices.pop();
+		// フリーキューに追加
+		enableIndices.push(index);
+	}
 }
 
 void RTVManager::CreateRTVDescriptor(uint32_t index, ID3D12Resource* pResource) {

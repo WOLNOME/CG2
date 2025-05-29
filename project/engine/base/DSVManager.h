@@ -5,25 +5,23 @@
 #include <cstdint>
 #include <queue>
 
-class GPUDescriptorManager {
+class DSVManager {
 private:
-	static GPUDescriptorManager* instance;
+	static DSVManager* instance;
 
-	GPUDescriptorManager() = default;
-	~GPUDescriptorManager() = default;
-	GPUDescriptorManager(GPUDescriptorManager&) = delete;
-	GPUDescriptorManager& operator=(GPUDescriptorManager&) = delete;
+	DSVManager() = default;
+	~DSVManager() = default;
+	DSVManager(DSVManager&) = delete;
+	DSVManager& operator=(DSVManager&) = delete;
 
 public:
-	static GPUDescriptorManager* GetInstance();
+	static DSVManager* GetInstance();
 
 	// 初期化
 	void Initialize();
 	// 終了
 	void Finalize();
 
-	// 描画前設定
-	void PreDraw(ID3D12GraphicsCommandList* pCommandList);
 	// 割り当て用関数
 	uint32_t Allocate();
 	// 解放用関数
@@ -33,17 +31,13 @@ public:
 	// 使用不可能インデックスを使用可能インデックスに遷移させる関数
 	void TransferEnable();
 
-	// SRV生成関数
-	void CreateSRVforRenderTexture(uint32_t index, ID3D12Resource* pResource);
-	void CreateSRVforStructuredBufferCS(uint32_t index, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);
-	// UAV生成関数
-	void CreateUAVforStructuredBufferCS(uint32_t index, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);
+	// DSVDescriptor生成関数
+	void CreateDSVDescriptor(uint32_t index, ID3D12Resource* pResource);
 
 	// ゲッター
 	ID3D12DescriptorHeap* GetDescriptorHeap() const { return descriptorHeap.Get(); }
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUDescriptorHandle(uint32_t index);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUDescriptorHandle(uint32_t index);
-	void SetGraphicsRootDescriptorTable(ID3D12GraphicsCommandList* pCommandList, UINT RootParameterIndex, uint32_t index);
 
 	static const uint32_t kMaxHeapSize;
 
@@ -61,3 +55,4 @@ private:
 	std::queue<uint32_t> unenableIndices;
 
 };
+

@@ -2,6 +2,7 @@
 #include "SceneManager.h"
 #include <numbers>
 
+
 void DevelopScene::Initialize() {
 	//シーン共通の初期化
 	BaseScene::Initialize();
@@ -40,13 +41,15 @@ void DevelopScene::Initialize() {
 	//ゲームシーン変数の初期化
 	sprite_ = std::make_unique<Sprite>();
 	textureHandleSprite_ = TextureManager::GetInstance()->LoadTexture("monsterBall.png");
-	sprite_->Initialize(textureHandleSprite_);
+	sprite_->Initialize();
+	sprite_->AdjustTextureSize(textureHandleSprite_);
 	sprite_->SetAnchorPoint({ 0.5f,0.5f });
 	sprite_->SetFlipX(true);
 
 	sprite2_ = std::make_unique<Sprite>();
 	textureHandleSprite2_ = TextureManager::GetInstance()->LoadTexture("monsterBall.png");
-	sprite2_->Initialize(textureHandleSprite2_);
+	sprite2_->Initialize();
+	sprite_->AdjustTextureSize(textureHandleSprite2_);
 	sprite2Position = { 100.0f,100.0f };
 	sprite2_->SetPosition(sprite2Position);
 	sprite2_->SetSize({ 300.0f,300.0f });
@@ -105,8 +108,8 @@ void DevelopScene::Initialize() {
 	simpleSkin_->SetSceneLight(sceneLight_.get());
 
 	ParticleManager::GetInstance()->SetCamera(camera.get());
-	particle_ = std::make_unique<Particle>();
-	particle_->Initialize("develop", "basic");
+	//particle_ = std::make_unique<Particle>();
+	//particle_->Initialize("develop", "basic");
 
 	line_ = std::make_unique<LineDrawer>();
 	line_->Initialize();
@@ -114,11 +117,26 @@ void DevelopScene::Initialize() {
 	audio_ = std::make_unique<Audio>();
 	audio_->Initialize("demo2.wav");
 
-	text_ = std::make_unique<TextWrite>();
-	text_->Initialize("text");
-	text_->SetParam({ 0.0f,0.0f }, Font::UDDegitalN_R, 32.0f, { 1,1,0,1 });
-	text_->SetEdgeParam({ 1,0,0,1 }, 10.0f, 0.0f, true);
-
+	//テキストテクスチャの作成
+	{
+		TextParam param;
+		param.text = L"フォント確認 0123 abcDEF";
+		param.font = Font::UDDegitalNP_B;
+		param.fontStyle = FontStyle::Normal;
+		param.size = 32.0f;
+		param.color = { 1,1,1,1 };
+		textHandle_ = TextTextureManager::GetInstance()->LoadTextTexture(param);
+		text_ = std::make_unique<Sprite>();
+		text_->Initialize();
+		text_->SetPosition({ 640,360 });
+		text_->SetAnchorPoint({ 0.5f,0.5f });
+		EdgeParam edgeParam;
+		edgeParam.width = 2;
+		edgeParam.isEdgeDisplay = 1;
+		edgeParam.slideRate = { 0.0f,0.0f };
+		edgeParam.color = { 1,1,0,1 };
+		TextTextureManager::GetInstance()->EditEdgeParam(textHandle_, edgeParam);
+	}
 }
 
 void DevelopScene::Finalize() {
@@ -151,9 +169,10 @@ void DevelopScene::Update() {
 	simpleSkin_->Update();
 
 	//スプライトの更新
-	sprite_->Update();
 	sprite_->SetRotation(sprite_->GetRotation() + 0.03f);
-	sprite2_->Update();
+
+	time_ += kDeltaTime;
+	TextTextureManager::GetInstance()->EditTextString(textHandle_, L"フォント確認 0123 abcDEF\n現在時刻 : {:.1f}", time_);
 
 #ifdef _DEBUG
 	ImGui::SetNextWindowSize(ImVec2(500, 100));
@@ -256,6 +275,7 @@ void DevelopScene::Update() {
 		MyMath::DrawSphere(slMarkSphere, { 1.0f,0.25f,0.0f,1.0f }, slMark.get());
 		MyMath::DrawSphere(slMarkSphere2, { 0.0f,1.0f,0.0f,1.0f }, slMark.get());
 	}
+	ImGui::End();
 
 	ImGui::Begin("複合アニメーション");
 	//選択肢
@@ -266,9 +286,8 @@ void DevelopScene::Update() {
 	}
 	ImGui::End();
 
-	ImGui::End();
 	//テキスト用ImGui
-	text_->DebugWithImGui();
+	TextTextureManager::GetInstance()->DebugWithImGui(textHandle_);
 	//カメラ用ImGui
 	camera->DebugWithImGui();
 	//ポストエフェクト用ImGui
@@ -331,25 +350,17 @@ void DevelopScene::Draw() {
 	///------------------------------///
 
 	////スプライト描画
-	//sprite_->Draw();
+	//sprite_->Draw(textureHandleSprite_);
 	//sprite2_->Draw();
 
+	//テキスト
+	text_->AdjustTextureSize(textHandle_);
+	text_->Draw(textHandle_);
 
 	///------------------------------///
 	///↑↑↑↑スプライト描画終了↑↑↑↑
 	///------------------------------///
-}
 
-void DevelopScene::TextDraw() {
-	///------------------------------///
-	///↑↑↑↑テキスト描画終了↑↑↑↑
-	///------------------------------///
 
-	timer_++;
-	float time = timer_ / 60.0f;
-	text_->WriteText(L"フォント確認 0123 現在時刻 : {:.1f}", time);
 
-	///------------------------------///
-	///↑↑↑↑テキスト描画終了↑↑↑↑
-	///------------------------------///
 }
