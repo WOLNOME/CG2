@@ -128,35 +128,52 @@ void DevelopScene::Initialize() {
 		textHandle_ = TextTextureManager::GetInstance()->LoadTextTexture(param);
 		text_ = std::make_unique<Sprite>();
 		text_->Initialize();
-		text_->AdjustTextureSize(textHandle_);
+		text_->SetPosition({ 640,360 });
+		text_->SetAnchorPoint({ 0.5f,0.5f });
 		EdgeParam edgeParam;
-		edgeParam.width = 5;
+		edgeParam.width = 2;
 		edgeParam.isEdgeDisplay = 1;
 		edgeParam.slideRate = { 0.0f,0.0f };
 		edgeParam.color = { 1,1,0,1 };
 		TextTextureManager::GetInstance()->EditEdgeParam(textHandle_, edgeParam);
 	}
 
-	//テクスチャ
-	{
-		TextParam param;
-		param.text = L"a";
-		param.font = Font::UDDegitalNP_B;
-		param.fontStyle = FontStyle::Normal;
-		param.size = 90.0f;
-		param.color = { 1,1,1,1 };
-		handle2_ = TextTextureManager::GetInstance()->LoadTextTexture(param);
-		text2_ = std::make_unique<Sprite>();
-		text2_->Initialize();
-		text2_->AdjustTextureSize(handle2_);
-		text2_->SetPosition({ text2_->GetPosition().x,text2_->GetPosition().y + 100.0f });
-		EdgeParam edgeParam;
-		edgeParam.width = 5;
-		edgeParam.isEdgeDisplay = 1;
-		edgeParam.slideRate = { 0.0f,0.0f };
-		edgeParam.color = { 0,0,1,1 };
-		TextTextureManager::GetInstance()->EditEdgeParam(handle2_, edgeParam);
-	}
+	////テクスチャ
+	//{
+	//	TextParam param;
+	//	param.text = L"a";
+	//	param.font = Font::UDDegitalNP_B;
+	//	param.fontStyle = FontStyle::Normal;
+	//	param.size = 90.0f;
+	//	param.color = { 1,1,1,1 };
+	//	handle2_ = TextTextureManager::GetInstance()->LoadTextTexture(param);
+	//	text2_ = std::make_unique<Sprite>();
+	//	text2_->Initialize();
+	//	text2_->AdjustTextureSize(handle2_);
+	//	text2_->SetPosition({ text2_->GetPosition().x,text2_->GetPosition().y + 100.0f });
+	//	EdgeParam edgeParam;
+	//	edgeParam.width = 5;
+	//	edgeParam.isEdgeDisplay = 1;
+	//	edgeParam.slideRate = { 0.0f,0.0f };
+	//	edgeParam.color = { 0,0,1,1 };
+	//	TextTextureManager::GetInstance()->EditEdgeParam(handle2_, edgeParam);
+	//}
+	////テクスチャ複数作成
+	//for (int i = 0; i < 16; i++) {
+	//	TextParam param;
+	//	param.text = L"テクスチャ複数作成実験";
+	//	param.font = Font::UDDegitalNP_B;
+	//	param.fontStyle = FontStyle::Normal;
+	//	param.size = 90.0f;
+	//	param.color = { 1,1,1,1 };
+	//	handles_[i] = TextTextureManager::GetInstance()->LoadTextTexture(param);
+	//	EdgeParam edgeParam;
+	//	edgeParam.width = 5;
+	//	edgeParam.isEdgeDisplay = 0;
+	//	edgeParam.slideRate = { 0.0f,0.0f };
+	//	edgeParam.color = { 0,0,1,1 };
+	//	TextTextureManager::GetInstance()->EditEdgeParam(handles_[i], edgeParam);
+	//}
 }
 
 void DevelopScene::Finalize() {
@@ -327,7 +344,7 @@ void DevelopScene::Draw() {
 	//スカイボックス描画
 	skyBox_->Draw(camera.get(), textureHandleSkyBox_);
 
-	terrain_->Draw(camera.get());
+	/*terrain_->Draw(camera.get());
 	teapot_->Draw(camera.get());
 
 	animatedCube_->Draw(camera.get());
@@ -338,7 +355,7 @@ void DevelopScene::Draw() {
 
 	composite_->Draw(camera.get());
 
-	simpleSkin_->Draw(camera.get());
+	simpleSkin_->Draw(camera.get());*/
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑
@@ -370,12 +387,13 @@ void DevelopScene::Draw() {
 	///------------------------------///
 
 	////スプライト描画
-	//sprite_->Draw();
+	//sprite_->Draw(textureHandleSprite_);
 	//sprite2_->Draw();
 
 	//テキスト
+	text_->AdjustTextureSize(textHandle_);
 	text_->Draw(textHandle_);
-	text2_->Draw(handle2_);
+	//text2_->Draw(handle2_);
 
 
 	///------------------------------///

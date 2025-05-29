@@ -4,6 +4,7 @@
 #include "MainRender.h"
 #include "ImGuiManager.h"
 #include "Logger.h"
+#include <algorithm>
 #include <filesystem>
 #include <format>
 #include <cassert>
@@ -75,7 +76,7 @@ void TextTextureManager::DebugWithImGui(Handle _handle) {
 		//サイズの編集
 		{
 			static float currentSize = GetTextSize(_handle);
-			ImGui::DragFloat("サイズを変更", &currentSize, 0.1f, 5.0f, 100.0f);
+			ImGui::DragFloat("サイズを変更", &currentSize, 0.1f, 5.0f);
 			EditTextSize(_handle, currentSize);
 		}
 		//カラーの編集
@@ -96,7 +97,7 @@ void TextTextureManager::DebugWithImGui(Handle _handle) {
 		//幅の編集
 		{
 			static float currentWidth = GetEdgeWidth(_handle);
-			ImGui::DragFloat("幅を変更", &currentWidth, 0.1f, 0.0f, 10.0f);
+			ImGui::DragFloat("幅を変更", &currentWidth, 0.1f, 0.0f, kMaxEdgeWidth_);
 			EditEdgeWidth(_handle, currentWidth);
 		}
 		//スライド量の編集
@@ -234,8 +235,10 @@ void TextTextureManager::EditEdgeWidth(Handle _handle, const float _width) {
 	//使用可能なハンドルかチェック
 	CheckHandle(_handle);
 
+	//最大幅でクランプ
+	float width = std::clamp(_width, 0.0f, kMaxEdgeWidth_);
 	//幅の編集
-	textTextureMap[_handle.id].edgeResource.param->width = _width;
+	textTextureMap[_handle.id].edgeResource.param->width = width;
 }
 
 void TextTextureManager::EditEdgeSlideRate(Handle _handle, const Vector2& _slideRate) {
@@ -252,6 +255,20 @@ void TextTextureManager::EditEdgeColor(Handle _handle, const Vector4& _color) {
 
 	//カラーの編集
 	textTextureMap[_handle.id].edgeResource.param->color = _color;
+}
+
+const UINT TextTextureManager::GetTextureWidth(Handle _handle) {
+	//使用可能なハンドルかチェック
+	CheckHandle(_handle);
+
+	return textTextureMap[_handle.id].width;
+}
+
+const UINT TextTextureManager::GetTextureHeight(Handle _handle) {
+	//使用可能なハンドルかチェック
+	CheckHandle(_handle);
+
+	return textTextureMap[_handle.id].height;
 }
 
 const std::wstring& TextTextureManager::GetTextString(Handle _handle) {
@@ -347,81 +364,37 @@ TextTextureManager::TextTextureItem TextTextureManager::CreateTextTextureItem(co
 	TextTextureItem textTextureItem;
 	//ローカル変数
 	HRESULT hr;
-	const auto gpuDescriptorManager = GPUDescriptorManager::GetInstance();
-	const auto rtvManager = RTVManager::GetInstance();
 
-	////////////////////D3D12用リソースの作成////////////////////
+	//縦横の初期化
+	{
+		textTextureItem.width = UINT_MAX;
+		textTextureItem.height = UINT_MAX;
+	}
+	//ブラシの作成
+	{
+		textTextureItem.solidColorBrush = CreateSolidColorBrush(_textParam.color);
+	}
+	//テキストフォーマットの作成
+	{
+		textTextureItem.textFormat = CreateTextFormat(_textParam.font, _textParam.fontStyle, _textParam.size);
+	}
+	//テキストリソースの作成
+	{
+		textTextureItem.textResource.resource = dxcommon->CreateBufferResource(sizeof(Vector4));
+		textTextureItem.textResource.resource->Map(0, nullptr, reinterpret_cast<void**>(&textTextureItem.textResource.color));
+		*textTextureItem.textResource.color = _textParam.color;
 
-	//リソースの作成
-	textTextureItem.resource = dxcommon->CreateRenderTextureResource(WinApp::kClientWidth, WinApp::kClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, Vector4(0.0f, 0.0f, 0.0f, 0.0f));
-	//rtvIndexの割り当て
-	textTextureItem.rtvIndex = rtvManager->Allocate();
-	//RTVを作成
-	rtvManager->CreateRTVDescriptor(textTextureItem.rtvIndex, textTextureItem.resource.Get());
-	//srvIndexの割り当て
-	textTextureItem.srvIndex = gpuDescriptorManager->Allocate();
-	//SRVを作成
-	gpuDescriptorManager->CreateSRVforRenderTexture(textTextureItem.srvIndex, textTextureItem.resource.Get());
+		textTextureItem.textResource.param = _textParam;
+	}
+	//アウトラインリソースの作成(初期化兼非表示設定)
+	{
+		EdgeResource edgeResource;
+		edgeResource.resource = dxcommon->CreateBufferResource(sizeof(EdgeParam));
+		edgeResource.resource->Map(0, nullptr, reinterpret_cast<void**>(&edgeResource.param));
+		edgeResource.param->isEdgeDisplay = 0;
 
-	////////////////////D3D12用コピーリソースの作成////////////////////
-
-	//リソースの作成
-	textTextureItem.copyResource = dxcommon->CreateRenderTextureResource(WinApp::kClientWidth, WinApp::kClientHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, Vector4(0.0f, 0.0f, 0.0f, 0.0f));
-	TransitionState(textTextureItem.copyResource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-
-	////////////////////D3D11用リソースの作成////////////////////
-
-	//DirectWriteの描画先の生成
-	D3D11_RESOURCE_FLAGS resourceFlags = { D3D11_BIND_RENDER_TARGET };
-	const UINT dpi = GetDpiForWindow(winapp->GetHwnd());
-	D2D1_BITMAP_PROPERTIES1 bitmapProperties = D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW, D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED), static_cast<float>(dpi), static_cast<float>(dpi));
-
-	//D2Dで使える用のリソースを生成
-	ComPtr<ID3D11Resource> wrappedTextureResource = nullptr;
-	//ID3D11Resourceの生成
-	hr = d2drender->GetD3D11On12Device()->CreateWrappedResource(textTextureItem.resource.Get(), &resourceFlags, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, IID_PPV_ARGS(&wrappedTextureResource));
-	assert(SUCCEEDED(hr));
-	//IDXGISurfaceの生成
-	ComPtr<IDXGISurface> dxgiSurface = nullptr;
-	hr = wrappedTextureResource.As(&dxgiSurface);
-	assert(SUCCEEDED(hr));
-	//ID2D1Bitmap1の生成
-	ComPtr<ID2D1Bitmap1> d2dRenderTarget = nullptr;
-	hr = d2drender->GetD2DDeviceContext()->CreateBitmapFromDxgiSurface(dxgiSurface.Get(), &bitmapProperties, &d2dRenderTarget);
-	assert(SUCCEEDED(hr));
-
-	//作成した変数をメンバ変数に格納
-	textTextureItem.wrappedResource = wrappedTextureResource;
-
-	////////////////////D2D用レンダーターゲットの作成////////////////////
-
-	textTextureItem.d2dRenderTarget = d2dRenderTarget;
-
-	////////////////////ブラシの作成////////////////////
-
-	textTextureItem.solidColorBrush = CreateSolidColorBrush(_textParam.color);
-
-	////////////////////テキストフォーマットの作成////////////////////
-
-	textTextureItem.textFormat = CreateTextFormat(_textParam.font, _textParam.fontStyle, _textParam.size);
-
-	////////////////////テキストリソースの作成////////////////////
-
-	textTextureItem.textResource.resource = dxcommon->CreateBufferResource(sizeof(Vector4));
-	textTextureItem.textResource.resource->Map(0, nullptr, reinterpret_cast<void**>(&textTextureItem.textResource.color));
-	*textTextureItem.textResource.color = _textParam.color;
-
-	textTextureItem.textResource.param = _textParam;
-
-	////////////////////アウトラインリソースの作成(初期化と非表示設定)////////////////////
-
-	EdgeResource edgeResource;
-	edgeResource.resource = dxcommon->CreateBufferResource(sizeof(EdgeParam));
-	edgeResource.resource->Map(0, nullptr, reinterpret_cast<void**>(&edgeResource.param));
-	edgeResource.param->isEdgeDisplay = 0;
-
-	textTextureItem.edgeResource = edgeResource;
-
+		textTextureItem.edgeResource = edgeResource;
+	}
 
 	return textTextureItem;
 }
@@ -761,21 +734,116 @@ void TextTextureManager::CheckAllReference() {
 	}
 }
 
+void TextTextureManager::ArrangeTextureSize(uint32_t _id) {
+	HRESULT hr;
+	const auto rtvManager = RTVManager::GetInstance();
+	const auto srvManager = GPUDescriptorManager::GetInstance();
+
+	//テキストのレイアウトを生成
+	ComPtr<IDWriteTextLayout> textLayout;
+	hr = directWriteFactory->CreateTextLayout(
+		textTextureMap[_id].textResource.param.text.c_str(),							//描画テキスト
+		static_cast<UINT32>(textTextureMap[_id].textResource.param.text.size()),	//文字数		
+		textTextureMap[_id].textFormat.Get(),												//フォント
+		FLT_MAX,																		//最大幅
+		FLT_MAX,																		//最大高さ
+		&textLayout
+	);
+	assert(SUCCEEDED(hr));
+
+	//メトリクスを取得
+	DWRITE_TEXT_METRICS metrics = {};
+	hr = textLayout->GetMetrics(&metrics);
+	assert(SUCCEEDED(hr));
+
+	//テクスチャサイズの決定
+	UINT textureWidth = static_cast<UINT>(ceil(metrics.width + (kMaxEdgeWidth_ * 2.0f)));
+	UINT textureHeight = static_cast<UINT>(ceil(metrics.height + (kMaxEdgeWidth_ * 2.0f)));
+
+	//もしテクスチャサイズがずれていた場合、リソースを作り直す。(軽量化のため初期化も兼ねる)
+	if (textureWidth != textTextureMap[_id].width || textureHeight != textTextureMap[_id].height) {
+		//D3Dレンダーターゲット用ID3D12Resourceの作成
+		{
+			//リセット
+			textTextureMap[_id].resource.Reset();
+			if (textTextureMap[_id].rtvIndex != 0) {
+				rtvManager->Free(textTextureMap[_id].rtvIndex);
+			}
+			if (textTextureMap[_id].srvIndex != 0) {
+				srvManager->Free(textTextureMap[_id].srvIndex);
+			}
+			//リソースの作成
+			textTextureMap[_id].resource = dxcommon->CreateRenderTextureResource(textureWidth, textureHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+			//RTVの作成
+			textTextureMap[_id].rtvIndex = rtvManager->Allocate();
+			rtvManager->CreateRTVDescriptor(textTextureMap[_id].rtvIndex, textTextureMap[_id].resource.Get());
+			//SRVの作成
+			textTextureMap[_id].srvIndex = srvManager->Allocate();
+			srvManager->CreateSRVforRenderTexture(textTextureMap[_id].srvIndex, textTextureMap[_id].resource.Get());
+		}
+		//テクスチャコピー用ID3D12Resourceの作成
+		{
+			//リセット
+			textTextureMap[_id].copyResource.Reset();
+			//リソースの作成
+			textTextureMap[_id].copyResource = dxcommon->CreateRenderTextureResource(textureWidth, textureHeight, DXGI_FORMAT_R8G8B8A8_UNORM_SRGB, Vector4(0.0f, 0.0f, 0.0f, 0.0f));
+			TransitionState(textTextureMap[_id].copyResource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		}
+		//D2Dレンダーターゲット用BitMapと中継用のID3D11Resourceの作成
+		{
+			//リセット
+			textTextureMap[_id].wrappedResource.Reset();
+			textTextureMap[_id].d2dRenderTarget.Reset();
+			//DirectWriteの描画先の生成
+			D3D11_RESOURCE_FLAGS resourceFlags = { D3D11_BIND_RENDER_TARGET };
+			const UINT dpi = GetDpiForWindow(winapp->GetHwnd());
+			D2D1_BITMAP_PROPERTIES1 bitmapProperties = D2D1::BitmapProperties1(D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW, D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED), static_cast<float>(dpi), static_cast<float>(dpi));
+			//D2Dで使える用のリソースを生成
+			ComPtr<ID3D11Resource> wrappedTextureResource = nullptr;
+			//ID3D11Resourceの生成
+			hr = d2drender->GetD3D11On12Device()->CreateWrappedResource(textTextureMap[_id].resource.Get(), &resourceFlags, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, IID_PPV_ARGS(&wrappedTextureResource));
+			assert(SUCCEEDED(hr));
+			//IDXGISurfaceの生成
+			ComPtr<IDXGISurface> dxgiSurface = nullptr;
+			hr = wrappedTextureResource.As(&dxgiSurface);
+			assert(SUCCEEDED(hr));
+			//ID2D1Bitmap1の生成
+			ComPtr<ID2D1Bitmap1> d2dRenderTarget = nullptr;
+			hr = d2drender->GetD2DDeviceContext()->CreateBitmapFromDxgiSurface(dxgiSurface.Get(), &bitmapProperties, &d2dRenderTarget);
+			assert(SUCCEEDED(hr));
+
+			//作成した変数をメンバ変数に格納
+			textTextureMap[_id].wrappedResource = wrappedTextureResource;
+			textTextureMap[_id].d2dRenderTarget = d2dRenderTarget;
+		}
+
+	}
+
+	//設定内容を反映
+	textTextureMap[_id].width = textureWidth;
+	textTextureMap[_id].height = textureHeight;
+}
+
 void TextTextureManager::WriteTextOnD2D() {
 	//参照カウントをチェック(未参照コンテナを削除する)
 	CheckAllReference();
 
-	//全コンテナ共通処理
-	D2D1_RECT_F rect;	//描画範囲
-	rect = {
-		0.0f,
-		0.0f,
-		WinApp::kClientWidth,
-		WinApp::kClientHeight
-	};
-
 	//各コンテナの処理
 	for (auto& [id, item] : textTextureMap) {
+		//テクスチャの縦幅、横幅を決めて反映する処理
+		ArrangeTextureSize(id);
+		//描画範囲の決定
+		D2D1_RECT_F rect;	//描画範囲
+		rect = {
+			0.0f,
+			0.0f,
+			(float)item.width,
+			(float)item.height
+		};
+		//ビューポートの送信
+		TextTextureRender::GetInstance()->SettingViewPort(item.width, item.height);
+		//シザー矩形の送信
+		TextTextureRender::GetInstance()->SettingScissorRect(item.width, item.height);
 		//リソースの設定
 		d2drender->GetD3D11On12Device()->AcquireWrappedResources(item.wrappedResource.GetAddressOf(), 1);
 		//描画ターゲットの設定

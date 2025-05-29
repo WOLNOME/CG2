@@ -140,6 +140,7 @@ void DirectXCommon::GenerateDevice() {
 			D3D12_MESSAGE_ID_CREATEGRAPHICSPIPELINESTATE_DEPTHSTENCILVIEW_NOT_SET,	//テキストテクスチャ作成時にDepthStencilViewがResourceにセットされていないことから起きるエラー
 			D3D12_MESSAGE_ID_GPU_BASED_VALIDATION_RESOURCE_ACCESS_OUT_OF_BOUNDS,	//テキストテクスチャのサイズを変えるとたまに起きる
 			D3D12_MESSAGE_ID_CLEARRENDERTARGETVIEW_MISMATCHINGCLEARVALUE,			//テキストテクスチャのサイズを大きくすると確実に起きる
+			D3D12_MESSAGE_ID_DESCRIPTOR_HANDLE_WITH_INVALID_RESOURCE,				//テキストテクスチャのサイズをクライアントサイズ以上の状態から小さくすると起きる
 
 		};
 		//抑制するレベル

@@ -30,9 +30,25 @@ void TextTextureRender::Finalize() {
 	instance = nullptr;
 }
 
-void TextTextureRender::PreDraw() {
-	//ビューポートとシザー矩形を設定する
+void TextTextureRender::SettingViewPort(UINT _width, UINT _height) {
+	//テクスチャの範囲に合わせる
+	viewport.Width = _width;
+	viewport.Height = _height;
+	viewport.TopLeftX = 0;
+	viewport.TopLeftY = 0;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+	//コマンドリストで送信
 	commandList->RSSetViewports(1, &viewport);
+}
+
+void TextTextureRender::SettingScissorRect(UINT _width, UINT _height) {
+	//テクスチャ範囲に切り取る
+	scissorRect.left = 0;
+	scissorRect.right = _width;
+	scissorRect.top = 0;
+	scissorRect.bottom = _height;
+	//コマンドリストで送信
 	commandList->RSSetScissorRects(1, &scissorRect);
 }
 

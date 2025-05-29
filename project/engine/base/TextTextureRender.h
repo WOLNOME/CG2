@@ -21,8 +21,9 @@ public:
 	//終了
 	void Finalize();
 
-	//描画前処理
-	void PreDraw();
+	//ビューポートとシザーのセッティング処理
+	void SettingViewPort(UINT _width, UINT _height);
+	void SettingScissorRect(UINT _width, UINT _height);
 	//描画後処理
 	void PostDraw();
 

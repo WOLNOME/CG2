@@ -147,10 +147,10 @@ void Sprite::Draw(Handle _textTextureHandle) {
 	}
 
 	//テクスチャのサイズからtexcoordを計算
-	float tex_left = textureLeftTop.x / WinApp::GetInstance()->kClientWidth;
-	float tex_right = (textureLeftTop.x + textureSize.x) / WinApp::GetInstance()->kClientWidth;
-	float tex_top = textureLeftTop.y / WinApp::GetInstance()->kClientHeight;
-	float tex_bottom = (textureLeftTop.y + textureSize.y) / WinApp::GetInstance()->kClientHeight;
+	float tex_left = textureLeftTop.x / TextTextureManager::GetInstance()->GetTextureWidth(_textTextureHandle);
+	float tex_right = (textureLeftTop.x + textureSize.x) / TextTextureManager::GetInstance()->GetTextureWidth(_textTextureHandle);
+	float tex_top = textureLeftTop.y / TextTextureManager::GetInstance()->GetTextureHeight(_textTextureHandle);
+	float tex_bottom = (textureLeftTop.y + textureSize.y) / TextTextureManager::GetInstance()->GetTextureHeight(_textTextureHandle);
 
 	//データ書き換え処理
 	vertexData[0].position = { left,bottom,0.0f,1.0f };
@@ -201,8 +201,8 @@ void Sprite::AdjustTextureSize(uint32_t _textureHandle) {
 }
 
 void Sprite::AdjustTextureSize(Handle _textTextureHandle) {
-	textureSize.x = static_cast<float>(WinApp::GetInstance()->kClientWidth);
-	textureSize.y = static_cast<float>(WinApp::GetInstance()->kClientHeight);
+	textureSize.x = static_cast<float>(TextTextureManager::GetInstance()->GetTextureWidth(_textTextureHandle));
+	textureSize.y = static_cast<float>(TextTextureManager::GetInstance()->GetTextureHeight(_textTextureHandle));
 	//画像サイズをテクスチャサイズに合わせる
 	size = textureSize;
 }

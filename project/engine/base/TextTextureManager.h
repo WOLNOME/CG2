@@ -89,9 +89,12 @@ private://構造体
 		ComPtr<IDWriteTextFormat> textFormat;			//DWrite用のテキストフォーマット
 		TextResource textResource;						//テキストのリソース
 		EdgeResource edgeResource;						//アウトラインのリソース
-		uint32_t rtvIndex;								//RTVインデックス
-		uint32_t srvIndex;								//SRVインデックス
-		uint32_t srvCopyIndex;							//コピーリソース用SRVインデックス
+		uint32_t rtvIndex = 0;								//RTVインデックス
+		uint32_t srvIndex = 0;								//SRVインデックス
+		uint32_t srvCopyIndex = 0;							//コピーリソース用SRVインデックス
+
+		UINT width;									//テクスチャの横幅
+		UINT height;								//テクスチャの縦幅
 	};
 
 private://コンストラクタ等の隠蔽
@@ -144,6 +147,9 @@ public:
 	void EditEdgeSlideRate(Handle _handle, const Vector2& _slideRate);
 	void EditEdgeColor(Handle _handle, const Vector4& _color);
 
+	//テクスチャそのもののgetter
+	const UINT GetTextureWidth(Handle _handle);
+	const UINT GetTextureHeight(Handle _handle);
 
 	//各パラメータのgetter
 	const std::wstring& GetTextString(Handle _handle);
@@ -186,6 +192,8 @@ private:
 
 	//描画前参照チェック関数
 	void CheckAllReference();
+	//テクスチャのサイズを揃える
+	void ArrangeTextureSize(uint32_t _id);
 
 public:
 	///=======================
@@ -227,6 +235,9 @@ private:
 	std::list<uint32_t> freeIndices;
 	//参照カウンタ
 	std::list<Handle> referenceCounter;
+
+	//アウトラインの最大幅
+	const float kMaxEdgeWidth_ = 3.0f;
 
 };
 
