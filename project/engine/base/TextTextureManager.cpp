@@ -608,7 +608,6 @@ void TextTextureManager::GenerateGraphicsPipeline() {
 	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;		//PSで使う
 	rootParameters[2].Descriptor.ShaderRegister = 1;						//Register番号は1
 
-
 	//Samplerの設定
 	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
 	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -816,7 +815,6 @@ void TextTextureManager::ArrangeTextureSize(uint32_t _id) {
 			textTextureMap[_id].wrappedResource = wrappedTextureResource;
 			textTextureMap[_id].d2dRenderTarget = d2dRenderTarget;
 		}
-
 	}
 
 	//設定内容を反映
@@ -840,10 +838,7 @@ void TextTextureManager::WriteTextOnD2D() {
 			(float)item.width,
 			(float)item.height
 		};
-		//ビューポートの送信
-		TextTextureRender::GetInstance()->SettingViewPort(item.width, item.height);
-		//シザー矩形の送信
-		TextTextureRender::GetInstance()->SettingScissorRect(item.width, item.height);
+		
 		//リソースの設定
 		d2drender->GetD3D11On12Device()->AcquireWrappedResources(item.wrappedResource.GetAddressOf(), 1);
 		//描画ターゲットの設定
@@ -906,6 +901,11 @@ void TextTextureManager::DrawDecorationOnD3D12() {
 			0.0f,0.0f,0.0f,0.0f
 		};
 		ttrender->GetCommandList()->ClearRenderTargetView(RTVManager::GetInstance()->GetCPUDescriptorHandle(item.rtvIndex), clearColor, 0, nullptr);
+
+		//ビューポートの送信
+		TextTextureRender::GetInstance()->SettingViewPort(item.width, item.height);
+		//シザー矩形の送信
+		TextTextureRender::GetInstance()->SettingScissorRect(item.width, item.height);
 
 		//テクスチャの送信
 		ttrender->GetCommandList()->SetGraphicsRootDescriptorTable(0, GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(item.srvCopyIndex));
