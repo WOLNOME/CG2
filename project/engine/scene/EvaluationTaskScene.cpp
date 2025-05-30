@@ -23,7 +23,7 @@ void EvaluationTaskScene::Initialize() {
 
 	ParticleManager::GetInstance()->SetCamera(camera.get());
 	//爆発エフェクトアニメーション
-	explosionEffects_.resize((int)ExplosionParticleName::kMaxNumExplosionParticleName);
+	explosionEffects_.resize((int)ExplosionEffectName::kMaxNumExplosionEffectName);
 	{
 		//収束のエフェクト
 		{
@@ -39,7 +39,7 @@ void EvaluationTaskScene::Initialize() {
 			float startTime = 1.0f / 60.0f;
 			float endTime = 0.0f;
 			//該当のインデックスに追加
-			explosionEffects_[(int)ExplosionParticleName::Convergence] = { std::move(particle), startTime, endTime };
+			explosionEffects_[(int)ExplosionEffectName::Convergence] = { std::move(particle), startTime, endTime };
 		}
 		//閃光のエフェクト
 		{
@@ -54,7 +54,7 @@ void EvaluationTaskScene::Initialize() {
 			float startTime = 6.0f/60.0f;
 			float endTime = 0.0f;
 			//該当のインデックスに追加
-			explosionEffects_[(int)ExplosionParticleName::Flash] = { std::move(particle), startTime, endTime };
+			explosionEffects_[(int)ExplosionEffectName::Flash] = { std::move(particle), startTime, endTime };
 		}
 		//衝撃波のエフェクト
 		{
@@ -69,7 +69,7 @@ void EvaluationTaskScene::Initialize() {
 			float startTime = 12.0f/60.0f;
 			float endTime = 40.0f/60.0f;
 			//該当のインデックスに追加
-			explosionEffects_[(int)ExplosionParticleName::ShockWave] = { std::move(particle), startTime, endTime };
+			explosionEffects_[(int)ExplosionEffectName::ShockWave] = { std::move(particle), startTime, endTime };
 		}
 		//炎のエフェクト
 		{
@@ -86,7 +86,7 @@ void EvaluationTaskScene::Initialize() {
 			float startTime = 12.0f/60.0f;
 			float endTime = 60.0f/60.0f;
 			//該当のインデックスに追加
-			explosionEffects_[(int)ExplosionParticleName::Fire] = { std::move(particle), startTime, endTime };
+			explosionEffects_[(int)ExplosionEffectName::Fire] = { std::move(particle), startTime, endTime };
 		}
 		//煙のエフェクト
 		{
@@ -94,16 +94,16 @@ void EvaluationTaskScene::Initialize() {
 			std::unique_ptr<Particle> particle = std::make_unique<Particle>();
 			particle->Initialize(ParticleManager::GetInstance()->GenerateName("Explosion_ShockWave"), "smoke");
 			particle->emitter_.isPlay = false;
-			particle->emitter_.transform.scale = { 3.5f,3.5f,3.5f };
+			particle->emitter_.transform.scale = { 7.5f,7.5f,7.5f };
 			particle->emitter_.generateMethod = Particle::GenerateMethod::Clump;
-			particle->emitter_.clumpNum = 3;
+			particle->emitter_.clumpNum = 4;
 			particle->emitter_.effectStyle = Particle::EffectStyle::Loop;
 			particle->emitter_.isGravity = true;
 			particle->emitter_.gravity = 6.0f;
 			float startTime = 50.0f/60.0f;
 			float endTime = 110.0f/60.0f;
 			//該当のインデックスに追加
-			explosionEffects_[(int)ExplosionParticleName::Smoke] = { std::move(particle), startTime, endTime };
+			explosionEffects_[(int)ExplosionEffectName::Smoke] = { std::move(particle), startTime, endTime };
 		}
 		//瓦礫エフェクト
 		{
@@ -119,9 +119,11 @@ void EvaluationTaskScene::Initialize() {
 			float startTime = 20.0f / 60.0f;
 			float endTime = 50.0f / 60.0f;
 			//該当のインデックスに追加
-			explosionEffects_[(int)ExplosionParticleName::Rubble] = { std::move(particle), startTime, endTime };
+			explosionEffects_[(int)ExplosionEffectName::Rubble] = { std::move(particle), startTime, endTime };
 		}
 	}
+	//斬撃エフェクト
+
 
 
 
@@ -146,7 +148,7 @@ void EvaluationTaskScene::Update() {
 	skyBox_->Update();
 
 	//エフェクトの更新
-	EffectUpdate();
+	ExplosionEffectUpdate();
 
 #ifdef _DEBUG
 
@@ -155,8 +157,13 @@ void EvaluationTaskScene::Update() {
 	{
 		//再生
 		if (ImGui::Button("再生")) {
+			if (isShake_&&!isExplosionPlay_) {
+				camera->RegistShake(3.0f, 0.7f);
+			}
 			isExplosionPlay_ = true;
 		}
+		//揺れフラグを追加
+		ImGui::Checkbox("ゆらす", &isShake_);
 	}
 	ImGui::End();
 #endif // _DEBUG
@@ -216,35 +223,35 @@ void EvaluationTaskScene::TextDraw() {
 	///------------------------------///
 }
 
-void EvaluationTaskScene::EffectUpdate() {
+void EvaluationTaskScene::ExplosionEffectUpdate() {
 	//もし再生フラグがオンになったら
 	if (isExplosionPlay_) {
-		currentTime_ += kDeltaTime;
+		explosionCurrentTime_ += kDeltaTime;
 		//エフェクトを回す
 		for (auto& effect : explosionEffects_) {
 			//もしスタイルがOneShotなら
 			if (effect.particle->emitter_.effectStyle == Particle::EffectStyle::OneShot) {
 				//開始時間に達したら
-				if (currentTime_ > effect.startTime && currentTime_ - kDeltaTime <= effect.startTime) {
+				if (explosionCurrentTime_ > effect.startTime && explosionCurrentTime_ - kDeltaTime <= effect.startTime) {
 					effect.particle->emitter_.isPlay = true;
 				}
 			}
 			//もしスタイルがLoopなら
 			else if (effect.particle->emitter_.effectStyle == Particle::EffectStyle::Loop) {
 				//開始時間に達したら
-				if (currentTime_ > effect.startTime && currentTime_ - kDeltaTime <= effect.startTime) {
+				if (explosionCurrentTime_ > effect.startTime && explosionCurrentTime_ - kDeltaTime <= effect.startTime) {
 					effect.particle->emitter_.isPlay = true;
 				}
 				//終了時間に達したら
-				if (currentTime_ > effect.endTime && currentTime_ - kDeltaTime <= effect.endTime) {
+				if (explosionCurrentTime_ > effect.endTime && explosionCurrentTime_ - kDeltaTime <= effect.endTime) {
 					effect.particle->emitter_.isPlay = false;
 				}
 			}
 		}
 		//4秒たったら終了
-		if (currentTime_ > 4.0f) {
+		if (explosionCurrentTime_ > 3.2f) {
 			isExplosionPlay_ = false;
-			currentTime_ = 0.0f;
+			explosionCurrentTime_ = 0.0f;
 		}
 	}
 }

@@ -8,8 +8,8 @@
 
 class EvaluationTaskScene : public BaseScene {
 private://列挙体
-	//爆発パーティクル
-	enum class ExplosionParticleName{
+	//爆発エフェクト
+	enum class ExplosionEffectName{
 		Convergence,	//収束
 		Flash,			//閃光
 		ShockWave,		//衝撃波
@@ -17,8 +17,14 @@ private://列挙体
 		Smoke,			//煙
 		Rubble,			//瓦礫
 
-		kMaxNumExplosionParticleName,	//最大数
+		kMaxNumExplosionEffectName,	//最大数
 	};
+	//斬撃エフェクト
+	enum class SlashEffectName {
+
+		kMaxNumSlashEffectName,	//最大数
+	};
+
 private://構造体
 	//単体パーティクルのデータ
 	struct SingleEffectData {
@@ -51,7 +57,7 @@ public:
 
 private:
 	//パーティクルの更新
-	void EffectUpdate();
+	void ExplosionEffectUpdate();
 
 private://メンバ変数
 	Input* input_ = nullptr;
@@ -63,10 +69,15 @@ private://メンバ変数
 	uint32_t textureHandleSkyBox_ = 0u;
 	std::unique_ptr<Object3d> skyBox_ = nullptr;
 
-	//パーティクル
+	//再生時の装飾用変数
+	bool isShake_ = false;
+	//爆発エフェクト
 	std::vector<SingleEffectData> explosionEffects_;
 	bool isExplosionPlay_ = false;	//再生フラグ
-	float currentTime_ = 0.0f;
-
+	float explosionCurrentTime_ = 0.0f;
+	//斬撃エフェクト
+	std::vector<SingleEffectData> slashEffects_;
+	bool isSlashPlay_ = false;		//再生フラグ
+	float slashCurrentTime_ = 0.0f;
 };
 
