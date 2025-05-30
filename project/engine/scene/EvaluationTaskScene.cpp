@@ -79,7 +79,7 @@ void EvaluationTaskScene::Initialize() {
 			particle->emitter_.isPlay = false;
 			particle->emitter_.transform.scale = { 0.1f,0.1f,0.1f };
 			particle->emitter_.generateMethod = Particle::GenerateMethod::Clump;
-			particle->emitter_.clumpNum = 6;
+			particle->emitter_.clumpNum = 3;
 			particle->emitter_.effectStyle = Particle::EffectStyle::Loop;
 			particle->emitter_.isGravity = true;
 			particle->emitter_.gravity = 2.0f;
@@ -104,6 +104,22 @@ void EvaluationTaskScene::Initialize() {
 			float endTime = 110.0f/60.0f;
 			//該当のインデックスに追加
 			explosionEffects_[(int)ExplosionParticleName::Smoke] = { std::move(particle), startTime, endTime };
+		}
+		//瓦礫エフェクト
+		{
+			//生成と初期化
+			std::unique_ptr<Particle> particle = std::make_unique<Particle>();
+			particle->Initialize(ParticleManager::GetInstance()->GenerateName("Explosion_Rubble"), "rubble");
+			particle->emitter_.isPlay = false;
+			particle->emitter_.transform.scale = { 5.0f,5.0f,5.0f };
+			particle->emitter_.generateMethod = Particle::GenerateMethod::Random;
+			particle->emitter_.effectStyle = Particle::EffectStyle::Loop;
+			particle->emitter_.isGravity = true;
+			particle->emitter_.gravity = -40.0f;
+			float startTime = 20.0f / 60.0f;
+			float endTime = 50.0f / 60.0f;
+			//該当のインデックスに追加
+			explosionEffects_[(int)ExplosionParticleName::Rubble] = { std::move(particle), startTime, endTime };
 		}
 	}
 

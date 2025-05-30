@@ -20,6 +20,7 @@ void MyGame::Initialize() {
 
 	//パーティクルエディター→PARTICLECREATOR
 	//開発用シーン→DEVELOP
+	//シーン→EVALUATIONTASK
 }
 
 void MyGame::Finalize() {

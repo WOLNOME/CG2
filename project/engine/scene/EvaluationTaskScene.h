@@ -15,6 +15,7 @@ private://列挙体
 		ShockWave,		//衝撃波
 		Fire,			//炎
 		Smoke,			//煙
+		Rubble,			//瓦礫
 
 		kMaxNumExplosionParticleName,	//最大数
 	};
