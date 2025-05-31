@@ -828,6 +828,29 @@ void TextTextureManager::WriteTextOnD2D() {
 
 	//各コンテナの処理
 	for (auto& [id, item] : textTextureMap) {
+		//描画重複抑制処理
+		if (item.textResource.preParam.text == item.textResource.param.text &&
+			item.textResource.preParam.font == item.textResource.param.font &&
+			item.textResource.preParam.fontStyle == item.textResource.param.fontStyle &&
+			item.textResource.preParam.size == item.textResource.param.size &&
+			item.textResource.preParam.color == item.textResource.param.color &&
+			item.edgeResource.preParam.isEdgeDisplay == item.edgeResource.param->isEdgeDisplay &&
+			item.edgeResource.preParam.width == item.edgeResource.param->width &&
+			item.edgeResource.preParam.slideRate == item.edgeResource.param->slideRate &&
+			item.edgeResource.preParam.color == item.edgeResource.param->color
+			) {
+			//このフレームでは描画しない
+			item.isDrawThisFrame = false;
+			//リソースの状態をPixel_Shader_Resourceへ
+			TransitionState(item.resource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+			//次の要素へ
+			continue;
+		}
+		else {
+			//このフレームでは描画をする
+			item.isDrawThisFrame = true;
+		}
+
 		//テクスチャの縦幅、横幅を決めて反映する処理
 		ArrangeTextureSize(id);
 		//描画範囲の決定
@@ -838,7 +861,7 @@ void TextTextureManager::WriteTextOnD2D() {
 			(float)item.width,
 			(float)item.height
 		};
-		
+
 		//リソースの設定
 		d2drender->GetD3D11On12Device()->AcquireWrappedResources(item.wrappedResource.GetAddressOf(), 1);
 		//描画ターゲットの設定
@@ -862,6 +885,11 @@ void TextTextureManager::WriteTextOnD2D() {
 		d2drender->GetD2DDeviceContext()->EndDraw();
 		//リソースを取り外す
 		d2drender->GetD3D11On12Device()->ReleaseWrappedResources(item.wrappedResource.GetAddressOf(), 1);
+
+		//パラメータを保存(描画重複抑制用)
+		item.textResource.preParam = item.textResource.param;
+		item.edgeResource.preParam = *item.edgeResource.param;
+
 	}
 	//描画内容の確定（ExecuteCommandListみたいなやつ→処理がまとまったら1回呼び出せば十分）
 	d2drender->GetD3D11On12DeviceContext()->Flush();
@@ -878,6 +906,12 @@ void TextTextureManager::DrawDecorationOnD3D12() {
 
 	//各コンテナの処理
 	for (auto& [id, item] : textTextureMap) {
+		//描画スキップ処理
+		if (!item.isDrawThisFrame) {
+			//次の要素へ
+			continue;
+		}
+
 		//コピーするためにコピー元をSourceコピー先をDestにする
 		TransitionState(item.resource.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_SOURCE);
 		TransitionState(item.copyResource.Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_COPY_DEST);
@@ -922,6 +956,7 @@ void TextTextureManager::DrawDecorationOnD3D12() {
 
 		//コピーリソースのSRVインデックスを破棄
 		GPUDescriptorManager::GetInstance()->Free(item.srvCopyIndex);
+
 	}
 }
 
