@@ -84,7 +84,7 @@ void EvaluationTaskScene::Initialize() {
 			particle->emitter_.isGravity = true;
 			particle->emitter_.gravity = 2.0f;
 			float startTime = 12.0f/60.0f;
-			float endTime = 60.0f/60.0f;
+			float endTime = 40.0f/60.0f;
 			//該当のインデックスに追加
 			explosionEffects_[(int)ExplosionEffectName::Fire] = { std::move(particle), startTime, endTime };
 		}
@@ -94,14 +94,14 @@ void EvaluationTaskScene::Initialize() {
 			std::unique_ptr<Particle> particle = std::make_unique<Particle>();
 			particle->Initialize(ParticleManager::GetInstance()->GenerateName("Explosion_ShockWave"), "smoke");
 			particle->emitter_.isPlay = false;
-			particle->emitter_.transform.scale = { 7.5f,7.5f,7.5f };
+			particle->emitter_.transform.scale = { 12.5f,12.5f,12.5f };
 			particle->emitter_.generateMethod = Particle::GenerateMethod::Clump;
-			particle->emitter_.clumpNum = 4;
+			particle->emitter_.clumpNum = 8;
 			particle->emitter_.effectStyle = Particle::EffectStyle::Loop;
 			particle->emitter_.isGravity = true;
 			particle->emitter_.gravity = 6.0f;
-			float startTime = 50.0f/60.0f;
-			float endTime = 110.0f/60.0f;
+			float startTime = 30.0f/60.0f;
+			float endTime = 60.0f/60.0f;
 			//該当のインデックスに追加
 			explosionEffects_[(int)ExplosionEffectName::Smoke] = { std::move(particle), startTime, endTime };
 		}
@@ -122,8 +122,70 @@ void EvaluationTaskScene::Initialize() {
 			explosionEffects_[(int)ExplosionEffectName::Rubble] = { std::move(particle), startTime, endTime };
 		}
 	}
-	//斬撃エフェクト
+	//闇エフェクト
+	darknessEffects_.resize((int)DarknessEffectName::kMaxNumDarknessEffectName);
+	{
+		//うずまきエフェクト
+		{
+			//生成と初期化
+			std::unique_ptr<Particle> particle = std::make_unique<Particle>();
+			particle->Initialize(ParticleManager::GetInstance()->GenerateName("Explosion_Uzumaki"), "uzumaki");
+			particle->emitter_.isPlay = false;
+			particle->emitter_.transform.scale = { 0.1f,0.1f,0.1f };
+			particle->emitter_.generateMethod = Particle::GenerateMethod::Clump;
+			particle->emitter_.clumpNum = 6;
+			particle->emitter_.effectStyle = Particle::EffectStyle::OneShot;
+			float startTime = 0.01f / 60.0f;
+			float endTime = 0.0f / 60.0f;
+			//該当のインデックスに追加
+			darknessEffects_[(int)DarknessEffectName::Uzumaki] = { std::move(particle), startTime, endTime };
+		}
+		//暗粒
+		{
+			//生成と初期化
+			std::unique_ptr<Particle> particle = std::make_unique<Particle>();
+			particle->Initialize(ParticleManager::GetInstance()->GenerateName("Explosion_DarkGrain"), "darkgrain");
+			particle->emitter_.isPlay = false;
+			particle->emitter_.transform.scale = { 3.0f,3.0f,3.0f };
+			particle->emitter_.generateMethod = Particle::GenerateMethod::Random;
+			particle->emitter_.effectStyle = Particle::EffectStyle::Loop;
+			float startTime = 0.01f / 60.0f;
+			float endTime = 40.0f / 60.0f;
+			//該当のインデックスに追加
+			darknessEffects_[(int)DarknessEffectName::DarkGrain] = { std::move(particle), startTime, endTime };
+		}
+		//閃光
+		{
+			//生成と初期化
+			std::unique_ptr<Particle> particle = std::make_unique<Particle>();
+			particle->Initialize(ParticleManager::GetInstance()->GenerateName("Explosion_DarkFlash"), "darkflash");
+			particle->emitter_.isPlay = false;
+			particle->emitter_.transform.scale = { 0.1f,0.1f,0.1f };
+			particle->emitter_.generateMethod = Particle::GenerateMethod::Clump;
+			particle->emitter_.clumpNum = 4;
+			particle->emitter_.effectStyle = Particle::EffectStyle::OneShot;
+			float startTime = 0.01f / 60.0f;
+			float endTime = 0.0f / 60.0f;
+			//該当のインデックスに追加
+			darknessEffects_[(int)DarknessEffectName::Flash] = { std::move(particle), startTime, endTime };
+		}
+		//集中
+		{
+			//生成と初期化
+			std::unique_ptr<Particle> particle = std::make_unique<Particle>();
+			particle->Initialize(ParticleManager::GetInstance()->GenerateName("Explosion_Concentration"), "concentration");
+			particle->emitter_.isPlay = false;
+			particle->emitter_.transform.scale = { 0.1f,0.1f,0.1f };
+			particle->emitter_.generateMethod = Particle::GenerateMethod::Clump;
+			particle->emitter_.clumpNum = 2;
+			particle->emitter_.effectStyle = Particle::EffectStyle::Loop;
+			float startTime = 1.0f / 60.0f;
+			float endTime = 40.0f / 60.0f;
+			//該当のインデックスに追加
+			darknessEffects_[(int)DarknessEffectName::Concentration] = { std::move(particle), startTime, endTime };
+		}
 
+	}
 
 
 
@@ -149,19 +211,30 @@ void EvaluationTaskScene::Update() {
 
 	//エフェクトの更新
 	ExplosionEffectUpdate();
+	DarknessEffectUpdate();
 
 #ifdef _DEBUG
 
 	ImGui::Begin("アニメーションの再生管理");
-	//爆発エフェクト
+	//エフェクト
 	{
-		//再生
-		if (ImGui::Button("再生")) {
+		//爆発エフェクト再生
+		if (ImGui::Button("爆発エフェクト再生")) {
 			if (isShake_&&!isExplosionPlay_) {
 				camera->RegistShake(3.0f, 0.7f);
 			}
 			isExplosionPlay_ = true;
+			camera->SetTranslate({ 0.0f,0.0f,-230.0f });
 		}
+		//闇エフェクト再生
+		if (ImGui::Button("闇攻撃エフェクト再生")) {
+			if (isShake_ && !isDarknessPlay_) {
+				camera->RegistShake(2.0f, 0.3f);
+			}
+			isDarknessPlay_ = true;
+			camera->SetTranslate({ 0.0f,0.0f,-35.0f });
+		}
+
 		//揺れフラグを追加
 		ImGui::Checkbox("ゆらす", &isShake_);
 	}
@@ -202,10 +275,6 @@ void EvaluationTaskScene::Draw() {
 	///------------------------------///
 	///↓↓↓↓スプライト描画開始↓↓↓↓
 	///------------------------------///
-
-	////スプライト描画
-	//sprite_->Draw();
-	//sprite2_->Draw();
 
 
 	///------------------------------///
@@ -248,10 +317,43 @@ void EvaluationTaskScene::ExplosionEffectUpdate() {
 				}
 			}
 		}
-		//4秒たったら終了
+		//3.2秒たったら終了
 		if (explosionCurrentTime_ > 3.2f) {
 			isExplosionPlay_ = false;
 			explosionCurrentTime_ = 0.0f;
+		}
+	}
+}
+
+void EvaluationTaskScene::DarknessEffectUpdate() {
+	//もし再生フラグがオンになったら
+	if (isDarknessPlay_) {
+		darknessCurrentTime_ += kDeltaTime;
+		//エフェクトを回す
+		for (auto& effect : darknessEffects_) {
+			//もしスタイルがOneShotなら
+			if (effect.particle->emitter_.effectStyle == Particle::EffectStyle::OneShot) {
+				//開始時間に達したら
+				if (darknessCurrentTime_ > effect.startTime && darknessCurrentTime_ - kDeltaTime <= effect.startTime) {
+					effect.particle->emitter_.isPlay = true;
+				}
+			}
+			//もしスタイルがLoopなら
+			else if (effect.particle->emitter_.effectStyle == Particle::EffectStyle::Loop) {
+				//開始時間に達したら
+				if (darknessCurrentTime_ > effect.startTime && darknessCurrentTime_ - kDeltaTime <= effect.startTime) {
+					effect.particle->emitter_.isPlay = true;
+				}
+				//終了時間に達したら
+				if (darknessCurrentTime_ > effect.endTime && darknessCurrentTime_ - kDeltaTime <= effect.endTime) {
+					effect.particle->emitter_.isPlay = false;
+				}
+			}
+		}
+		//3.2秒たったら終了
+		if (darknessCurrentTime_ > 3.2f) {
+			isDarknessPlay_ = false;
+			darknessCurrentTime_ = 0.0f;
 		}
 	}
 }

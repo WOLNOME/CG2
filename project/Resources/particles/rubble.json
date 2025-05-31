@@ -1,6 +1,6 @@
 {
     "BlendMode": 1,
-    "EmitRate": 30,
+    "EmitRate": 60,
     "EndColor": {
         "Max": {
             "w": 0.0,
@@ -61,7 +61,7 @@
         "Max": 2.0,
         "Min": 1.0
     },
-    "MaxGrains": 1000,
+    "MaxGrains": 100,
     "Primitive": 3,
     "StartColor": {
         "Max": {

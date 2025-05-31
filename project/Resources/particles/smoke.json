@@ -1,6 +1,6 @@
 {
     "BlendMode": 1,
-    "EmitRate": 25,
+    "EmitRate": 80,
     "EndColor": {
         "Max": {
             "w": 0.062745101749897,
@@ -58,10 +58,10 @@
         }
     },
     "LifeTime": {
-        "Max": 0.800000011920929,
-        "Min": 0.4000000059604645
+        "Max": 2.0,
+        "Min": 1.5
     },
-    "MaxGrains": 320,
+    "MaxGrains": 1280,
     "Primitive": 3,
     "StartColor": {
         "Max": {
@@ -93,7 +93,7 @@
         "Max": 0.20000000298023224,
         "Min": 0.10000000149011612
     },
-    "Texture": "circle3.png",
+    "Texture": "smoke.png",
     "Velocity": {
         "Max": {
             "x": 0.5,

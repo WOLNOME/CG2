@@ -90,8 +90,8 @@
         }
     },
     "StartSize": {
-        "Max": 7.0,
-        "Min": 5.0
+        "Max": 70.0,
+        "Min": 50.0
     },
     "Texture": "circle2.png",
     "Velocity": {

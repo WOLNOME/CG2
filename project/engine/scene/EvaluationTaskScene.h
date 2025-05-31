@@ -20,9 +20,13 @@ private://列挙体
 		kMaxNumExplosionEffectName,	//最大数
 	};
 	//斬撃エフェクト
-	enum class SlashEffectName {
+	enum class DarknessEffectName {
+		Uzumaki,		//うずまき
+		DarkGrain,		//暗粒
+		Flash,			//閃光
+		Concentration,	//集中	
 
-		kMaxNumSlashEffectName,	//最大数
+		kMaxNumDarknessEffectName,	//最大数
 	};
 
 private://構造体
@@ -56,8 +60,10 @@ public:
 	void TextDraw() override;
 
 private:
-	//パーティクルの更新
+	//爆発エフェクトの更新
 	void ExplosionEffectUpdate();
+	//闇エフェクトの更新
+	void DarknessEffectUpdate();
 
 private://メンバ変数
 	Input* input_ = nullptr;
@@ -75,9 +81,9 @@ private://メンバ変数
 	std::vector<SingleEffectData> explosionEffects_;
 	bool isExplosionPlay_ = false;	//再生フラグ
 	float explosionCurrentTime_ = 0.0f;
-	//斬撃エフェクト
-	std::vector<SingleEffectData> slashEffects_;
-	bool isSlashPlay_ = false;		//再生フラグ
-	float slashCurrentTime_ = 0.0f;
+	//闇エフェクト
+	std::vector<SingleEffectData> darknessEffects_;
+	bool isDarknessPlay_ = false;		//再生フラグ
+	float darknessCurrentTime_ = 0.0f;
 };
 

@@ -1,6 +1,6 @@
 {
-    "BlendMode": 2,
-    "EmitRate": 30,
+    "BlendMode": 3,
+    "EmitRate": 60,
     "EndColor": {
         "Max": {
             "w": 0.0,
@@ -10,9 +10,9 @@
         },
         "Min": {
             "w": 0.0,
-            "x": 1.0,
+            "x": 0.0,
             "y": 1.0,
-            "z": 1.0
+            "z": 0.0
         }
     },
     "EndRotate": {
@@ -28,14 +28,14 @@
         }
     },
     "EndSize": {
-        "Max": 400.0,
-        "Min": 200.0
+        "Max": 0.0,
+        "Min": 0.0
     },
     "GrainTransform": {
         "Rotate": {
             "Max": {
-                "x": 3.140000104904175,
-                "y": 3.140000104904175,
+                "x": 0.0,
+                "y": 0.0,
                 "z": 0.0
             },
             "Min": {
@@ -51,18 +51,18 @@
                 "z": 1.0
             },
             "Min": {
-                "x": 0.5,
-                "y": 0.5,
+                "x": 1.0,
+                "y": 1.0,
                 "z": 1.0
             }
         }
     },
     "LifeTime": {
-        "Max": 0.800000011920929,
-        "Min": 0.4000000059604645
+        "Max": 2.0,
+        "Min": 1.0
     },
-    "MaxGrains": 32,
-    "Primitive": 4,
+    "MaxGrains": 120,
+    "Primitive": 3,
     "StartColor": {
         "Max": {
             "w": 1.0,
@@ -72,9 +72,9 @@
         },
         "Min": {
             "w": 1.0,
-            "x": 1.0,
+            "x": 0.0,
             "y": 1.0,
-            "z": 1.0
+            "z": 0.0
         }
     },
     "StartRotate": {
@@ -90,10 +90,10 @@
         }
     },
     "StartSize": {
-        "Max": 5.0,
-        "Min": 5.0
+        "Max": 0.5,
+        "Min": 0.5
     },
-    "Texture": "gradationLine2.png",
+    "Texture": "circle.png",
     "Velocity": {
         "Max": {
             "x": 0.0,
