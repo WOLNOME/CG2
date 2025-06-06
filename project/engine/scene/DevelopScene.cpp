@@ -107,6 +107,12 @@ void DevelopScene::Initialize() {
 	simpleSkin_->worldTransform.translate = { 5.0f,3.0f,0.0f };
 	simpleSkin_->SetSceneLight(sceneLight_.get());
 
+	//レベルオブジェクトの生成・初期化
+	levelObject_ = std::make_unique<LevelObject>();
+	levelObject_->Initialize("Resources/levelOutput");
+	levelObject_->SetCamera(camera.get());
+
+	//パーティクルの生成・初期化
 	ParticleManager::GetInstance()->SetCamera(camera.get());
 	//particle_ = std::make_unique<Particle>();
 	//particle_->Initialize("develop", "basic");
@@ -167,6 +173,8 @@ void DevelopScene::Update() {
 	sneakWalk_->Update();
 	composite_->Update();
 	simpleSkin_->Update();
+	//レベルオブジェクトの更新
+	levelObject_->Update();
 
 	//スプライトの更新
 	sprite_->SetRotation(sprite_->GetRotation() + 0.03f);
@@ -286,6 +294,8 @@ void DevelopScene::Update() {
 	}
 	ImGui::End();
 
+	//レベルオブジェクト用ImGui
+	levelObject_->DebugWithImGui();
 	//テキスト用ImGui
 	TextTextureManager::GetInstance()->DebugWithImGui(textHandle_);
 	//カメラ用ImGui
@@ -319,6 +329,8 @@ void DevelopScene::Draw() {
 	composite_->Draw(camera.get());
 
 	simpleSkin_->Draw(camera.get());
+
+	levelObject_->Draw();
 
 	///------------------------------///
 	///↑↑↑↑モデル描画終了↑↑↑↑

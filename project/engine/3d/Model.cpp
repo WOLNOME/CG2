@@ -245,6 +245,10 @@ Model::ModelResource Model::MakeModelResource() {
 
 void Model::SettingTexture() {
 	for (size_t index = 0; index < modelResource_.modelData.size(); index++) {
+		//テクスチャがない場合はスキップ
+		if (modelResource_.modelData[index].material.textureFilePath.empty()) {
+			continue;
+		}
 		//.objの参照しているテクスチャファイル読み込み(TextureManagerはResources/をカットできるので)
 		modelResource_.modelData.at(index).material.textureHandle = TextureManager::GetInstance()->LoadTexture("../models/" + fileName_ + "/" + modelResource_.modelData.at(index).material.textureFilePath);
 	}

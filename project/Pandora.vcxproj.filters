@@ -87,6 +87,7 @@
     <ClCompile Include="engine\3d\CombinedParticle.cpp" />
     <ClCompile Include="engine\base\DSVManager.cpp" />
     <ClCompile Include="engine\base\TextTextureRender.cpp" />
+    <ClCompile Include="engine\3d\LevelObject.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\3d\DirectionalLight.h" />
@@ -161,6 +162,7 @@
     <ClInclude Include="engine\base\DSVManager.h" />
     <ClInclude Include="engine\base\TextTextureRender.h" />
     <ClInclude Include="engine\util\Handle.h" />
+    <ClInclude Include="LevelObject.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\LineDrawer.hlsli" />
