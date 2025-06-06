@@ -8,8 +8,6 @@ void LevelObject::Initialize(const std::string& _filePath) {
 	for (json& object : data["objects"]) {
 		ScanObjectData(object);
 	}
-
-
 }
 
 void LevelObject::Update() {

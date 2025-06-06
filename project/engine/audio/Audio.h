@@ -2,8 +2,7 @@
 #include <string>
 #include "AudioCommon.h"
 
-class Audio
-{
+class Audio {
 public:
 	/// <summary>
 	/// デストラクタ
@@ -16,6 +15,11 @@ public:
 	/// <param name="filename">Resources/はカットして</param>
 	/// <param name="directoryPath">ディレクトリパス (デフォルト: "Resources/audios/")</param>
 	void Initialize(const std::string& filename, const std::string& directoryPath = "Resources/audios/");
+
+	/// <summary>
+	/// デバッグ用ImGui
+	/// </summary>
+	void DebugWithImGui(const std::wstring& _name);
 
 	/// <summary>
 	/// 再生
@@ -47,4 +51,5 @@ private: // メンバ変数
 	std::string directoryPath_;  // ディレクトリパス
 	uint32_t soundDataHandle_ = 0u;  // サウンドデータハンドル
 	uint32_t voiceDataHandle_ = 0u;  // ボイスデータハンドル
+	float volume_ = 0.5f;
 };

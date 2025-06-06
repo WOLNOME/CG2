@@ -165,8 +165,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClCompile Include="engine\3d\SceneLight.cpp" />
     <ClCompile Include="engine\3d\SpotLight.cpp" />
     <ClCompile Include="engine\3d\Shape.cpp" />
-    <ClCompile Include="engine\3d\Skybox.cpp" />
-    <ClCompile Include="engine\3d\SkyboxCommon.cpp" />
     <ClCompile Include="engine\util\RandomStringUtil.cpp" />
     <ClCompile Include="engine\base\PostEffectManager.cpp" />
     <ClCompile Include="engine\base\RTVManager.cpp" />
@@ -229,7 +227,7 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\base\MainRender.h" />
     <ClInclude Include="engine\3d\ModelFormat.h" />
     <ClInclude Include="engine\util\Handle.h" />
-    <ClInclude Include="LevelObject.h" />
+    <ClInclude Include="engine\3d\LevelObject.h" />
     <ClInclude Include="MyGame.h" />
     <ClInclude Include="engine\scenebase\SceneFactory.h" />
     <ClInclude Include="engine\scenebase\SceneManager.h" />
@@ -240,8 +238,6 @@ copy "$(WindowsSdkDir)bin\$(TargetPlatformVersion)\x64\dxil.dll" "$(TargetDir)dx
     <ClInclude Include="engine\3d\SceneLight.h" />
     <ClInclude Include="engine\3d\SpotLight.h" />
     <ClInclude Include="engine\3d\Shape.h" />
-    <ClInclude Include="engine\3d\Skybox.h" />
-    <ClInclude Include="engine\3d\SkyboxCommon.h" />
     <ClInclude Include="engine\util\RandomStringUtil.h" />
     <ClInclude Include="engine\base\PostEffectManager.h" />
     <ClInclude Include="engine\base\RTVManager.h" />

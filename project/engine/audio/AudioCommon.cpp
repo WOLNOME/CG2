@@ -7,16 +7,14 @@ AudioCommon* AudioCommon::instance = nullptr;
 //サウンドデータコンテナの開始位置
 const uint32_t kStartSoundDataIndex = 1;
 
-AudioCommon* AudioCommon::GetInstance()
-{
+AudioCommon* AudioCommon::GetInstance() {
 	if (instance == nullptr) {
 		instance = new AudioCommon;
 	}
 	return instance;
 }
 
-void AudioCommon::Initialize()
-{
+void AudioCommon::Initialize() {
 	//XAudio2エンジンのインスタンス作成
 	HRESULT hr = XAudio2Create(&xAudio2_, 0, XAUDIO2_DEFAULT_PROCESSOR);
 	assert(SUCCEEDED(hr));
@@ -26,8 +24,7 @@ void AudioCommon::Initialize()
 
 }
 
-void AudioCommon::Finalize()
-{
+void AudioCommon::Finalize() {
 	//コンテナの全開放
 	ShutdownContainer();
 	//XAudio2の解放
@@ -37,8 +34,7 @@ void AudioCommon::Finalize()
 }
 
 
-uint32_t AudioCommon::SoundLoadWave(const std::string& filename)
-{
+uint32_t AudioCommon::SoundLoadWave(const std::string& filename) {
 	// 既存のサウンドデータを検索
 	for (uint32_t i = kStartSoundDataIndex; i < soundDatas_.size(); ++i) {
 		if (soundDatas_[i].name == filename) {  // 名前が一致するサウンドデータを発見
@@ -120,8 +116,7 @@ uint32_t AudioCommon::SoundLoadWave(const std::string& filename)
 	return -1; // ここには到達しないが、警告回避のため
 }
 
-uint32_t AudioCommon::SoundPlayWave(uint32_t soundDataHandle, bool loop, float volume)
-{
+uint32_t AudioCommon::SoundPlayWave(uint32_t soundDataHandle, bool loop, float volume) {
 	//手順
 	//空のボイスデータを作成
 	//ボイスデータコンテナからボイスデータ内のhandleと引数のサウンドデータハンドルが一致しているか確認
@@ -187,8 +182,7 @@ uint32_t AudioCommon::SoundPlayWave(uint32_t soundDataHandle, bool loop, float v
 	return soundDataHandle;
 }
 
-void AudioCommon::SoundUnload(SoundData* soundData)
-{
+void AudioCommon::SoundUnload(SoundData* soundData) {
 	//バッファのメモリを解放
 	delete[] soundData->pBuffer;
 
@@ -197,8 +191,7 @@ void AudioCommon::SoundUnload(SoundData* soundData)
 	soundData->wfex = {};
 }
 
-void AudioCommon::SoundStop(uint32_t voiceHandle)
-{
+void AudioCommon::SoundStop(uint32_t voiceHandle) {
 	auto it = std::find_if(voiceDatas_.begin(), voiceDatas_.end(),
 		[voiceHandle](VoiceData* data) { return data->handle == voiceHandle; });
 
@@ -208,8 +201,7 @@ void AudioCommon::SoundStop(uint32_t voiceHandle)
 	}
 }
 
-void AudioCommon::SoundPause(uint32_t voiceHandle)
-{
+void AudioCommon::SoundPause(uint32_t voiceHandle) {
 	auto it = std::find_if(voiceDatas_.begin(), voiceDatas_.end(),
 		[voiceHandle](VoiceData* data) { return data->handle == voiceHandle; });
 
@@ -218,8 +210,7 @@ void AudioCommon::SoundPause(uint32_t voiceHandle)
 	}
 }
 
-void AudioCommon::SoundResume(uint32_t voiceHandle)
-{
+void AudioCommon::SoundResume(uint32_t voiceHandle) {
 	auto it = std::find_if(voiceDatas_.begin(), voiceDatas_.end(),
 		[voiceHandle](VoiceData* data) { return data->handle == voiceHandle; });
 
@@ -228,8 +219,7 @@ void AudioCommon::SoundResume(uint32_t voiceHandle)
 	}
 }
 
-void AudioCommon::SetVolume(uint32_t voiceHandle, float volume)
-{
+void AudioCommon::SetVolume(uint32_t voiceHandle, float volume) {
 	auto it = std::find_if(voiceDatas_.begin(), voiceDatas_.end(),
 		[voiceHandle](VoiceData* data) { return data->handle == voiceHandle; });
 

@@ -183,107 +183,18 @@ void DevelopScene::Update() {
 	TextTextureManager::GetInstance()->EditTextString(textHandle_, L"フォント確認 0123 abcDEF\n現在時刻 : {:.1f}", time_);
 
 #ifdef _DEBUG
-	ImGui::SetNextWindowSize(ImVec2(500, 100));
-	ImGui::Begin("MosterBall");
-	ImGui::SliderFloat2("position", &sprite2Position.x, 0.0f, 1200.0f, "%5.1f");
-	sprite2_->SetPosition(sprite2Position);
-	ImGui::End();
+	//オーディオのデバッグ用ImGui
+	audio_->DebugWithImGui(L"アラーム");
 
-	ImGui::Begin("Audio");
-	if (ImGui::Button("PlayAudio")) {
-		audio_->Play();
-	}
-	if (ImGui::Button("StopAudio")) {
-		audio_->Stop();
-	}
-	if (ImGui::Button("PauseAudio")) {
-		audio_->Pause();
-	}
-	if (ImGui::Button("ResumeAudio")) {
-		audio_->Resume();
-	}
-	ImGui::SliderFloat("SetVolume", &volume, 0.0f, 1.0f);
-	audio_->SetVolume(volume);
+	//平行光源のデバッグ用ImGui
+	dirLight->DebugWithImGui(L"1");
 
-	ImGui::End();
+	//点光源のデバッグ用ImGui
+	pointLight->DebugWithImGui(L"1");
+	pointLight2->DebugWithImGui(L"2");
 
-	ImGui::Begin("line");
-	ImGui::Checkbox("sphere", &isDrawSphere_);
-	if (isDrawSphere_) {
-		Sphere sphere;
-		sphere.center = { 0.0f,-3.0f,0.0f };
-		sphere.radius = 2.0f;
-		MyMath::DrawSphere(sphere, { 1.0f,0.0f,0.0f,1.0f }, line_.get());
-	}
-
-	ImGui::End();
-
-	ImGui::Begin("DirectionalLight");
-	ImGui::SliderFloat4("color", &dirLight->color_.x, 0.0f, 1.0f);
-	ImGui::DragFloat3("direction", &dirLight->direction_.x, 0.01f);
-	ImGui::SliderFloat("intencity", &dirLight->intencity_, 0.0f, 10.0f);
-	ImGui::Checkbox("isActive", &dirLight->isActive_);
-	ImGui::End();
-
-	ImGui::Begin("PoiintLight2");
-	ImGui::SliderFloat4("color", &pointLight2->color_.x, 0.0f, 1.0f);
-	ImGui::DragFloat3("position", &pointLight2->position_.x, 0.01f);
-	ImGui::SliderFloat("intencity", &pointLight2->intencity_, 0.0f, 10.0f);
-	ImGui::SliderFloat("radius", &pointLight2->radius_, 0.0f, 20.0f);
-	ImGui::SliderFloat("decay", &pointLight2->decay_, 0.0f, 10.0f);
-	ImGui::Checkbox("isActive", &pointLight2->isActive_);
-	ImGui::Checkbox("isDrawMark", &isDrawPLMark2);
-	if (isDrawPLMark2) {
-		//マークの生成
-		Sphere plMarkSphere;
-		plMarkSphere.center = pointLight2->position_;
-		plMarkSphere.radius = 0.1f;
-		MyMath::DrawSphere(plMarkSphere, { 1.0f,0.5f,0.0f,1.0f }, plMark2.get());
-
-	}
-	ImGui::End();
-
-	ImGui::Begin("PoiintLight");
-	ImGui::SliderFloat4("color", &pointLight->color_.x, 0.0f, 1.0f);
-	ImGui::DragFloat3("position", &pointLight->position_.x, 0.01f);
-	ImGui::SliderFloat("intencity", &pointLight->intencity_, 0.0f, 10.0f);
-	ImGui::SliderFloat("radius", &pointLight->radius_, 0.0f, 20.0f);
-	ImGui::SliderFloat("decay", &pointLight->decay_, 0.0f, 10.0f);
-	ImGui::Checkbox("isActive", &pointLight->isActive_);
-	ImGui::Checkbox("isDrawMark", &isDrawPLMark);
-	if (isDrawPLMark) {
-		//マークの生成
-		Sphere plMarkSphere;
-		plMarkSphere.center = pointLight->position_;
-		plMarkSphere.radius = 0.1f;
-		MyMath::DrawSphere(plMarkSphere, { 1.0f,0.5f,0.0f,1.0f }, plMark.get());
-	}
-	ImGui::End();
-
-	ImGui::Begin("SpotLight");
-	ImGui::SliderFloat4("color", &spotLight->color_.x, 0.0f, 1.0f);
-	ImGui::DragFloat3("position", &spotLight->position_.x, 0.01f);
-	ImGui::SliderFloat("intencity", &spotLight->intencity_, 0.0f, 10.0f);
-	ImGui::SliderFloat3("direction", &spotLight->direction_.x, -1.0f, 1.0f);
-	ImGui::SliderFloat("distance", &spotLight->distance_, 0.0f, 20.0f);
-	ImGui::SliderFloat("decay", &spotLight->decay_, 0.0f, 10.0f);
-	ImGui::SliderFloat("cosAngle", &spotLight->cosAngle_, -1.0f, spotLight->cosFalloffStart_ - 0.01f);
-	ImGui::SliderFloat("cosFalloffStart", &spotLight->cosFalloffStart_, 0.0f, 2.0f);
-	ImGui::Checkbox("isActive", &spotLight->isActive_);
-	ImGui::Checkbox("isDrawMark", &isDrawSLMark);
-	if (isDrawSLMark) {
-		//マークの生成
-		Sphere slMarkSphere;
-		slMarkSphere.center = spotLight->position_;
-		slMarkSphere.radius = 0.1f;
-		Sphere slMarkSphere2;
-		slMarkSphere2.center = spotLight->position_ + (spotLight->direction_.Normalized() * 0.15f);
-		slMarkSphere2.radius = 0.05f;
-
-		MyMath::DrawSphere(slMarkSphere, { 1.0f,0.25f,0.0f,1.0f }, slMark.get());
-		MyMath::DrawSphere(slMarkSphere2, { 0.0f,1.0f,0.0f,1.0f }, slMark.get());
-	}
-	ImGui::End();
+	//スポットライトのデバッグ用ImGui
+	spotLight->DebugWithImGui(L"1");
 
 	ImGui::Begin("複合アニメーション");
 	//選択肢
@@ -346,9 +257,6 @@ void DevelopScene::Draw() {
 
 	//線描画
 	line_->Draw(*camera.get());
-	plMark->Draw(*camera.get());
-	plMark2->Draw(*camera.get());
-	slMark->Draw(*camera.get());
 
 	///------------------------------///
 	///↑↑↑↑線描画終了↑↑↑↑
