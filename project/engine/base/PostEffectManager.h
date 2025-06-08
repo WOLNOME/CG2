@@ -16,6 +16,7 @@ enum class PostEffectKind {
 	LuminanceBaseOutline,	// 輝度ベースのアウトライン
 	RadialBlur,				// ラジアルブラー
 	Dissolve,				// ディゾルブ
+	Random,					// ランダム
 
 	kMaxNumPostEffectKind,	// ポストエフェクトの最大数
 };
@@ -37,6 +38,14 @@ private://構造体
 		Microsoft::WRL::ComPtr<ID3D12Resource> resource;
 		DissolveData* data;
 		uint32_t textureHandle;		//ディゾルブに使用するテクスチャ
+	};
+	//ランダム系
+	struct RandomData {
+		float seed;	//シード値
+	};
+	struct RandomResource {
+		Microsoft::WRL::ComPtr<ID3D12Resource> resource;
+		RandomData* data;
 	};
 
 private://コンストラクタ等の隠蔽
@@ -92,6 +101,8 @@ private:
 
 	//ディゾルブのリソース
 	DissolveResource dissolveResource_;
+	//ランダムのリソース
+	RandomResource randomResource_;
 
 };
 

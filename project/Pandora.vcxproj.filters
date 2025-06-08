@@ -23,6 +23,7 @@
     <FxCompile Include="Resources\shaders\TextTexture.VS.hlsl" />
     <FxCompile Include="Resources\shaders\TextTexture.PS.hlsl" />
     <FxCompile Include="Resources\shaders\postEffects\Dissolve.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\postEffects\Random.PS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\3d\DirectionalLight.cpp" />
