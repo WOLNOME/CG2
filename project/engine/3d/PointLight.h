@@ -1,6 +1,7 @@
 #pragma once
 #include <d3d12.h>
 #include <wrl.h>
+#include <string>
 #include "Vector4.h"
 #include "Vector3.h"
 
@@ -45,6 +46,10 @@ public:
 	/// </summary>
 	/// <returns>スポットライトのデータ</returns>
 	const PointLightData& GetData() { return data_; }
+	/// <summary>
+	/// デバッグ用ImGui
+	/// </summary>
+	void DebugWithImGui(const std::wstring& _name);
 
 private:
 	// データ

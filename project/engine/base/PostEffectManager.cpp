@@ -6,7 +6,9 @@
 #include "DSVManager.h"
 #include "MainRender.h"
 #include "ImGuiManager.h"
+#include "TextureManager.h"
 #include "Logger.h"
+#include <random>
 
 PostEffectManager* PostEffectManager::instance = nullptr;
 
@@ -24,6 +26,8 @@ void PostEffectManager::Initialize() {
 	InitOffScreenRenderingOption();
 	//オフスク用グラフィックスパイプラインの生成
 	GenerateRenderTextureGraphicsPipeline();
+	//固有リソースの初期化
+	InitUniqueResources();
 }
 
 void PostEffectManager::Finalize() {
@@ -65,11 +69,37 @@ void PostEffectManager::CopySceneToRenderTexture() {
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;		//遷移後の状態
 	commandList->ResourceBarrier(1, &barrier);
 
-	//描画情報コピー
+	//ルートシグネチャ、パイプラインステートの設定
 	commandList->SetGraphicsRootSignature(rootSignature[(int)currentPostEffectKind].Get());
 	commandList->SetPipelineState(graphicsPipelineState[(int)currentPostEffectKind].Get());
+
+	//個別描画情報記述
+	switch (currentPostEffectKind) {
+	case PostEffectKind::Dissolve:
+		//マスクテクスチャ
+		commandList->SetGraphicsRootDescriptorTable(1, GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(TextureManager::GetInstance()->GetSrvIndex(dissolveResource_.textureHandle)));
+		//ディゾルブデータ
+		commandList->SetGraphicsRootConstantBufferView(2, dissolveResource_.resource->GetGPUVirtualAddress());
+		break;
+	case PostEffectKind::Random: {
+		//ランダムエンジンを使ってシードを設定
+		std::random_device rd;
+		std::mt19937 gen(rd());
+		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+		randomResource_.data->seed = dist(gen);
+		//ランダムデータ
+		commandList->SetGraphicsRootConstantBufferView(1, randomResource_.resource->GetGPUVirtualAddress());
+		break;
+	}
+	default:
+		break;
+	}
+
+	//共通描画情報記述
 	commandList->SetGraphicsRootDescriptorTable(0, GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(srvIndex));
 	commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	//ドローコール
 	commandList->DrawInstanced(3, 1, 0, 0);
 
 	//バリアの設定
@@ -84,11 +114,37 @@ void PostEffectManager::CopySceneToRenderTexture() {
 void PostEffectManager::DebugWithImGui() {
 	ImGui::Begin("ポストエフェクト");
 	//ポストエフェクトの種類を選択する
-	const char* items[] = { "None","Grayscale","Vignette","BoxFilter","GaussianFilter","LuminanceBaseOutline","RadialBlur" };
+	const char* items[] = { "None","Grayscale","Vignette","BoxFilter","GaussianFilter","LuminanceBaseOutline","RadialBlur","Dissolve","Random" };
 	static int currentItem = 0;
-	if (ImGui::Combo("アイテム", &currentItem, items, IM_ARRAYSIZE(items))) {
+	if (ImGui::Combo("一覧", &currentItem, items, IM_ARRAYSIZE(items))) {
 		currentPostEffectKind = static_cast<PostEffectKind>(currentItem);
 	}
+	//各処理ごとの値編集
+	switch (currentPostEffectKind) {
+	case PostEffectKind::Dissolve: {
+		//閾値の変更処理
+		ImGui::DragFloat("しきい値", &dissolveResource_.data->threshold, 0.01f, 0.0f, 1.0f);
+		//テクスチャの変更処理
+		const char* textures[] = { "noise0","noise1" };
+		static int currentTexture = 0;
+		if (ImGui::Combo("テクスチャ", &currentTexture, textures, IM_ARRAYSIZE(textures))) {
+			switch (currentTexture) {
+			case 0:
+				dissolveResource_.textureHandle = TextureManager::GetInstance()->LoadTexture("noise0.png");
+				break;
+			case 1:
+				dissolveResource_.textureHandle = TextureManager::GetInstance()->LoadTexture("noise1.png");
+				break;
+			default:
+				break;
+			}
+		}
+		break;
+	}
+	default:
+		break;
+	}
+
 	ImGui::End();
 }
 
@@ -112,20 +168,106 @@ void PostEffectManager::GenerateRenderTextureGraphicsPipeline() {
 		//RootSignature作成
 		D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 		descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-		//DescriptorRange作成
-		D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
-		descriptorRange[0].BaseShaderRegister = 0;
-		descriptorRange[0].NumDescriptors = 1;
-		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		//RootParameter格納用変数
+		std::vector<D3D12_ROOT_PARAMETER> rootParameters;
+		switch (i) {
+		case (int)PostEffectKind::None:
+		case (int)PostEffectKind::Grayscale:
+		case (int)PostEffectKind::Vignette:
+		case (int)PostEffectKind::BoxFilter:
+		case (int)PostEffectKind::GaussianFilter:
+		case (int)PostEffectKind::LuminanceBaseOutline:
+		case (int)PostEffectKind::RadialBlur: {
+			//RootParameter作成
+			//レンダーテクスチャの設定
+			{
+				D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+				descriptorRange[0].BaseShaderRegister = 0;
+				descriptorRange[0].NumDescriptors = 1;
+				descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+				descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 
-		//RootParameter作成
-		D3D12_ROOT_PARAMETER rootParameters[1] = {};
-		//テクスチャの設定
-		rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//Tableを使う
-		rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
-		rootParameters[0].DescriptorTable.pDescriptorRanges = descriptorRange;//Tableの中身の配列を指定
-		rootParameters[0].DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+				D3D12_ROOT_PARAMETER rootParameter = {};
+				rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//Tableを使う
+				rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
+				rootParameter.DescriptorTable.pDescriptorRanges = descriptorRange;//Tableの中身の配列を指定
+				rootParameter.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+				rootParameters.push_back(rootParameter);
+			}
+			break;
+		}
+		case (int)PostEffectKind::Dissolve: {
+			//RootParameter作成
+			//レンダーテクスチャの設定
+			{
+				D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+				descriptorRange[0].BaseShaderRegister = 0;
+				descriptorRange[0].NumDescriptors = 1;
+				descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+				descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+				D3D12_ROOT_PARAMETER rootParameter = {};
+				rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//Tableを使う
+				rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
+				rootParameter.DescriptorTable.pDescriptorRanges = descriptorRange;//Tableの中身の配列を指定
+				rootParameter.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+				rootParameters.push_back(rootParameter);
+			}
+			//マスクテクスチャの設定
+			{
+				D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+				descriptorRange[0].BaseShaderRegister = 1;
+				descriptorRange[0].NumDescriptors = 1;
+				descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+				descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+				D3D12_ROOT_PARAMETER rootParameter = {};
+				rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//Tableを使う
+				rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
+				rootParameter.DescriptorTable.pDescriptorRanges = descriptorRange;//Tableの中身の配列を指定
+				rootParameter.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+				rootParameters.push_back(rootParameter);
+			}
+			//ディゾルブデータの設定
+			{
+				D3D12_ROOT_PARAMETER rootParameter = {};
+				rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
+				rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
+				rootParameter.Descriptor.ShaderRegister = 0;
+				rootParameters.push_back(rootParameter);
+			}
+			break;
+		}
+		case (int)PostEffectKind::Random: {
+			//RootParameter作成
+			//レンダーテクスチャの設定
+			{
+				D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+				descriptorRange[0].BaseShaderRegister = 0;
+				descriptorRange[0].NumDescriptors = 1;
+				descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+				descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+				D3D12_ROOT_PARAMETER rootParameter = {};
+				rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//Tableを使う
+				rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
+				rootParameter.DescriptorTable.pDescriptorRanges = descriptorRange;//Tableの中身の配列を指定
+				rootParameter.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+				rootParameters.push_back(rootParameter);
+			}
+			//ランダムデータの設定
+			{
+				D3D12_ROOT_PARAMETER rootParameter = {};
+				rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
+				rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
+				rootParameter.Descriptor.ShaderRegister = 0;
+				rootParameters.push_back(rootParameter);
+			}
+			break;
+		}
+		default:
+			break;
+		}
 
 		//Samplerの設定
 		D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
@@ -141,8 +283,8 @@ void PostEffectManager::GenerateRenderTextureGraphicsPipeline() {
 		//Signatureに反映
 		descriptionRootSignature.pStaticSamplers = staticSamplers;
 		descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
-		descriptionRootSignature.pParameters = rootParameters;//ルートパラメータ配列へのポインタ
-		descriptionRootSignature.NumParameters = _countof(rootParameters);//配列の長さ
+		descriptionRootSignature.pParameters = rootParameters.data();//ルートパラメータ配列へのポインタ
+		descriptionRootSignature.NumParameters = static_cast<UINT>(rootParameters.size());//配列の長さ
 
 		//シリアライズしてバイナリにする
 		Microsoft::WRL::ComPtr<ID3D10Blob> signatireBlob = nullptr;
@@ -222,11 +364,19 @@ void PostEffectManager::GenerateRenderTextureGraphicsPipeline() {
 			pixelShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/postEffects/RadialBlur.PS.hlsl",
 				L"ps_6_0");
 			break;
+		case (int)PostEffectKind::Dissolve:
+			pixelShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/postEffects/Dissolve.PS.hlsl",
+				L"ps_6_0");
+			break;
+		case (int)PostEffectKind::Random:
+			pixelShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/postEffects/Random.PS.hlsl",
+				L"ps_6_0");
+			break;
 		default:
 			break;
 		}
 		assert(pixelShaderBlob != nullptr);
-		
+
 		//DepthStencilStateの設定
 		D3D12_DEPTH_STENCIL_DESC depthStencilDesc{};
 		//Depthの機能を無効化する
@@ -258,4 +408,16 @@ void PostEffectManager::GenerateRenderTextureGraphicsPipeline() {
 			IID_PPV_ARGS(&graphicsPipelineState[i]));
 		assert(SUCCEEDED(hr));
 	}
+}
+
+void PostEffectManager::InitUniqueResources() {
+	//ディゾルブ
+	dissolveResource_.resource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(DissolveResource));
+	dissolveResource_.resource->Map(0, nullptr, reinterpret_cast<void**>(&dissolveResource_.data));
+	dissolveResource_.data->threshold = 0.0f;
+	dissolveResource_.textureHandle = TextureManager::GetInstance()->LoadTexture("noise0.png");
+	//ランダム
+	randomResource_.resource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(RandomResource));
+	randomResource_.resource->Map(0, nullptr, reinterpret_cast<void**>(&randomResource_.data));
+	randomResource_.data->seed = 0.0f;
 }

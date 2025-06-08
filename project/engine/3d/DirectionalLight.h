@@ -2,6 +2,7 @@
 #include <d3d12.h>
 #include <wrl.h>
 #include <array>
+#include <string>
 #include "Vector4.h"
 #include "Vector3.h"
 
@@ -44,6 +45,10 @@ public:
 	/// </summary>
 	/// <returns>平行光源のデータ</returns>
 	const DirectionalLightData& GetData() const { return data_; }
+	/// <summary>
+	/// デバッグ用ImGui
+	/// </summary>
+	void DebugWithImGui(const std::wstring& _name);
 
 private:
 	//データ

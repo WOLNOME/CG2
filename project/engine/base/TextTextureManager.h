@@ -69,14 +69,16 @@ private://構造体
 	//テキストのリソース
 	struct TextResource {
 		ComPtr<ID3D12Resource> resource;
-		Vector4* color;		//テキストの色
+		Vector4* color;		//テキストの色(PSに送る)
 		TextParam param;
+		TextParam preParam;
 	};
 
 	//アウトラインのリソース
 	struct EdgeResource {
 		ComPtr<ID3D12Resource> resource;
 		EdgeParam* param;
+		EdgeParam preParam;
 	};
 
 	//各テキストテクスチャの必須項目
@@ -95,6 +97,7 @@ private://構造体
 
 		UINT width;									//テクスチャの横幅
 		UINT height;								//テクスチャの縦幅
+		bool isDrawThisFrame = true;
 	};
 
 private://コンストラクタ等の隠蔽

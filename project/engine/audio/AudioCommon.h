@@ -7,8 +7,7 @@
 #include <set>
 
 #pragma comment(lib,"xaudio2.lib")
-class AudioCommon
-{
+class AudioCommon {
 private://シングルトン
 	static AudioCommon* instance;
 
@@ -20,29 +19,25 @@ public://シングルトン
 	static AudioCommon* GetInstance();
 private://非公開構造体
 	//チャンクヘッダ
-	struct ChunkHeader
-	{
+	struct ChunkHeader {
 		char id[4];
 		int32_t size;
 	};
 
 	//RIFFヘッダチャンク
-	struct RiffHeader
-	{
+	struct RiffHeader {
 		ChunkHeader chunk;
 		char type[4];
 	};
 
 	//FMTチャンク
-	struct FormatChunk
-	{
+	struct FormatChunk {
 		ChunkHeader chunk;
 		WAVEFORMATEX fmt;
 	};
 public://公開構造体
 	//音声データ
-	struct SoundData
-	{
+	struct SoundData {
 		//波形フォーマット
 		WAVEFORMATEX wfex;
 		//バッファの先頭アドレス
@@ -81,8 +76,6 @@ public:
 	//音量の調整
 	void SetVolume(uint32_t voiceHandle, float volume);
 
-
-
 private:
 	void SoundUnload(SoundData* soundData);
 	void ClearSoundData();
@@ -98,7 +91,7 @@ private://メンバ変数
 	std::array<SoundData, kMaxSoundData> soundDatas_;
 	//ボイスデータコンテナ
 	std::set<VoiceData*> voiceDatas_;
-	
+
 
 };
 

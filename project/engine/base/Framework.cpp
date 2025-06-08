@@ -7,10 +7,10 @@
 #include "TextTextureRender.h"
 #include "MainRender.h"
 #include "D2DRender.h"
-#include "PostEffectManager.h"
 #include "ImGuiManager.h"
 #include "TextureManager.h"
 #include "TextTextureManager.h"
+#include "PostEffectManager.h"
 #include "ModelManager.h"
 #include "ParticleManager.h"
 #include "Input.h"
@@ -48,9 +48,6 @@ void Framework::Initialize() {
 	//D2Dレンダー
 	D2DRender::GetInstance()->Initialize();
 
-	//ポストエフェクトマネージャー
-	PostEffectManager::GetInstance()->Initialize();
-
 	//ImGuiマネージャー
 	ImGuiManager::GetInstance()->Initialize();
 
@@ -59,6 +56,9 @@ void Framework::Initialize() {
 
 	//テキストテクスチャマネージャー
 	TextTextureManager::GetInstance()->Initialize();
+
+	//ポストエフェクトマネージャー
+	PostEffectManager::GetInstance()->Initialize();
 
 	//モデルマネージャー
 	ModelManager::GetInstance()->Initialize();
@@ -95,10 +95,10 @@ void Framework::Finalize() {
 	Input::GetInstance()->Finalize();
 	ParticleManager::GetInstance()->Finalize();
 	ModelManager::GetInstance()->Finalize();
+	PostEffectManager::GetInstance()->Finalize();
 	TextTextureManager::GetInstance()->Finalize();
 	TextureManager::GetInstance()->Finalize();
 	ImGuiManager::GetInstance()->Finalize();
-	PostEffectManager::GetInstance()->Finalize();
 	D2DRender::GetInstance()->Finalize();
 	MainRender::GetInstance()->Finalize();
 	TextTextureRender::GetInstance()->Finalize();
