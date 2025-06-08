@@ -3,6 +3,7 @@
 #include <wrl.h>
 #include <cstdint>
 #include <array>
+#include <vector>
 #include "Vector4.h"
 
 //ポストエフェクトの種類
@@ -14,6 +15,7 @@ enum class PostEffectKind {
 	GaussianFilter,			// ガウシアンフィルター
 	LuminanceBaseOutline,	// 輝度ベースのアウトライン
 	RadialBlur,				// ラジアルブラー
+	Dissolve,				// ディゾルブ
 
 	kMaxNumPostEffectKind,	// ポストエフェクトの最大数
 };
@@ -23,6 +25,20 @@ enum class PostEffectKind {
 //ImGuiにも追加しておく
 
 class PostEffectManager {
+private://構造体
+	//ディゾルブ系
+	struct DissolveData {
+		float threshold;	//閾値
+
+		//追加予定項目
+		//全体の色、エッジの色、エッジの大きさ
+	};
+	struct DissolveResource {
+		Microsoft::WRL::ComPtr<ID3D12Resource> resource;
+		DissolveData* data;
+		uint32_t textureHandle;		//ディゾルブに使用するテクスチャ
+	};
+
 private://コンストラクタ等の隠蔽
 	static PostEffectManager* instance;
 
@@ -54,6 +70,8 @@ private://生成系メンバ関数
 	void InitOffScreenRenderingOption();
 	//オフスクのグラフィックスパイプラインの生成
 	void GenerateRenderTextureGraphicsPipeline();
+	//固有リソースの初期化
+	void InitUniqueResources();
 
 private:
 	//レンダーテクスチャのリソース
@@ -71,5 +89,9 @@ private:
 
 	//現在適用しているポストエフェクトの種類
 	PostEffectKind currentPostEffectKind = PostEffectKind::None;
+
+	//ディゾルブのリソース
+	DissolveResource dissolveResource_;
+
 };
 
