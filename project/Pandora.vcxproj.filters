@@ -25,6 +25,7 @@
     <FxCompile Include="Resources\shaders\postEffects\Dissolve.PS.hlsl" />
     <FxCompile Include="Resources\shaders\postEffects\Random.PS.hlsl" />
     <FxCompile Include="Resources\shaders\postEffects\HSVFilter.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\Particle.CS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\3d\DirectionalLight.cpp" />

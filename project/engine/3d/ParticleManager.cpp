@@ -130,8 +130,6 @@ void ParticleManager::Update() {
 			//インスタンスの番号をインクリメント
 			++instanceNum;
 		}
-		//形状の変更通知があった場合
-
 		//形状更新
 		particle.second->shape_->Update();
 	}
