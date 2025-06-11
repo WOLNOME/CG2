@@ -11,17 +11,18 @@ RWStructuredBuffer<uint> gFreeList : register(u2);
 ConstantBuffer<Emitter> gEmitter : register(b0);
 //JSON情報の配列
 ConstantBuffer<JsonInfo> gJsonInfo : register(b1);
-//稼働制御用情報
-ConstantBuffer<ParticleInformation> gParticleInformation : register(b2);
 //フレーム情報
-ConstantBuffer<PerFrame> gPerFrame : register(b3);
+ConstantBuffer<PerFrame> gPerFrame : register(b2);
 
 [numthreads(1024, 1, 1)]
 void main(uint3 DTid : SV_DispatchThreadID)
 {
     uint grainIndex = DTid.x;
     //稼働する必要のないスレッドでは計算処理を省く
-    if (grainIndex >= gParticleInformation.numGrains)
+    if (grainIndex >= gJsonInfo.maxGrains)
+        return;
+    // 寿命が0の粒子は死亡済みと見なして即スキップ
+    if (gGrains[grainIndex].lifeTime == 0)
         return;
     
     //Outputから粒の情報を受け取る
@@ -34,16 +35,31 @@ void main(uint3 DTid : SV_DispatchThreadID)
     ///==================///
     /// 粒の削除処理
     ///==================///
-    
-    
-    
-    //正規化時間
-    float normalizedTime = saturate(grain.currentTime * rcp(grain.lifeTime));
-    
-    
+    //寿命を迎えたら
+    if (grain.currentTime > grain.lifeTime)
+    {
+        //全データに0を入れる
+        gGrains[grainIndex] = (Grain) 0;
+        int freeListIndex;
+        InterlockedAdd(gFreeListIndex[0], 1, freeListIndex);
+        //最新のFreeListIndexの場所に死亡済みGrainのIndexを設定する。
+        if ((freeListIndex + 1) < gJsonInfo.maxGrains)
+        {
+            gFreeList[freeListIndex + 1] = grainIndex;
+            return;
+        }
+        else
+        {
+            //ここに来たら設定がおかしい。安全策をうっておく
+            InterlockedAdd(gFreeListIndex[0], -1, freeListIndex);
+        }
+        
+    }
     ///==================///
     /// エミッターとの処理
     ///==================///
+    //正規化時間
+    float normalizedTime = saturate(grain.currentTime * rcp(grain.lifeTime));
     //重力処理
     if (emitter.isGravity == 1)
         grain.velocity.y += emitter.gravity * gPerFrame.deltaTime;

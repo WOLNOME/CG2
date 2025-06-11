@@ -12,10 +12,8 @@ RWStructuredBuffer<uint> gFreeList : register(u2);
 ConstantBuffer<Emitter> gEmitter : register(b0);
 //JSON情報の配列
 ConstantBuffer<JsonInfo> gJsonInfo : register(b1);
-//稼働制御用情報
-ConstantBuffer<ParticleInformation> gParticleInformation : register(b2);
 //フレーム情報
-ConstantBuffer<PerFrame> gPerFrame : register(b3);
+ConstantBuffer<PerFrame> gPerFrame : register(b2);
 
 //乱数ジェネレーター
 class RandomGenerator

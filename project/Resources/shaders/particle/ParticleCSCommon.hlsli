@@ -62,11 +62,6 @@ struct Grain
     float lifeTime;
     float currentTime;
 };
-//追加情報
-struct ParticleInformation
-{
-    uint numGrains; //全ての粒の数
-};
 //フレーム情報
 struct PerFrame
 {
