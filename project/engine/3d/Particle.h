@@ -29,7 +29,7 @@ public:
 		OneShot,	//一度きり
 	};
 
-public:
+private://非公開構造体
 	//座標変換行列データ
 	struct ParticleForGPU {
 		Matrix4x4 World;
@@ -55,6 +55,92 @@ public:
 		float lifeTime;					//寿命
 		float currentTime;				//現在の時間
 	};
+
+	///========================///
+	///		CSで使用する構造体
+	///========================///
+	//CS用トランスフォーム
+	struct TransformForCS {
+		Vector4 scale;
+		Vector4 rotate;
+		Vector4 transltate;
+	};
+	//CS用エミッター情報
+	struct EmitterForCS {
+		TransformForCS transform;
+		int generateMethod;
+		int effectStyle;
+		float gravity;
+		float repulsion;
+		float floorHeight;
+		int clumpNum;
+		uint32_t isAffectedField;
+		uint32_t isGravity;
+		uint32_t isBound;
+		uint32_t isPlay;
+	};
+	//CS用Json情報
+	struct JsonInfoForCS {
+		Vector4 velocityMax;
+		Vector4 velocityMin;
+		Vector4 initRotateMax;
+		Vector4 initRotateMin;
+		Vector4 initScaleMax;
+		Vector4 initScaleMin;
+		Vector4 startColorMax;
+		Vector4 startColorMin;
+		Vector4 endColorMax;
+		Vector4 endColorMin;
+		Vector4 startRotateMax;
+		Vector4 startRotateMin;
+		Vector4 endRotateMax;
+		Vector4 endRotateMin;
+		float startSizeMax;
+		float startSizeMin;
+		float endSizeMax;
+		float endSizeMin;
+		float lifeTimeMax;
+		float lifeTimeMin;
+		int emitRate;
+		int maxGrains;
+	};
+	//CS用粒の情報
+	struct GrainForCS {
+		TransformForCS transform;
+		TransformForCS basicTransform;
+		Vector4 velocity;
+		Vector4 startColor;
+		Vector4 endColor;
+		Vector4 currentColor;
+		Vector4 startRotate;
+		Vector4 endRotate;
+		float startSize;
+		float endSize;
+		float lifeTime;
+		float currentTime;
+	};
+	//CS用時間情報
+	struct PerFrameForCS {
+		float time;
+		float deltaTime;
+	};
+	//CS用リソースのまとめ
+	struct AllResourceForCS {
+		//エミッター情報
+		Microsoft::WRL::ComPtr<ID3D12Resource> emitterResource;
+		std::span<EmitterForCS> mappedEmitter;
+		//JSON情報
+		Microsoft::WRL::ComPtr<ID3D12Resource> jsonInfoResource;
+		std::span<JsonInfoForCS> mappedJsonInfo;
+		//粒の情報
+		Microsoft::WRL::ComPtr<ID3D12Resource> grainsResource;
+		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> grainsSrvHandle;
+		//時間情報
+		Microsoft::WRL::ComPtr<ID3D12Resource> perFrameResource;
+		std::span<PerFrameForCS> mappedPerFrame;
+	};
+
+public://公開構造体
 	//エミッター
 	struct Emitter {
 		TransformEuler transform;			//エミッターのトランスフォーム
@@ -90,6 +176,7 @@ public: //getter
 public: //setter
 	//パラメーター
 	void SetParam(const json& param) { param_ = param; }
+
 private: //マネージャーにのみ公開するパラメーター
 	//形状(見た目)
 	std::unique_ptr<Shape> shape_;
@@ -97,6 +184,7 @@ private: //マネージャーにのみ公開するパラメーター
 	ParticleResource particleResource_;
 	//各インスタンシング（粒）用書き換え情報
 	std::list<GrainData> grains_;
+
 private: //クリエイターシーンにのみ公開するパラメーター
 	//形状の変更
 	void ShapeChange();
@@ -105,6 +193,7 @@ private: //クリエイターシーンにのみ公開するパラメーター
 
 public://通常のクラスに見せて良いパラメーター
 	Emitter emitter_;
+
 private: //メンバ変数
 	//インスタンスの名前
 	std::string name_;
