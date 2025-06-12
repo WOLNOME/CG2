@@ -75,7 +75,7 @@ void GPUDescriptorManager::CreateSRVforRenderTexture(uint32_t index, ID3D12Resou
 	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(pResource, &srvDesc, GetCPUDescriptorHandle(index));
 }
 
-void GPUDescriptorManager::CreateSRVforStructuredBufferCS(uint32_t index, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride) {
+void GPUDescriptorManager::CreateSRVforStructuredBuffer(uint32_t index, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride) {
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Format = DXGI_FORMAT_UNKNOWN;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
@@ -87,7 +87,7 @@ void GPUDescriptorManager::CreateSRVforStructuredBufferCS(uint32_t index, ID3D12
 	DirectXCommon::GetInstance()->GetDevice()->CreateShaderResourceView(pResource, &srvDesc, GetCPUDescriptorHandle(index));
 }
 
-void GPUDescriptorManager::CreateUAVforStructuredBufferCS(uint32_t index, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride) {
+void GPUDescriptorManager::CreateUAVforRWStructuredBuffer(uint32_t index, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride) {
 	D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc{};
 	uavDesc.Format = DXGI_FORMAT_UNKNOWN;
 	uavDesc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;

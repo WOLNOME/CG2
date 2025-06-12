@@ -35,9 +35,9 @@ public:
 
 	// SRV生成関数
 	void CreateSRVforRenderTexture(uint32_t index, ID3D12Resource* pResource);
-	void CreateSRVforStructuredBufferCS(uint32_t index, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);
+	void CreateSRVforStructuredBuffer(uint32_t index, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);
 	// UAV生成関数
-	void CreateUAVforStructuredBufferCS(uint32_t index, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);
+	void CreateUAVforRWStructuredBuffer(uint32_t index, ID3D12Resource* pResource, UINT numElements, UINT structureByteStride);
 
 	// ゲッター
 	ID3D12DescriptorHeap* GetDescriptorHeap() const { return descriptorHeap.Get(); }

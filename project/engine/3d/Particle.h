@@ -59,11 +59,26 @@ private://非公開構造体
 	///========================///
 	///		CSで使用する構造体
 	///========================///
-	//CS用トランスフォーム
+	//CS用トランスフォーム(paddingの手間を防ぐため)
 	struct TransformForCS {
 		Vector4 scale;
 		Vector4 rotate;
-		Vector4 transltate;
+		Vector4 translate;
+	};
+	//CS用粒の情報
+	struct GrainForCS {
+		TransformForCS transform;
+		TransformForCS basicTransform;
+		Vector4 velocity;
+		Vector4 startColor;
+		Vector4 endColor;
+		Vector4 currentColor;
+		Vector4 startRotate;
+		Vector4 endRotate;
+		float startSize;
+		float endSize;
+		float lifeTime;
+		float currentTime;
 	};
 	//CS用エミッター情報
 	struct EmitterForCS {
@@ -104,21 +119,6 @@ private://非公開構造体
 		int emitRate;
 		int maxGrains;
 	};
-	//CS用粒の情報
-	struct GrainForCS {
-		TransformForCS transform;
-		TransformForCS basicTransform;
-		Vector4 velocity;
-		Vector4 startColor;
-		Vector4 endColor;
-		Vector4 currentColor;
-		Vector4 startRotate;
-		Vector4 endRotate;
-		float startSize;
-		float endSize;
-		float lifeTime;
-		float currentTime;
-	};
 	//CS用時間情報
 	struct PerFrameForCS {
 		float time;
@@ -126,15 +126,22 @@ private://非公開構造体
 	};
 	//CS用リソースのまとめ
 	struct AllResourceForCS {
+		//粒の情報
+		Microsoft::WRL::ComPtr<ID3D12Resource> grainsResource;
+		uint32_t grainsSrvIndex;	//VS用
+		uint32_t grainsUavIndex;	//CS用
+		//フリーリストのインデックス情報
+		Microsoft::WRL::ComPtr<ID3D12Resource> freeListIndexResource;
+		uint32_t freeListIndexUavIndex;		//CS用
+		//フリーリストの情報
+		Microsoft::WRL::ComPtr<ID3D12Resource> freeListResource;
+		uint32_t freeListUavIndex;		//CS用
 		//エミッター情報
 		Microsoft::WRL::ComPtr<ID3D12Resource> emitterResource;
 		std::span<EmitterForCS> mappedEmitter;
 		//JSON情報
 		Microsoft::WRL::ComPtr<ID3D12Resource> jsonInfoResource;
 		std::span<JsonInfoForCS> mappedJsonInfo;
-		//粒の情報
-		Microsoft::WRL::ComPtr<ID3D12Resource> grainsResource;
-		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> grainsSrvHandle;
 		//時間情報
 		Microsoft::WRL::ComPtr<ID3D12Resource> perFrameResource;
 		std::span<PerFrameForCS> mappedPerFrame;
@@ -169,6 +176,8 @@ private://メンバ関数(非公開)
 	ParticleResource MakeParticleResource();
 	//SRVの設定
 	void SettingSRV();
+	//CS専用リソースの作成
+	AllResourceForCS CreateAllResourceForCS();
 
 public: //getter
 	//パラメーター
@@ -184,6 +193,8 @@ private: //マネージャーにのみ公開するパラメーター
 	ParticleResource particleResource_;
 	//各インスタンシング（粒）用書き換え情報
 	std::list<GrainData> grains_;
+	//CS専用のリソース
+	AllResourceForCS allResourceForCS_;
 
 private: //クリエイターシーンにのみ公開するパラメーター
 	//形状の変更
