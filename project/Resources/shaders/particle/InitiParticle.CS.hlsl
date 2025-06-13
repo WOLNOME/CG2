@@ -7,7 +7,7 @@ RWStructuredBuffer<int> gFreeListIndex : register(u1);
 //フリーリスト
 RWStructuredBuffer<uint> gFreeList : register(u2);
 
-//JSON情報の配列
+//JSON情報
 ConstantBuffer<JsonInfo> gJsonInfo : register(b0);
 
 [numthreads(1024, 1, 1)]

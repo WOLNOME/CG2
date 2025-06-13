@@ -99,29 +99,12 @@ void AnimationModel::SettingCSPreDraw() {
 	//Dispatch(命令)
 	MainRender::GetInstance()->GetCommandList()->Dispatch(UINT(modelResource_.modelData[0].vertices.size() + 1023) / 1024, 1, 1);
 	//リソースの状態遷移
-	D3D12_RESOURCE_BARRIER barrier{};
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = skinCluster_.outputVertexResource.Get();
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-	MainRender::GetInstance()->GetCommandList()->ResourceBarrier(1, &barrier);
-
+	MainRender::GetInstance()->TransitionResource(skinCluster_.outputVertexResource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 }
 
 void AnimationModel::SettingCSPostDraw() {
 	//outputリソースの状態の遷移
-	D3D12_RESOURCE_BARRIER barrier{};
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = skinCluster_.outputVertexResource.Get();
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-	MainRender::GetInstance()->GetCommandList()->ResourceBarrier(1, &barrier);
+	MainRender::GetInstance()->TransitionResource(skinCluster_.outputVertexResource.Get(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 }
 
 void AnimationModel::SetNewAnimation(const std::string& _name, const std::string& _fileName) {

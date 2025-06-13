@@ -34,6 +34,9 @@ public:
 	//コマンドの準備
 	void ReadyNextCommand();
 
+	//リソースの状態遷移用関数
+	void TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState);
+
 private://生成系メンバ関数
 	void InitCommand();
 	void GenerateSwapChain();
@@ -42,7 +45,7 @@ private://生成系メンバ関数
 	void InitDepthStencilView();
 	void InitViewPort();
 	void InitScissorRect();
-	
+
 public://getter
 	//コマンドアロケーター
 	ID3D12CommandAllocator* GetCommandAllocator() const { return commandAllocator.Get(); }

@@ -37,6 +37,9 @@ public://メンバ関数
 private://非公開メンバ関数
 	//グラフィックスパイプライン
 	void GenerateGraphicsPipeline();
+	//コンピュートパイプライン
+	void GenerateComputePipeline();
+
 	//通常のPSO設定
 	void NormalPSOOption();
 	//アニメーション用のPSO設定

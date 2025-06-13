@@ -135,7 +135,7 @@ void Object3d::Draw(const BaseCamera* _camera, int32_t _textureHandle) {
 		animationModel_->Draw(0, 3, 1, _textureHandle);
 
 		//CS後処理(スキニング)
-		//animationModel_->SettingCSPostDraw();
+		animationModel_->SettingCSPostDraw();
 
 		break;
 	case ObjectKind::Shape:

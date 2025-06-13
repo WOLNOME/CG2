@@ -1,5 +1,5 @@
 #include "ParticleCSCommon.hlsli"
-#include "RandomUtility.hlsli"
+#include "../util/RandomUtility.hlsli"
 
 //粒の配列
 RWStructuredBuffer<Grain> gGrains : register(u0);
@@ -8,9 +8,9 @@ RWStructuredBuffer<int> gFreeListIndex : register(u1);
 //フリーリスト
 RWStructuredBuffer<uint> gFreeList : register(u2);
 
-//エミッターの配列
-ConstantBuffer<Emitter> gEmitter : register(b0);
-//JSON情報の配列
+//エミッター情報
+ConstantBuffer<EmitterInfo> gEmitterInfo : register(b0);
+//JSON情報
 ConstantBuffer<JsonInfo> gJsonInfo : register(b1);
 //フレーム情報
 ConstantBuffer<PerFrame> gPerFrame : register(b2);
@@ -48,7 +48,7 @@ void GenerateGrain(int generateNum, RandomGenerator generator);
 void main(uint3 DTid : SV_DispatchThreadID)
 {
     //エミッターが稼働していなければ処理を行わない
-    if (gEmitter.isPlay == 0)
+    if (gEmitterInfo.isPlay == 0)
         return;
     
     //生成に必要なローカル変数
@@ -62,7 +62,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
     RandomGenerator generator;
     generator.seed = (DTid + gPerFrame.time) * gPerFrame.time;
     //エフェクトの生成スタイルによって分ける
-    if (gEmitter.effectStyle == 0)      //ループ処理
+    if (gEmitterInfo.effectStyle == 0)      //ループ処理
     {
         for (int i = 0; i < 60; i++)
         {
@@ -71,7 +71,7 @@ void main(uint3 DTid : SV_DispatchThreadID)
                 generateNum++;
         }
     }
-    else if (gEmitter.effectStyle == 1)     //一度きり処理
+    else if (gEmitterInfo.effectStyle == 1)     //一度きり処理
     {
         //現在の粒の数が0なら生成
         if (playingGrainNum == 0)
@@ -96,7 +96,7 @@ void GenerateGrain(int generateNum, RandomGenerator generator)
         int freeListIndex;
         
         //生成方法ごとに処理を分ける
-        if (gEmitter.generateMethod == 0)       //ランダム生成
+        if (gEmitterInfo.generateMethod == 0)       //ランダム生成
         {
             //FreeListのIndexを1つ前に設定し、現在のIndexを取得する
             InterlockedAdd(gFreeListIndex[0], -1, freeListIndex);
@@ -104,9 +104,9 @@ void GenerateGrain(int generateNum, RandomGenerator generator)
             {
                 uint grainIndex = gFreeList[freeListIndex];
                 //値を入れていく
-                gGrains[grainIndex].basicTransform.translate.x = generator.GenerateInRange(gEmitter.transform.translate.x - gEmitter.transform.scale.x, gEmitter.transform.translate.x + gEmitter.transform.scale.x);
-                gGrains[grainIndex].basicTransform.translate.y = generator.GenerateInRange(gEmitter.transform.translate.y - gEmitter.transform.scale.y, gEmitter.transform.translate.y + gEmitter.transform.scale.y);
-                gGrains[grainIndex].basicTransform.translate.z = generator.GenerateInRange(gEmitter.transform.translate.z - gEmitter.transform.scale.z, gEmitter.transform.translate.z + gEmitter.transform.scale.z);
+                gGrains[grainIndex].basicTransform.translate.x = generator.GenerateInRange(gEmitterInfo.transform.translate.x - gEmitterInfo.transform.scale.x, gEmitterInfo.transform.translate.x + gEmitterInfo.transform.scale.x);
+                gGrains[grainIndex].basicTransform.translate.y = generator.GenerateInRange(gEmitterInfo.transform.translate.y - gEmitterInfo.transform.scale.y, gEmitterInfo.transform.translate.y + gEmitterInfo.transform.scale.y);
+                gGrains[grainIndex].basicTransform.translate.z = generator.GenerateInRange(gEmitterInfo.transform.translate.z - gEmitterInfo.transform.scale.z, gEmitterInfo.transform.translate.z + gEmitterInfo.transform.scale.z);
                 gGrains[grainIndex].basicTransform.rotate.x = generator.GenerateInRange(gJsonInfo.initRotateMin.x, gJsonInfo.initRotateMax.x);
                 gGrains[grainIndex].basicTransform.rotate.y = generator.GenerateInRange(gJsonInfo.initRotateMin.y, gJsonInfo.initRotateMax.y);
                 gGrains[grainIndex].basicTransform.rotate.z = generator.GenerateInRange(gJsonInfo.initRotateMin.z, gJsonInfo.initRotateMax.z);
@@ -147,7 +147,7 @@ void GenerateGrain(int generateNum, RandomGenerator generator)
                 return;
             }
         }
-        else if (gEmitter.generateMethod == 1)      //クランプ生成
+        else if (gEmitterInfo.generateMethod == 1)      //クランプ生成
         {
             //FreeListのIndexを1つ前に設定し、現在のIndexを取得する
             InterlockedAdd(gFreeListIndex[0], -1, freeListIndex);
@@ -157,9 +157,9 @@ void GenerateGrain(int generateNum, RandomGenerator generator)
             
                 //共通の値は先に決めておく
                 float4 basicTranslate = (float4) 0.0f;
-                basicTranslate.x = generator.GenerateInRange(gEmitter.transform.translate.x - gEmitter.transform.scale.x, gEmitter.transform.translate.x + gEmitter.transform.scale.x);
-                basicTranslate.y = generator.GenerateInRange(gEmitter.transform.translate.y - gEmitter.transform.scale.y, gEmitter.transform.translate.y + gEmitter.transform.scale.y);
-                basicTranslate.z = generator.GenerateInRange(gEmitter.transform.translate.z - gEmitter.transform.scale.z, gEmitter.transform.translate.z + gEmitter.transform.scale.z);
+                basicTranslate.x = generator.GenerateInRange(gEmitterInfo.transform.translate.x - gEmitterInfo.transform.scale.x, gEmitterInfo.transform.translate.x + gEmitterInfo.transform.scale.x);
+                basicTranslate.y = generator.GenerateInRange(gEmitterInfo.transform.translate.y - gEmitterInfo.transform.scale.y, gEmitterInfo.transform.translate.y + gEmitterInfo.transform.scale.y);
+                basicTranslate.z = generator.GenerateInRange(gEmitterInfo.transform.translate.z - gEmitterInfo.transform.scale.z, gEmitterInfo.transform.translate.z + gEmitterInfo.transform.scale.z);
                 float4 velocity = (float4) 0.0f;
                 velocity.x = generator.GenerateInRange(gJsonInfo.velocityMin.x, gJsonInfo.velocityMax.x);
                 velocity.y = generator.GenerateInRange(gJsonInfo.velocityMin.y, gJsonInfo.velocityMax.y);
@@ -167,7 +167,7 @@ void GenerateGrain(int generateNum, RandomGenerator generator)
                 float lifeTime = 0.0f;
                 lifeTime = generator.GenerateInRange(gJsonInfo.lifeTimeMin, gJsonInfo.lifeTimeMax);
                 //クランプ数だけ回す
-                for (int j = 0; j < gEmitter.clumpNum; j++)
+                for (int j = 0; j < gEmitterInfo.clumpNum; j++)
                 {
                     //値を入れていく
                     gGrains[grainIndex].basicTransform.translate = basicTranslate;

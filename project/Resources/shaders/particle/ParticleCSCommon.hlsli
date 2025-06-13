@@ -6,7 +6,7 @@ struct Transform
     float4 translate;
 };
 //エミッター情報
-struct Emitter
+struct EmitterInfo
 {
     Transform transform;
     int generateMethod;
@@ -18,6 +18,7 @@ struct Emitter
     uint isAffectedField;
     uint isGravity;
     uint isBound;
+    uint isBillboard;
     uint isPlay;
 };
 //JSON情報
@@ -54,7 +55,6 @@ struct Grain
     float4 velocity;
     float4 startColor;
     float4 endColor;
-    float4 currentColor;
     float4 startRotate;
     float4 endRotate;
     float startSize;
