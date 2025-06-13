@@ -73,6 +73,10 @@ void ParticleManager::Update() {
 		mainRender->GetCommandList()->SetComputeRootConstantBufferView(5, particle.second->allResourceForCS_.perFrameResource->GetGPUVirtualAddress());
 
 		mainRender->GetCommandList()->Dispatch(1, 1, 1);
+		//OneShotスタイルの場合isPlayをfalseにする
+		if (particle.second->emitter_.effectStyle == Particle::EffectStyle::OneShot) {
+			particle.second->emitter_.isPlay = false;
+		}
 		//バリア遷移(状態保証処理)
 		{
 			std::vector<ID3D12Resource*> uavResources = {

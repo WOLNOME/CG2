@@ -200,6 +200,10 @@ void GenerateGrain(int generateNum, RandomGenerator generator)
                     gGrains[grainIndex].lifeTime = lifeTime;
                     gGrains[grainIndex].currentTime = 0.0f;
                     
+                    //最後の周ならここでreturn
+                    if (j == gEmitterInfo.clumpNum - 1)
+                        return;
+                    
                     //粒のインデックスを次の値へ
                     InterlockedAdd(gFreeListIndex[0], -1, freeListIndex);
                     if (0 <= freeListIndex && freeListIndex < gJsonInfo.maxGrains)
