@@ -1,4 +1,4 @@
-#include "Particle.hlsli"
+#include "ParticleCommon.hlsli"
 
 struct Material
 {

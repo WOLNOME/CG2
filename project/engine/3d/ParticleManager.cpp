@@ -22,115 +22,84 @@ ParticleManager* ParticleManager::GetInstance() {
 void ParticleManager::Initialize() {
 	//グラフィックスパイプラインの設定
 	GenerateGraphicsPipeline();
+	//コンピュートパイプラインの設定
+	GenerateComputePipeline();
+
 }
 
 void ParticleManager::Update() {
+	MainRender* mainRender = MainRender::GetInstance();
+	GPUDescriptorManager* gpuDescriptorManager = GPUDescriptorManager::GetInstance();
+	auto InsertUAVBarriers = [&](std::vector<ID3D12Resource*>& resources) {
+		std::vector<D3D12_RESOURCE_BARRIER> barriers;
+		for (ID3D12Resource* resource : resources) {
+			D3D12_RESOURCE_BARRIER barrier{};
+			barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_UAV;
+			barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+			barrier.UAV.pResource = resource;
+			barriers.push_back(barrier);
+		}
+		mainRender->GetCommandList()->ResourceBarrier(UINT(barriers.size()), barriers.data());
+		};
+
+	//GPUDescriptorHeapをコマンドリストにセット
+	gpuDescriptorManager->SetDescriptorHeap(mainRender->GetCommandList());
+
 	//各パーティクルの更新
 	for (const auto& particle : particles) {
-		//空いている粒の中から確率で生成
-		if (particle.second->emitter_.isPlay) {
-			//生成に必要なローカル変数
-			int max = particle.second->GetParam()["MaxGrains"];
-			int rate = particle.second->GetParam()["EmitRate"];
-			float ratePerFrame = rate * kDeltaTime;
-			int genNum = 0;
-			//ランダムエンジンの初期化
-			std::random_device rd;
-			std::mt19937 gen(rd());
-			std::uniform_real_distribution<float> dist(0.0f, 100.0f);
-			//エフェクトの生成スタイルによって分ける
-			switch (particle.second->emitter_.effectStyle) {
-			case Particle::EffectStyle::Loop:
-				for (int i = 0; i < 60; i++) {
-					//確率でこのフレームの生成数をインクリメント
-					if (dist(gen) < ratePerFrame) {
-						genNum++;
-					}
-				}
-				break;
-			case Particle::EffectStyle::OneShot:
-				//現在の粒の数が0なら生成
-				if (particle.second->grains_.size() == 0) {
-					//生成数は一つだけ
-					genNum = 1;
-				}
-				//生成許可フラグをオフ
-				particle.second->emitter_.isPlay = false;
-				break;
-			default:
-				break;
-			}
-			//粒の生成
-			if (genNum > 0 && particle.second->grains_.size() + genNum < max) {
-				particle.second->grains_.splice(particle.second->grains_.end(), GenerateGrain(particle.second, genNum));
-			}
+		//perFrameのタイムを更新
+		particle.second->allResourceForCS_.mappedPerFrame[0].time += kDeltaTime;
+		//エミッターとJSONデータの更新
+		particle.second->TraceEmitterForCS();
+		particle.second->TraceJsonDataForCS();
+		//バリア遷移(状態保証処理)
+		{
+			std::vector<ID3D12Resource*> uavResources = {
+				particle.second->allResourceForCS_.grainsResource.Get(),
+				particle.second->allResourceForCS_.freeListIndexResource.Get(),
+				particle.second->allResourceForCS_.freeListResource.Get()
+			};
+
+			InsertUAVBarriers(uavResources);
 		}
+		//粒の生成処理
+		mainRender->GetCommandList()->SetComputeRootSignature(cRootSignature[1].Get());
+		mainRender->GetCommandList()->SetPipelineState(computePipelineState[1].Get());
+		mainRender->GetCommandList()->SetComputeRootDescriptorTable(0, gpuDescriptorManager->GetGPUDescriptorHandle(particle.second->allResourceForCS_.grainsUavIndex));
+		mainRender->GetCommandList()->SetComputeRootDescriptorTable(1, gpuDescriptorManager->GetGPUDescriptorHandle(particle.second->allResourceForCS_.freeListIndexUavIndex));
+		mainRender->GetCommandList()->SetComputeRootDescriptorTable(2, gpuDescriptorManager->GetGPUDescriptorHandle(particle.second->allResourceForCS_.freeListUavIndex));
+		mainRender->GetCommandList()->SetComputeRootConstantBufferView(3, particle.second->allResourceForCS_.emitterResource->GetGPUVirtualAddress());
+		mainRender->GetCommandList()->SetComputeRootConstantBufferView(4, particle.second->allResourceForCS_.jsonInfoResource->GetGPUVirtualAddress());
+		mainRender->GetCommandList()->SetComputeRootConstantBufferView(5, particle.second->allResourceForCS_.perFrameResource->GetGPUVirtualAddress());
 
-		//インスタンスの番号
-		uint32_t instanceNum = 0;
-		//パーティクル内各粒の更新
-		for (std::list<Particle::GrainData>::iterator grainIterator = particle.second->grains_.begin(); grainIterator != particle.second->grains_.end();) {
-			//各粒(生きている)の寿命更新
-			(*grainIterator).currentTime += kDeltaTime;
-			//各粒の生存チェック(寿命を迎えたら削除)
-			if ((*grainIterator).currentTime > (*grainIterator).lifeTime) {
-				grainIterator = particle.second->grains_.erase(grainIterator);
-				continue;
-			}
-			//各粒とエミッターとの処理
-			if (particle.second->emitter_.isGravity) {
-				//重力処理
-				(*grainIterator).velocity.y += particle.second->emitter_.gravity * kDeltaTime;
-			}
-			if (particle.second->emitter_.isBound) {
-				//粒の足
-				float leg = (*grainIterator).basicTransform.translate.y - MyMath::Lerp((*grainIterator).startSize, (*grainIterator).endSize, (*grainIterator).currentTime);
-				//床の反発処理
-				if (leg > particle.second->emitter_.floorHeight && leg + (kDeltaTime * (*grainIterator).velocity.y) < particle.second->emitter_.floorHeight) {
-					(*grainIterator).velocity.y *= (-1.0f) * particle.second->emitter_.repulsion;
-				}
-			}
-			//各粒とフィールドとの処理
-			if (field_) {
-				if (field_->isActive && particle.second->emitter_.isAffectedField) {
-					if (MyMath::IsCollision(field_->area, (*grainIterator).basicTransform.translate)) {
-						(*grainIterator).velocity = (*grainIterator).velocity + (kDeltaTime * field_->acceleration);
-					}
-				}
-			}
-			//各粒の速度加算
-			(*grainIterator).basicTransform.translate = (*grainIterator).basicTransform.translate + (kDeltaTime * (*grainIterator).velocity);
-			//各粒の色更新
-			Vector4 currentColor = MyMath::Lerp((*grainIterator).startColor, (*grainIterator).endColor, (*grainIterator).currentTime / (*grainIterator).lifeTime);
-			//各粒の回転更新
-			Vector3 currentRotate = MyMath::Lerp((*grainIterator).startRotate, (*grainIterator).endRotate, (*grainIterator).currentTime / (*grainIterator).lifeTime);
-			//各粒のサイズ更新
-			float currentSize = MyMath::Lerp((*grainIterator).startSize, (*grainIterator).endSize, (*grainIterator).currentTime / (*grainIterator).lifeTime);
-			//各粒のトランスフォーム更新
-			(*grainIterator).transform.translate = (*grainIterator).basicTransform.translate;
-			(*grainIterator).transform.rotate = (*grainIterator).basicTransform.rotate + currentRotate;
-			(*grainIterator).transform.scale = (*grainIterator).basicTransform.scale * currentSize;
-
-			//座標情報からワールド行列を作成(ビルボード行列の計算もここで)
-			Matrix4x4 backToFrontMatrix = MyMath::MakeRotateZMatrix((*grainIterator).transform.rotate.z);
-			Matrix4x4 billboardMatrix = MyMath::Multiply(backToFrontMatrix, camera_->GetWorldMatrix());
-			billboardMatrix.m[3][0] = 0.0f;
-			billboardMatrix.m[3][1] = 0.0f;
-			billboardMatrix.m[3][2] = 0.0f;
-			Matrix4x4 worldMatrix = MyMath::Multiply(MyMath::Multiply(MyMath::MakeScaleMatrix((*grainIterator).transform.scale), billboardMatrix), MyMath::MakeTranslateMatrix((*grainIterator).transform.translate));
-			if (!particle.second->emitter_.isBillboard) {
-				worldMatrix = MyMath::MakeAffineMatrix((*grainIterator).transform.scale, (*grainIterator).transform.rotate, (*grainIterator).transform.translate);
-			}
-			//各粒のワールド行列と色情報をパーティクルリソースに書き込む
-			particle.second->particleResource_.instancingData[instanceNum].World = worldMatrix;
-			particle.second->particleResource_.instancingData[instanceNum].color = currentColor;
-
-			//次の粒へ
-			++grainIterator;
-			//インスタンスの番号をインクリメント
-			++instanceNum;
+		mainRender->GetCommandList()->Dispatch(1, 1, 1);
+		//OneShotスタイルの場合isPlayをfalseにする
+		if (particle.second->emitter_.effectStyle == Particle::EffectStyle::OneShot) {
+			particle.second->emitter_.isPlay = false;
 		}
-		//形状の変更通知があった場合
+		//バリア遷移(状態保証処理)
+		{
+			std::vector<ID3D12Resource*> uavResources = {
+				particle.second->allResourceForCS_.grainsResource.Get(),
+				particle.second->allResourceForCS_.freeListIndexResource.Get(),
+				particle.second->allResourceForCS_.freeListResource.Get()
+			};
+
+			InsertUAVBarriers(uavResources);
+		}
+		//粒の更新処理
+		mainRender->GetCommandList()->SetComputeRootSignature(cRootSignature[2].Get());
+		mainRender->GetCommandList()->SetPipelineState(computePipelineState[2].Get());
+		mainRender->GetCommandList()->SetComputeRootDescriptorTable(0, gpuDescriptorManager->GetGPUDescriptorHandle(particle.second->allResourceForCS_.grainsUavIndex));
+		mainRender->GetCommandList()->SetComputeRootDescriptorTable(1, gpuDescriptorManager->GetGPUDescriptorHandle(particle.second->allResourceForCS_.freeListIndexUavIndex));
+		mainRender->GetCommandList()->SetComputeRootDescriptorTable(2, gpuDescriptorManager->GetGPUDescriptorHandle(particle.second->allResourceForCS_.freeListUavIndex));
+		mainRender->GetCommandList()->SetComputeRootConstantBufferView(3, particle.second->allResourceForCS_.emitterResource->GetGPUVirtualAddress());
+		mainRender->GetCommandList()->SetComputeRootConstantBufferView(4, particle.second->allResourceForCS_.jsonInfoResource->GetGPUVirtualAddress());
+		mainRender->GetCommandList()->SetComputeRootConstantBufferView(5, particle.second->allResourceForCS_.perFrameResource->GetGPUVirtualAddress());
+
+		mainRender->GetCommandList()->Dispatch(UINT(particle.second->param_["MaxGrains"] + 1023) / 1024, 1, 1);
+		//粒配列情報をSRV用にリソース遷移
+		mainRender->TransitionResource(particle.second->allResourceForCS_.grainsResource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_GENERIC_READ);
 
 		//形状更新
 		particle.second->shape_->Update();
@@ -147,19 +116,26 @@ void ParticleManager::Draw() {
 		assert(0 && "カメラがセットされていません。");
 	}
 	//ルートシグネチャをセットするコマンド
-	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootSignature(rootSignature.Get());
+	mainRender->GetCommandList()->SetGraphicsRootSignature(gRootSignature.Get());
 	//プリミティブトポロジーをセットするコマンド
-	MainRender::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mainRender->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	//カメラ情報をVSに送信(一括)
-	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera_->GetViewProjectionConstBuffer()->GetGPUVirtualAddress());
+	mainRender->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera_->GetViewProjectionConstBuffer()->GetGPUVirtualAddress());
 	//パーティクル個別の設定
 	for (const auto& particle : particles) {
 		//各パーティクルのブレンドモード情報からパイプラインステートを選択
-		MainRender::GetInstance()->GetCommandList()->SetPipelineState(graphicsPipelineState[particle.second->GetParam()["BlendMode"]].Get());
-		//各パーティクルのインスタンシングデータをVSに送信
-		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(particle.second->particleResource_.srvIndex));
+		mainRender->GetCommandList()->SetPipelineState(graphicsPipelineState[particle.second->GetParam()["BlendMode"]].Get());
+		//各パーティクルの粒配列情報をVSに送信
+		mainRender->GetCommandList()->SetGraphicsRootDescriptorTable(1, GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(particle.second->allResourceForCS_.grainsSrvIndex));
+		//エミッター情報をVSに送信
+		mainRender->GetCommandList()->SetGraphicsRootConstantBufferView(4, particle.second->allResourceForCS_.emitterResource->GetGPUVirtualAddress());
+		//JSON情報をVSに送信
+		mainRender->GetCommandList()->SetGraphicsRootConstantBufferView(5, particle.second->allResourceForCS_.jsonInfoResource->GetGPUVirtualAddress());
 		//各パーティクル形状の描画
-		particle.second->shape_->Draw(0, 3, (uint32_t)particle.second->grains_.size(), particle.second->textureHandle_);
+		particle.second->shape_->Draw(0, 3, (uint32_t)particle.second->param_["MaxGrains"], particle.second->textureHandle_);
+
+		//粒配列情報をUAV用にリソース遷移
+		mainRender->TransitionResource(particle.second->allResourceForCS_.grainsResource.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	}
 }
 
@@ -175,6 +151,20 @@ void ParticleManager::RegisterParticle(const std::string& name, Particle* partic
 	}
 	//登録
 	particles[name] = particle;
+
+	MainRender* mainRender = MainRender::GetInstance();
+	GPUDescriptorManager* gpuDescriptorManager = GPUDescriptorManager::GetInstance();
+	//GPUDescriptorHeapをコマンドリストにセット
+	gpuDescriptorManager->SetDescriptorHeap(mainRender->GetCommandList());
+	//CSでUAVリソースの初期化処理
+	mainRender->GetCommandList()->SetComputeRootSignature(cRootSignature[0].Get());
+	mainRender->GetCommandList()->SetPipelineState(computePipelineState[0].Get());
+	mainRender->GetCommandList()->SetComputeRootDescriptorTable(0, gpuDescriptorManager->GetGPUDescriptorHandle(particles[name]->allResourceForCS_.grainsUavIndex));
+	mainRender->GetCommandList()->SetComputeRootDescriptorTable(1, gpuDescriptorManager->GetGPUDescriptorHandle(particles[name]->allResourceForCS_.freeListIndexUavIndex));
+	mainRender->GetCommandList()->SetComputeRootDescriptorTable(2, gpuDescriptorManager->GetGPUDescriptorHandle(particles[name]->allResourceForCS_.freeListUavIndex));
+	mainRender->GetCommandList()->SetComputeRootConstantBufferView(3, particles[name]->allResourceForCS_.jsonInfoResource->GetGPUVirtualAddress());
+
+	mainRender->GetCommandList()->Dispatch(UINT(particles[name]->param_["MaxGrains"] + 1023) / 1024, 1, 1);
 }
 
 void ParticleManager::DeleteParticle(const std::string& name) {
@@ -210,40 +200,94 @@ void ParticleManager::GenerateGraphicsPipeline() {
 	HRESULT hr;
 	auto dxCommon = DirectXCommon::GetInstance();
 
-	//RootSignature作成
+	// RootSignature作成
 	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-	//DescriptorRange作成
-	D3D12_DESCRIPTOR_RANGE descriptorRangeForInstancing[1] = {};
-	descriptorRangeForInstancing[0].BaseShaderRegister = 0;
-	descriptorRangeForInstancing[0].NumDescriptors = 1;
-	descriptorRangeForInstancing[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-	descriptorRangeForInstancing[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+	//レジスタカウント
+	int registerCountVS = 0;
+	int registerCountPS = 0;
+	//使用するデスクリプタの数
+	int numDescriptors = 0;
 
-	//RootParameter作成。複数設定できるので配列。今回は結果1つだけなので長さ1の配列
-	D3D12_ROOT_PARAMETER rootParameters[4] = {};
-	//マテリアルの設定
-	rootParameters[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
-	rootParameters[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
-	rootParameters[0].Descriptor.ShaderRegister = 0;//レジスタ番号0とバインド
-	//オブジェクト関連の設定
-	rootParameters[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//Tableを使う
-	rootParameters[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;//VertexShaderで使う
-	rootParameters[1].DescriptorTable.pDescriptorRanges = descriptorRangeForInstancing;
-	rootParameters[1].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeForInstancing);
-	//ViewProjection関連の設定
-	rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
-	rootParameters[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;//PixelShaderで使う
-	rootParameters[2].Descriptor.ShaderRegister = 0;//レジスタ番号0とバインド
-	//テクスチャの設定
-	rootParameters[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//Tableを使う
-	rootParameters[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
-	rootParameters[3].DescriptorTable.pDescriptorRanges = descriptorRangeForInstancing;//Tableの中身の配列を指定
-	rootParameters[3].DescriptorTable.NumDescriptorRanges = _countof(descriptorRangeForInstancing);
+	// RootParameter作成
+	std::vector<D3D12_ROOT_PARAMETER> rootParameters;
 
-	//Samplerの設定
-	D3D12_STATIC_SAMPLER_DESC staticSamplers[1] = {};
+	// マテリアル情報用の設定(0)
+	{
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		param.Descriptor.ShaderRegister = 0;
+		rootParameters.push_back(param);
+	}
+	// 粒配列情報用の設定(1)
+	{
+		//デスクリプタレンジ作成
+		D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+		numDescriptors = 1;
+		descriptorRange[0].BaseShaderRegister = registerCountVS;
+		descriptorRange[0].NumDescriptors = numDescriptors;
+		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		registerCountVS += numDescriptors;
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+		param.DescriptorTable.pDescriptorRanges = descriptorRange;
+		param.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+		rootParameters.push_back(param);
+	}
+	// カメラ情報用の設定(2)
+	{
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+		param.Descriptor.ShaderRegister = 0;
+		rootParameters.push_back(param);
+	}
+	// テクスチャ情報用の設定(3)
+	{
+		//デスクリプタレンジ作成
+		D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+		numDescriptors = 1;
+		descriptorRange[0].BaseShaderRegister = registerCountPS;
+		descriptorRange[0].NumDescriptors = numDescriptors;
+		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		registerCountPS += numDescriptors;
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+		param.DescriptorTable.pDescriptorRanges = descriptorRange;
+		param.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+		rootParameters.push_back(param);
+	}
+	//エミッター情報用の設定(4)
+	{
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+		param.Descriptor.ShaderRegister = 1;
+		rootParameters.push_back(param);
+	}
+	//JSON情報用の設定(5)
+	{
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+		param.Descriptor.ShaderRegister = 2;
+		rootParameters.push_back(param);
+	}
+
+	// Sampler作成
+	std::vector<D3D12_STATIC_SAMPLER_DESC> staticSamplers(1);
 	staticSamplers[0].Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
 	staticSamplers[0].AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
 	staticSamplers[0].AddressV = D3D12_TEXTURE_ADDRESS_MODE_CLAMP;
@@ -254,10 +298,10 @@ void ParticleManager::GenerateGraphicsPipeline() {
 	staticSamplers[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
 	//Signatureに反映
-	descriptionRootSignature.pStaticSamplers = staticSamplers;
-	descriptionRootSignature.NumStaticSamplers = _countof(staticSamplers);
-	descriptionRootSignature.pParameters = rootParameters;//ルートパラメータ配列へのポインタ
-	descriptionRootSignature.NumParameters = _countof(rootParameters);//配列の長さ
+	descriptionRootSignature.pParameters = rootParameters.data();
+	descriptionRootSignature.NumParameters = static_cast<UINT>(rootParameters.size());
+	descriptionRootSignature.pStaticSamplers = staticSamplers.data();
+	descriptionRootSignature.NumStaticSamplers = static_cast<UINT>(staticSamplers.size());
 
 	//シリアライズしてバイナリにする
 	Microsoft::WRL::ComPtr<ID3D10Blob> signatireBlob = nullptr;
@@ -270,7 +314,7 @@ void ParticleManager::GenerateGraphicsPipeline() {
 	}
 	//バイナリをもとに生成
 	hr = dxCommon->GetDevice()->CreateRootSignature(0, signatireBlob->GetBufferPointer(),
-		signatireBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature));
+		signatireBlob->GetBufferSize(), IID_PPV_ARGS(&gRootSignature));
 	assert(SUCCEEDED(hr));
 
 	//InputLayout
@@ -353,11 +397,11 @@ void ParticleManager::GenerateGraphicsPipeline() {
 	rasterizerDesc.FillMode = D3D12_FILL_MODE_SOLID;
 
 	//Shaderをコンパイルする
-	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxCommon->CompileShader(L"Resources/shaders/Particle.VS.hlsl",
+	Microsoft::WRL::ComPtr<IDxcBlob> vertexShaderBlob = dxCommon->CompileShader(L"Resources/shaders/particle/Particle.VS.hlsl",
 		L"vs_6_0");
 	assert(vertexShaderBlob != nullptr);
 
-	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = dxCommon->CompileShader(L"Resources/shaders/Particle.PS.hlsl",
+	Microsoft::WRL::ComPtr<IDxcBlob> pixelShaderBlob = dxCommon->CompileShader(L"Resources/shaders/particle/Particle.PS.hlsl",
 		L"ps_6_0");
 	assert(pixelShaderBlob != nullptr);
 
@@ -369,7 +413,7 @@ void ParticleManager::GenerateGraphicsPipeline() {
 
 	std::array<D3D12_GRAPHICS_PIPELINE_STATE_DESC, (int)BlendMode::kMaxBlendModeNum> graphicsPipelineStateDesc{};
 	for (int i = 0; i < (int)BlendMode::kMaxBlendModeNum; i++) {
-		graphicsPipelineStateDesc[i].pRootSignature = rootSignature.Get();
+		graphicsPipelineStateDesc[i].pRootSignature = gRootSignature.Get();
 		graphicsPipelineStateDesc[i].InputLayout = inputLayoutDesc;
 		graphicsPipelineStateDesc[i].VS = { vertexShaderBlob->GetBufferPointer(),
 		vertexShaderBlob->GetBufferSize() };
@@ -396,128 +440,377 @@ void ParticleManager::GenerateGraphicsPipeline() {
 	}
 }
 
-std::list<Particle::GrainData> ParticleManager::GenerateGrain(Particle* particle, int genNum) {
+void ParticleManager::GenerateComputePipeline() {
+	//初期化用CPSOの設定
+	InitCPSOOption();
+	//エミット用CPSOの設定
+	EmitCPSOOption();
+	//更新用CPSOの設定
+	UpdateCPSOOption();
+}
 
-	std::list<Particle::GrainData> grains;
-	for (int i = 0; i < genNum; i++) {
-		Particle::GrainData grain;
-		//ランダム
-		std::random_device rd;
-		std::mt19937 gen(rd());
-		//一様分布
-		std::uniform_real_distribution<float> distTranslateX(particle->emitter_.transform.translate.x - particle->emitter_.transform.scale.x, particle->emitter_.transform.translate.x + particle->emitter_.transform.scale.x);
-		std::uniform_real_distribution<float> distTranslateY(particle->emitter_.transform.translate.y - particle->emitter_.transform.scale.y, particle->emitter_.transform.translate.y + particle->emitter_.transform.scale.y);
-		std::uniform_real_distribution<float> distTranslateZ(particle->emitter_.transform.translate.z - particle->emitter_.transform.scale.z, particle->emitter_.transform.translate.z + particle->emitter_.transform.scale.z);
-		std::uniform_real_distribution<float> distRotateX(std::min(particle->GetParam()["GrainTransform"]["Rotate"]["Min"]["x"], particle->GetParam()["GrainTransform"]["Rotate"]["Max"]["x"]), std::max(particle->GetParam()["GrainTransform"]["Rotate"]["Min"]["x"], particle->GetParam()["GrainTransform"]["Rotate"]["Max"]["x"]));
-		std::uniform_real_distribution<float> distRotateY(std::min(particle->GetParam()["GrainTransform"]["Rotate"]["Min"]["y"], particle->GetParam()["GrainTransform"]["Rotate"]["Max"]["y"]), std::max(particle->GetParam()["GrainTransform"]["Rotate"]["Min"]["y"], particle->GetParam()["GrainTransform"]["Rotate"]["Max"]["y"]));
-		std::uniform_real_distribution<float> distRotateZ(std::min(particle->GetParam()["GrainTransform"]["Rotate"]["Min"]["z"], particle->GetParam()["GrainTransform"]["Rotate"]["Max"]["z"]), std::max(particle->GetParam()["GrainTransform"]["Rotate"]["Min"]["z"], particle->GetParam()["GrainTransform"]["Rotate"]["Max"]["z"]));
-		std::uniform_real_distribution<float> distScaleX(std::min(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["x"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["x"]), std::max(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["x"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["x"]));
-		std::uniform_real_distribution<float> distScaleY(std::min(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["y"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["y"]), std::max(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["y"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["y"]));
-		std::uniform_real_distribution<float> distScaleZ(std::min(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["z"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["z"]), std::max(particle->GetParam()["GrainTransform"]["Scale"]["Min"]["z"], particle->GetParam()["GrainTransform"]["Scale"]["Max"]["z"]));
-		std::uniform_real_distribution<float> distStartRotateX(std::min(particle->GetParam()["StartRotate"]["Min"]["x"], particle->GetParam()["StartRotate"]["Max"]["x"]), std::max(particle->GetParam()["StartRotate"]["Min"]["x"], particle->GetParam()["StartRotate"]["Max"]["x"]));
-		std::uniform_real_distribution<float> distStartRotateY(std::min(particle->GetParam()["StartRotate"]["Min"]["y"], particle->GetParam()["StartRotate"]["Max"]["y"]), std::max(particle->GetParam()["StartRotate"]["Min"]["y"], particle->GetParam()["StartRotate"]["Max"]["y"]));
-		std::uniform_real_distribution<float> distStartRotateZ(std::min(particle->GetParam()["StartRotate"]["Min"]["z"], particle->GetParam()["StartRotate"]["Max"]["z"]), std::max(particle->GetParam()["StartRotate"]["Min"]["z"], particle->GetParam()["StartRotate"]["Max"]["z"]));
-		std::uniform_real_distribution<float> distEndRotateX(std::min(particle->GetParam()["EndRotate"]["Min"]["x"], particle->GetParam()["EndRotate"]["Max"]["x"]), std::max(particle->GetParam()["EndRotate"]["Min"]["x"], particle->GetParam()["EndRotate"]["Max"]["x"]));
-		std::uniform_real_distribution<float> distEndRotateY(std::min(particle->GetParam()["EndRotate"]["Min"]["y"], particle->GetParam()["EndRotate"]["Max"]["y"]), std::max(particle->GetParam()["EndRotate"]["Min"]["y"], particle->GetParam()["EndRotate"]["Max"]["y"]));
-		std::uniform_real_distribution<float> distEndRotateZ(std::min(particle->GetParam()["EndRotate"]["Min"]["z"], particle->GetParam()["EndRotate"]["Max"]["z"]), std::max(particle->GetParam()["EndRotate"]["Min"]["z"], particle->GetParam()["EndRotate"]["Max"]["z"]));
-		std::uniform_real_distribution<float> distStartSize(std::min(particle->GetParam()["StartSize"]["Min"], particle->GetParam()["StartSize"]["Max"]), std::max(particle->GetParam()["StartSize"]["Min"], particle->GetParam()["StartSize"]["Max"]));
-		std::uniform_real_distribution<float> distEndSize(std::min(particle->GetParam()["EndSize"]["Min"], particle->GetParam()["EndSize"]["Max"]), std::max(particle->GetParam()["EndSize"]["Min"], particle->GetParam()["EndSize"]["Max"]));
-		Vector4 startColorMin = {
-			particle->GetParam()["StartColor"]["Min"]["x"],
-			particle->GetParam()["StartColor"]["Min"]["y"],
-			particle->GetParam()["StartColor"]["Min"]["z"],
-			particle->GetParam()["StartColor"]["Min"]["w"]
-		};
-		Vector4 startColorMax = {
-			particle->GetParam()["StartColor"]["Max"]["x"],
-			particle->GetParam()["StartColor"]["Max"]["y"],
-			particle->GetParam()["StartColor"]["Max"]["z"],
-			particle->GetParam()["StartColor"]["Max"]["w"]
-		};
-		std::uniform_real_distribution<float> distStartColorX(std::min(startColorMin.x, startColorMax.x), std::max(startColorMin.x, startColorMax.x));
-		std::uniform_real_distribution<float> distStartColorY(std::min(startColorMin.y, startColorMax.y), std::max(startColorMin.y, startColorMax.y));
-		std::uniform_real_distribution<float> distStartColorZ(std::min(startColorMin.z, startColorMax.z), std::max(startColorMin.z, startColorMax.z));
-		std::uniform_real_distribution<float> distStartColorW(std::min(startColorMin.w, startColorMax.w), std::max(startColorMin.w, startColorMax.w));
-		Vector4 endColorMin = {
-			particle->GetParam()["EndColor"]["Min"]["x"] ,
-			particle->GetParam()["EndColor"]["Min"]["y"] ,
-			particle->GetParam()["EndColor"]["Min"]["z"] ,
-			particle->GetParam()["EndColor"]["Min"]["w"]
-		};
-		Vector4 endColorMax = {
-			particle->GetParam()["EndColor"]["Max"]["x"] ,
-			particle->GetParam()["EndColor"]["Max"]["y"] ,
-			particle->GetParam()["EndColor"]["Max"]["z"] ,
-			particle->GetParam()["EndColor"]["Max"]["w"]
-		};
-		std::uniform_real_distribution<float> distEndColorX(std::min(endColorMin.x, endColorMax.x), std::max(endColorMin.x, endColorMax.x));
-		std::uniform_real_distribution<float> distEndColorY(std::min(endColorMin.y, endColorMax.y), std::max(endColorMin.y, endColorMax.y));
-		std::uniform_real_distribution<float> distEndColorZ(std::min(endColorMin.z, endColorMax.z), std::max(endColorMin.z, endColorMax.z));
-		std::uniform_real_distribution<float> distEndColorW(std::min(endColorMin.w, endColorMax.w), std::max(endColorMin.w, endColorMax.w));
-		Vector3 velocityMax = {
-			particle->GetParam()["Velocity"]["Max"]["x"],
-			particle->GetParam()["Velocity"]["Max"]["y"],
-			particle->GetParam()["Velocity"]["Max"]["z"],
-		};
-		Vector3 velocityMin = {
-			particle->GetParam()["Velocity"]["Min"]["x"],
-			particle->GetParam()["Velocity"]["Min"]["y"],
-			particle->GetParam()["Velocity"]["Min"]["z"],
-		};
-		std::uniform_real_distribution<float> distVelocityX(std::min(velocityMin.x, velocityMax.x), std::max(velocityMin.x, velocityMax.x));
-		std::uniform_real_distribution<float> distVelocityY(std::min(velocityMin.y, velocityMax.y), std::max(velocityMin.y, velocityMax.y));
-		std::uniform_real_distribution<float> distVelocityZ(std::min(velocityMin.z, velocityMax.z), std::max(velocityMin.z, velocityMax.z));
-		std::uniform_real_distribution<float> distLifeTime(std::min(particle->GetParam()["LifeTime"]["Min"], particle->GetParam()["LifeTime"]["Max"]), std::max(particle->GetParam()["LifeTime"]["Min"], particle->GetParam()["LifeTime"]["Max"]));
+void ParticleManager::InitCPSOOption() {
+	HRESULT hr;
+	//RootSignature作成
+	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
+	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
-		//生成方法ごとにパラメータの初期化
-		switch (particle->emitter_.generateMethod) {
-		case Particle::GenerateMethod::Random:
-			//ランダム
-			grain.basicTransform.translate = Vector3(distTranslateX(gen), distTranslateY(gen), distTranslateZ(gen));
-			grain.basicTransform.rotate = Vector3(distRotateX(gen), distRotateY(gen), distRotateZ(gen));
-			grain.basicTransform.scale = Vector3(distScaleX(gen), distScaleY(gen), distScaleZ(gen));
-			grain.startRotate = Vector3(distStartRotateX(gen), distStartRotateY(gen), distStartRotateZ(gen));
-			grain.endRotate = Vector3(distEndRotateX(gen), distEndRotateY(gen), distEndRotateZ(gen));
-			grain.startSize = distStartSize(gen);
-			grain.endSize = distEndSize(gen);
-			grain.transform.translate = grain.basicTransform.translate;
-			grain.transform.rotate = grain.basicTransform.rotate;
-			grain.transform.scale = grain.basicTransform.scale * grain.startSize;
-			grain.startColor = Vector4(distStartColorX(gen), distStartColorY(gen), distStartColorZ(gen), distStartColorW(gen));
-			grain.endColor = Vector4(distEndColorX(gen), distEndColorY(gen), distEndColorZ(gen), distEndColorW(gen));
-			grain.velocity = Vector3(distVelocityX(gen), distVelocityY(gen), distVelocityZ(gen));
-			grain.lifeTime = distLifeTime(gen);
-			grain.currentTime = 0.0f;
-			//プッシュバック
-			grains.push_back(grain);
-			break;
-		case Particle::GenerateMethod::Clump:
-			//塊(座標に関しての情報だけ同じ値にする)
-			grain.basicTransform.translate = Vector3(distTranslateX(gen), distTranslateY(gen), distTranslateZ(gen));
-			grain.transform.translate = grain.basicTransform.translate;
-			grain.velocity = Vector3(distVelocityX(gen), distVelocityY(gen), distVelocityZ(gen));
-			grain.lifeTime = distLifeTime(gen);
-			grain.currentTime = 0.0f;
-			//塊を構成する粒数の処理
-			for (int j = 0; j < particle->emitter_.clumpNum; j++) {
-				grain.basicTransform.rotate = Vector3(distRotateX(gen), distRotateY(gen), distRotateZ(gen));
-				grain.basicTransform.scale = Vector3(distScaleX(gen), distScaleY(gen), distScaleZ(gen));
-				grain.startRotate = Vector3(distStartRotateX(gen), distStartRotateY(gen), distStartRotateZ(gen));
-				grain.endRotate = Vector3(distEndRotateX(gen), distEndRotateY(gen), distEndRotateZ(gen));
-				grain.startSize = distStartSize(gen);
-				grain.endSize = distEndSize(gen);
-				grain.transform.rotate = grain.basicTransform.rotate;
-				grain.transform.scale = grain.basicTransform.scale * grain.startSize;
-				grain.startColor = Vector4(distStartColorX(gen), distStartColorY(gen), distStartColorZ(gen), distStartColorW(gen));
-				grain.endColor = Vector4(distEndColorX(gen), distEndColorY(gen), distEndColorZ(gen), distEndColorW(gen));
+	//レジスタカウント
+	int registerCountT = 0;		//structuredBuffer専用
+	int registerCountU = 0;		//RWStructuredBuffer専用
+	//使用するデスクリプタの数
+	int numDescriptors = 0;
 
-				//プッシュバック
-				grains.push_back(grain);
-			}
-			break;
-		default:
-			break;
-		}
+	std::vector<D3D12_ROOT_PARAMETER> rootParameters;
+	//粒配列用の設定(0)
+	{
+		//デスクリプタレンジ作成
+		D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+		numDescriptors = 1;
+		descriptorRange[0].BaseShaderRegister = registerCountU;
+		descriptorRange[0].NumDescriptors = numDescriptors;
+		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		registerCountU += numDescriptors;
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param.DescriptorTable.pDescriptorRanges = descriptorRange;
+		param.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+		rootParameters.push_back(param);
 	}
-	return grains;
+	//フリーリストインデックス用の設定(1)
+	{
+		//デスクリプタレンジ作成
+		D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+		numDescriptors = 1;
+		descriptorRange[0].BaseShaderRegister = registerCountU;
+		descriptorRange[0].NumDescriptors = numDescriptors;
+		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		registerCountU += numDescriptors;
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param.DescriptorTable.pDescriptorRanges = descriptorRange;
+		param.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+		rootParameters.push_back(param);
+	}
+	//フリーリスト用の設定(2)
+	{
+		//デスクリプタレンジ作成
+		D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+		numDescriptors = 1;
+		descriptorRange[0].BaseShaderRegister = registerCountU;
+		descriptorRange[0].NumDescriptors = numDescriptors;
+		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		registerCountU += numDescriptors;
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param.DescriptorTable.pDescriptorRanges = descriptorRange;
+		param.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+		rootParameters.push_back(param);
+	}
+	//JSON情報用の設定(3)
+	{
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param.Descriptor.ShaderRegister = 0;
+		rootParameters.push_back(param);
+	}
+	//Signatureに反映
+	descriptionRootSignature.pParameters = rootParameters.data();
+	descriptionRootSignature.NumParameters = static_cast<UINT>(rootParameters.size());
+
+	//シリアライズしてバイナリにする
+	Microsoft::WRL::ComPtr<ID3D10Blob> signatireBlob = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+	hr = D3D12SerializeRootSignature(&descriptionRootSignature,
+		D3D_ROOT_SIGNATURE_VERSION_1, &signatireBlob, &errorBlob);
+	if (FAILED(hr)) {
+		Logger::Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+		assert(false);
+	}
+	//バイナリをもとにコンピュートルートシグネチャを生成
+	hr = DirectXCommon::GetInstance()->GetDevice()->CreateRootSignature(0, signatireBlob->GetBufferPointer(),
+		signatireBlob->GetBufferSize(), IID_PPV_ARGS(&cRootSignature[0]));
+	assert(SUCCEEDED(hr));
+
+	//Shaderをコンパイルする
+	Microsoft::WRL::ComPtr<IDxcBlob> computeShaderBlob;
+	computeShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/particle/InitParticle.CS.hlsl",
+		L"cs_6_0");
+	assert(computeShaderBlob != nullptr);
+
+	//コンピュートシェーダー用のPSOの設定
+	D3D12_COMPUTE_PIPELINE_STATE_DESC computePipelineStateDesc{};
+	computePipelineStateDesc.CS = {
+		.pShaderBytecode = computeShaderBlob->GetBufferPointer(),
+		.BytecodeLength = computeShaderBlob->GetBufferSize()
+	};
+	computePipelineStateDesc.pRootSignature = cRootSignature[0].Get();
+	hr = DirectXCommon::GetInstance()->GetDevice()->CreateComputePipelineState(&computePipelineStateDesc, IID_PPV_ARGS(&computePipelineState[0]));
+}
+
+void ParticleManager::EmitCPSOOption() {
+	HRESULT hr;
+	//RootSignature作成
+	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
+	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+	//レジスタカウント
+	int registerCountT = 0;		//structuredBuffer専用
+	int registerCountU = 0;		//RWStructuredBuffer専用
+	//使用するデスクリプタの数
+	int numDescriptors = 0;
+
+	std::vector<D3D12_ROOT_PARAMETER> rootParameters;
+	//粒配列用の設定(0)
+	{
+		//デスクリプタレンジ作成
+		D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+		numDescriptors = 1;
+		descriptorRange[0].BaseShaderRegister = registerCountU;
+		descriptorRange[0].NumDescriptors = numDescriptors;
+		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		registerCountU += numDescriptors;
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param.DescriptorTable.pDescriptorRanges = descriptorRange;
+		param.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+		rootParameters.push_back(param);
+	}
+	//フリーリストインデックス用の設定(1)
+	{
+		//デスクリプタレンジ作成
+		D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+		numDescriptors = 1;
+		descriptorRange[0].BaseShaderRegister = registerCountU;
+		descriptorRange[0].NumDescriptors = numDescriptors;
+		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		registerCountU += numDescriptors;
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param.DescriptorTable.pDescriptorRanges = descriptorRange;
+		param.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+		rootParameters.push_back(param);
+	}
+	//フリーリスト用の設定(2)
+	{
+		//デスクリプタレンジ作成
+		D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+		numDescriptors = 1;
+		descriptorRange[0].BaseShaderRegister = registerCountU;
+		descriptorRange[0].NumDescriptors = numDescriptors;
+		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		registerCountU += numDescriptors;
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param.DescriptorTable.pDescriptorRanges = descriptorRange;
+		param.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+		rootParameters.push_back(param);
+	}
+	//エミッター情報用の設定(3)
+	{
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param.Descriptor.ShaderRegister = 0;
+		rootParameters.push_back(param);
+	}
+	//JSON情報用の設定(4)
+	{
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param.Descriptor.ShaderRegister = 1;
+		rootParameters.push_back(param);
+	}
+	//フレーム情報用の設定(5)
+	{
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param.Descriptor.ShaderRegister = 2;
+		rootParameters.push_back(param);
+	}
+	//Signatureに反映
+	descriptionRootSignature.pParameters = rootParameters.data();
+	descriptionRootSignature.NumParameters = static_cast<UINT>(rootParameters.size());
+
+	//シリアライズしてバイナリにする
+	Microsoft::WRL::ComPtr<ID3D10Blob> signatireBlob = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+	hr = D3D12SerializeRootSignature(&descriptionRootSignature,
+		D3D_ROOT_SIGNATURE_VERSION_1, &signatireBlob, &errorBlob);
+	if (FAILED(hr)) {
+		Logger::Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+		assert(false);
+	}
+	//バイナリをもとにコンピュートルートシグネチャを生成
+	hr = DirectXCommon::GetInstance()->GetDevice()->CreateRootSignature(0, signatireBlob->GetBufferPointer(),
+		signatireBlob->GetBufferSize(), IID_PPV_ARGS(&cRootSignature[1]));
+	assert(SUCCEEDED(hr));
+
+	//Shaderをコンパイルする
+	Microsoft::WRL::ComPtr<IDxcBlob> computeShaderBlob;
+	computeShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/particle/EmitParticle.CS.hlsl",
+		L"cs_6_0");
+	assert(computeShaderBlob != nullptr);
+
+	//コンピュートシェーダー用のPSOの設定
+	D3D12_COMPUTE_PIPELINE_STATE_DESC computePipelineStateDesc{};
+	computePipelineStateDesc.CS = {
+		.pShaderBytecode = computeShaderBlob->GetBufferPointer(),
+		.BytecodeLength = computeShaderBlob->GetBufferSize()
+	};
+	computePipelineStateDesc.pRootSignature = cRootSignature[1].Get();
+	hr = DirectXCommon::GetInstance()->GetDevice()->CreateComputePipelineState(&computePipelineStateDesc, IID_PPV_ARGS(&computePipelineState[1]));
+}
+
+void ParticleManager::UpdateCPSOOption() {
+	HRESULT hr;
+	//RootSignature作成
+	D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
+	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+	//レジスタカウント
+	int registerCountT = 0;		//structuredBuffer専用
+	int registerCountU = 0;		//RWStructuredBuffer専用
+	//使用するデスクリプタの数
+	int numDescriptors = 0;
+
+	std::vector<D3D12_ROOT_PARAMETER> rootParameters;
+	//粒配列用の設定(0)
+	{
+		//デスクリプタレンジ作成
+		D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+		numDescriptors = 1;
+		descriptorRange[0].BaseShaderRegister = registerCountU;
+		descriptorRange[0].NumDescriptors = numDescriptors;
+		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		registerCountU += numDescriptors;
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param.DescriptorTable.pDescriptorRanges = descriptorRange;
+		param.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+		rootParameters.push_back(param);
+	}
+	//フリーリストインデックス用の設定(1)
+	{
+		//デスクリプタレンジ作成
+		D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+		numDescriptors = 1;
+		descriptorRange[0].BaseShaderRegister = registerCountU;
+		descriptorRange[0].NumDescriptors = numDescriptors;
+		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		registerCountU += numDescriptors;
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param.DescriptorTable.pDescriptorRanges = descriptorRange;
+		param.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+		rootParameters.push_back(param);
+	}
+	//フリーリスト用の設定(2)
+	{
+		//デスクリプタレンジ作成
+		D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+		numDescriptors = 1;
+		descriptorRange[0].BaseShaderRegister = registerCountU;
+		descriptorRange[0].NumDescriptors = numDescriptors;
+		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		registerCountU += numDescriptors;
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param.DescriptorTable.pDescriptorRanges = descriptorRange;
+		param.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+		rootParameters.push_back(param);
+	}
+	//エミッター情報用の設定(3)
+	{
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param.Descriptor.ShaderRegister = 0;
+		rootParameters.push_back(param);
+	}
+	//JSON情報用の設定(4)
+	{
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param.Descriptor.ShaderRegister = 1;
+		rootParameters.push_back(param);
+	}
+	//フレーム情報用の設定(5)
+	{
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+		param.Descriptor.ShaderRegister = 2;
+		rootParameters.push_back(param);
+	}
+	//Signatureに反映
+	descriptionRootSignature.pParameters = rootParameters.data();
+	descriptionRootSignature.NumParameters = static_cast<UINT>(rootParameters.size());
+
+	//シリアライズしてバイナリにする
+	Microsoft::WRL::ComPtr<ID3D10Blob> signatireBlob = nullptr;
+	Microsoft::WRL::ComPtr<ID3DBlob> errorBlob = nullptr;
+	hr = D3D12SerializeRootSignature(&descriptionRootSignature,
+		D3D_ROOT_SIGNATURE_VERSION_1, &signatireBlob, &errorBlob);
+	if (FAILED(hr)) {
+		Logger::Log(reinterpret_cast<char*>(errorBlob->GetBufferPointer()));
+		assert(false);
+	}
+	//バイナリをもとにコンピュートルートシグネチャを生成
+	hr = DirectXCommon::GetInstance()->GetDevice()->CreateRootSignature(0, signatireBlob->GetBufferPointer(),
+		signatireBlob->GetBufferSize(), IID_PPV_ARGS(&cRootSignature[2]));
+	assert(SUCCEEDED(hr));
+
+	//Shaderをコンパイルする
+	Microsoft::WRL::ComPtr<IDxcBlob> computeShaderBlob;
+	computeShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/particle/UpdateParticle.CS.hlsl",
+		L"cs_6_0");
+	assert(computeShaderBlob != nullptr);
+
+	//コンピュートシェーダー用のPSOの設定
+	D3D12_COMPUTE_PIPELINE_STATE_DESC computePipelineStateDesc{};
+	computePipelineStateDesc.CS = {
+		.pShaderBytecode = computeShaderBlob->GetBufferPointer(),
+		.BytecodeLength = computeShaderBlob->GetBufferSize()
+	};
+	computePipelineStateDesc.pRootSignature = cRootSignature[2].Get();
+	hr = DirectXCommon::GetInstance()->GetDevice()->CreateComputePipelineState(&computePipelineStateDesc, IID_PPV_ARGS(&computePipelineState[2]));
 }

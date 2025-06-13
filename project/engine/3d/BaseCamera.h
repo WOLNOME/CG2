@@ -10,7 +10,8 @@
 #include "Matrix4x4.h"
 
 // 定数バッファ用データ構造体
-struct ViewProjectionTransformationMatrixForVS {
+struct CameraInfoForVS {
+	Matrix4x4 matWorld;		   
 	Matrix4x4 matView;         // ワールド → ビュー変換行列
 	Matrix4x4 matProjection;   // ビュー → プロジェクション変換行列
 };
@@ -43,7 +44,7 @@ public:
 	float GetAspectRatio() { return aspectRatio; }
 	float GetNearClip() { return nearClip; }
 	float GetFarClip() { return farClip; }
-	const Microsoft::WRL::ComPtr<ID3D12Resource>& GetViewProjectionConstBuffer() const { return viewProjectionResource_; }
+	const Microsoft::WRL::ComPtr<ID3D12Resource>& GetViewProjectionConstBuffer() const { return cameraInfoResource_; }
 	const Microsoft::WRL::ComPtr<ID3D12Resource>& GetCameraPositionConstBuffer() const { return cameraPositionResource_; }
 	const Vector3 GetForwardDirection();
 	const Vector3 GetRightDirection();
@@ -67,9 +68,9 @@ private:
 
 protected:
 	// 定数バッファ(座標変換リソース)
-	Microsoft::WRL::ComPtr<ID3D12Resource> viewProjectionResource_ = nullptr;
+	Microsoft::WRL::ComPtr<ID3D12Resource> cameraInfoResource_ = nullptr;
 	// マッピング済みアドレス
-	ViewProjectionTransformationMatrixForVS* viewProjectionData_ = nullptr;
+	CameraInfoForVS* cameraInfoData_ = nullptr;
 
 	// 定数バッファ(カメラ座標リソース)
 	Microsoft::WRL::ComPtr<ID3D12Resource> cameraPositionResource_ = nullptr;

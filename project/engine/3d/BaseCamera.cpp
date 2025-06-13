@@ -21,12 +21,13 @@ BaseCamera::BaseCamera()
 
 void BaseCamera::Initialize() {
 	//座標変換用リソース
-	viewProjectionResource_ = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(ViewProjectionTransformationMatrixForVS));
-	viewProjectionResource_->Map(0, nullptr, reinterpret_cast<void**>(&viewProjectionData_));
-	viewProjectionData_->matView = viewMatrix;
-	viewProjectionData_->matProjection = projectionMatrix;
+	cameraInfoResource_ = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(CameraInfoForVS));
+	cameraInfoResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraInfoData_));
+	cameraInfoData_->matWorld = worldMatrix;
+	cameraInfoData_->matView = viewMatrix;
+	cameraInfoData_->matProjection = projectionMatrix;
 	//カメラ座標リソース
-	cameraPositionResource_ = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(ViewProjectionTransformationMatrixForVS));
+	cameraPositionResource_ = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(CameraInfoForVS));
 	cameraPositionResource_->Map(0, nullptr, reinterpret_cast<void**>(&cameraPositionData_));
 	cameraPositionData_->worldPosition = { worldMatrix.m[3][0], worldMatrix.m[3][1], worldMatrix.m[3][2] };
 }
@@ -42,8 +43,9 @@ void BaseCamera::UpdateMatrix() {
 	projectionMatrix = MyMath::MakePerspectiveFovMatrix(fovY, aspectRatio, nearClip, farClip);
 	viewProjectionMatrix = MyMath::Multiply(viewMatrix, projectionMatrix);
 
-	viewProjectionData_->matView = viewMatrix;
-	viewProjectionData_->matProjection = projectionMatrix;
+	cameraInfoData_->matWorld = worldMatrix;
+	cameraInfoData_->matView = viewMatrix;
+	cameraInfoData_->matProjection = projectionMatrix;
 
 	cameraPositionData_->worldPosition = { worldMatrix.m[3][0], worldMatrix.m[3][1], worldMatrix.m[3][2] };
 }

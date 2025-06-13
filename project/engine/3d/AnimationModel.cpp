@@ -91,37 +91,20 @@ void AnimationModel::Draw(uint32_t materialRootParameterIndex, uint32_t textureR
 void AnimationModel::SettingCSPreDraw() {
 	//コンピュートシェーダーへの転送
 	Object3dCommon::GetInstance()->SettingAnimationCS();
-	MainRender::GetInstance()->GetCommandList()->SetComputeRootDescriptorTable(0, skinCluster_.paletteSrvHandle.second);
-	MainRender::GetInstance()->GetCommandList()->SetComputeRootDescriptorTable(1, skinCluster_.inputVertexSrvHandle.second);
-	MainRender::GetInstance()->GetCommandList()->SetComputeRootDescriptorTable(2, skinCluster_.influenceSrvHandle.second);
-	MainRender::GetInstance()->GetCommandList()->SetComputeRootDescriptorTable(3, skinCluster_.outputVertexSrvHandle.second);
+	MainRender::GetInstance()->GetCommandList()->SetComputeRootDescriptorTable(0, GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(skinCluster_.paletteSrvIndex));
+	MainRender::GetInstance()->GetCommandList()->SetComputeRootDescriptorTable(1, GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(skinCluster_.inputVertexSrvIndex));
+	MainRender::GetInstance()->GetCommandList()->SetComputeRootDescriptorTable(2, GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(skinCluster_.influenceSrvIndex));
+	MainRender::GetInstance()->GetCommandList()->SetComputeRootDescriptorTable(3, GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(skinCluster_.outputVertexUavIndex));
 	MainRender::GetInstance()->GetCommandList()->SetComputeRootConstantBufferView(4, skinCluster_.skinningInfoResource->GetGPUVirtualAddress());
 	//Dispatch(命令)
 	MainRender::GetInstance()->GetCommandList()->Dispatch(UINT(modelResource_.modelData[0].vertices.size() + 1023) / 1024, 1, 1);
 	//リソースの状態遷移
-	D3D12_RESOURCE_BARRIER barrier{};
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = skinCluster_.outputVertexResource.Get();
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-	MainRender::GetInstance()->GetCommandList()->ResourceBarrier(1, &barrier);
-
+	MainRender::GetInstance()->TransitionResource(skinCluster_.outputVertexResource.Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 }
 
 void AnimationModel::SettingCSPostDraw() {
 	//outputリソースの状態の遷移
-	D3D12_RESOURCE_BARRIER barrier{};
-	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-	barrier.Transition.pResource = skinCluster_.outputVertexResource.Get();
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER;
-	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
-	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-	MainRender::GetInstance()->GetCommandList()->ResourceBarrier(1, &barrier);
+	MainRender::GetInstance()->TransitionResource(skinCluster_.outputVertexResource.Get(), D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 }
 
 void AnimationModel::SetNewAnimation(const std::string& _name, const std::string& _fileName) {
@@ -398,11 +381,9 @@ AnimationModel::SkinCluster AnimationModel::CreateSkinCluster() {
 		WellForGPU* mappedPalette = nullptr;
 		skinCluster.paletteResource->Map(0, nullptr, reinterpret_cast<void**>(&mappedPalette));
 		skinCluster.mappedPalette = { mappedPalette,skeleton_.joints.size() };//spanを使ってアクセスするようにする
-		uint32_t index = GPUDescriptorManager::GetInstance()->Allocate();
-		skinCluster.paletteSrvHandle.first = GPUDescriptorManager::GetInstance()->GetCPUDescriptorHandle(index);
-		skinCluster.paletteSrvHandle.second = GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(index);
+		skinCluster.paletteSrvIndex = GPUDescriptorManager::GetInstance()->Allocate();
 		//palette用のsrvを作成。StructuredBufferでアクセスできるようにする
-		GPUDescriptorManager::GetInstance()->CreateSRVforStructuredBufferCS(index, skinCluster.paletteResource.Get(), UINT(skeleton_.joints.size()), sizeof(WellForGPU));
+		GPUDescriptorManager::GetInstance()->CreateSRVforStructuredBuffer(skinCluster.paletteSrvIndex, skinCluster.paletteResource.Get(), UINT(skeleton_.joints.size()), sizeof(WellForGPU));
 	}
 	{
 		// 入力頂点用のResourceを確保
@@ -420,11 +401,9 @@ AnimationModel::SkinCluster AnimationModel::CreateSkinCluster() {
 		skinCluster.mappedInputVertex = { mappedInputVertex, modelResource_.modelData[0].vertices.size() };
 
 		// SRV登録処理
-		uint32_t index = GPUDescriptorManager::GetInstance()->Allocate();
-		skinCluster.inputVertexSrvHandle.first = GPUDescriptorManager::GetInstance()->GetCPUDescriptorHandle(index);
-		skinCluster.inputVertexSrvHandle.second = GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(index);
-		GPUDescriptorManager::GetInstance()->CreateSRVforStructuredBufferCS(
-			index,
+		skinCluster.inputVertexSrvIndex = GPUDescriptorManager::GetInstance()->Allocate();
+		GPUDescriptorManager::GetInstance()->CreateSRVforStructuredBuffer(
+			skinCluster.inputVertexSrvIndex,
 			skinCluster.inputVertexResource.Get(),
 			static_cast<UINT>(modelResource_.modelData[0].vertices.size()),
 			sizeof(VertexData)
@@ -439,11 +418,9 @@ AnimationModel::SkinCluster AnimationModel::CreateSkinCluster() {
 		std::memset(mappedInfluence, 0, sizeof(VertexInfluence) * modelResource_.modelData[0].vertices.size());
 		skinCluster.mappedInfluence = { mappedInfluence,modelResource_.modelData[0].vertices.size() };
 		// SRV登録処理
-		uint32_t index = GPUDescriptorManager::GetInstance()->Allocate();
-		skinCluster.influenceSrvHandle.first = GPUDescriptorManager::GetInstance()->GetCPUDescriptorHandle(index);
-		skinCluster.influenceSrvHandle.second = GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(index);
-		GPUDescriptorManager::GetInstance()->CreateSRVforStructuredBufferCS(
-			index,
+		skinCluster.influenceSrvIndex = GPUDescriptorManager::GetInstance()->Allocate();
+		GPUDescriptorManager::GetInstance()->CreateSRVforStructuredBuffer(
+			skinCluster.influenceSrvIndex,
 			skinCluster.influenceResource.Get(),
 			static_cast<UINT>(modelResource_.modelData[0].vertices.size()),
 			sizeof(VertexInfluence)
@@ -452,11 +429,9 @@ AnimationModel::SkinCluster AnimationModel::CreateSkinCluster() {
 	{
 		//出力頂点用のResourceを確保
 		skinCluster.outputVertexResource = DirectXCommon::GetInstance()->CreateUAVBufferResource(sizeof(VertexData) * modelResource_.modelData[0].vertices.size());
-		uint32_t index = GPUDescriptorManager::GetInstance()->Allocate();
-		skinCluster.outputVertexSrvHandle.first = GPUDescriptorManager::GetInstance()->GetCPUDescriptorHandle(index);
-		skinCluster.outputVertexSrvHandle.second = GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(index);
+		skinCluster.outputVertexUavIndex = GPUDescriptorManager::GetInstance()->Allocate();
 		//出力頂点用のuavを作成。RBStructuredBufferでアクセスできるようにする
-		GPUDescriptorManager::GetInstance()->CreateUAVforStructuredBufferCS(index, skinCluster.outputVertexResource.Get(), UINT(modelResource_.modelData[0].vertices.size()), sizeof(VertexData));
+		GPUDescriptorManager::GetInstance()->CreateUAVforRWStructuredBuffer(skinCluster.outputVertexUavIndex, skinCluster.outputVertexResource.Get(), UINT(modelResource_.modelData[0].vertices.size()), sizeof(VertexData));
 	}
 	{
 		//スキニング情報用のResourceを確保

@@ -102,6 +102,23 @@ void MainRender::ReadyNextCommand() {
 	assert(SUCCEEDED(hr));
 }
 
+void MainRender::TransitionResource(ID3D12Resource* resource, D3D12_RESOURCE_STATES beforeState, D3D12_RESOURCE_STATES afterState) {
+	if (beforeState == afterState) {
+		// 同じ状態なら遷移不要
+		return;
+	}
+
+	D3D12_RESOURCE_BARRIER barrier = {};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = resource;
+	barrier.Transition.StateBefore = beforeState;
+	barrier.Transition.StateAfter = afterState;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+	commandList->ResourceBarrier(1, &barrier);
+}
+
 void MainRender::InitCommand() {
 	HRESULT hr;
 	//コマンドアロケーターを生成する

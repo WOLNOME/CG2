@@ -98,19 +98,19 @@ private://アニメーション関連構造体
 		//MatrixPalette
 		Microsoft::WRL::ComPtr<ID3D12Resource> paletteResource;
 		std::span<WellForGPU> mappedPalette;
-		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> paletteSrvHandle;
+		uint32_t paletteSrvIndex;
 		//入力頂点
 		Microsoft::WRL::ComPtr<ID3D12Resource> inputVertexResource;
 		std::span<VertexData> mappedInputVertex;
-		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> inputVertexSrvHandle;
+		uint32_t inputVertexSrvIndex;
 		//インフルエンス
 		Microsoft::WRL::ComPtr<ID3D12Resource> influenceResource;
 		D3D12_VERTEX_BUFFER_VIEW influenceBufferView;
 		std::span<VertexInfluence> mappedInfluence;
-		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> influenceSrvHandle;
+		uint32_t influenceSrvIndex;
 		//出力頂点
 		Microsoft::WRL::ComPtr<ID3D12Resource> outputVertexResource;
-		std::pair<D3D12_CPU_DESCRIPTOR_HANDLE, D3D12_GPU_DESCRIPTOR_HANDLE> outputVertexSrvHandle;
+		uint32_t outputVertexUavIndex;
 		//スキニング情報
 		Microsoft::WRL::ComPtr<ID3D12Resource> skinningInfoResource;
 		std::span<SkinningInformationForGPU> mappedSkinningInfo;

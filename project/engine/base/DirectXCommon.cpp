@@ -347,7 +347,7 @@ ID3D12Resource* DirectXCommon::CreateUAVBufferResource(size_t sizeInBytes) {
 	bufferDesc.SampleDesc.Count = 1;
 	bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 
-	// UAVとして使用するためのフラグを指定
+	// UAVとして使用するためのフラグを指定(SRVとしても使用可能)
 	bufferDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
 	ID3D12Resource* resource = nullptr;

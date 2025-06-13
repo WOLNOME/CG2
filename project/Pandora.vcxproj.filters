@@ -3,8 +3,8 @@
   <ItemGroup>
     <FxCompile Include="Resources\shaders\LineDrawer.PS.hlsl" />
     <FxCompile Include="Resources\shaders\LineDrawer.VS.hlsl" />
-    <FxCompile Include="Resources\shaders\Particle.PS.hlsl" />
-    <FxCompile Include="Resources\shaders\Particle.VS.hlsl" />
+    <FxCompile Include="Resources\shaders\particle\Particle.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\particle\Particle.VS.hlsl" />
     <FxCompile Include="Resources\shaders\Object3d.PS.hlsl" />
     <FxCompile Include="Resources\shaders\Object3d.VS.hlsl" />
     <FxCompile Include="Resources\shaders\Sprite.PS.hlsl" />
@@ -24,6 +24,10 @@
     <FxCompile Include="Resources\shaders\TextTexture.PS.hlsl" />
     <FxCompile Include="Resources\shaders\postEffects\Dissolve.PS.hlsl" />
     <FxCompile Include="Resources\shaders\postEffects\Random.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\postEffects\HSVFilter.PS.hlsl" />
+    <FxCompile Include="Resources\shaders\particle\UpdateParticle.CS.hlsl" />
+    <FxCompile Include="Resources\shaders\particle\InitParticle.CS.hlsl" />
+    <FxCompile Include="Resources\shaders\particle\EmitParticle.CS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="engine\3d\DirectionalLight.cpp" />
@@ -164,12 +168,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\LineDrawer.hlsli" />
-    <None Include="Resources\shaders\Particle.hlsli" />
     <None Include="Resources\shaders\Object3d.hlsli" />
     <None Include="Resources\shaders\Sprite.hlsli" />
     <None Include="Resources\shaders\Skybox.hlsli" />
     <None Include="Resources\shaders\postEffects\CopyImage.hlsli" />
     <None Include="Resources\shaders\TextTexture.hlsli" />
+    <None Include="Resources\shaders\util\RandomUtility.hlsli" />
+    <None Include="Resources\shaders\particle\ParticleCommon.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="externals\imgui\LICENSE.txt" />

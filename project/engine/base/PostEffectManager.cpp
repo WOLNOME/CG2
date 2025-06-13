@@ -77,20 +77,24 @@ void PostEffectManager::CopySceneToRenderTexture() {
 	switch (currentPostEffectKind) {
 	case PostEffectKind::Dissolve:
 		//マスクテクスチャ
-		commandList->SetGraphicsRootDescriptorTable(1, GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(TextureManager::GetInstance()->GetSrvIndex(dissolveResource_.textureHandle)));
+		commandList->SetGraphicsRootDescriptorTable(1, GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(TextureManager::GetInstance()->GetSrvIndex(postEffectResource.dissolveResource.textureHandle)));
 		//ディゾルブデータ
-		commandList->SetGraphicsRootConstantBufferView(2, dissolveResource_.resource->GetGPUVirtualAddress());
+		commandList->SetGraphicsRootConstantBufferView(2, postEffectResource.dissolveResource.resource->GetGPUVirtualAddress());
 		break;
 	case PostEffectKind::Random: {
 		//ランダムエンジンを使ってシードを設定
 		std::random_device rd;
 		std::mt19937 gen(rd());
 		std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-		randomResource_.data->seed = dist(gen);
+		postEffectResource.randomResource.data->seed = dist(gen);
 		//ランダムデータ
-		commandList->SetGraphicsRootConstantBufferView(1, randomResource_.resource->GetGPUVirtualAddress());
+		commandList->SetGraphicsRootConstantBufferView(1, postEffectResource.randomResource.resource->GetGPUVirtualAddress());
 		break;
 	}
+	case PostEffectKind::HSVFilter:
+		//HSVフィルターデータ
+		commandList->SetGraphicsRootConstantBufferView(1, postEffectResource.hsvResource.resource->GetGPUVirtualAddress());
+		break;
 	default:
 		break;
 	}
@@ -114,7 +118,7 @@ void PostEffectManager::CopySceneToRenderTexture() {
 void PostEffectManager::DebugWithImGui() {
 	ImGui::Begin("ポストエフェクト");
 	//ポストエフェクトの種類を選択する
-	const char* items[] = { "None","Grayscale","Vignette","BoxFilter","GaussianFilter","LuminanceBaseOutline","RadialBlur","Dissolve","Random" };
+	const char* items[] = { "None","Grayscale","Vignette","BoxFilter","GaussianFilter","LuminanceBaseOutline","RadialBlur","Dissolve","Random","HSVFilter" };
 	static int currentItem = 0;
 	if (ImGui::Combo("一覧", &currentItem, items, IM_ARRAYSIZE(items))) {
 		currentPostEffectKind = static_cast<PostEffectKind>(currentItem);
@@ -123,17 +127,17 @@ void PostEffectManager::DebugWithImGui() {
 	switch (currentPostEffectKind) {
 	case PostEffectKind::Dissolve: {
 		//閾値の変更処理
-		ImGui::DragFloat("しきい値", &dissolveResource_.data->threshold, 0.01f, 0.0f, 1.0f);
+		ImGui::DragFloat("しきい値", &postEffectResource.dissolveResource.data->threshold, 0.01f, 0.0f, 1.0f);
 		//テクスチャの変更処理
 		const char* textures[] = { "noise0","noise1" };
 		static int currentTexture = 0;
 		if (ImGui::Combo("テクスチャ", &currentTexture, textures, IM_ARRAYSIZE(textures))) {
 			switch (currentTexture) {
 			case 0:
-				dissolveResource_.textureHandle = TextureManager::GetInstance()->LoadTexture("noise0.png");
+				postEffectResource.dissolveResource.textureHandle = TextureManager::GetInstance()->LoadTexture("noise0.png");
 				break;
 			case 1:
-				dissolveResource_.textureHandle = TextureManager::GetInstance()->LoadTexture("noise1.png");
+				postEffectResource.dissolveResource.textureHandle = TextureManager::GetInstance()->LoadTexture("noise1.png");
 				break;
 			default:
 				break;
@@ -141,6 +145,12 @@ void PostEffectManager::DebugWithImGui() {
 		}
 		break;
 	}
+	case PostEffectKind::HSVFilter:
+		ImGui::DragFloat("Hue", &postEffectResource.hsvResource.data->hsvColor.x, 0.01f, -1.0f, 1.0f);
+		ImGui::DragFloat("Saturation", &postEffectResource.hsvResource.data->hsvColor.y, 0.01f, -1.0f, 1.0f);
+		ImGui::DragFloat("Value", &postEffectResource.hsvResource.data->hsvColor.z, 0.01f, -1.0f, 1.0f);
+
+		break;
 	default:
 		break;
 	}
@@ -265,6 +275,35 @@ void PostEffectManager::GenerateRenderTextureGraphicsPipeline() {
 			}
 			break;
 		}
+		case (int)PostEffectKind::HSVFilter: {
+			//RootParameter作成
+			//レンダーテクスチャの設定
+			{
+				D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
+				descriptorRange[0].BaseShaderRegister = 0;
+				descriptorRange[0].NumDescriptors = 1;
+				descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+				descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+				D3D12_ROOT_PARAMETER rootParameter = {};
+				rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//Tableを使う
+				rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
+				rootParameter.DescriptorTable.pDescriptorRanges = descriptorRange;//Tableの中身の配列を指定
+				rootParameter.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+				rootParameters.push_back(rootParameter);
+			}
+			//HSVフィルターデータの設定
+			{
+				D3D12_ROOT_PARAMETER rootParameter = {};
+				rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;//CBVを使う
+				rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
+				rootParameter.Descriptor.ShaderRegister = 0;
+				rootParameters.push_back(rootParameter);
+			}
+			break;
+		}
+
+
 		default:
 			break;
 		}
@@ -372,6 +411,10 @@ void PostEffectManager::GenerateRenderTextureGraphicsPipeline() {
 			pixelShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/postEffects/Random.PS.hlsl",
 				L"ps_6_0");
 			break;
+		case (int)PostEffectKind::HSVFilter:
+			pixelShaderBlob = DirectXCommon::GetInstance()->CompileShader(L"Resources/shaders/postEffects/HSVFilter.PS.hlsl",
+				L"ps_6_0");
+			break;
 		default:
 			break;
 		}
@@ -412,12 +455,16 @@ void PostEffectManager::GenerateRenderTextureGraphicsPipeline() {
 
 void PostEffectManager::InitUniqueResources() {
 	//ディゾルブ
-	dissolveResource_.resource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(DissolveResource));
-	dissolveResource_.resource->Map(0, nullptr, reinterpret_cast<void**>(&dissolveResource_.data));
-	dissolveResource_.data->threshold = 0.0f;
-	dissolveResource_.textureHandle = TextureManager::GetInstance()->LoadTexture("noise0.png");
+	postEffectResource.dissolveResource.resource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(DissolveResource));
+	postEffectResource.dissolveResource.resource->Map(0, nullptr, reinterpret_cast<void**>(&postEffectResource.dissolveResource.data));
+	postEffectResource.dissolveResource.data->threshold = 0.0f;
+	postEffectResource.dissolveResource.textureHandle = TextureManager::GetInstance()->LoadTexture("noise0.png");
 	//ランダム
-	randomResource_.resource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(RandomResource));
-	randomResource_.resource->Map(0, nullptr, reinterpret_cast<void**>(&randomResource_.data));
-	randomResource_.data->seed = 0.0f;
+	postEffectResource.randomResource.resource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(RandomResource));
+	postEffectResource.randomResource.resource->Map(0, nullptr, reinterpret_cast<void**>(&postEffectResource.randomResource.data));
+	postEffectResource.randomResource.data->seed = 0.0f;
+	//HSVフィルター
+	postEffectResource.hsvResource.resource = DirectXCommon::GetInstance()->CreateBufferResource(sizeof(HSVFilterResource));
+	postEffectResource.hsvResource.resource->Map(0, nullptr, reinterpret_cast<void**>(&postEffectResource.hsvResource.data));
+	postEffectResource.hsvResource.data->hsvColor = { 0.0f,0.0f,0.0f };
 }

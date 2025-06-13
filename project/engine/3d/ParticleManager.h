@@ -11,13 +11,6 @@
 #include <wrl.h>
 
 class ParticleManager {
-public:
-	//フィールド
-	struct AccelerationField {
-		Vector3 acceleration;
-		AABB area;
-		bool isActive;
-	};
 private://コンストラクタ等の隠蔽
 	static ParticleManager* instance;
 
@@ -46,31 +39,35 @@ public://メンバ関数
 	//名前を決める関数
 	std::string GenerateName(const std::string& name);
 
-public://パーティクルコンテナの操作
-
-
 private://パーティクル全体の操作
 	//グラフィックスパイプライン
 	void GenerateGraphicsPipeline();
-private://粒の操作
-	//粒の生成
-	std::list<Particle::GrainData> GenerateGrain(Particle* particle, int genNum);
+	//コンピュートパイプライン
+	void GenerateComputePipeline();
+
+	//初期化用CPSOの設定
+	void InitCPSOOption();
+	//エミット用CPSOの設定
+	void EmitCPSOOption();
+	//更新用CPSOの設定
+	void UpdateCPSOOption();
 
 public://セッター
 	void SetCamera(BaseCamera* camera) { camera_ = camera; }
 private://インスタンス
 	BaseCamera* camera_ = nullptr;
 private://メンバ変数
-	//ルートシグネチャ
-	Microsoft::WRL::ComPtr<ID3D12RootSignature> rootSignature = nullptr;
+	//Gルートシグネチャ
+	Microsoft::WRL::ComPtr<ID3D12RootSignature> gRootSignature = nullptr;
 	//グラフィックスパイプライン
 	std::array<Microsoft::WRL::ComPtr<ID3D12PipelineState>, (int)BlendMode::kMaxBlendModeNum> graphicsPipelineState;
+	//Cルートシグネチャ(init,emit,update分あるので3つ)
+	std::array<Microsoft::WRL::ComPtr<ID3D12RootSignature>, 3> cRootSignature;
+	//コンピュートパイプライン
+	std::array<Microsoft::WRL::ComPtr<ID3D12PipelineState>, 3> computePipelineState;
 
 	//パーティクルのコンテナ
 	std::unordered_map<std::string, Particle*> particles;
-
-	//共通フィールド
-	AccelerationField* field_ = nullptr;
 
 };
 

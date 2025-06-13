@@ -29,32 +29,99 @@ public:
 		OneShot,	//一度きり
 	};
 
-public:
-	//座標変換行列データ
-	struct ParticleForGPU {
-		Matrix4x4 World;
-		Vector4 color;
+private://非公開構造体
+	///========================///
+	///		CSで使用する構造体
+	///========================///
+	//CS用トランスフォーム(paddingの手間を防ぐため)
+	struct TransformForCS {
+		Vector4 scale;
+		Vector4 rotate;
+		Vector4 translate;
 	};
-	//モデルリソース作成用データ型
-	struct ParticleResource {
-		Microsoft::WRL::ComPtr<ID3D12Resource> instancingResource;
-		ParticleForGPU* instancingData;
-		uint32_t srvIndex;
+	//CS用粒の情報
+	struct GrainForCS {
+		TransformForCS transform;
+		TransformForCS basicTransform;
+		Vector4 velocity;
+		Vector4 startColor;
+		Vector4 endColor;
+		Vector4 startRotate;
+		Vector4 endRotate;
+		float startSize;
+		float endSize;
+		float lifeTime;
+		float currentTime;
 	};
-	//粒の構造体
-	struct GrainData {
-		TransformEuler transform;		//粒のトランスフォーム
-		TransformEuler basicTransform;	//最初のトランスフォーム
-		Vector4 startColor;				//最初の色
-		Vector4 endColor;				//最後の色
-		Vector3 velocity;				//速度
-		Vector3 startRotate;			//最初の回転
-		Vector3 endRotate;				//最後の回転
-		float startSize;				//最初のサイズ
-		float endSize;					//最後のサイズ
-		float lifeTime;					//寿命
-		float currentTime;				//現在の時間
+	//CS用エミッター情報
+	struct EmitterForCS {
+		TransformForCS transform;
+		int generateMethod;
+		int effectStyle;
+		float gravity;
+		float repulsion;
+		float floorHeight;
+		int clumpNum;
+		uint32_t isAffectedField;
+		uint32_t isGravity;
+		uint32_t isBound;
+		uint32_t isBillboard;
+		uint32_t isPlay;
 	};
+	//CS用Json情報
+	struct JsonInfoForCS {
+		Vector4 velocityMax;
+		Vector4 velocityMin;
+		Vector4 initRotateMax;
+		Vector4 initRotateMin;
+		Vector4 initScaleMax;
+		Vector4 initScaleMin;
+		Vector4 startColorMax;
+		Vector4 startColorMin;
+		Vector4 endColorMax;
+		Vector4 endColorMin;
+		Vector4 startRotateMax;
+		Vector4 startRotateMin;
+		Vector4 endRotateMax;
+		Vector4 endRotateMin;
+		float startSizeMax;
+		float startSizeMin;
+		float endSizeMax;
+		float endSizeMin;
+		float lifeTimeMax;
+		float lifeTimeMin;
+		int emitRate;
+		int maxGrains;
+	};
+	//CS用時間情報
+	struct PerFrameForCS {
+		float time;
+		float deltaTime;
+	};
+	//CS用リソースのまとめ
+	struct AllResourceForCS {
+		//粒の情報
+		Microsoft::WRL::ComPtr<ID3D12Resource> grainsResource;
+		uint32_t grainsSrvIndex;	//VS用
+		uint32_t grainsUavIndex;	//CS用
+		//フリーリストのインデックス情報
+		Microsoft::WRL::ComPtr<ID3D12Resource> freeListIndexResource;
+		uint32_t freeListIndexUavIndex;		//CS用
+		//フリーリストの情報
+		Microsoft::WRL::ComPtr<ID3D12Resource> freeListResource;
+		uint32_t freeListUavIndex;		//CS用
+		//エミッター情報
+		Microsoft::WRL::ComPtr<ID3D12Resource> emitterResource;
+		std::span<EmitterForCS> mappedEmitter;
+		//JSON情報
+		Microsoft::WRL::ComPtr<ID3D12Resource> jsonInfoResource;
+		std::span<JsonInfoForCS> mappedJsonInfo;
+		//時間情報
+		Microsoft::WRL::ComPtr<ID3D12Resource> perFrameResource;
+		std::span<PerFrameForCS> mappedPerFrame;
+	};
+
+public://公開構造体
 	//エミッター
 	struct Emitter {
 		TransformEuler transform;			//エミッターのトランスフォーム
@@ -79,10 +146,18 @@ public://メンバ関数
 	/// <param name="fileName">使用するパーティクルの名前(.jsonは省略)</param>
 	void Initialize(const std::string& name, const std::string& fileName);
 private://メンバ関数(非公開)
-	//パーティクルリソース作成関数
-	ParticleResource MakeParticleResource();
-	//SRVの設定
-	void SettingSRV();
+	//CS専用リソースの作成
+	AllResourceForCS CreateAllResourceForCS();
+
+	//形状の変更
+	void ShapeChange();
+	//テクスチャの変更
+	void TextureChange();
+
+	//エミッター反映(CSに反映)
+	void TraceEmitterForCS();
+	//JSONデータ反映(CSに反映)
+	void TraceJsonDataForCS();
 
 public: //getter
 	//パラメーター
@@ -90,22 +165,16 @@ public: //getter
 public: //setter
 	//パラメーター
 	void SetParam(const json& param) { param_ = param; }
-private: //マネージャーにのみ公開するパラメーター
+
+public://公開パラメーター
+	Emitter emitter_;
+
+private: //メンバ変数(非公開)
 	//形状(見た目)
 	std::unique_ptr<Shape> shape_;
-	//パーティクル用リソース
-	ParticleResource particleResource_;
-	//各インスタンシング（粒）用書き換え情報
-	std::list<GrainData> grains_;
-private: //クリエイターシーンにのみ公開するパラメーター
-	//形状の変更
-	void ShapeChange();
-	//テクスチャの変更
-	void TextureChange();
+	//CS専用のリソース
+	AllResourceForCS allResourceForCS_;
 
-public://通常のクラスに見せて良いパラメーター
-	Emitter emitter_;
-private: //メンバ変数
 	//インスタンスの名前
 	std::string name_;
 	//各粒のパラメーター
