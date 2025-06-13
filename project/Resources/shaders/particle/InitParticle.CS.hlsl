@@ -1,4 +1,4 @@
-#include "ParticleCSCommon.hlsli"
+#include "ParticleCommon.hlsli"
 
 //粒の配列
 RWStructuredBuffer<Grain> gGrains : register(u0);

@@ -1,4 +1,4 @@
-#include "ParticleCSCommon.hlsli"
+#include "ParticleCommon.hlsli"
 #include "../util/RandomUtility.hlsli"
 
 //粒の配列

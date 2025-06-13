@@ -18,7 +18,7 @@ void MyGame::Initialize() {
 	Framework::Initialize();
 
 	//シーンマネージャーに最初のシーンをセット
-	SceneManager::GetInstance()->SetNextScene("DEVELOP");
+	SceneManager::GetInstance()->SetNextScene("PARTICLECREATOR");
 
 	//パーティクルエディター→PARTICLECREATOR
 	//開発用シーン→DEVELOP
@@ -53,7 +53,7 @@ void MyGame::Draw() {
 	///------------------------------///
 
 	//テキストテクスチャ描画前処理
-	GPUDescriptorManager::GetInstance()->PreDraw(TextTextureRender::GetInstance()->GetCommandList());
+	GPUDescriptorManager::GetInstance()->SetDescriptorHeap(TextTextureRender::GetInstance()->GetCommandList());
 
 	//文字をD2D描画でテクスチャに書き込む
 	TextTextureManager::GetInstance()->WriteTextOnD2D();
@@ -65,7 +65,6 @@ void MyGame::Draw() {
 	DirectXCommon::GetInstance()->PostEachRender();			//GPUの実行を待つ
 	TextTextureRender::GetInstance()->ReadyNextCommand();	//TextTextureRenderで使用したコマンドをリセット
 
-
 	///------------------------------///
 	///        D3D12の描画処理
 	///------------------------------///
@@ -73,7 +72,7 @@ void MyGame::Draw() {
 	//オブジェクト描画前処理
 	PostEffectManager::GetInstance()->PreObjectDraw();
 	MainRender::GetInstance()->PreObjectDraw();
-	GPUDescriptorManager::GetInstance()->PreDraw(MainRender::GetInstance()->GetCommandList());
+	GPUDescriptorManager::GetInstance()->SetDescriptorHeap(MainRender::GetInstance()->GetCommandList());
 
 	//シーンの描画
 	SceneManager::GetInstance()->Draw();

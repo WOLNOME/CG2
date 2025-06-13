@@ -42,6 +42,9 @@ void ParticleManager::Update() {
 		mainRender->GetCommandList()->ResourceBarrier(UINT(barriers.size()), barriers.data());
 		};
 
+	//GPUDescriptorHeapをコマンドリストにセット
+	gpuDescriptorManager->SetDescriptorHeap(mainRender->GetCommandList());
+
 	//各パーティクルの更新
 	for (const auto& particle : particles) {
 		//perFrameのタイムを更新
@@ -109,19 +112,24 @@ void ParticleManager::Draw() {
 		assert(0 && "カメラがセットされていません。");
 	}
 	//ルートシグネチャをセットするコマンド
-	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootSignature(gRootSignature.Get());
+	mainRender->GetCommandList()->SetGraphicsRootSignature(gRootSignature.Get());
 	//プリミティブトポロジーをセットするコマンド
-	MainRender::GetInstance()->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	mainRender->GetCommandList()->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 	//カメラ情報をVSに送信(一括)
-	MainRender::GetInstance()->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera_->GetViewProjectionConstBuffer()->GetGPUVirtualAddress());
+	mainRender->GetCommandList()->SetGraphicsRootConstantBufferView(2, camera_->GetViewProjectionConstBuffer()->GetGPUVirtualAddress());
 	//パーティクル個別の設定
 	for (const auto& particle : particles) {
 		//各パーティクルのブレンドモード情報からパイプラインステートを選択
-		MainRender::GetInstance()->GetCommandList()->SetPipelineState(graphicsPipelineState[particle.second->GetParam()["BlendMode"]].Get());
+		mainRender->GetCommandList()->SetPipelineState(graphicsPipelineState[particle.second->GetParam()["BlendMode"]].Get());
 		//各パーティクルの粒配列情報をVSに送信
-		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(particle.second->allResourceForCS_.grainsSrvIndex));
+		mainRender->GetCommandList()->SetGraphicsRootDescriptorTable(1, GPUDescriptorManager::GetInstance()->GetGPUDescriptorHandle(particle.second->allResourceForCS_.grainsSrvIndex));
+		//エミッター情報をVSに送信
+		mainRender->GetCommandList()->SetGraphicsRootConstantBufferView(4, particle.second->allResourceForCS_.emitterResource->GetGPUVirtualAddress());
+		//JSON情報をVSに送信
+		mainRender->GetCommandList()->SetGraphicsRootConstantBufferView(5, particle.second->allResourceForCS_.jsonInfoResource->GetGPUVirtualAddress());
 		//各パーティクル形状の描画
 		particle.second->shape_->Draw(0, 3, (uint32_t)particle.second->param_["MaxGrains"], particle.second->textureHandle_);
+
 		//粒配列情報をUAV用にリソース遷移
 		mainRender->TransitionResource(particle.second->allResourceForCS_.grainsResource.Get(), D3D12_RESOURCE_STATE_GENERIC_READ, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
 	}
@@ -139,6 +147,20 @@ void ParticleManager::RegisterParticle(const std::string& name, Particle* partic
 	}
 	//登録
 	particles[name] = particle;
+
+	MainRender* mainRender = MainRender::GetInstance();
+	GPUDescriptorManager* gpuDescriptorManager = GPUDescriptorManager::GetInstance();
+	//GPUDescriptorHeapをコマンドリストにセット
+	gpuDescriptorManager->SetDescriptorHeap(mainRender->GetCommandList());
+	//CSでUAVリソースの初期化処理
+	mainRender->GetCommandList()->SetComputeRootSignature(cRootSignature[0].Get());
+	mainRender->GetCommandList()->SetPipelineState(computePipelineState[0].Get());
+	mainRender->GetCommandList()->SetComputeRootDescriptorTable(0, gpuDescriptorManager->GetGPUDescriptorHandle(particles[name]->allResourceForCS_.grainsUavIndex));
+	mainRender->GetCommandList()->SetComputeRootDescriptorTable(1, gpuDescriptorManager->GetGPUDescriptorHandle(particles[name]->allResourceForCS_.freeListIndexUavIndex));
+	mainRender->GetCommandList()->SetComputeRootDescriptorTable(2, gpuDescriptorManager->GetGPUDescriptorHandle(particles[name]->allResourceForCS_.freeListUavIndex));
+	mainRender->GetCommandList()->SetComputeRootConstantBufferView(3, particles[name]->allResourceForCS_.jsonInfoResource->GetGPUVirtualAddress());
+
+	mainRender->GetCommandList()->Dispatch(UINT(particles[name]->param_["MaxGrains"] + 1023) / 1024, 1, 1);
 }
 
 void ParticleManager::DeleteParticle(const std::string& name) {
@@ -179,7 +201,8 @@ void ParticleManager::GenerateGraphicsPipeline() {
 	descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
 
 	//レジスタカウント
-	int registerCount = 0;
+	int registerCountVS = 0;
+	int registerCountPS = 0;
 	//使用するデスクリプタの数
 	int numDescriptors = 0;
 
@@ -200,11 +223,11 @@ void ParticleManager::GenerateGraphicsPipeline() {
 		//デスクリプタレンジ作成
 		D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
 		numDescriptors = 1;
-		descriptorRange[0].BaseShaderRegister = registerCount;
+		descriptorRange[0].BaseShaderRegister = registerCountVS;
 		descriptorRange[0].NumDescriptors = numDescriptors;
 		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-		registerCount += numDescriptors;
+		registerCountVS += numDescriptors;
 		//ルートパラメータ入力
 		D3D12_ROOT_PARAMETER param = {};
 		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
@@ -227,17 +250,35 @@ void ParticleManager::GenerateGraphicsPipeline() {
 		//デスクリプタレンジ作成
 		D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
 		numDescriptors = 1;
-		descriptorRange[0].BaseShaderRegister = registerCount;
+		descriptorRange[0].BaseShaderRegister = registerCountPS;
 		descriptorRange[0].NumDescriptors = numDescriptors;
 		descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 		descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-		registerCount += numDescriptors;
+		registerCountPS += numDescriptors;
 		//ルートパラメータ入力
 		D3D12_ROOT_PARAMETER param = {};
 		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 		param.DescriptorTable.pDescriptorRanges = descriptorRange;
 		param.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+		rootParameters.push_back(param);
+	}
+	//エミッター情報用の設定(4)
+	{
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+		param.Descriptor.ShaderRegister = 1;
+		rootParameters.push_back(param);
+	}
+	//JSON情報用の設定(5)
+	{
+		//ルートパラメータ入力
+		D3D12_ROOT_PARAMETER param = {};
+		param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+		param.ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+		param.Descriptor.ShaderRegister = 2;
 		rootParameters.push_back(param);
 	}
 

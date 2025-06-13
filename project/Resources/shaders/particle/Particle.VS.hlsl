@@ -1,5 +1,4 @@
-#include "Particle.hlsli"
-#include "ParticleCSCommon.hlsli"
+#include "ParticleCommon.hlsli"
 
 struct CameraInfo
 {

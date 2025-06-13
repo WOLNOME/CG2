@@ -22,7 +22,7 @@ void GPUDescriptorManager::Finalize() {
 	instance = nullptr;
 }
 
-void GPUDescriptorManager::PreDraw(ID3D12GraphicsCommandList* pCommandList) {
+void GPUDescriptorManager::SetDescriptorHeap(ID3D12GraphicsCommandList* pCommandList) {
 	ID3D12DescriptorHeap* descriptorHeaps[] = { descriptorHeap.Get() };
 	pCommandList->SetDescriptorHeaps(1, descriptorHeaps);
 }

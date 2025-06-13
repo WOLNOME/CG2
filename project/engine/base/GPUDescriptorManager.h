@@ -23,7 +23,7 @@ public:
 	void Finalize();
 
 	// 描画前設定
-	void PreDraw(ID3D12GraphicsCommandList* pCommandList);
+	void SetDescriptorHeap(ID3D12GraphicsCommandList* pCommandList);
 	// 割り当て用関数
 	uint32_t Allocate();
 	// 解放用関数

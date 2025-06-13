@@ -1,11 +1,19 @@
-//トランスフォーム
+
+struct VertexShaderOutput
+{
+    float4 position : SV_POSITION;
+    float2 texcoord : TEXCOORD0;
+    float3 normal : NORMAL0;
+    float4 color : COLOR0;
+};
+
 struct Transform
 {
     float4 scale;
     float4 rotate;
     float4 translate;
 };
-//エミッター情報
+
 struct EmitterInfo
 {
     Transform transform;
@@ -21,7 +29,7 @@ struct EmitterInfo
     uint isBillboard;
     uint isPlay;
 };
-//JSON情報
+
 struct JsonInfo
 {
     float4 velocityMax;
@@ -47,7 +55,7 @@ struct JsonInfo
     int emitRate;
     int maxGrains;
 };
-//粒の情報
+
 struct Grain
 {
     Transform transform;
@@ -62,7 +70,7 @@ struct Grain
     float lifeTime;
     float currentTime;
 };
-//フレーム情報
+
 struct PerFrame
 {
     float time;
