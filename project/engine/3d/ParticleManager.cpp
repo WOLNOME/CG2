@@ -2,7 +2,6 @@
 #include "DirectXCommon.h"
 #include "MainRender.h"
 #include "SrvManager.h"
-#include "TextureManager.h"
 #include "Logger.h"
 #include <numbers>
 #include <random>
@@ -139,9 +138,7 @@ void ParticleManager::Draw() {
 		//各パーティクルのインスタンシングデータをVSに送信
 		MainRender::GetInstance()->GetCommandList()->SetGraphicsRootDescriptorTable(1, SrvManager::GetInstance()->GetGPUDescriptorHandle(particle.second->particleResource_.srvIndex));
 		//各パーティクル形状の描画
-		std::string textureName = particle.second->GetParam()["Texture"];
-		int textureHandle = TextureManager::GetInstance()->LoadTexture(textureName);
-		particle.second->shape_->Draw(0, 3, (uint32_t)particle.second->grains_.size(), textureHandle);
+		particle.second->shape_->Draw(0, 3, (uint32_t)particle.second->grains_.size(), particle.second->textureHandle_);
 	}
 }
 

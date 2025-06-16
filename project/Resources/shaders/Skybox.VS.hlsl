@@ -23,7 +23,8 @@ struct VertexShaderInput
 VertexShaderOutput main(VertexShaderInput input)
 {
     VertexShaderOutput output;
-    output.position = mul(input.position, mul(mul(gWorldTransformationMatrix.World, gViewProjectionTransformationMatrix.View), gViewProjectionTransformationMatrix.Projection)).xyww;
+    float4x4 wvpMatrix = mul(mul(gWorldTransformationMatrix.World, gViewProjectionTransformationMatrix.View), gViewProjectionTransformationMatrix.Projection);
+    output.position = mul(input.position, wvpMatrix).xyww;
     output.texcoord = input.position.xyz;
     return output;
 }

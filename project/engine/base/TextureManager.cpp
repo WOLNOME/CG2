@@ -1,6 +1,7 @@
 #include "TextureManager.h"
 #include "DirectXCommon.h"
 #include "SrvManager.h"
+#include "MainRender.h"
 #include "StringUtility.h"
 #include <iostream>
 #include <filesystem>
@@ -50,16 +51,12 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath) {
 	//DDSファイルを読み込む
 	if (filePathw.ends_with(L".dds")) {
 		hr = DirectX::LoadFromDDSFile(filePathw.c_str(), DirectX::DDS_FLAGS_NONE, nullptr, image);
+		assert(SUCCEEDED(hr));
 	}
 	//WICファイルを読み込む
 	else {
 		hr = DirectX::LoadFromWICFile(filePathw.c_str(), DirectX::WIC_FLAGS_FORCE_SRGB, nullptr, image);
-	}	
-	//エラー処理
-	if (FAILED(hr)) {
-		std::cerr << "Failed to load texture file: " << directoryPath_ + filePath
-			<< ", HRESULT: " << std::hex << hr << std::endl;
-		assert(false);
+		assert(SUCCEEDED(hr));
 	}
 
 	//ミップマップの生成
@@ -77,8 +74,49 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath) {
 	textureData.metadata = metadata;
 	textureData.resource = DirectXCommon::GetInstance()->CreateTextureResource(textureData.metadata);
 
-	//テクスチャデータの転送
-	UploadTextureData(textureData.resource, mipImages);
+	{
+		HRESULT hr;
+		ID3D12CommandAllocator* allocator = MainRender::GetInstance()->GetCommandAllocator();
+		ID3D12GraphicsCommandList* commandList = MainRender::GetInstance()->GetCommandList();
+		ID3D12CommandQueue* commandQueue = DirectXCommon::GetInstance()->GetCommandQueue();
+
+		//テクスチャデータの転送(valはこのブロック終了時まで保持される必要があるのでUploadTextureはnodiscard属性である)
+		ID3D12Resource* val = UploadTextureData(textureData.resource.Get(), mipImages);
+
+		//commandListをCloseし、commandQueue->ExecuteCommandListsを使いキックする
+		hr = commandList->Close();
+		assert(SUCCEEDED(hr));
+
+		ID3D12CommandList* cmdLists[] = { commandList };
+		commandQueue->ExecuteCommandLists(_countof(cmdLists), cmdLists);
+
+		//実行を待つ
+		Microsoft::WRL::ComPtr<ID3D12Fence> fence;
+		hr= DirectXCommon::GetInstance()->GetDevice()->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+		assert(SUCCEEDED(hr));
+
+		UINT64 fenceValue = 1;
+		HANDLE fenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+		if (fenceEvent == nullptr) {
+			assert(false && "Failed to create fence event");
+		}
+
+		hr = commandQueue->Signal(fence.Get(), fenceValue);
+		assert(SUCCEEDED(hr));
+
+		if (fence->GetCompletedValue() < fenceValue) {
+			hr = fence->SetEventOnCompletion(fenceValue, fenceEvent);
+			assert(SUCCEEDED(hr));
+			WaitForSingleObject(fenceEvent, INFINITE);
+		}
+		CloseHandle(fenceEvent);
+
+		//実行が完了したので、allocateとcommandListをResetして次のコマンドを積めるようにする
+		allocator->Reset();
+		assert(SUCCEEDED(hr));
+		commandList->Reset(allocator, nullptr);
+		assert(SUCCEEDED(hr));
+	}
 
 	//テクスチャデータの要素数番号からSRVのインデックスを計算する
 	textureData.srvIndex = SrvManager::GetInstance()->Allocate();
@@ -121,23 +159,32 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath) {
 	return UINT32_MAX; // エラー時の特殊な値を返す
 }
 
-void TextureManager::UploadTextureData(const Microsoft::WRL::ComPtr<ID3D12Resource>& texture, const DirectX::ScratchImage& mipImages) {
-	//Meta情報を取得
-	const DirectX::TexMetadata& metadata = mipImages.GetMetadata();
-	//全MipMapについて
-	for (size_t mipLevel = 0; mipLevel < metadata.mipLevels; ++mipLevel) {
-		//MipMapLevelを指定して各Imageを取得
-		const DirectX::Image* img = mipImages.GetImage(mipLevel, 0, 0);
-		//Textureに転送
-		HRESULT hr = texture->WriteToSubresource(
-			UINT(mipLevel),
-			nullptr,
-			img->pixels,
-			UINT(img->rowPitch),
-			UINT(img->slicePitch)
-		);
-		assert(SUCCEEDED(hr));
-	}
+[[nodiscard]]		//戻り値を破棄してはならないという属性(x=関数の形でないと使えない)
+ID3D12Resource* TextureManager::UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages) {
+	ID3D12Device* device = DirectXCommon::GetInstance()->GetDevice();
+	ID3D12GraphicsCommandList* commandList = MainRender::GetInstance()->GetCommandList();
+
+	//サブリソース列の作成
+	std::vector<D3D12_SUBRESOURCE_DATA> subresources;
+	DirectX::PrepareUpload(device, mipImages.GetImages(), mipImages.GetImageCount(), mipImages.GetMetadata(), subresources);
+	uint64_t intermediateSize = GetRequiredIntermediateSize(texture, 0, UINT(subresources.size()));
+	ID3D12Resource* intermediateResource = DirectXCommon::GetInstance()->CreateBufferResource(intermediateSize);
+	//テクスチャにデータ転送
+	UpdateSubresources(commandList, texture, intermediateResource, 0, 0, UINT(subresources.size()), subresources.data());
+	//Textureへの転送後は利用できるよう、D3D12_RESOURCE_STATE_COPY_DESTからD3D12_RESOURCE_STATE_GENERIC_READへResourceStateを変更する
+	D3D12_RESOURCE_BARRIER barrier{};
+	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	barrier.Transition.pResource = texture;
+	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_GENERIC_READ;
+	commandList->ResourceBarrier(1, &barrier);
+	return intermediateResource;
+
+
+
+
 }
 
 const DirectX::TexMetadata& TextureManager::GetMetaData(uint32_t textureHandle) {
