@@ -11,16 +11,14 @@ DirectXCommon* DirectXCommon::instance = nullptr;
 
 using namespace Microsoft::WRL;
 
-DirectXCommon* DirectXCommon::GetInstance()
-{
+DirectXCommon* DirectXCommon::GetInstance() {
 	if (instance == nullptr) {
 		instance = new DirectXCommon;
 	}
 	return instance;
 }
 
-void DirectXCommon::Initialize()
-{
+void DirectXCommon::Initialize() {
 	//FPS固定初期化
 	InitializeFixFPS();
 	//デバイスの生成
@@ -34,16 +32,14 @@ void DirectXCommon::Initialize()
 
 }
 
-void DirectXCommon::Finalize()
-{
+void DirectXCommon::Finalize() {
 	//イベント
 	CloseHandle(fenceEvent);
 	delete instance;
 	instance = nullptr;
 }
 
-void DirectXCommon::PostEachRender()
-{
+void DirectXCommon::PostEachRender() {
 	//Fenceの値を更新
 	fenceValue++;
 	//コマンドの実行完了を待つ
@@ -59,14 +55,12 @@ void DirectXCommon::PostEachRender()
 	}
 }
 
-void DirectXCommon::PostAllRenders()
-{
+void DirectXCommon::PostAllRenders() {
 	//FPS固定更新処理
 	UpdateFixFPS();
 }
 
-void DirectXCommon::GenerateDevice()
-{
+void DirectXCommon::GenerateDevice() {
 	HRESULT hr;
 
 #ifdef _DEBUG
@@ -161,10 +155,9 @@ void DirectXCommon::GenerateDevice()
 
 }
 
-void DirectXCommon::InitCommand()
-{
+void DirectXCommon::InitCommand() {
 	HRESULT hr;
-	
+
 	//コマンドキューを生成する
 	D3D12_COMMAND_QUEUE_DESC commandQueueDesc{};
 	hr = device->CreateCommandQueue(&commandQueueDesc, IID_PPV_ARGS(&commandQueue));
@@ -172,8 +165,7 @@ void DirectXCommon::InitCommand()
 	assert(SUCCEEDED(hr));
 }
 
-void DirectXCommon::GenerateFence()
-{
+void DirectXCommon::GenerateFence() {
 	HRESULT hr;
 	//初期値θでfenceを作る
 	hr = device->CreateFence(fenceValue, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
@@ -184,8 +176,7 @@ void DirectXCommon::GenerateFence()
 
 }
 
-void DirectXCommon::GenerateDXCCompiler()
-{
+void DirectXCommon::GenerateDXCCompiler() {
 	HRESULT hr;
 	//dxcCompilerを初期化
 	hr = DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&dxcUtils));
@@ -198,9 +189,8 @@ void DirectXCommon::GenerateDXCCompiler()
 	assert(SUCCEEDED(hr));
 }
 
-Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible)
-{
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> descriptorHeap = nullptr;
+ID3D12DescriptorHeap* DirectXCommon::CreateDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, UINT numDescriptors, bool shaderVisible) {
+	ID3D12DescriptorHeap* descriptorHeap = nullptr;
 	D3D12_DESCRIPTOR_HEAP_DESC descriptorHeapDesc{};
 	descriptorHeapDesc.Type = heapType;
 	descriptorHeapDesc.NumDescriptors = numDescriptors;
@@ -210,22 +200,19 @@ Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> DirectXCommon::CreateDescriptorHeap
 	return descriptorHeap;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetCPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index)
-{
+D3D12_CPU_DESCRIPTOR_HANDLE DirectXCommon::GetCPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index) {
 	D3D12_CPU_DESCRIPTOR_HANDLE handleCPU = descriptorHeap->GetCPUDescriptorHandleForHeapStart();
 	handleCPU.ptr += (descriptorSize * index);
 	return handleCPU;
 }
 
-D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index)
-{
+D3D12_GPU_DESCRIPTOR_HANDLE DirectXCommon::GetGPUDescriptorHandle(const Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& descriptorHeap, uint32_t descriptorSize, uint32_t index) {
 	D3D12_GPU_DESCRIPTOR_HANDLE handleGPU = descriptorHeap->GetGPUDescriptorHandleForHeapStart();
 	handleGPU.ptr += (descriptorSize * index);
 	return handleGPU;
 }
 
-void DirectXCommon::InitializeFixFPS()
-{
+void DirectXCommon::InitializeFixFPS() {
 	//システムタイマーの分解能を上げる
 	timeBeginPeriod(1);
 	//現在時間を記録する
@@ -233,8 +220,7 @@ void DirectXCommon::InitializeFixFPS()
 
 }
 
-void DirectXCommon::UpdateFixFPS()
-{
+void DirectXCommon::UpdateFixFPS() {
 	//1/60秒ピッタリの時間
 	const std::chrono::microseconds kMinTime(uint64_t(1000000.0f / 60.0f));
 	//1/60秒よりわずかに短い時間
@@ -248,8 +234,7 @@ void DirectXCommon::UpdateFixFPS()
 	//1/60秒(よりわずかに短い時間)経っていない場合
 	if (elapsed < kMinCheckTime) {
 		//1/60秒経過するまで微笑なスリープを繰り返す
-		while (std::chrono::steady_clock::now() - reference_ < kMinTime)
-		{
+		while (std::chrono::steady_clock::now() - reference_ < kMinTime) {
 			//1マイクロ秒スリープ
 			std::this_thread::sleep_for(std::chrono::microseconds(1));
 		}
@@ -258,8 +243,7 @@ void DirectXCommon::UpdateFixFPS()
 	reference_ = std::chrono::steady_clock::now();
 }
 
-Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile)
-{
+Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::CompileShader(const std::wstring& filePath, const wchar_t* profile) {
 	///hlslファイルを読み込む
 	//これからシェーダーをコンパイルする旨をログに出す
 	Logger::Log(StringUtility::ConvertString(std::format(L"Begin CompileShader, path:{}, profile:{}\n", filePath, profile)));
@@ -318,8 +302,7 @@ Microsoft::WRL::ComPtr<IDxcBlob> DirectXCommon::CompileShader(const std::wstring
 	return shaderBlob;
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(size_t sizeInBytes)
-{
+ID3D12Resource* DirectXCommon::CreateBufferResource(size_t sizeInBytes) {
 	//頂点リソース用のヒープの設定
 	D3D12_HEAP_PROPERTIES uploadHeapProperties{};
 	uploadHeapProperties.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -336,7 +319,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(size_
 	//バッファの場合はこれにする決まり
 	vertexResourceDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 	//実際に頂点リソースを作る
-	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
+	ID3D12Resource* resource = nullptr;
 	HRESULT hr = device->CreateCommittedResource(&uploadHeapProperties, D3D12_HEAP_FLAG_NONE,
 		&vertexResourceDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
 		IID_PPV_ARGS(&resource));
@@ -345,8 +328,7 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateBufferResource(size_
 	return resource;
 }
 
-Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateTextureResource(const DirectX::TexMetadata& metadata)
-{
+ID3D12Resource* DirectXCommon::CreateTextureResource(const DirectX::TexMetadata& metadata) {
 	//metadataをもとにResourceの設定
 	D3D12_RESOURCE_DESC resourceDesc{};
 	resourceDesc.Width = UINT(metadata.width);
@@ -357,19 +339,17 @@ Microsoft::WRL::ComPtr<ID3D12Resource> DirectXCommon::CreateTextureResource(cons
 	resourceDesc.SampleDesc.Count = 1;
 	resourceDesc.Dimension = D3D12_RESOURCE_DIMENSION(metadata.dimension);
 
-	//利用するヒープの設定
+	//利用するヒープの設定(VRAM上に作る)
 	D3D12_HEAP_PROPERTIES heapProperties{};
-	heapProperties.Type = D3D12_HEAP_TYPE_CUSTOM;
-	heapProperties.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_BACK;
-	heapProperties.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+	heapProperties.Type = D3D12_HEAP_TYPE_DEFAULT;
 
 	//Resourceの生成
-	Microsoft::WRL::ComPtr<ID3D12Resource> resource = nullptr;
+	ID3D12Resource* resource = nullptr;
 	HRESULT hr = device->CreateCommittedResource(
 		&heapProperties,
 		D3D12_HEAP_FLAG_NONE,
 		&resourceDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ,
+		D3D12_RESOURCE_STATE_COPY_DEST,		//データ転送される設定
 		nullptr,
 		IID_PPV_ARGS(&resource)
 	);
