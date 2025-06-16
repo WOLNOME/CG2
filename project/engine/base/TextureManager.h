@@ -29,7 +29,7 @@ public://公開メンバ関数
 	uint32_t LoadTexture(const std::string& filePath);
 private://非公開メンバ関数
 	//テクスチャデータの転送
-	ID3D12Resource* UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
+	Microsoft::WRL::ComPtr<ID3D12Resource> UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages);
 public://ゲッター
 	//メタデータを取得
 	const DirectX::TexMetadata& GetMetaData(uint32_t textureHandle);

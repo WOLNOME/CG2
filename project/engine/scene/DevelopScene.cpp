@@ -12,8 +12,8 @@ void DevelopScene::Initialize() {
 	//カメラの生成と初期化
 	camera = std::make_unique<DevelopCamera>();
 	camera->Initialize();
-	camera->SetRotate({ cameraRotate });
-	camera->SetTranslate(cameraTranslate);
+	camera->worldTransform.rotate = (cameraRotate);
+	camera->worldTransform.translate = (cameraTranslate);
 	camera->SetFarClip(500.0f);
 
 	//平行光源の生成と初期化
