@@ -178,6 +178,8 @@ void PostEffectManager::GenerateRenderTextureGraphicsPipeline() {
 		//RootSignature作成
 		D3D12_ROOT_SIGNATURE_DESC descriptionRootSignature{};
 		descriptionRootSignature.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+
+
 		//RootParameter格納用変数
 		std::vector<D3D12_ROOT_PARAMETER> rootParameters;
 		switch (i) {
@@ -207,35 +209,36 @@ void PostEffectManager::GenerateRenderTextureGraphicsPipeline() {
 			break;
 		}
 		case (int)PostEffectKind::Dissolve: {
+			//DescriptorRangeの配列を作成
+			D3D12_DESCRIPTOR_RANGE descriptorRange[2] = {};
+			//レンダーテクスチャの設定
+			descriptorRange[0].BaseShaderRegister = 0;
+			descriptorRange[0].NumDescriptors = 1;
+			descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+			descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+			//マスクテクスチャの設定
+			descriptorRange[1].BaseShaderRegister = 1;
+			descriptorRange[1].NumDescriptors = 1;
+			descriptorRange[1].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+			descriptorRange[1].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
 			//RootParameter作成
 			//レンダーテクスチャの設定
 			{
-				D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
-				descriptorRange[0].BaseShaderRegister = 0;
-				descriptorRange[0].NumDescriptors = 1;
-				descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-				descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
 				D3D12_ROOT_PARAMETER rootParameter = {};
 				rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//Tableを使う
 				rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
-				rootParameter.DescriptorTable.pDescriptorRanges = descriptorRange;//Tableの中身の配列を指定
-				rootParameter.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+				rootParameter.DescriptorTable.pDescriptorRanges = &descriptorRange[0];//Tableの中身の配列を指定
+				rootParameter.DescriptorTable.NumDescriptorRanges = 1;
 				rootParameters.push_back(rootParameter);
 			}
 			//マスクテクスチャの設定
 			{
-				D3D12_DESCRIPTOR_RANGE descriptorRange[1] = {};
-				descriptorRange[0].BaseShaderRegister = 1;
-				descriptorRange[0].NumDescriptors = 1;
-				descriptorRange[0].RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-				descriptorRange[0].OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-
 				D3D12_ROOT_PARAMETER rootParameter = {};
 				rootParameter.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;//Tableを使う
 				rootParameter.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;//PixelShaderで使う
-				rootParameter.DescriptorTable.pDescriptorRanges = descriptorRange;//Tableの中身の配列を指定
-				rootParameter.DescriptorTable.NumDescriptorRanges = _countof(descriptorRange);
+				rootParameter.DescriptorTable.pDescriptorRanges = &descriptorRange[1];//Tableの中身の配列を指定
+				rootParameter.DescriptorTable.NumDescriptorRanges = 1;
 				rootParameters.push_back(rootParameter);
 			}
 			//ディゾルブデータの設定
