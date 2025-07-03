@@ -81,7 +81,7 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath) {
 		ID3D12CommandQueue* commandQueue = DirectXCommon::GetInstance()->GetCommandQueue();
 
 		//テクスチャデータの転送(valはこのブロック終了時まで保持される必要があるのでUploadTextureはnodiscard属性である)
-		ID3D12Resource* val = UploadTextureData(textureData.resource.Get(), mipImages);
+		Microsoft::WRL::ComPtr<ID3D12Resource> val = UploadTextureData(textureData.resource.Get(), mipImages);
 
 		//commandListをCloseし、commandQueue->ExecuteCommandListsを使いキックする
 		hr = commandList->Close();
@@ -160,7 +160,7 @@ uint32_t TextureManager::LoadTexture(const std::string& filePath) {
 }
 
 [[nodiscard]]		//戻り値を破棄してはならないという属性(x=関数の形でないと使えない)
-ID3D12Resource* TextureManager::UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages) {
+Microsoft::WRL::ComPtr<ID3D12Resource> TextureManager::UploadTextureData(ID3D12Resource* texture, const DirectX::ScratchImage& mipImages) {
 	ID3D12Device* device = DirectXCommon::GetInstance()->GetDevice();
 	ID3D12GraphicsCommandList* commandList = MainRender::GetInstance()->GetCommandList();
 
@@ -168,9 +168,9 @@ ID3D12Resource* TextureManager::UploadTextureData(ID3D12Resource* texture, const
 	std::vector<D3D12_SUBRESOURCE_DATA> subresources;
 	DirectX::PrepareUpload(device, mipImages.GetImages(), mipImages.GetImageCount(), mipImages.GetMetadata(), subresources);
 	uint64_t intermediateSize = GetRequiredIntermediateSize(texture, 0, UINT(subresources.size()));
-	ID3D12Resource* intermediateResource = DirectXCommon::GetInstance()->CreateBufferResource(intermediateSize);
+	Microsoft::WRL::ComPtr<ID3D12Resource> intermediateResource = DirectXCommon::GetInstance()->CreateBufferResource(intermediateSize);
 	//テクスチャにデータ転送
-	UpdateSubresources(commandList, texture, intermediateResource, 0, 0, UINT(subresources.size()), subresources.data());
+	UpdateSubresources(commandList, texture, intermediateResource.Get(), 0, 0, UINT(subresources.size()), subresources.data());
 	//Textureへの転送後は利用できるよう、D3D12_RESOURCE_STATE_COPY_DESTからD3D12_RESOURCE_STATE_GENERIC_READへResourceStateを変更する
 	D3D12_RESOURCE_BARRIER barrier{};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;

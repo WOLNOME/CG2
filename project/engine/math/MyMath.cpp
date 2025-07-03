@@ -1696,7 +1696,7 @@ bool MyMath::IsCollision(const OBB& obb, const Segment& segment) {
 	return IsCollision(aabbOBBLocal, segmentOBBLocal);
 }
 
-void MyMath::DrawSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDrawer, uint32_t subdivision) {
+void MyMath::CreateLineSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDrawer, uint32_t subdivision) {
 	float pi = std::numbers::pi_v<float>;
 	const uint32_t kSubdivision = subdivision;//分割数
 	const float kLonEvery = 2.0f * pi / kSubdivision;//経度分割1つ分の角度

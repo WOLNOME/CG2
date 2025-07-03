@@ -1,18 +1,18 @@
 #pragma once
 #include "BaseCamera.h"
+#include "Input.h"
 #include "Vector2.h"
 
-class Input;
+
 //開発用カメラ
-class DevelopCamera : public BaseCamera
-{
+class DevelopCamera : public BaseCamera {
 public:
 	DevelopCamera() : BaseCamera() {}
 	virtual ~DevelopCamera() = default;
 	//初期化
 	void Initialize() override;
 	//更新
-	void Update();
+	void Update() override;
 
 	//ImGui操作
 	void DebugWithImGui();

@@ -92,6 +92,7 @@
     <ClCompile Include="engine\base\DSVManager.cpp" />
     <ClCompile Include="engine\base\TextTextureRender.cpp" />
     <ClCompile Include="engine\3d\LevelObject.cpp" />
+    <ClCompile Include="engine\3d\GameCamera.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="engine\3d\DirectionalLight.h" />
@@ -165,6 +166,7 @@
     <ClInclude Include="engine\base\TextTextureRender.h" />
     <ClInclude Include="engine\util\Handle.h" />
     <ClInclude Include="engine\3d\LevelObject.h" />
+    <ClInclude Include="engine\3d\GameCamera.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\shaders\LineDrawer.hlsli" />

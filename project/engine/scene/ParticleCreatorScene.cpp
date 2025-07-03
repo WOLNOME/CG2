@@ -17,8 +17,8 @@ void ParticleCreatorScene::Initialize() {
 	//カメラの生成と初期化
 	camera_ = std::make_unique<DevelopCamera>();
 	camera_->Initialize();
-	camera_->SetTranslate({ 0.0f,50.0f,0.0f });
-	camera_->SetRotate({ 0.2f,0.0f,0.0f });
+	camera_->worldTransform.translate = { 0.0f,50.0f,0.0f };
+	camera_->worldTransform.rotate = { 0.2f,0.0f,0.0f };
 	//パーティクルマネージャーにカメラをセット
 	ParticleManager::GetInstance()->SetCamera(camera_.get());
 
@@ -123,8 +123,8 @@ void ParticleCreatorScene::StartWithImGui() {
 			//jsonデータをロード
 			editParam_ = particle_->GetParam();
 			//カメラの位置をセット
-			camera_->SetTranslate({ 0.0f,4.0f,-20.0f });
-			camera_->SetRotate({ 0.03f,0.0f,0.0f });
+			camera_->worldTransform.translate = { 0.0f,4.0f,-20.0f };
+			camera_->worldTransform.rotate = { 0.03f,0.0f,0.0f };
 		}
 		if (ImGui::Button("既存のパーティクルを編集する")) {
 			checkEditName_ = true;
@@ -213,8 +213,8 @@ void ParticleCreatorScene::EditWithImGui() {
 					//jsonデータをロード
 					editParam_ = particle_->GetParam();
 					//カメラの位置をセット
-					camera_->SetTranslate({ 0.0f,4.0f,-20.0f });
-					camera_->SetRotate({ 0.03f,0.0f,0.0f });
+					camera_->worldTransform.translate = { 0.0f,4.0f,-20.0f };
+					camera_->worldTransform.rotate = { 0.03f,0.0f,0.0f };
 
 					ImGui::CloseCurrentPopup();
 				}
@@ -644,7 +644,7 @@ void ParticleCreatorScene::Editor() {
 	//エミッターのトランスフォーム
 	if (ImGui::CollapsingHeader("エミッターのトランスフォーム")) {
 		ImGui::DragFloat3("平行移動", &particle_->emitter_.transform.translate.x, 0.1f);
-		ImGui::DragFloat3("拡縮", &particle_->emitter_.transform.scale.x, 0.1f,0.0f);
+		ImGui::DragFloat3("拡縮", &particle_->emitter_.transform.scale.x, 0.1f, 0.0f);
 	}
 	//生成アルゴリズム
 	if (ImGui::CollapsingHeader("生成アルゴリズム")) {

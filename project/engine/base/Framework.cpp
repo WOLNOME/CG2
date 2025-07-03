@@ -19,6 +19,7 @@
 #include "Object3dCommon.h"
 #include "LineDrawerCommon.h"
 #include "SceneManager.h"
+#include "CollisionManager.h"
 
 void Framework::Initialize() {
 	//解放処理確認用
@@ -84,9 +85,13 @@ void Framework::Initialize() {
 	//シーンマネージャーの生成
 	SceneManager::GetInstance()->Initialize();
 
+	//当たり判定マネージャーの生成
+	CollisionManager::GetInstance()->Initialize();
+
 }
 
 void Framework::Finalize() {
+	CollisionManager::GetInstance()->Finalize();
 	SceneManager::GetInstance()->Finalize();
 	LineDrawerCommon::GetInstance()->Finalize();
 	Object3dCommon::GetInstance()->Finalize();
@@ -110,15 +115,18 @@ void Framework::Finalize() {
 }
 
 void Framework::Update() {
+	//インプット更新
+	Input::GetInstance()->Update();
 	//メッセージ処理
 	if (WinApp::GetInstance()->ProcessMessage()) {
 		isOver = true;
 	}
-	//インプット更新
-	Input::GetInstance()->Update();
+	//当たり判定のクリア
+	CollisionManager::GetInstance()->ClearColliders();
 	//シーンマネージャー更新
 	SceneManager::GetInstance()->Update();
-
+	//当たり判定のチェック
+	CollisionManager::GetInstance()->CheckCollision();
 }
 
 void Framework::Run() {

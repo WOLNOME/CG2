@@ -403,7 +403,7 @@ public://静的メンバ関数
 	///              図形の線描画
 	///------------------------------------///
 
-	static void DrawSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDrawer, uint32_t subdivision = 15);
+	static void CreateLineSphere(const Sphere& sphere, Vector4 color, LineDrawer* lineDrawer, uint32_t subdivision = 15);
 
 };
 

@@ -25,8 +25,6 @@ void Input::Initialize() {
 	GenerateKeyboard();
 	//ゲームパッドの生成
 	GenerateGamepad();
-
-	padData;
 }
 
 void Input::Update() {
@@ -230,6 +228,9 @@ void Input::GenerateGamepad() {
 		diprgRightY.lMin = -1000;
 		diprgRightY.lMax = 1000;
 		assert(SUCCEEDED(gamepad->SetProperty(DIPROP_RANGE, &diprgRightY.diph)));
+
+		HWND hwnd = WinApp::GetInstance()->GetHwnd();
+		assert(hwnd != nullptr); // HWNDの検証
 
 		// 協調モードの設定
 		hr = gamepad->SetCooperativeLevel(WinApp::GetInstance()->GetHwnd(), DISCL_EXCLUSIVE | DISCL_FOREGROUND);
