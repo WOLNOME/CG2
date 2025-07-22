@@ -183,34 +183,6 @@ void DevelopScene::Update() {
 	TextTextureManager::GetInstance()->EditTextString(textHandle_, L"フォント確認 0123 abcDEF\n現在時刻 : {:.1f}", time_);
 
 #ifdef _DEBUG
-	//オーディオのデバッグ用ImGui
-	audio_->DebugWithImGui(L"アラーム");
-
-	//平行光源のデバッグ用ImGui
-	dirLight->DebugWithImGui(L"1");
-
-	//点光源のデバッグ用ImGui
-	pointLight->DebugWithImGui(L"1");
-	pointLight2->DebugWithImGui(L"2");
-
-	//スポットライトのデバッグ用ImGui
-	spotLight->DebugWithImGui(L"1");
-
-	ImGui::Begin("複合アニメーション");
-	//選択肢
-	const char* items[] = { "walk","sneakWalk" };
-	static int currentItem = 0;
-	if (ImGui::Combo("アニメーションのアイテム", &currentItem, items, IM_ARRAYSIZE(items))) {
-		composite_->SetCurrentAnimation(items[currentItem]);
-	}
-	ImGui::End();
-
-	//レベルオブジェクト用ImGui
-	levelObject_->DebugWithImGui();
-	//テキスト用ImGui
-	TextTextureManager::GetInstance()->DebugWithImGui(textHandle_);
-	//カメラ用ImGui
-	camera->DebugWithImGui();
 	//ポストエフェクト用ImGui
 	PostEffectManager::GetInstance()->DebugWithImGui();
 
