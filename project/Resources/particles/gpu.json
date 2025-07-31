@@ -62,7 +62,7 @@
         "Min": 1.0
     },
     "MaxGrains": 99999,
-    "Primitive": 4,
+    "Primitive": 3,
     "StartColor": {
         "Max": {
             "w": 0.6078431606292725,
